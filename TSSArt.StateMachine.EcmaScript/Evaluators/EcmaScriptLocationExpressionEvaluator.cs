@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using Jint.Parser;
 using Jint.Parser.Ast;
 using JintIdentifier = Jint.Parser.Ast.Identifier;
 
@@ -11,8 +10,8 @@ namespace TSSArt.StateMachine.EcmaScript
 		private readonly Program            _declare;
 		private readonly Expression         _leftExpression;
 		private readonly LocationExpression _locationExpression;
-		private readonly Program            _program;
 		private readonly string             _name;
+		private readonly Program            _program;
 
 		public EcmaScriptLocationExpressionEvaluator(in LocationExpression locationExpression, Program program, Expression leftExpression)
 		{

@@ -31,11 +31,11 @@ namespace TSSArt.StateMachine.Test
 		{
 			var channel = Channel.CreateUnbounded<IEvent>();
 
-			await channel.Writer.WriteAsync(new EventObject(EventType.External, "Event1"));
-			await channel.Writer.WriteAsync(new EventObject(EventType.External, "Test1.done"));
-			await channel.Writer.WriteAsync(new EventObject(EventType.External, "Event2"));
-			await channel.Writer.WriteAsync(new EventObject(EventType.External, "done.state.Test2"));
-			await channel.Writer.WriteAsync(new EventObject(EventType.External, "Timer"));
+			await channel.Writer.WriteAsync(new EventObject(EventType.External, name: "Event1"));
+			await channel.Writer.WriteAsync(new EventObject(EventType.External, name: "Test1.done"));
+			await channel.Writer.WriteAsync(new EventObject(EventType.External, name: "Event2"));
+			await channel.Writer.WriteAsync(new EventObject(EventType.External, name: "done.state.Test2"));
+			await channel.Writer.WriteAsync(new EventObject(EventType.External, name: "Timer"));
 			channel.Writer.Complete(new ArgumentException("333"));
 
 			var options = new InterpreterOptions();

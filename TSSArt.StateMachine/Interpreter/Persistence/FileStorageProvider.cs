@@ -8,20 +8,8 @@ namespace TSSArt.StateMachine
 {
 	public class FileStorageProvider : IStorageProvider
 	{
-		private static readonly char[] InvalidFileNameChars = Path.GetInvalidFileNameChars();
+		private static readonly char[]   InvalidFileNameChars   = Path.GetInvalidFileNameChars();
 		private static readonly string[] InvalidCharReplacement = GetInvalidCharReplacement();
-
-		private static string[] GetInvalidCharReplacement()
-		{
-			var list = new string[InvalidFileNameChars.Length];
-
-			for (var i = 0; i < list.Length; i ++)
-			{
-				list[i] = "_x" + ((int) InvalidFileNameChars[i]).ToString("X") + "_";
-			}
-
-			return list;
-		}
 
 		private readonly string _extension;
 		private readonly string _path;
@@ -65,6 +53,36 @@ namespace TSSArt.StateMachine
 			return Task.CompletedTask;
 		}
 
+		public Task RemoveAllTransactionalStorage(string sessionId, CancellationToken token)
+		{
+			if (string.IsNullOrEmpty(sessionId)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(sessionId));
+
+			var path = Path.Combine(_path, Escape(sessionId));
+
+			try
+			{
+				Directory.Delete(path, recursive: true);
+			}
+			catch
+			{
+				// ignored
+			}
+
+			return Task.CompletedTask;
+		}
+
+		private static string[] GetInvalidCharReplacement()
+		{
+			var list = new string[InvalidFileNameChars.Length];
+
+			for (var i = 0; i < list.Length; i ++)
+			{
+				list[i] = "_x" + ((int) InvalidFileNameChars[i]).ToString("X") + "_";
+			}
+
+			return list;
+		}
+
 		private static string Escape(string name)
 		{
 			if (name.IndexOfAny(InvalidFileNameChars) < 0)
@@ -87,24 +105,6 @@ namespace TSSArt.StateMachine
 			}
 
 			return sb.ToString();
-		}
-
-		public Task RemoveAllTransactionalStorage(string sessionId, CancellationToken token)
-		{
-			if (string.IsNullOrEmpty(sessionId)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(sessionId));
-
-			var path = Path.Combine(_path, Escape(sessionId));
-
-			try
-			{
-				Directory.Delete(path, recursive: true);
-			}
-			catch
-			{
-				// ignored
-			}
-
-			return Task.CompletedTask;
 		}
 	}
 }

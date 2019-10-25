@@ -10,7 +10,7 @@ namespace TSSArt.StateMachine
 		public StateNode(LinkedListNode<int> documentIdNode, in State state) : base(documentIdNode, GetChildNodes(state.Initial, state.States, state.HistoryStates))
 		{
 			_state = state;
-			
+
 			var id = state.Id ?? new IdentifierNode(new RuntimeIdentifier());
 			var transitions = state.Transitions.AsListOf<TransitionNode>() ?? Array.Empty<TransitionNode>();
 			var invokeList = state.Invoke.AsListOf<InvokeNode>() ?? Array.Empty<InvokeNode>();

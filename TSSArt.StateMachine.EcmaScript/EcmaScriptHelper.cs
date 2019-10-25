@@ -108,9 +108,6 @@ namespace TSSArt.StateMachine.EcmaScript
 			}
 		}
 
-		public static object GetAncestor<T>(in T ancestorProvider) where T : IAncestorProvider
-		{
-			return ancestorProvider.Ancestor;
-		}
+		public static object GetAncestor<T>(in T ancestorProvider) where T : IAncestorProvider => ancestorProvider.Ancestor;
 	}
 }

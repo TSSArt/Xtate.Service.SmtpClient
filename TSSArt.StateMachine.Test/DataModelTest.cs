@@ -107,7 +107,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(NoNameOnEntry, innerXml: "<log expr='_not_existed'/>");
 
-			_logger.Verify(l => l.Error(ErrorType.Execution1, It.IsNotNull<string>(), null, "(#7)", It.IsAny<Exception>(), It.IsAny<CancellationToken>()), Times.Once);
+			_logger.Verify(l => l.Error(ErrorType.Execution, It.IsNotNull<string>(), null, "(#7)", It.IsAny<Exception>(), It.IsAny<CancellationToken>()), Times.Once);
 			_logger.VerifyNoOtherCalls();
 		}
 
@@ -117,7 +117,7 @@ namespace TSSArt.StateMachine.Test
 			await RunStateMachine(WithNameOnEntry, innerXml: "<log expr='_name'/><log expr='_not_existed'/><log expr='_name'/>");
 
 			_logger.Verify(l => l.Log(It.IsNotNull<string>(), "MyName", null, "MyName", default), Times.Once);
-			_logger.Verify(l => l.Error(ErrorType.Execution1, It.IsNotNull<string>(), "MyName", "(#9)", It.IsNotNull<Exception>(), default), Times.Once);
+			_logger.Verify(l => l.Error(ErrorType.Execution, It.IsNotNull<string>(), "MyName", "(#9)", It.IsNotNull<Exception>(), default), Times.Once);
 			_logger.VerifyNoOtherCalls();
 		}
 
@@ -218,7 +218,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(WithNameOnEntry, innerXml: "<assign location='_name' expr=\"'Hello World'\"/>");
 
-			_logger.Verify(l => l.Error(ErrorType.Execution1, It.IsNotNull<string>(), "MyName", "(#7)", It.IsNotNull<SecurityException>(), default), Times.Once);
+			_logger.Verify(l => l.Error(ErrorType.Execution, It.IsNotNull<string>(), "MyName", "(#7)", It.IsNotNull<SecurityException>(), default), Times.Once);
 			_logger.VerifyNoOtherCalls();
 		}
 

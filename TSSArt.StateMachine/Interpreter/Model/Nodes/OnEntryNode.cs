@@ -5,8 +5,8 @@ namespace TSSArt.StateMachine
 {
 	public class OnEntryNode : IOnEntry, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
-		private readonly OnEntry             _onEntry;
 		private readonly LinkedListNode<int> _documentIdNode;
+		private readonly OnEntry             _onEntry;
 
 		public OnEntryNode(LinkedListNode<int> documentIdNode, in OnEntry onEntry)
 		{

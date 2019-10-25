@@ -5,8 +5,8 @@ namespace TSSArt.StateMachine
 {
 	public class TransitionNode : ITransition, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
-		private readonly Transition          _transition;
 		private readonly LinkedListNode<int> _documentIdNode;
+		private readonly Transition          _transition;
 
 		public TransitionNode(LinkedListNode<int> documentIdNode, in Transition transition, IReadOnlyList<StateEntityNode> target = null)
 		{

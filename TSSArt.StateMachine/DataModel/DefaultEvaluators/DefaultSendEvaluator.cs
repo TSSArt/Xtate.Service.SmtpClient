@@ -46,7 +46,7 @@ namespace TSSArt.StateMachine
 
 			var eventType = EventTarget.IsInternalTarget(target) ? EventType.Internal : EventType.External;
 			var eventObject = new EventObject(eventType, sendId, name, data);
-			
+
 			await executionContext.Send(eventObject, type, target, delayMs, token).ConfigureAwait(false);
 
 			IdLocationEvaluator?.SetValue(new DefaultObject(sendId), executionContext);

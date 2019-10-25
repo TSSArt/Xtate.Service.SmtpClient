@@ -7,17 +7,15 @@ namespace TSSArt.StateMachine
 {
 	public class InvokeNode : IInvoke, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
-		private readonly Invoke                            _invoke;
-		private readonly LinkedListNode<int>               _documentIdNode;
-		private readonly IStringEvaluator                  _typeExpressionEvaluator;
-		private readonly IStringEvaluator                  _sourceExpressionEvaluator;
 		private readonly IObjectEvaluator                  _contentExpressionEvaluator;
+		private readonly LinkedListNode<int>               _documentIdNode;
 		private readonly ILocationEvaluator                _idLocationEvaluator;
+		private readonly Invoke                            _invoke;
 		private readonly IReadOnlyList<ILocationEvaluator> _nameEvaluatorList;
 		private readonly IReadOnlyList<DefaultParam>       _parameterList;
+		private readonly IStringEvaluator                  _sourceExpressionEvaluator;
+		private readonly IStringEvaluator                  _typeExpressionEvaluator;
 		private          IIdentifier                       _stateId;
-
-		public string InvokeId { get; private set; }
 
 		public InvokeNode(LinkedListNode<int> documentIdNode, in Invoke invoke)
 		{
@@ -33,13 +31,15 @@ namespace TSSArt.StateMachine
 			_parameterList = invoke.Parameters.AsListOf<DefaultParam>();
 		}
 
+		public string InvokeId { get; private set; }
+
+		public FinalizeNode Finalize { get; }
+
 		object IAncestorProvider.Ancestor => _invoke.Ancestor;
 
 		FormattableString IDebugEntityId.EntityId => $"{Id}(#{DocumentId})";
 
 		public int DocumentId => _documentIdNode.Value;
-
-		public FinalizeNode Finalize { get; }
 
 		public Uri                                Type             => _invoke.Type;
 		public IValueExpression                   TypeExpression   => _invoke.TypeExpression;
@@ -51,7 +51,7 @@ namespace TSSArt.StateMachine
 		public IReadOnlyList<ILocationExpression> NameList         => _invoke.NameList;
 		public IReadOnlyList<IParam>              Parameters       => _invoke.Parameters;
 		public IContent                           Content          => _invoke.Content;
-		IFinalize IInvoke.Finalize => _invoke.Finalize;
+		IFinalize IInvoke.                        Finalize         => _invoke.Finalize;
 
 		void IStoreSupport.Store(Bucket bucket)
 		{

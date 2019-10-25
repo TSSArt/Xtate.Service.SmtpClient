@@ -20,7 +20,7 @@ namespace TSSArt.StateMachine.Test
 
 			var task = Task.FromResult(new Resource(new Uri("http://none"), new ContentType(), content: "content"));
 			resourceLoaderMock.Setup(e => e.Request(It.IsAny<Uri>(), It.IsAny<CancellationToken>())).Returns(task);
-		
+
 			var options = new IoProcessorOptions
 						  {
 								  StateMachineProvider = new StateMachineProvider(),
