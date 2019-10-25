@@ -5,8 +5,8 @@ namespace TSSArt.StateMachine
 {
 	public class ElseNode : IElse, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
-		private readonly Else                _entity;
 		private readonly LinkedListNode<int> _documentIdNode;
+		private readonly Else                _entity;
 
 		public ElseNode(LinkedListNode<int> documentIdNode, in Else entity)
 		{

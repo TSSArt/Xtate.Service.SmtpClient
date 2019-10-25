@@ -35,6 +35,5 @@ namespace TSSArt.StateMachine
 		internal object Ancestor;
 
 		object IAncestorProvider.Ancestor => Ancestor;
-
 	}
 }

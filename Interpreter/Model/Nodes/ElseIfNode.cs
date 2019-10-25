@@ -5,8 +5,8 @@ namespace TSSArt.StateMachine
 {
 	public class ElseIfNode : IElseIf, IAncestorProvider, IStoreSupport, IDocumentId, IDebugEntityId
 	{
-		private readonly ElseIf              _entity;
 		private readonly LinkedListNode<int> _documentIdNode;
+		private readonly ElseIf              _entity;
 
 		public ElseIfNode(LinkedListNode<int> documentIdNode, in ElseIf entity)
 		{

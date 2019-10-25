@@ -17,19 +17,19 @@ namespace TSSArt.StateMachine
 		private const string StateStorageName                  = "state";
 		private const string StateMachineDefinitionStorageName = "smd";
 
+		private readonly CancellationToken _anyToken;
 		private readonly ICollection<IDataModelHandlerFactory> _dataModelHandlerFactories;
 		private readonly CancellationToken                     _destroyToken;
 		private readonly ChannelReader<IEvent>                 _eventChannel;
-		private readonly ILogger                               _interpreterLogger;
 		private readonly ExternalCommunicationWrapper          _externalCommunication;
+		private readonly ILogger                               _interpreterLogger;
+		private readonly INotifyStateChanged                   _notifyStateChanged;
 		private readonly PersistenceLevel                      _persistenceLevel;
 		private readonly IResourceLoader                       _resourceLoader;
 		private readonly string                                _sessionId;
 		private readonly CancellationToken                     _stopToken;
-		private readonly CancellationToken                     _anyToken;
 		private readonly IStorageProvider                      _storageProvider;
 		private readonly CancellationToken                     _suspendToken;
-		private readonly INotifyStateChanged                   _notifyStateChanged;
 		private          IStateMachineContext                  _context;
 		private          IDataModelHandler                     _dataModelHandler;
 		private          DataModelValue                        _doneData;
@@ -306,7 +306,7 @@ namespace TSSArt.StateMachine
 		private Task NotifyAccepted() => _notifyStateChanged?.OnChanged(_sessionId, StateMachineInterpreterState.Accepted) ?? Task.CompletedTask;
 		private Task NotifyStarted()  => _notifyStateChanged?.OnChanged(_sessionId, StateMachineInterpreterState.Started) ?? Task.CompletedTask;
 		private Task NotifyExited()   => _notifyStateChanged?.OnChanged(_sessionId, StateMachineInterpreterState.Exited) ?? Task.CompletedTask;
-		private Task NotifyWaiting()   => _notifyStateChanged?.OnChanged(_sessionId, StateMachineInterpreterState.Waiting) ?? Task.CompletedTask;
+		private Task NotifyWaiting()  => _notifyStateChanged?.OnChanged(_sessionId, StateMachineInterpreterState.Waiting) ?? Task.CompletedTask;
 
 		private async Task<StateMachineResult> Run(IStateMachine stateMachine, DataModelValue arguments)
 		{
@@ -354,7 +354,7 @@ namespace TSSArt.StateMachine
 					}
 				}
 			}
-			
+
 			return new StateMachineResult(exitStatus, _doneData);
 		}
 
@@ -1152,18 +1152,18 @@ namespace TSSArt.StateMachine
 			var sourceEntityId = (source as IEntity).As<IDebugEntityId>()?.EntityId?.ToString(CultureInfo.InvariantCulture);
 
 			string sendId = null;
-			
-			var errorType = isPlatform 
-					? ErrorType.Platform1
-					: _externalCommunication.IsCommunicationError(exception, out sendId) 
-							? ErrorType.Communication1
-							: ErrorType.Execution1;
+
+			var errorType = isPlatform
+					? ErrorType.Platform
+					: _externalCommunication.IsCommunicationError(exception, out sendId)
+							? ErrorType.Communication
+							: ErrorType.Execution;
 
 			var name = errorType switch
 			{
-					ErrorType.Execution1 => "error.execution",
-					ErrorType.Communication1 => "error.communication",
-					ErrorType.Platform1 => "error.platform",
+					ErrorType.Execution => "error.execution",
+					ErrorType.Communication => "error.communication",
+					ErrorType.Platform => "error.platform",
 					_ => throw new ArgumentOutOfRangeException(nameof(errorType), errorType, message: null)
 			};
 

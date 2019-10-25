@@ -2,8 +2,8 @@
 {
 	public enum ErrorType
 	{
-		Execution1,
-		Communication1,
-		Platform1
+		Execution,
+		Communication,
+		Platform
 	}
 }

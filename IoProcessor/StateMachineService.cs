@@ -9,19 +9,19 @@ namespace TSSArt.StateMachine
 {
 	public class StateMachineService : IService
 	{
+		private readonly TaskCompletionSource<object>    _acceptedTcs = new TaskCompletionSource<object>();
+		private readonly DataModelValue                  _arguments;
 		private readonly Channel<IEvent>                 _channel;
 		private readonly CancellationTokenSource         _destroyTokenSource = new CancellationTokenSource();
-		private readonly IService                        _parentService;
-		private readonly IStateMachine                   _stateMachine;
-		private readonly InterpreterOptions              _options;
-		private readonly DataModelValue                  _arguments;
 		private readonly IExternalCommunication          _externalCommunication;
+		private readonly TimeSpan                        _idlePeriod;
 		private readonly Action<StateMachineService>     _onStateMachineCompleted;
-		private readonly TimeSpan _idlePeriod;
+		private readonly InterpreterOptions              _options;
+		private readonly IService                        _parentService;
 		private readonly HashSet<ScheduledEvent>         _scheduledEvents   = new HashSet<ScheduledEvent>();
 		private readonly Dictionary<string, IService>    _serviceByInvokeId = new Dictionary<string, IService>();
-		private readonly ConcurrentQueue<ScheduledEvent> _toDelete          = new ConcurrentQueue<ScheduledEvent>();
-		private readonly TaskCompletionSource<object>    _acceptedTcs        = new TaskCompletionSource<object>();
+		private readonly IStateMachine                   _stateMachine;
+		private readonly ConcurrentQueue<ScheduledEvent> _toDelete = new ConcurrentQueue<ScheduledEvent>();
 		private          CancellationTokenSource         _suspendOnIdle;
 
 		public StateMachineService(IService parentService, string sessionId, IStateMachine stateMachine, InterpreterOptions options, DataModelValue arguments,
@@ -41,6 +41,15 @@ namespace TSSArt.StateMachine
 		public string             SessionId { get; }
 		public StateMachineResult Result    { get; private set; }
 
+		public Task Send(IEvent @event, CancellationToken token) => _channel.Writer.WriteAsync(@event, token).AsTask();
+
+		public Task Destroy(CancellationToken token)
+		{
+			_channel.Writer.Complete();
+			_destroyTokenSource.Cancel();
+			return Task.CompletedTask;
+		}
+
 		public Task StartAsync(CancellationToken token)
 		{
 			token.Register(() => _acceptedTcs.TrySetCanceled(token));
@@ -59,7 +68,7 @@ namespace TSSArt.StateMachine
 				{
 					_suspendOnIdle = _idlePeriod > TimeSpan.Zero ? new CancellationTokenSource(_idlePeriod) : null;
 
-					Result = await StateMachineInterpreter.RunAsync(SessionId, _stateMachine, _channel.Reader, _options, _arguments, 
+					Result = await StateMachineInterpreter.RunAsync(SessionId, _stateMachine, _channel.Reader, _options, _arguments,
 																	_destroyTokenSource.Token, _suspendOnIdle?.Token ?? default).ConfigureAwait(false);
 					_acceptedTcs.TrySetResult(null);
 
@@ -81,15 +90,6 @@ namespace TSSArt.StateMachine
 
 				ready = await _channel.Reader.WaitToReadAsync();
 			}
-		}
-
-		public Task Send(IEvent @event, CancellationToken token) => _channel.Writer.WriteAsync(@event, token).AsTask();
-
-		public Task Destroy(CancellationToken token)
-		{
-			_channel.Writer.Complete();
-			_destroyTokenSource.Cancel();
-			return Task.CompletedTask;
 		}
 
 		public void OnStateChanged(StateMachineInterpreterState state)
@@ -170,7 +170,7 @@ namespace TSSArt.StateMachine
 
 		public Task ReturnDoneEvent(DataModelValue doneData, CancellationToken token)
 		{
-			var eventObject = new EventObject(EventType.External, null, "TBD", "invokeid", null, null, doneData); //TODO: put correct parameters
+			var eventObject = new EventObject(EventType.External, sendId: null, name: "TBD", invokeId: "invokeid", origin: null, originType: null, doneData); //TODO: put correct parameters
 
 			return _parentService.Send(eventObject, token);
 		}

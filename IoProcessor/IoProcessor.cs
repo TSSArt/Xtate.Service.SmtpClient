@@ -14,14 +14,13 @@ namespace TSSArt.StateMachine
 		private static readonly Uri ServiceFactoryTypeId      = new Uri("http://www.w3.org/TR/scxml/");
 		private static readonly Uri ServiceFactoryAliasTypeId = new Uri(uriString: "scxml", UriKind.Relative);
 
-		private readonly Dictionary<Uri, IEventProcessor> _eventProcessors  = new Dictionary<Uri, IEventProcessor>();
-		private readonly Dictionary<Uri, IServiceFactory> _serviceFactories = new Dictionary<Uri, IServiceFactory>();
-		private readonly List<IEventProcessor>            _ioProcessors     = new List<IEventProcessor>();
-		private readonly IStateMachineProvider            _stateMachineProvider;
-		private readonly InterpreterOptions               _interpreterOptions;
-		private readonly TimeSpan                         _suspendIdlePeriod;
-
+		private readonly Dictionary<Uri, IEventProcessor>                  _eventProcessors = new Dictionary<Uri, IEventProcessor>();
+		private readonly InterpreterOptions                                _interpreterOptions;
+		private readonly List<IEventProcessor>                             _ioProcessors     = new List<IEventProcessor>();
+		private readonly Dictionary<Uri, IServiceFactory>                  _serviceFactories = new Dictionary<Uri, IServiceFactory>();
+		private readonly IStateMachineProvider                             _stateMachineProvider;
 		private readonly ConcurrentDictionary<string, StateMachineService> _stateMachines = new ConcurrentDictionary<string, StateMachineService>();
+		private readonly TimeSpan                                          _suspendIdlePeriod;
 
 		public IoProcessor(IoProcessorOptions options)
 		{
@@ -48,37 +47,6 @@ namespace TSSArt.StateMachine
 			_interpreterOptions = CreateInterpreterOptions(options);
 
 			_suspendIdlePeriod = options.SuspendIdlePeriod;
-		}
-
-		private InterpreterOptions CreateInterpreterOptions(IoProcessorOptions options)
-		{
-			var interpreterOptions = new InterpreterOptions
-									 {
-											 ExternalCommunication = this,
-											 NotifyStateChanged = this,
-											 Logger = options.Logger,
-											 PersistenceLevel = options.PersistenceLevel,
-											 StorageProvider = options.StorageProvider,
-											 ResourceLoader = options.ResourceLoader,
-											 SuspendToken = options.SuspendToken,
-											 StopToken = options.StopToken
-									 };
-
-			foreach (var factory in options.DataModelHandlerFactories)
-			{
-				interpreterOptions.DataModelHandlerFactories.Add(factory);
-			}
-
-			return interpreterOptions;
-		}
-
-		Task INotifyStateChanged.OnChanged(string sessionId, StateMachineInterpreterState state)
-		{
-			ValidateSessionId(sessionId, out var service);
-
-			service.OnStateChanged(state);
-
-			return Task.CompletedTask;
 		}
 
 		Uri IEventProcessor.Id => EventProcessorId;
@@ -162,11 +130,42 @@ namespace TSSArt.StateMachine
 			return service.ReturnDoneEvent(doneData, token);
 		}
 
+		Task INotifyStateChanged.OnChanged(string sessionId, StateMachineInterpreterState state)
+		{
+			ValidateSessionId(sessionId, out var service);
+
+			service.OnStateChanged(state);
+
+			return Task.CompletedTask;
+		}
+
 		Uri IServiceFactory.TypeId => ServiceFactoryTypeId;
 
 		Uri IServiceFactory.AliasTypeId => ServiceFactoryAliasTypeId;
 
 		Task<IService> IServiceFactory.StartService(IService parentService, Uri source, DataModelValue data, CancellationToken token) => StartStateMachine(parentService, source, data, token);
+
+		private InterpreterOptions CreateInterpreterOptions(IoProcessorOptions options)
+		{
+			var interpreterOptions = new InterpreterOptions
+									 {
+											 ExternalCommunication = this,
+											 NotifyStateChanged = this,
+											 Logger = options.Logger,
+											 PersistenceLevel = options.PersistenceLevel,
+											 StorageProvider = options.StorageProvider,
+											 ResourceLoader = options.ResourceLoader,
+											 SuspendToken = options.SuspendToken,
+											 StopToken = options.StopToken
+									 };
+
+			foreach (var factory in options.DataModelHandlerFactories)
+			{
+				interpreterOptions.DataModelHandlerFactories.Add(factory);
+			}
+
+			return interpreterOptions;
+		}
 
 		private async Task<IService> StartStateMachine(IService parentService, Uri source, DataModelValue data, CancellationToken token)
 		{

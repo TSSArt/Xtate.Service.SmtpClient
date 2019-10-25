@@ -11,7 +11,7 @@ namespace TSSArt.StateMachine
 		{
 			_event = @event ?? throw new ArgumentNullException(nameof(@event));
 
-			if (@event.Type != EventType.Internal || @event.Origin != null || @event.OriginType != null || 
+			if (@event.Type != EventType.Internal || @event.Origin != null || @event.OriginType != null ||
 				@event.InvokeId != null || @event.SendId != null || @event.Data.Type != DataModelValueType.Undefined)
 			{
 				throw new ArgumentException("Allowed only named internal event");

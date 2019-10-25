@@ -98,7 +98,7 @@ namespace TSSArt.StateMachine
 
 			RemoveInternal(property);
 		}
-		
+
 		public override bool TryGetMember(GetMemberBinder binder, out object result)
 		{
 			result = this[binder.Name].ToObject();

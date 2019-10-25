@@ -12,7 +12,7 @@ namespace TSSArt.StateMachine
 		public IReadOnlyList<IEventProcessor> GetIoProcessors(string sessionId) => Array.Empty<IEventProcessor>();
 
 		public Task StartInvoke(string sessionId, string invokeId, Uri type, Uri source, DataModelValue data, CancellationToken token) => throw GetNotSupportedException();
-		
+
 		public Task CancelInvoke(string sessionId, string invokeId, CancellationToken token) => throw GetNotSupportedException();
 
 		public Task ForwardEvent(string sessionId, IEvent @event, string invokeId, CancellationToken token) => throw GetNotSupportedException();

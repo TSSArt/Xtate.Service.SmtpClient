@@ -7,11 +7,10 @@ namespace TSSArt.StateMachine
 {
 	internal class StateMachineContext : IStateMachineContext, IExecutionContext
 	{
-		private readonly string  _stateMachineName;
-		private readonly string  _sessionId;
-		private readonly ILogger _interpreterLogger;
-
 		private readonly ExternalCommunicationWrapper _externalCommunication;
+		private readonly ILogger                      _interpreterLogger;
+		private readonly string                       _sessionId;
+		private readonly string                       _stateMachineName;
 
 		public StateMachineContext(string stateMachineName, string sessionId, DataModelValue arguments, ILogger interpreterLogger, ExternalCommunicationWrapper externalCommunication)
 		{
@@ -56,10 +55,7 @@ namespace TSSArt.StateMachine
 			return _externalCommunication.SendEvent(_sessionId, @event, type, target, delayMs, token);
 		}
 
-		public Task Cancel(string sendId, CancellationToken token)
-		{
-			return _externalCommunication.CancelEvent(_sessionId, sendId, token);
-		}
+		public Task Cancel(string sendId, CancellationToken token) => _externalCommunication.CancelEvent(_sessionId, sendId, token);
 
 		public Task Log(string label, object arguments, CancellationToken token)
 		{
@@ -69,7 +65,7 @@ namespace TSSArt.StateMachine
 			}
 			catch (Exception ex)
 			{
-				ex.Data.Add(typeof(ErrorType), ErrorType.Platform1);
+				ex.Data.Add(typeof(ErrorType), ErrorType.Platform);
 				throw;
 			}
 		}

@@ -2,7 +2,7 @@
 
 namespace TSSArt.StateMachine
 {
-	public interface INotifyStateChanged 
+	public interface INotifyStateChanged
 	{
 		Task OnChanged(string sessionId, StateMachineInterpreterState state);
 	}

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
@@ -12,10 +11,7 @@ namespace TSSArt.StateMachine
 
 		object IAncestorProvider.Ancestor => _raise.Ancestor;
 
-		public virtual Task Execute(IExecutionContext executionContext, CancellationToken token)
-		{
-			return executionContext.Send(Event, type: null, EventTarget.InternalTarget, delayMs: 0, token);
-		}
+		public virtual Task Execute(IExecutionContext executionContext, CancellationToken token) => executionContext.Send(Event, type: null, EventTarget.InternalTarget, delayMs: 0, token);
 
 		public IEvent Event => _raise.Event;
 	}

@@ -6,8 +6,8 @@ namespace TSSArt.StateMachine
 {
 	public class DoneDataNode : IDoneData, IStoreSupport, IAncestorProvider
 	{
-		private readonly DoneData                    _doneData;
 		private readonly IObjectEvaluator            _contentExpressionEvaluator;
+		private readonly DoneData                    _doneData;
 		private readonly IReadOnlyList<DefaultParam> _parameterList;
 
 		public DoneDataNode(in DoneData doneData)
@@ -30,9 +30,7 @@ namespace TSSArt.StateMachine
 			bucket.AddEntityList(Key.Parameters, Parameters);
 		}
 
-		public Task<DataModelValue> Evaluate(IExecutionContext executionContext, CancellationToken token)
-		{
-			return Converter.GetData(_doneData.Content?.Value, _contentExpressionEvaluator, nameEvaluatorList: null, _parameterList, executionContext, token);
-		}
+		public Task<DataModelValue> Evaluate(IExecutionContext executionContext, CancellationToken token) =>
+				Converter.GetData(_doneData.Content?.Value, _contentExpressionEvaluator, nameEvaluatorList: null, _parameterList, executionContext, token);
 	}
 }

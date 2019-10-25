@@ -5,8 +5,8 @@ namespace TSSArt.StateMachine
 {
 	public class OnExitNode : IOnExit, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
-		private readonly OnExit              _onExit;
 		private readonly LinkedListNode<int> _documentIdNode;
+		private readonly OnExit              _onExit;
 
 		public OnExitNode(LinkedListNode<int> documentIdNode, in OnExit onExit)
 		{

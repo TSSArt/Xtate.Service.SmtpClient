@@ -298,14 +298,14 @@ namespace TSSArt.StateMachine
 
 		public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object result)
 		{
-			result = this[(int)indexes[0]].ToObject();
+			result = this[(int) indexes[0]].ToObject();
 
 			return true;
 		}
 
 		public override bool TrySetIndex(SetIndexBinder binder, object[] indexes, object value)
 		{
-			this[(int)indexes[0]] = DataModelValue.FromObject(value);
+			this[(int) indexes[0]] = DataModelValue.FromObject(value);
 
 			return true;
 		}

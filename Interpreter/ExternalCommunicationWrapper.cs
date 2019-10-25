@@ -8,6 +8,7 @@ namespace TSSArt.StateMachine
 	public class ExternalCommunicationWrapper
 	{
 		private const string SendIdKey = "SendId";
+
 		private readonly IExternalCommunication _inner;
 
 		public ExternalCommunicationWrapper(IExternalCommunication inner) => _inner = inner;

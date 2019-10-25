@@ -5,8 +5,8 @@ namespace TSSArt.StateMachine
 {
 	public class ParamNode : IParam, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
-		private readonly Param               _param;
 		private readonly LinkedListNode<int> _documentIdNode;
+		private readonly Param               _param;
 
 		public ParamNode(LinkedListNode<int> documentIdNode, in Param param)
 		{

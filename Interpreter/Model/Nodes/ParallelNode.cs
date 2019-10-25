@@ -10,7 +10,7 @@ namespace TSSArt.StateMachine
 		public ParallelNode(LinkedListNode<int> documentIdNode, in Parallel parallel) : base(documentIdNode, GetChildNodes(initial: null, parallel.States, parallel.HistoryStates))
 		{
 			_parallel = parallel;
-			
+
 			var id = parallel.Id ?? new IdentifierNode(new RuntimeIdentifier());
 			var transitions = parallel.Transitions.AsListOf<TransitionNode>() ?? Array.Empty<TransitionNode>();
 			var invokeList = parallel.Invoke.AsListOf<InvokeNode>() ?? Array.Empty<InvokeNode>();

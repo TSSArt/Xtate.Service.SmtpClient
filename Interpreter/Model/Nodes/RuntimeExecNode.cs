@@ -4,8 +4,8 @@ namespace TSSArt.StateMachine
 {
 	public class RuntimeExecNode : IExecutableEntity, IStoreSupport, IAncestorProvider, IDocumentId
 	{
-		private readonly IExecutableEntity   _entity;
 		private readonly LinkedListNode<int> _documentIdNode;
+		private readonly IExecutableEntity   _entity;
 
 		public RuntimeExecNode(LinkedListNode<int> documentIdNode, IExecutableEntity entity)
 		{

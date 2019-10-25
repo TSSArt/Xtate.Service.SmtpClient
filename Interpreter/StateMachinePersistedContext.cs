@@ -6,7 +6,6 @@ namespace TSSArt.StateMachine
 {
 	internal class StateMachinePersistedContext : StateMachineContext, IPersistenceContext
 	{
-		private readonly ITransactionalStorage                           _storage;
 		private readonly OrderedSetPersistingController<StateEntityNode> _configurationController;
 		private readonly DataModelObjectPersistingController             _dataModelObjectPersistingController;
 		private readonly DataModelReferenceTracker                       _dataModelReferenceTracker;
@@ -15,6 +14,7 @@ namespace TSSArt.StateMachine
 		private readonly EntityQueuePersistingController<IEvent>         _internalQueuePersistingController;
 		private readonly Bucket                                          _state;
 		private readonly OrderedSetPersistingController<StateEntityNode> _statesToInvokeController;
+		private readonly ITransactionalStorage                           _storage;
 
 		public StateMachinePersistedContext(string stateMachineName, string sessionId, DataModelValue arguments, ITransactionalStorage storage,
 											Dictionary<int, IEntity> entityMap, ILogger interpreterLogger, ExternalCommunicationWrapper externalCommunication)
@@ -33,7 +33,7 @@ namespace TSSArt.StateMachine
 			_state = bucket.Nested(StorageSection.StateBag);
 		}
 
-		private static IEvent EventCreator(Bucket bucket) => new EventObject(bucket);
+		public override IPersistenceContext PersistenceContext => this;
 
 		public void ClearState(int key) => _state.RemoveSubtree(key);
 
@@ -49,7 +49,7 @@ namespace TSSArt.StateMachine
 
 		public Task Shrink(CancellationToken token) => _storage.Shrink(token);
 
-		public override IPersistenceContext PersistenceContext => this;
+		private static IEvent EventCreator(Bucket bucket) => new EventObject(bucket);
 
 		private void DisposeControllers()
 		{

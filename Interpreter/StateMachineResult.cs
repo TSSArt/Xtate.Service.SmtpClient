@@ -2,6 +2,8 @@
 {
 	public class StateMachineResult
 	{
+		public DataModelValue Result;
+
 		public StateMachineResult(StateMachineExitStatus status, DataModelValue result)
 		{
 			Result = result;
@@ -9,7 +11,5 @@
 		}
 
 		public StateMachineExitStatus Status { get; }
-
-		public DataModelValue Result;
 	}
 }

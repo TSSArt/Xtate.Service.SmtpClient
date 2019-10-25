@@ -11,7 +11,7 @@ namespace TSSArt.StateMachine
 		DataModelObject DataModel { get; }
 
 		bool InState(IIdentifier id);
-		
+
 		Task Cancel(string sendId, CancellationToken token);
 
 		Task Log(string label, object arguments, CancellationToken token);
