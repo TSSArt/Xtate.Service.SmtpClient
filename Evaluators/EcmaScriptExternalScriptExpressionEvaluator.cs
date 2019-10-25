@@ -11,10 +11,7 @@ namespace TSSArt.StateMachine.EcmaScript
 		private readonly ExternalScriptExpression _externalScriptExpression;
 		private          Program                  _program;
 
-		public EcmaScriptExternalScriptExpressionEvaluator(in ExternalScriptExpression externalScriptExpression)
-		{
-			_externalScriptExpression = externalScriptExpression;
-		}
+		public EcmaScriptExternalScriptExpressionEvaluator(in ExternalScriptExpression externalScriptExpression) => _externalScriptExpression = externalScriptExpression;
 
 		object IAncestorProvider.Ancestor => EcmaScriptHelper.GetAncestor(_externalScriptExpression);
 
