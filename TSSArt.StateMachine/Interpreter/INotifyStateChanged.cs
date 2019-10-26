@@ -4,6 +4,6 @@ namespace TSSArt.StateMachine
 {
 	public interface INotifyStateChanged
 	{
-		Task OnChanged(string sessionId, StateMachineInterpreterState state);
+		ValueTask OnChanged(string sessionId, StateMachineInterpreterState state);
 	}
 }

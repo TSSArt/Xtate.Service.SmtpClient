@@ -10,7 +10,7 @@ namespace TSSArt.StateMachine
 		void SetState(int key, int value);
 		void SetState(int key, int subKey, int value);
 		void ClearState(int key);
-		Task CheckPoint(int level, CancellationToken token);
-		Task Shrink(CancellationToken token);
+		ValueTask CheckPoint(int level, CancellationToken token);
+		ValueTask Shrink(CancellationToken token);
 	}
 }

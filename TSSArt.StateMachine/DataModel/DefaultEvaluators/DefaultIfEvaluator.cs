@@ -46,7 +46,7 @@ namespace TSSArt.StateMachine
 
 		object IAncestorProvider.Ancestor => _if.Ancestor;
 
-		public virtual async Task Execute(IExecutionContext executionContext, CancellationToken token)
+		public virtual async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
 			foreach (var (condition, actions) in Branches)
 			{

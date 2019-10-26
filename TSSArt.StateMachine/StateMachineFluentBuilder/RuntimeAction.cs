@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public delegate Task ExecutableTask(IExecutionContext executionContext, CancellationToken token);
+	public delegate ValueTask ExecutableTask(IExecutionContext executionContext, CancellationToken token);
 
 	public delegate void ExecutableAction(IExecutionContext executionContext);
 
@@ -17,16 +17,16 @@ namespace TSSArt.StateMachine
 
 		public RuntimeAction(ExecutableAction action) => _action = action ?? throw new ArgumentNullException(nameof(action));
 
-		public Task Execute(IExecutionContext executionContext, CancellationToken token)
+		public async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
 			if (_task != null)
 			{
-				return _task(executionContext, token);
+				await _task(executionContext, token);
 			}
-
-			_action(executionContext);
-
-			return Task.CompletedTask;
+			else
+			{
+				_action(executionContext);
+			}
 		}
 	}
 }

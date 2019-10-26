@@ -55,7 +55,7 @@ namespace TSSArt.StateMachine
 
 		Uri IEventProcessor.GetLocation(string sessionId) => new Uri(BaseUri, sessionId);
 
-		Task IEventProcessor.Send(IEvent @event, Uri target, CancellationToken token)
+		ValueTask IEventProcessor.Send(IEvent @event, Uri target, CancellationToken token)
 		{
 			var sessionId = target.GetLeftPart(UriPartial.Path);
 
@@ -66,7 +66,7 @@ namespace TSSArt.StateMachine
 
 		IReadOnlyList<IEventProcessor> IExternalCommunication.GetIoProcessors(string sessionId) => _ioProcessors;
 
-		async Task IExternalCommunication.StartInvoke(string sessionId, string invokeId, Uri type, Uri source, DataModelValue data, CancellationToken token)
+		async ValueTask IExternalCommunication.StartInvoke(string sessionId, string invokeId, Uri type, Uri source, DataModelValue data, CancellationToken token)
 		{
 			ValidateSessionId(sessionId, out var service);
 
@@ -80,7 +80,7 @@ namespace TSSArt.StateMachine
 			service.RegisterService(invokeId, invokedService);
 		}
 
-		Task IExternalCommunication.CancelInvoke(string sessionId, string invokeId, CancellationToken token)
+		ValueTask IExternalCommunication.CancelInvoke(string sessionId, string invokeId, CancellationToken token)
 		{
 			ValidateSessionId(sessionId, out var service);
 
@@ -89,7 +89,7 @@ namespace TSSArt.StateMachine
 			return invokedService.Destroy(token);
 		}
 
-		Task IExternalCommunication.SendEvent(string sessionId, IEvent @event, Uri type, Uri target, int delayMs, CancellationToken token)
+		ValueTask IExternalCommunication.SendEvent(string sessionId, IEvent @event, Uri type, Uri target, int delayMs, CancellationToken token)
 		{
 			ValidateSessionId(sessionId, out var service);
 
@@ -97,7 +97,7 @@ namespace TSSArt.StateMachine
 			{
 				service.ScheduleEvent(@event, type, target, delayMs);
 
-				return Task.CompletedTask;
+				return default;
 			}
 
 			var eventProcessor = GetEventProcessor(type);
@@ -107,43 +107,43 @@ namespace TSSArt.StateMachine
 			return eventProcessor.Send(sendEvent, target, token);
 		}
 
-		Task IExternalCommunication.ForwardEvent(string sessionId, IEvent @event, string invokeId, CancellationToken token)
+		ValueTask IExternalCommunication.ForwardEvent(string sessionId, IEvent @event, string invokeId, CancellationToken token)
 		{
 			ValidateSessionId(sessionId, out var service);
 
 			return service.ForwardEvent(invokeId, @event, token);
 		}
 
-		Task IExternalCommunication.CancelEvent(string sessionId, string sendId, CancellationToken token)
+		ValueTask IExternalCommunication.CancelEvent(string sessionId, string sendId, CancellationToken token)
 		{
 			ValidateSessionId(sessionId, out var service);
 
 			service.CancelEvent(sendId);
 
-			return Task.CompletedTask;
+			return default;
 		}
 
-		Task IExternalCommunication.ReturnDoneEvent(string sessionId, DataModelValue doneData, CancellationToken token)
+		ValueTask IExternalCommunication.ReturnDoneEvent(string sessionId, DataModelValue doneData, CancellationToken token)
 		{
 			ValidateSessionId(sessionId, out var service);
 
 			return service.ReturnDoneEvent(doneData, token);
 		}
 
-		Task INotifyStateChanged.OnChanged(string sessionId, StateMachineInterpreterState state)
+		ValueTask INotifyStateChanged.OnChanged(string sessionId, StateMachineInterpreterState state)
 		{
 			ValidateSessionId(sessionId, out var service);
 
 			service.OnStateChanged(state);
 
-			return Task.CompletedTask;
+			return default;
 		}
 
 		Uri IServiceFactory.TypeId => ServiceFactoryTypeId;
 
 		Uri IServiceFactory.AliasTypeId => ServiceFactoryAliasTypeId;
 
-		Task<IService> IServiceFactory.StartService(IService parentService, Uri source, DataModelValue data, CancellationToken token) => StartStateMachine(parentService, source, data, token);
+		ValueTask<IService> IServiceFactory.StartService(IService parentService, Uri source, DataModelValue data, CancellationToken token) => StartStateMachine(parentService, source, data, token);
 
 		private InterpreterOptions CreateInterpreterOptions(IoProcessorOptions options)
 		{
@@ -167,7 +167,7 @@ namespace TSSArt.StateMachine
 			return interpreterOptions;
 		}
 
-		private async Task<IService> StartStateMachine(IService parentService, Uri source, DataModelValue data, CancellationToken token)
+		private async ValueTask<IService> StartStateMachine(IService parentService, Uri source, DataModelValue data, CancellationToken token)
 		{
 			var sessionId = IdGenerator.NewSessionId();
 			var service = new StateMachineService(parentService, sessionId, GetStateMachine(source), _interpreterOptions, data, this, OnStateMachineComplete, _suspendIdlePeriod);
@@ -230,6 +230,9 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public Task Start(Uri source, CancellationToken token = default) => StartStateMachine(parentService: null, source, data: default, token);
+		public async ValueTask Start(Uri source, CancellationToken token = default)
+		{
+			await StartStateMachine(parentService: null, source, data: default, token).ConfigureAwait(false);
+		}
 	}
 }

@@ -30,7 +30,7 @@ namespace TSSArt.StateMachine.Test
 			_allStateMachine = director.ConstructStateMachine();
 
 			_resourceLoaderMock = new Mock<IResourceLoader>();
-			var task = Task.FromResult(new Resource(new Uri("http://none"), new ContentType(), content: "content"));
+			var task = new ValueTask<Resource>(new Resource(new Uri("http://none"), new ContentType(), content: "content"));
 			_resourceLoaderMock.Setup(e => e.Request(It.IsAny<Uri>(), It.IsAny<CancellationToken>())).Returns(task);
 		}
 
@@ -64,7 +64,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			private readonly Dictionary<string, MemoryStream> _streams = new Dictionary<string, MemoryStream>();
 
-			public async Task<ITransactionalStorage> GetTransactionalStorage(string sessionId, string name, CancellationToken token)
+			public async ValueTask<ITransactionalStorage> GetTransactionalStorage(string sessionId, string name, CancellationToken token)
 			{
 				var key = sessionId + "-" + name;
 
@@ -77,9 +77,9 @@ namespace TSSArt.StateMachine.Test
 				return await StreamStorage.CreateAsync(stream, disposeStream: false, token);
 			}
 
-			public Task RemoveTransactionalStorage(string sessionId, string name, CancellationToken token) => Task.CompletedTask;
+			public ValueTask RemoveTransactionalStorage(string sessionId, string name, CancellationToken token) => default;
 
-			public Task RemoveAllTransactionalStorage(string sessionId, CancellationToken token) => Task.CompletedTask;
+			public ValueTask RemoveAllTransactionalStorage(string sessionId, CancellationToken token) => default;
 		}
 	}
 }

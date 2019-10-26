@@ -9,6 +9,6 @@ namespace TSSArt.StateMachine
 		Uri  Id      { get; }
 		Uri  AliasId { get; }
 		Uri  GetLocation(string sessionId);
-		Task Send(IEvent @event, Uri target, CancellationToken token);
+		ValueTask Send(IEvent @event, Uri target, CancellationToken token);
 	}
 }

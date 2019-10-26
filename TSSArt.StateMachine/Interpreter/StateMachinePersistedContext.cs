@@ -45,9 +45,9 @@ namespace TSSArt.StateMachine
 
 		public void SetState(int key, int subKey, int value) => _state.Nested(key).Add(subKey, value);
 
-		public Task CheckPoint(int level, CancellationToken token) => _storage.CheckPoint(level, token);
+		public ValueTask CheckPoint(int level, CancellationToken token) => _storage.CheckPoint(level, token);
 
-		public Task Shrink(CancellationToken token) => _storage.Shrink(token);
+		public ValueTask Shrink(CancellationToken token) => _storage.Shrink(token);
 
 		private static IEvent EventCreator(Bucket bucket) => new EventObject(bucket);
 

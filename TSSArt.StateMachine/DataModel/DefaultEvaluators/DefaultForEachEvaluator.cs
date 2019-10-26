@@ -25,7 +25,7 @@ namespace TSSArt.StateMachine
 
 		object IAncestorProvider.Ancestor => _forEach.Ancestor;
 
-		public virtual async Task Execute(IExecutionContext executionContext, CancellationToken token)
+		public virtual async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
 			var array = await ArrayEvaluator.EvaluateArray(executionContext, token).ConfigureAwait(false);
 

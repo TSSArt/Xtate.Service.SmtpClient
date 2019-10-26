@@ -69,7 +69,7 @@ namespace TSSArt.StateMachine.Test
 					.AddOnEntryTask((ctx, token) =>
 									{
 										ctx.DataModel["Hello"] = new DataModelValue("World");
-										return Task.CompletedTask;
+										return default;
 									})
 					.EndState();
 

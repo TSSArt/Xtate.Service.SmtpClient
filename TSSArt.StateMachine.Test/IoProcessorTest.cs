@@ -18,7 +18,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			var resourceLoaderMock = new Mock<IResourceLoader>();
 
-			var task = Task.FromResult(new Resource(new Uri("http://none"), new ContentType(), content: "content"));
+			var task = new ValueTask<Resource>(new Resource(new Uri("http://none"), new ContentType(), content: "content"));
 			resourceLoaderMock.Setup(e => e.Request(It.IsAny<Uri>(), It.IsAny<CancellationToken>())).Returns(task);
 
 			var options = new IoProcessorOptions

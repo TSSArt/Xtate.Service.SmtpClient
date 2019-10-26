@@ -27,14 +27,6 @@ namespace TSSArt.StateMachine.Test
 
 		private IStateMachine NoneDataModel(string xml) => GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' datamodel='none'>" + xml + "</scxml>");
 
-		private IStateMachine EcmaScriptDataModel(string xml) => GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' datamodel='ecmascript'>" + xml + "</scxml>");
-
-		private IStateMachine NoNameOnEntry(string xml) =>
-				GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' datamodel='ecmascript'><state><onentry>" + xml + "</onentry></state></scxml>");
-
-		private IStateMachine WithNameOnEntry(string xml) =>
-				GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' datamodel='ecmascript' name='MyName'><state><onentry>" + xml + "</onentry></state></scxml>");
-
 		private async Task RunStateMachine(Func<string, IStateMachine> getter, string innerXml)
 		{
 			var stateMachine = getter(innerXml);

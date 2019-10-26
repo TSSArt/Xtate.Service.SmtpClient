@@ -20,7 +20,7 @@ namespace TSSArt.StateMachine
 			_extension = extension;
 		}
 
-		public async Task<ITransactionalStorage> GetTransactionalStorage(string sessionId, string name, CancellationToken token)
+		public async ValueTask<ITransactionalStorage> GetTransactionalStorage(string sessionId, string name, CancellationToken token)
 		{
 			if (string.IsNullOrEmpty(sessionId)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(sessionId));
 			if (string.IsNullOrEmpty(name)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(name));
@@ -33,7 +33,7 @@ namespace TSSArt.StateMachine
 			return streamStorage;
 		}
 
-		public Task RemoveTransactionalStorage(string sessionId, string name, CancellationToken token)
+		public ValueTask RemoveTransactionalStorage(string sessionId, string name, CancellationToken token)
 		{
 			if (string.IsNullOrEmpty(sessionId)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(sessionId));
 			if (string.IsNullOrEmpty(name)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(name));
@@ -50,10 +50,10 @@ namespace TSSArt.StateMachine
 				// ignored
 			}
 
-			return Task.CompletedTask;
+			return default;
 		}
 
-		public Task RemoveAllTransactionalStorage(string sessionId, CancellationToken token)
+		public ValueTask RemoveAllTransactionalStorage(string sessionId, CancellationToken token)
 		{
 			if (string.IsNullOrEmpty(sessionId)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(sessionId));
 
@@ -68,7 +68,7 @@ namespace TSSArt.StateMachine
 				// ignored
 			}
 
-			return Task.CompletedTask;
+			return default;
 		}
 
 		private static string[] GetInvalidCharReplacement()

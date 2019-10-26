@@ -6,7 +6,7 @@ namespace TSSArt.StateMachine
 {
 	public static class Converter
 	{
-		public static async Task<DataModelValue> GetData(string content, IObjectEvaluator contentExpressionEvaluator, IReadOnlyList<ILocationEvaluator> nameEvaluatorList,
+		public static async ValueTask<DataModelValue> GetData(string content, IObjectEvaluator contentExpressionEvaluator, IReadOnlyList<ILocationEvaluator> nameEvaluatorList,
 														 IReadOnlyList<DefaultParam> parameterList, IExecutionContext executionContext, CancellationToken token)
 		{
 			var attrCount = (nameEvaluatorList?.Count ?? 0) + (parameterList?.Count ?? 0);

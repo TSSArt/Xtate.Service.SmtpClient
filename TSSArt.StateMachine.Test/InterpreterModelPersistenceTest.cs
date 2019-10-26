@@ -61,7 +61,7 @@ namespace TSSArt.StateMachine.Test
 				restoredStateMachine = new StateMachineReader().Build(new Bucket(newStorage));
 			}
 
-			var newModel = _imBuilder.Build(restoredStateMachine, _dataModelHandler);
+			_imBuilder.Build(restoredStateMachine, _dataModelHandler);
 		}
 
 		[TestMethod]
@@ -91,7 +91,7 @@ namespace TSSArt.StateMachine.Test
 				restoredStateMachine = new StateMachineReader().Build(new Bucket(newStorage), model.EntityMap);
 			}
 
-			var restoredModel = _imBuilder.Build(restoredStateMachine, _dataModelHandler);
+			_imBuilder.Build(restoredStateMachine, _dataModelHandler);
 		}
 	}
 }

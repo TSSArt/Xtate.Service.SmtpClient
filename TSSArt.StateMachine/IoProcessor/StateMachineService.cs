@@ -41,22 +41,22 @@ namespace TSSArt.StateMachine
 		public string             SessionId { get; }
 		public StateMachineResult Result    { get; private set; }
 
-		public Task Send(IEvent @event, CancellationToken token) => _channel.Writer.WriteAsync(@event, token).AsTask();
+		public ValueTask Send(IEvent @event, CancellationToken token) => _channel.Writer.WriteAsync(@event, token);
 
-		public Task Destroy(CancellationToken token)
+		public ValueTask Destroy(CancellationToken token)
 		{
 			_channel.Writer.Complete();
 			_destroyTokenSource.Cancel();
-			return Task.CompletedTask;
+			return default;
 		}
 
-		public Task StartAsync(CancellationToken token)
+		public ValueTask StartAsync(CancellationToken token)
 		{
 			token.Register(() => _acceptedTcs.TrySetCanceled(token));
 
 			RunAsync();
 
-			return _acceptedTcs.Task;
+			return new ValueTask(_acceptedTcs.Task);
 		}
 
 		private async void RunAsync()
@@ -122,7 +122,7 @@ namespace TSSArt.StateMachine
 			throw new ApplicationException("InvokeId does not exist");
 		}
 
-		public Task ForwardEvent(string invokeId, IEvent @event, in CancellationToken token)
+		public ValueTask ForwardEvent(string invokeId, IEvent @event, in CancellationToken token)
 		{
 			if (!_serviceByInvokeId.TryGetValue(invokeId, out var service))
 			{
@@ -138,21 +138,28 @@ namespace TSSArt.StateMachine
 
 			_scheduledEvents.Add(scheduledEvent);
 
-			Task.Delay(delayMs, CancellationToken.None).ContinueWith(Fire, @event);
+			var _ = DelayedFire(delayMs, scheduledEvent);
 
 			CleanScheduledEvents();
 		}
 
-		private Task Fire(Task delayTask, object eventObj)
+		private async ValueTask DelayedFire(int delayMs, ScheduledEvent scheduledEvent)
 		{
-			var scheduledEvent = (ScheduledEvent) eventObj;
+			await Task.Delay(delayMs);
 
-			if (delayTask.IsCompletedSuccessfully && !scheduledEvent.IsDisposed)
+			if (!scheduledEvent.IsDisposed)
 			{
-				return _externalCommunication.SendEvent(SessionId, scheduledEvent.Event, scheduledEvent.Type, scheduledEvent.Target, delayMs: 0, CancellationToken.None);
-			}
+				try
+				{
+					DisposeEvent(scheduledEvent);
 
-			return Task.CompletedTask;
+					await _externalCommunication.SendEvent(SessionId, scheduledEvent.Event, scheduledEvent.Type, scheduledEvent.Target, delayMs: 0, CancellationToken.None);
+				}
+				catch
+				{
+					//TODO: send error.communication event into originator session
+				}
+			}
 		}
 
 		public void CancelEvent(string sendId)
@@ -168,26 +175,28 @@ namespace TSSArt.StateMachine
 			CleanScheduledEvents();
 		}
 
-		public Task ReturnDoneEvent(DataModelValue doneData, CancellationToken token)
+		public ValueTask ReturnDoneEvent(DataModelValue doneData, CancellationToken token)
 		{
-			var eventObject = new EventObject(EventType.External, sendId: null, name: "TBD", invokeId: "invokeid", origin: null, originType: null, doneData); //TODO: put correct parameters
+			//TODO: create correct done event
+			//TODO: put correct parameters
+			var eventObject = new EventObject(EventType.External, sendId: null, name: "TBD", invokeId: "invokeid", origin: null, originType: null, doneData); 
 
 			return _parentService.Send(eventObject, token);
 		}
 
 		private void CleanScheduledEvents()
 		{
-			while (_toDelete.TryDequeue(out var @event))
+			while (_toDelete.TryDequeue(out var scheduledEvent))
 			{
-				_scheduledEvents.Remove(@event);
+				_scheduledEvents.Remove(scheduledEvent);
 			}
 		}
 
-		private void DisposeEvent(ScheduledEvent @event)
+		private void DisposeEvent(ScheduledEvent scheduledEvent)
 		{
-			_toDelete.Enqueue(@event);
+			_toDelete.Enqueue(scheduledEvent);
 
-			@event.Dispose();
+			scheduledEvent.Dispose();
 		}
 	}
 }

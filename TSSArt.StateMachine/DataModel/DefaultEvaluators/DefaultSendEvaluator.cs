@@ -35,7 +35,7 @@ namespace TSSArt.StateMachine
 
 		public FormattableString EntityId => $"{Id}";
 
-		public virtual async Task Execute(IExecutionContext executionContext, CancellationToken token)
+		public virtual async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
 			var sendId = _send.Id ?? IdGenerator.NewSendId();
 			var name = EventExpressionEvaluator != null ? await EventExpressionEvaluator.EvaluateString(executionContext, token).ConfigureAwait(false) : _send.Event;

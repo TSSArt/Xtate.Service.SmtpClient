@@ -28,7 +28,7 @@ namespace TSSArt.StateMachine
 			return Configuration.Some(node => baseId.Equals(node.Id.Base<IIdentifier>()));
 		}
 
-		public Task Send(IEvent @event, Uri type, Uri target, int delayMs, CancellationToken token)
+		public ValueTask Send(IEvent @event, Uri type, Uri target, int delayMs, CancellationToken token)
 		{
 			if (EventTarget.IsInternalTarget(target))
 			{
@@ -49,15 +49,15 @@ namespace TSSArt.StateMachine
 
 				InternalQueue.Enqueue(@event);
 
-				return Task.CompletedTask;
+				return default;
 			}
 
 			return _externalCommunication.SendEvent(_sessionId, @event, type, target, delayMs, token);
 		}
 
-		public Task Cancel(string sendId, CancellationToken token) => _externalCommunication.CancelEvent(_sessionId, sendId, token);
+		public ValueTask Cancel(string sendId, CancellationToken token) => _externalCommunication.CancelEvent(_sessionId, sendId, token);
 
-		public Task Log(string label, object arguments, CancellationToken token)
+		public ValueTask Log(string label, object arguments, CancellationToken token)
 		{
 			try
 			{

@@ -9,16 +9,16 @@ namespace TSSArt.StateMachine
 	{
 		public static readonly ILogger Instance = new DefaultLogger();
 
-		public Task Error(ErrorType errorType, string sessionId, string stateMachineName, string sourceEntityId, Exception exception, CancellationToken token)
+		public ValueTask Error(ErrorType errorType, string sessionId, string stateMachineName, string sourceEntityId, Exception exception, CancellationToken token)
 		{
 			FormattableString formattableString = $"Type: [{errorType}]. Name: [{stateMachineName}]. SessionId: [{sessionId}]. SourceEntityId: [{sourceEntityId}]. Exception: {exception}";
 
 			Trace.TraceError(formattableString.Format, formattableString.GetArguments());
 
-			return Task.CompletedTask;
+			return default;
 		}
 
-		public Task Log(string sessionId, string stateMachineName, string label, object data, CancellationToken token)
+		public ValueTask Log(string sessionId, string stateMachineName, string label, object data, CancellationToken token)
 		{
 			FormattableString formattableString;
 
@@ -37,7 +37,7 @@ namespace TSSArt.StateMachine
 
 			Trace.TraceInformation(formattableString.Format, formattableString.GetArguments());
 
-			return Task.CompletedTask;
+			return default;
 		}
 	}
 }

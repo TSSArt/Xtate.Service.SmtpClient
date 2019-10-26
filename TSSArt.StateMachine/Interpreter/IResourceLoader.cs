@@ -6,6 +6,6 @@ namespace TSSArt.StateMachine
 {
 	public interface IResourceLoader
 	{
-		Task<Resource> Request(Uri uri, CancellationToken token);
+		ValueTask<Resource> Request(Uri uri, CancellationToken token);
 	}
 }
