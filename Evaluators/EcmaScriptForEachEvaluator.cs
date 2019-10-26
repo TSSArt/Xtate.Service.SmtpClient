@@ -7,7 +7,7 @@ namespace TSSArt.StateMachine.EcmaScript
 	{
 		public EcmaScriptForEachEvaluator(in ForEach forEach) : base(forEach) { }
 
-		public override async Task Execute(IExecutionContext executionContext, CancellationToken token)
+		public override async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
 			var engine = executionContext.Engine();
 

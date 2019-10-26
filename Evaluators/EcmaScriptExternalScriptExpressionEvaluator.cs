@@ -15,7 +15,7 @@ namespace TSSArt.StateMachine.EcmaScript
 
 		object IAncestorProvider.Ancestor => EcmaScriptHelper.GetAncestor(_externalScriptExpression);
 
-		public Task Execute(IExecutionContext executionContext, CancellationToken token)
+		public ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
 			if (_program == null)
 			{
@@ -23,7 +23,8 @@ namespace TSSArt.StateMachine.EcmaScript
 			}
 
 			executionContext.Engine().Exec(_program, startNewScope: true);
-			return Task.CompletedTask;
+
+			return default;
 		}
 
 		public void SetContent(string content)
