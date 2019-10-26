@@ -10,7 +10,7 @@ namespace TSSArt.StateMachine
 	{
 		public static readonly IResourceLoader Instance = new DefaultResourceLoader();
 
-		public async Task<Resource> Request(Uri uri, CancellationToken token)
+		public async ValueTask<Resource> Request(Uri uri, CancellationToken token)
 		{
 			using (var client = new HttpClient())
 			using (var responseMessage = await client.GetAsync(uri, token).ConfigureAwait(false))

@@ -20,7 +20,7 @@ namespace TSSArt.StateMachine
 		public string           SendId           => _cancel.SendId;
 		public IValueExpression SendIdExpression => _cancel.SendIdExpression;
 
-		public virtual async Task Execute(IExecutionContext executionContext, CancellationToken token)
+		public virtual async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
 			var sendId = SendIdExpressionEvaluator != null ? await SendIdExpressionEvaluator.EvaluateString(executionContext, token).ConfigureAwait(false) : SendId;
 

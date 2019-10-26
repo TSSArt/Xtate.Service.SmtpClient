@@ -5,7 +5,7 @@ namespace TSSArt.StateMachine
 {
 	public interface IService
 	{
-		Task Send(IEvent @event, CancellationToken token);
-		Task Destroy(CancellationToken token);
+		ValueTask Send(IEvent @event, CancellationToken token);
+		ValueTask Destroy(CancellationToken token);
 	}
 }

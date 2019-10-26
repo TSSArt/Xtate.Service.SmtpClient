@@ -36,7 +36,7 @@ namespace TSSArt.StateMachine
 
 		public void Add(ReadOnlySpan<byte> key, ReadOnlySpan<byte> value) => _inMemoryStorage.Add(key, value);
 
-		public async Task CheckPoint(int level, CancellationToken token)
+		public async ValueTask CheckPoint(int level, CancellationToken token)
 		{
 			if (level < 0) throw new ArgumentOutOfRangeException(nameof(level));
 
@@ -70,7 +70,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public async Task Shrink(CancellationToken token)
+		public async ValueTask Shrink(CancellationToken token)
 		{
 			if (_canShrink)
 			{
@@ -97,13 +97,13 @@ namespace TSSArt.StateMachine
 			return _disposeStream ? _stream.DisposeAsync() : new ValueTask();
 		}
 
-		public static async Task<StreamStorage> CreateAsync(Stream stream, bool disposeStream = true, CancellationToken token = default) =>
+		public static async ValueTask<StreamStorage> CreateAsync(Stream stream, bool disposeStream = true, CancellationToken token = default) =>
 				new StreamStorage(stream, disposeStream)
 				{
 						_inMemoryStorage = await ReadStream(stream, int.MaxValue, shrink: false, token).ConfigureAwait(false)
 				};
 
-		public static async Task<StreamStorage> CreateWithRollbackAsync(Stream stream, int rollbackLevel, bool disposeStream = true, CancellationToken token = default)
+		public static async ValueTask<StreamStorage> CreateWithRollbackAsync(Stream stream, int rollbackLevel, bool disposeStream = true, CancellationToken token = default)
 		{
 			if (rollbackLevel < 0) throw new ArgumentOutOfRangeException(nameof(rollbackLevel));
 
@@ -113,7 +113,7 @@ namespace TSSArt.StateMachine
 				   };
 		}
 
-		private static async Task<InMemoryStorage> ReadStream(Stream stream, int rollbackLevel, bool shrink, CancellationToken token)
+		private static async ValueTask<InMemoryStorage> ReadStream(Stream stream, int rollbackLevel, bool shrink, CancellationToken token)
 		{
 			var total = 0;
 			var end = 0;

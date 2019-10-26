@@ -6,18 +6,17 @@ namespace TSSArt.StateMachine
 {
 	public class NullStorageProvider : IStorageProvider, ITransactionalStorage
 	{
-		public static readonly  NullStorageProvider         Instance             = new NullStorageProvider();
-		private static readonly Task<ITransactionalStorage> TransactionalStorage = Task.FromResult<ITransactionalStorage>(Instance);
+		public static readonly NullStorageProvider Instance = new NullStorageProvider();
 
-		public Task<ITransactionalStorage> GetTransactionalStorage(string sessionId, string name, CancellationToken token) => TransactionalStorage;
+		public ValueTask<ITransactionalStorage> GetTransactionalStorage(string sessionId, string name, CancellationToken token) => new ValueTask<ITransactionalStorage>(Instance);
 
-		public Task RemoveTransactionalStorage(string sessionId, string name, CancellationToken token) => Task.CompletedTask;
+		public ValueTask RemoveTransactionalStorage(string sessionId, string name, CancellationToken token) => default;
 
-		public Task RemoveAllTransactionalStorage(string sessionId, CancellationToken token) => Task.CompletedTask;
+		public ValueTask RemoveAllTransactionalStorage(string sessionId, CancellationToken token) => default;
 
 		public void Add(ReadOnlySpan<byte> key, ReadOnlySpan<byte> value) { }
 
-		public Task CheckPoint(int level, CancellationToken token) => Task.CompletedTask;
+		public ValueTask CheckPoint(int level, CancellationToken token) => default;
 
 		public void Dispose() { }
 
@@ -25,6 +24,6 @@ namespace TSSArt.StateMachine
 
 		public ReadOnlyMemory<byte> Get(ReadOnlySpan<byte> key) => ReadOnlyMemory<byte>.Empty;
 
-		public Task Shrink(CancellationToken token) => Task.CompletedTask;
+		public ValueTask Shrink(CancellationToken token) => default;
 	}
 }

@@ -24,7 +24,7 @@ namespace TSSArt.StateMachine
 
 		public int DocumentId => _documentIdNode.Value;
 
-		public Task Execute(IExecutionContext executionContext, CancellationToken token) => _execEvaluator.Execute(executionContext, token);
+		public ValueTask Execute(IExecutionContext executionContext, CancellationToken token) => _execEvaluator.Execute(executionContext, token);
 
 		void IStoreSupport.Store(Bucket bucket) => Store(bucket);
 

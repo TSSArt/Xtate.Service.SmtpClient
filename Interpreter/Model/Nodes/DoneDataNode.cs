@@ -30,7 +30,7 @@ namespace TSSArt.StateMachine
 			bucket.AddEntityList(Key.Parameters, Parameters);
 		}
 
-		public Task<DataModelValue> Evaluate(IExecutionContext executionContext, CancellationToken token) =>
+		public ValueTask<DataModelValue> Evaluate(IExecutionContext executionContext, CancellationToken token) =>
 				Converter.GetData(_doneData.Content?.Value, _contentExpressionEvaluator, nameEvaluatorList: null, _parameterList, executionContext, token);
 	}
 }

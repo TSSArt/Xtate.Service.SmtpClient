@@ -24,7 +24,7 @@ namespace TSSArt.StateMachine
 		public IValueExpression    Expression    => _assign.Expression;
 		public string              InlineContent => _assign.InlineContent;
 
-		public virtual async Task Execute(IExecutionContext executionContext, CancellationToken token)
+		public virtual async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
 			if (ExpressionEvaluator != null)
 			{

@@ -12,11 +12,11 @@ namespace TSSArt.StateMachine
 
 		bool InState(IIdentifier id);
 
-		Task Cancel(string sendId, CancellationToken token);
+		ValueTask Cancel(string sendId, CancellationToken token);
 
-		Task Log(string label, object arguments, CancellationToken token);
+		ValueTask Log(string label, object arguments, CancellationToken token);
 
-		Task Send(IEvent @event, Uri type, Uri target, int delayMs, CancellationToken token);
+		ValueTask Send(IEvent @event, Uri type, Uri target, int delayMs, CancellationToken token);
 	}
 
 	public interface IContextItems

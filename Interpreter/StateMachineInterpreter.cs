@@ -69,7 +69,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public static Task<StateMachineResult> RunAsync(string sessionId, IStateMachine stateMachine, ChannelReader<IEvent> eventChannel,
+		public static ValueTask<StateMachineResult> RunAsync(string sessionId, IStateMachine stateMachine, ChannelReader<IEvent> eventChannel,
 														InterpreterOptions options = null, DataModelValue arguments = default,
 														CancellationToken destroyToken = default, CancellationToken suspendToken = default)
 		{
@@ -79,7 +79,7 @@ namespace TSSArt.StateMachine
 			return new StateMachineInterpreter(sessionId, eventChannel, options, destroyToken, suspendToken).Run(stateMachine, arguments);
 		}
 
-		private async Task<InterpreterModel> BuildInterpreterModel(IStateMachine stateMachine)
+		private async ValueTask<InterpreterModel> BuildInterpreterModel(IStateMachine stateMachine)
 		{
 			var interpreterModel = IsPersistingEnabled ? await TryRestoreInterpreterModel(stateMachine).ConfigureAwait(false) : null;
 
@@ -102,7 +102,7 @@ namespace TSSArt.StateMachine
 			return interpreterModel;
 		}
 
-		private async Task<InterpreterModel> TryRestoreInterpreterModel(IStateMachine stateMachine)
+		private async ValueTask<InterpreterModel> TryRestoreInterpreterModel(IStateMachine stateMachine)
 		{
 			var storage = await _storageProvider.GetTransactionalStorage(_sessionId, StateMachineDefinitionStorageName, _stopToken).ConfigureAwait(false);
 			await using (storage.ConfigureAwait(false))
@@ -142,7 +142,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private async Task SaveInterpreterModel(InterpreterModel interpreterModel)
+		private async ValueTask SaveInterpreterModel(InterpreterModel interpreterModel)
 		{
 			var storage = await _storageProvider.GetTransactionalStorage(_sessionId, StateMachineDefinitionStorageName, _stopToken).ConfigureAwait(false);
 			await using (storage.ConfigureAwait(false))
@@ -162,7 +162,7 @@ namespace TSSArt.StateMachine
 					bucket.Add(Key.StateMachineDefinition, span);
 				}
 
-				await storage.CheckPoint(level: 0, _stopToken).ConfigureAwait(false);
+				await storage.CheckPoint(level: 0, token: _stopToken).ConfigureAwait(false);
 			}
 		}
 
@@ -193,11 +193,11 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private Task DoOperation(StateBagKey key, Func<Task> func)
+		private ValueTask DoOperation(StateBagKey key, Func<ValueTask> func)
 		{
 			return IsPersistingEnabled ? DoOperationAsync() : func();
 
-			async Task DoOperationAsync()
+			async ValueTask DoOperationAsync()
 			{
 				var persistenceContext = _context.PersistenceContext;
 				if (persistenceContext.GetState((int) key) == 0)
@@ -209,11 +209,11 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private Task DoOperation<TArg>(StateBagKey key, Func<TArg, Task> func, TArg arg)
+		private ValueTask DoOperation<TArg>(StateBagKey key, Func<TArg, ValueTask> func, TArg arg)
 		{
 			return IsPersistingEnabled ? DoOperationAsync() : func(arg);
 
-			async Task DoOperationAsync()
+			async ValueTask DoOperationAsync()
 			{
 				var persistenceContext = _context.PersistenceContext;
 				if (persistenceContext.GetState((int) key) == 0)
@@ -225,11 +225,11 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private Task DoOperation<TArg>(StateBagKey key, IEntity entity, Func<TArg, Task> func, TArg arg)
+		private ValueTask DoOperation<TArg>(StateBagKey key, IEntity entity, Func<TArg, ValueTask> func, TArg arg)
 		{
 			return IsPersistingEnabled ? DoOperationAsync() : func(arg);
 
-			async Task DoOperationAsync()
+			async ValueTask DoOperationAsync()
 			{
 				var documentId = entity.As<IDocumentId>().DocumentId;
 
@@ -303,12 +303,12 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private Task NotifyAccepted() => _notifyStateChanged?.OnChanged(_sessionId, StateMachineInterpreterState.Accepted) ?? Task.CompletedTask;
-		private Task NotifyStarted()  => _notifyStateChanged?.OnChanged(_sessionId, StateMachineInterpreterState.Started) ?? Task.CompletedTask;
-		private Task NotifyExited()   => _notifyStateChanged?.OnChanged(_sessionId, StateMachineInterpreterState.Exited) ?? Task.CompletedTask;
-		private Task NotifyWaiting()  => _notifyStateChanged?.OnChanged(_sessionId, StateMachineInterpreterState.Waiting) ?? Task.CompletedTask;
+		private ValueTask NotifyAccepted() => _notifyStateChanged?.OnChanged(_sessionId, StateMachineInterpreterState.Accepted) ?? default;
+		private ValueTask NotifyStarted()  => _notifyStateChanged?.OnChanged(_sessionId, StateMachineInterpreterState.Started) ?? default;
+		private ValueTask NotifyExited()   => _notifyStateChanged?.OnChanged(_sessionId, StateMachineInterpreterState.Exited) ?? default;
+		private ValueTask NotifyWaiting()  => _notifyStateChanged?.OnChanged(_sessionId, StateMachineInterpreterState.Waiting) ?? default;
 
-		private async Task<StateMachineResult> Run(IStateMachine stateMachine, DataModelValue arguments)
+		private async ValueTask<StateMachineResult> Run(IStateMachine stateMachine, DataModelValue arguments)
 		{
 			var exitStatus = StateMachineExitStatus.Completed;
 
@@ -376,7 +376,7 @@ namespace TSSArt.StateMachine
 			return exitStatus != StateMachineExitStatus.Unknown;
 		}
 
-		private Task PersistExternalEvents()
+		private ValueTask PersistExternalEvents()
 		{
 			var externalBufferedQueue = _context.ExternalBufferedQueue;
 
@@ -388,13 +388,13 @@ namespace TSSArt.StateMachine
 			return CheckPoint(PersistenceLevel.Event);
 		}
 
-		private async Task CleanupPersistedData()
+		private async ValueTask CleanupPersistedData()
 		{
 			await _storageProvider.RemoveTransactionalStorage(_sessionId, StateStorageName, _stopToken).ConfigureAwait(false);
 			await _storageProvider.RemoveTransactionalStorage(_sessionId, StateMachineDefinitionStorageName, _stopToken).ConfigureAwait(false);
 		}
 
-		private async Task InitializeAllDataModels()
+		private async ValueTask InitializeAllDataModels()
 		{
 			if (_model.Root.Binding == BindingType.Early)
 			{
@@ -405,9 +405,9 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private Task InitialEnterStates() => EnterStates(new[] { _model.Root.Initial.Transition });
+		private ValueTask InitialEnterStates() => EnterStates(new[] { _model.Root.Initial.Transition });
 
-		private async Task MainEventLoop()
+		private async ValueTask MainEventLoop()
 		{
 			var exit = false;
 
@@ -426,7 +426,7 @@ namespace TSSArt.StateMachine
 			Complete(StateBagKey.Running);
 		}
 
-		private async Task InternalQueueProcessing()
+		private async ValueTask InternalQueueProcessing()
 		{
 			var liveLockDetector = LiveLockDetector.Create();
 			var exit = false;
@@ -461,7 +461,7 @@ namespace TSSArt.StateMachine
 			return SelectTransitions(internalEvent);
 		}
 
-		private async Task<bool> InternalQueueProcessMessage()
+		private async ValueTask<bool> InternalQueueProcessMessage()
 		{
 			var exit = false;
 
@@ -488,7 +488,7 @@ namespace TSSArt.StateMachine
 			return exit;
 		}
 
-		private async Task<bool> InternalQueueProcessingIteration()
+		private async ValueTask<bool> InternalQueueProcessingIteration()
 		{
 			var exit = false;
 			var transitions = await Capture(StateBagKey.EventlessTransitions, SelectEventlessTransitions).ConfigureAwait(false);
@@ -509,7 +509,7 @@ namespace TSSArt.StateMachine
 			return exit;
 		}
 
-		private async Task<bool> ExternalQueueProcessing()
+		private async ValueTask<bool> ExternalQueueProcessing()
 		{
 			var exit = false;
 
@@ -572,7 +572,7 @@ namespace TSSArt.StateMachine
 			return exit;
 		}
 
-		private async Task CheckPoint(PersistenceLevel level)
+		private async ValueTask CheckPoint(PersistenceLevel level)
 		{
 			if (!IsPersistingEnabled || _persistenceLevel < level)
 			{
@@ -609,7 +609,7 @@ namespace TSSArt.StateMachine
 			return await _eventChannel.ReadAsync(_anyToken).ConfigureAwait(false);
 		}
 
-		private async Task ExitInterpreter()
+		private async ValueTask ExitInterpreter()
 		{
 			var statesToExit = _context.Configuration.ToSortedList(StateEntityNode.ExitOrder);
 
@@ -650,7 +650,7 @@ namespace TSSArt.StateMachine
 
 			return RemoveConflictingTransitions(transitions);
 
-			async Task FindTransitionForState(StateEntityNode state)
+			async ValueTask FindTransitionForState(StateEntityNode state)
 			{
 				foreach (var transition in state.Transitions)
 				{
@@ -682,7 +682,7 @@ namespace TSSArt.StateMachine
 
 			bool EventNameMatch(IEventDescriptor eventDescriptor) => eventDescriptor.IsEventMatch(@event);
 
-			async Task<bool> ConditionMatch(TransitionNode transition)
+			async ValueTask<bool> ConditionMatch(TransitionNode transition)
 			{
 				var condition = transition.ConditionEvaluator;
 
@@ -745,7 +745,7 @@ namespace TSSArt.StateMachine
 			return filteredTransitions;
 		}
 
-		private async Task Microstep(IReadOnlyList<TransitionNode> enabledTransitions)
+		private async ValueTask Microstep(IReadOnlyList<TransitionNode> enabledTransitions)
 		{
 			await DoOperation(StateBagKey.ExitStates, ExitStates, enabledTransitions).ConfigureAwait(false);
 
@@ -754,7 +754,7 @@ namespace TSSArt.StateMachine
 			await DoOperation(StateBagKey.EnterStates, EnterStates, enabledTransitions).ConfigureAwait(false);
 		}
 
-		private async Task ExitStates(IReadOnlyList<TransitionNode> enabledTransitions)
+		private async ValueTask ExitStates(IReadOnlyList<TransitionNode> enabledTransitions)
 		{
 			var statesToExit = ComputeExitSet(enabledTransitions);
 
@@ -796,7 +796,7 @@ namespace TSSArt.StateMachine
 			Complete(StateBagKey.OnExit);
 		}
 
-		private async Task EnterStates(IReadOnlyList<TransitionNode> enabledTransitions)
+		private async ValueTask EnterStates(IReadOnlyList<TransitionNode> enabledTransitions)
 		{
 			var statesToEnter = new OrderedSet<StateEntityNode>();
 			var statesForDefaultEntry = new OrderedSet<CompoundNode>();
@@ -864,7 +864,7 @@ namespace TSSArt.StateMachine
 			Complete(StateBagKey.DefaultHistoryContent);
 		}
 
-		private async Task<DataModelValue> EvaluateDoneData(DoneDataNode doneData)
+		private async ValueTask<DataModelValue> EvaluateDoneData(DoneDataNode doneData)
 		{
 			try
 			{
@@ -1102,7 +1102,7 @@ namespace TSSArt.StateMachine
 			return targets;
 		}
 
-		private async Task ExecuteTransitionContent(IReadOnlyList<TransitionNode> transitions)
+		private async ValueTask ExecuteTransitionContent(IReadOnlyList<TransitionNode> transitions)
 		{
 			foreach (var transition in transitions)
 			{
@@ -1112,7 +1112,7 @@ namespace TSSArt.StateMachine
 			Complete(StateBagKey.RunExecutableEntity);
 		}
 
-		private async Task RunExecutableEntity(IReadOnlyList<IExecEvaluator> action)
+		private async ValueTask RunExecutableEntity(IReadOnlyList<IExecEvaluator> action)
 		{
 			foreach (var executableEntity in action)
 			{
@@ -1147,7 +1147,7 @@ namespace TSSArt.StateMachine
 
 		private bool IsError(Exception ex) => !IsOperationCancelled(ex);
 
-		private async Task Error(object source, Exception exception, bool isPlatform = false, bool logLoggerErrors = true)
+		private async ValueTask Error(object source, Exception exception, bool isPlatform = false, bool logLoggerErrors = true)
 		{
 			var sourceEntityId = (source as IEntity).As<IDebugEntityId>()?.EntityId?.ToString(CultureInfo.InvariantCulture);
 
@@ -1200,7 +1200,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private async Task ExecuteGlobalScript()
+		private async ValueTask ExecuteGlobalScript()
 		{
 			if (_model.Root.ScriptEvaluator != null)
 			{
@@ -1215,7 +1215,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private async Task ReturnDoneEvent(FinalNode final)
+		private async ValueTask ReturnDoneEvent(FinalNode final)
 		{
 			try
 			{
@@ -1232,11 +1232,11 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private Task ForwardEvent(string invokeId, IEvent @event) => _externalCommunication.ForwardEvent(_sessionId, @event, invokeId, _stopToken);
+		private ValueTask ForwardEvent(string invokeId, IEvent @event) => _externalCommunication.ForwardEvent(_sessionId, @event, invokeId, _stopToken);
 
-		private Task ApplyFinalize(InvokeNode invoke) => RunExecutableEntity(invoke.Finalize.ActionEvaluators);
+		private ValueTask ApplyFinalize(InvokeNode invoke) => RunExecutableEntity(invoke.Finalize.ActionEvaluators);
 
-		private async Task Invoke(InvokeNode invoke)
+		private async ValueTask Invoke(InvokeNode invoke)
 		{
 			try
 			{
@@ -1260,7 +1260,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private async Task InitializeRootDataModel(DataModelValue arguments)
+		private async ValueTask InitializeRootDataModel(DataModelValue arguments)
 		{
 			var rootDataModel = _model.Root.DataModel;
 
@@ -1283,7 +1283,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private async Task InitializeDataModel(DataModelNode dataModel)
+		private async ValueTask InitializeDataModel(DataModelNode dataModel)
 		{
 			foreach (var node in dataModel.Data)
 			{
@@ -1291,7 +1291,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private async Task InitializeData(DataNode data, DataModelValue overrideValue = default)
+		private async ValueTask InitializeData(DataNode data, DataModelValue overrideValue = default)
 		{
 			try
 			{
@@ -1324,7 +1324,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private async Task<IStateMachineContext> CreateContext(DataModelValue arguments)
+		private async ValueTask<IStateMachineContext> CreateContext(DataModelValue arguments)
 		{
 			IStateMachineContext context;
 			if (IsPersistingEnabled)

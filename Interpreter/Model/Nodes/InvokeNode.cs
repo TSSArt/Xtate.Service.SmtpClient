@@ -72,7 +72,7 @@ namespace TSSArt.StateMachine
 
 		public void SetStateId(IIdentifier stateId) => _stateId = stateId.Base<IIdentifier>();
 
-		public async Task Start(string sessionId, ExternalCommunicationWrapper externalCommunication, IExecutionContext executionContext, CancellationToken token)
+		public async ValueTask Start(string sessionId, ExternalCommunicationWrapper externalCommunication, IExecutionContext executionContext, CancellationToken token)
 		{
 			InvokeId = _invoke.Id ?? IdGenerator.NewInvokeId(_stateId.ToString());
 
@@ -86,7 +86,7 @@ namespace TSSArt.StateMachine
 			_idLocationEvaluator?.SetValue(new DefaultObject(InvokeId), executionContext);
 		}
 
-		public async Task Cancel(string sessionId, ExternalCommunicationWrapper externalCommunication, IExecutionContext executionContext, CancellationToken token)
+		public async ValueTask Cancel(string sessionId, ExternalCommunicationWrapper externalCommunication, IExecutionContext executionContext, CancellationToken token)
 		{
 			var tmpInvokeId = InvokeId;
 			InvokeId = null;

@@ -36,7 +36,7 @@ namespace TSSArt.StateMachine
 			return false;
 		}
 
-		public async Task StartInvoke(string sessionId, string invokeId, Uri type, Uri source, DataModelValue data, CancellationToken token)
+		public async ValueTask StartInvoke(string sessionId, string invokeId, Uri type, Uri source, DataModelValue data, CancellationToken token)
 		{
 			try
 			{
@@ -49,7 +49,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public async Task CancelInvoke(string sessionId, string invokeId, CancellationToken token)
+		public async ValueTask CancelInvoke(string sessionId, string invokeId, CancellationToken token)
 		{
 			try
 			{
@@ -62,7 +62,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public async Task SendEvent(string sessionId, IEvent @event, Uri type, Uri target, int delayMs, CancellationToken token)
+		public async ValueTask SendEvent(string sessionId, IEvent @event, Uri type, Uri target, int delayMs, CancellationToken token)
 		{
 			try
 			{
@@ -76,7 +76,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public async Task ForwardEvent(string sessionId, IEvent @event, string invokeId, CancellationToken token)
+		public async ValueTask ForwardEvent(string sessionId, IEvent @event, string invokeId, CancellationToken token)
 		{
 			try
 			{
@@ -89,7 +89,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public async Task CancelEvent(string sessionId, string sendId, CancellationToken token)
+		public async ValueTask CancelEvent(string sessionId, string sendId, CancellationToken token)
 		{
 			try
 			{
@@ -103,7 +103,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public async Task ReturnDoneEvent(string sessionId, DataModelValue doneData, CancellationToken token)
+		public async ValueTask ReturnDoneEvent(string sessionId, DataModelValue doneData, CancellationToken token)
 		{
 			try
 			{

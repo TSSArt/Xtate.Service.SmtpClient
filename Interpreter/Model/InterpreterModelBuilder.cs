@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -68,7 +67,7 @@ namespace TSSArt.StateMachine
 			return new InterpreterModel((StateMachineNode) stateMachine, _counter, _entityMap, _dataModelNodeList);
 		}
 
-		public async Task<InterpreterModel> Build(IStateMachine stateMachine, IDataModelHandler dataModelHandler, IResourceLoader resourceLoader, CancellationToken token)
+		public async ValueTask<InterpreterModel> Build(IStateMachine stateMachine, IDataModelHandler dataModelHandler, IResourceLoader resourceLoader, CancellationToken token)
 		{
 			if (stateMachine == null) throw new ArgumentNullException(nameof(stateMachine));
 			if (resourceLoader == null) throw new ArgumentNullException(nameof(resourceLoader));
@@ -101,13 +100,12 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private async Task SetExternalResources(IResourceLoader resourceLoader, CancellationToken token)
+		private async ValueTask SetExternalResources(IResourceLoader resourceLoader, CancellationToken token)
 		{
-			var resources = await Task.WhenAll(_externalScriptList.Select(i => resourceLoader.Request(i.Uri, token))).ConfigureAwait(false);
-
-			for (var i = 0; i < resources.Length; i ++)
+			foreach (var (uri, consumer) in _externalScriptList)
 			{
-				_externalScriptList[i].Consumer.SetContent(resources[i].Content);
+				var resource = await resourceLoader.Request(uri, token).ConfigureAwait(false);
+				consumer.SetContent(resource.Content);
 			}
 		}
 

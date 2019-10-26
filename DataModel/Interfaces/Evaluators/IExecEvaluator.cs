@@ -5,6 +5,6 @@ namespace TSSArt.StateMachine
 {
 	public interface IExecEvaluator
 	{
-		Task Execute(IExecutionContext executionContext, CancellationToken token);
+		ValueTask Execute(IExecutionContext executionContext, CancellationToken token);
 	}
 }

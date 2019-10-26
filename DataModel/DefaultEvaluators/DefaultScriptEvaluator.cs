@@ -19,7 +19,7 @@ namespace TSSArt.StateMachine
 
 		object IAncestorProvider.Ancestor => _script.Ancestor;
 
-		public virtual Task Execute(IExecutionContext executionContext, CancellationToken token) => (ContentEvaluator ?? SourceEvaluator).Execute(executionContext, token);
+		public virtual ValueTask Execute(IExecutionContext executionContext, CancellationToken token) => (ContentEvaluator ?? SourceEvaluator).Execute(executionContext, token);
 
 		public IScriptExpression Content => _script.Content;
 

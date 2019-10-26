@@ -17,7 +17,7 @@ namespace TSSArt.StateMachine
 
 		object IAncestorProvider.Ancestor => _log.Ancestor;
 
-		public virtual async Task Execute(IExecutionContext executionContext, CancellationToken token)
+		public virtual async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
 			var arguments = ExpressionEvaluator != null ? (await ExpressionEvaluator.EvaluateObject(executionContext, token).ConfigureAwait(false)).ToObject() : null;
 

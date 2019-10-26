@@ -6,7 +6,7 @@ namespace TSSArt.StateMachine
 {
 	public interface ITransactionalStorage : IStorage, IAsyncDisposable
 	{
-		Task CheckPoint(int level, CancellationToken token);
-		Task Shrink(CancellationToken token);
+		ValueTask CheckPoint(int level, CancellationToken token);
+		ValueTask Shrink(CancellationToken token);
 	}
 }
