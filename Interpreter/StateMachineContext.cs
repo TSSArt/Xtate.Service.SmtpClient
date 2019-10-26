@@ -70,6 +70,11 @@ namespace TSSArt.StateMachine
 			}
 		}
 
+		public ValueTask StartInvoke(string invokeId, Uri type, Uri source, DataModelValue data, CancellationToken token) =>
+				_externalCommunication.StartInvoke(_sessionId, invokeId, type, source, data, token);
+
+		public ValueTask CancelInvoke(string invokeId, CancellationToken token) => _externalCommunication.CancelInvoke(_sessionId, invokeId, token);
+
 		public IContextItems RuntimeItems { get; } = new ContextItems();
 
 		public DataModelObject DataModel { get; }

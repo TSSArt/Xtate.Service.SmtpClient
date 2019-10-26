@@ -17,6 +17,10 @@ namespace TSSArt.StateMachine
 		ValueTask Log(string label, object arguments, CancellationToken token);
 
 		ValueTask Send(IEvent @event, Uri type, Uri target, int delayMs, CancellationToken token);
+
+		ValueTask StartInvoke(string invokeId, Uri type, Uri source, DataModelValue data, CancellationToken token);
+
+		ValueTask CancelInvoke(string invokeId, CancellationToken token);
 	}
 
 	public interface IContextItems
