@@ -1240,7 +1240,7 @@ namespace TSSArt.StateMachine
 		{
 			try
 			{
-				await invoke.Start(_sessionId, _externalCommunication, _context.ExecutionContext, _stopToken).ConfigureAwait(false);
+				await invoke.Start(_context.ExecutionContext, _stopToken).ConfigureAwait(false);
 			}
 			catch (Exception ex) when (IsError(ex))
 			{
@@ -1252,7 +1252,7 @@ namespace TSSArt.StateMachine
 		{
 			try
 			{
-				await invoke.Cancel(_sessionId, _externalCommunication, _context.ExecutionContext, _stopToken).ConfigureAwait(false);
+				await invoke.Cancel(_context.ExecutionContext, _stopToken).ConfigureAwait(false);
 			}
 			catch (Exception ex) when (IsError(ex))
 			{

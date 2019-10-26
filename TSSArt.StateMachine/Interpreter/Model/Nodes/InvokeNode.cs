@@ -7,15 +7,11 @@ namespace TSSArt.StateMachine
 {
 	public class InvokeNode : IInvoke, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
-		private readonly IObjectEvaluator                  _contentExpressionEvaluator;
-		private readonly LinkedListNode<int>               _documentIdNode;
-		private readonly ILocationEvaluator                _idLocationEvaluator;
-		private readonly Invoke                            _invoke;
-		private readonly IReadOnlyList<ILocationEvaluator> _nameEvaluatorList;
-		private readonly IReadOnlyList<DefaultParam>       _parameterList;
-		private readonly IStringEvaluator                  _sourceExpressionEvaluator;
-		private readonly IStringEvaluator                  _typeExpressionEvaluator;
-		private          IIdentifier                       _stateId;
+		private readonly ICancelInvokeEvaluator _cancelInvokeEvaluator;
+		private readonly LinkedListNode<int>    _documentIdNode;
+		private readonly Invoke                 _invoke;
+		private readonly IStartInvokeEvaluator  _startInvokeEvaluator;
+		private          string                 _stateId;
 
 		public InvokeNode(LinkedListNode<int> documentIdNode, in Invoke invoke)
 		{
@@ -23,12 +19,8 @@ namespace TSSArt.StateMachine
 			_invoke = invoke;
 
 			Finalize = invoke.Finalize.As<FinalizeNode>();
-			_typeExpressionEvaluator = invoke.TypeExpression.As<IStringEvaluator>();
-			_sourceExpressionEvaluator = invoke.SourceExpression.As<IStringEvaluator>();
-			_contentExpressionEvaluator = invoke.Content?.Expression.As<IObjectEvaluator>();
-			_idLocationEvaluator = invoke.IdLocation.As<ILocationEvaluator>();
-			_nameEvaluatorList = invoke.NameList.AsListOf<ILocationEvaluator>();
-			_parameterList = invoke.Parameters.AsListOf<DefaultParam>();
+			_startInvokeEvaluator = invoke.As<IStartInvokeEvaluator>();
+			_cancelInvokeEvaluator = invoke.As<ICancelInvokeEvaluator>();
 		}
 
 		public string InvokeId { get; private set; }
@@ -70,30 +62,19 @@ namespace TSSArt.StateMachine
 			bucket.AddEntity(Key.Content, Content);
 		}
 
-		public void SetStateId(IIdentifier stateId) => _stateId = stateId.Base<IIdentifier>();
+		public void SetStateId(IIdentifier stateId) => _stateId = stateId.Base<IIdentifier>().ToString();
 
-		public async ValueTask Start(string sessionId, ExternalCommunicationWrapper externalCommunication, IExecutionContext executionContext, CancellationToken token)
+		public async ValueTask Start(IExecutionContext executionContext, CancellationToken token)
 		{
-			InvokeId = _invoke.Id ?? IdGenerator.NewInvokeId(_stateId.ToString());
-
-			var type = _typeExpressionEvaluator != null ? ToUri(await _typeExpressionEvaluator.EvaluateString(executionContext, token).ConfigureAwait(false)) : _invoke.Type;
-			var source = _sourceExpressionEvaluator != null ? ToUri(await _sourceExpressionEvaluator.EvaluateString(executionContext, token).ConfigureAwait(false)) : _invoke.Source;
-
-			var data = await Converter.GetData(_invoke.Content?.Value, _contentExpressionEvaluator, _nameEvaluatorList, _parameterList, executionContext, token).ConfigureAwait(false);
-
-			await externalCommunication.StartInvoke(sessionId, InvokeId, type, source, data, token);
-
-			_idLocationEvaluator?.SetValue(new DefaultObject(InvokeId), executionContext);
+			InvokeId = await _startInvokeEvaluator.Start(_stateId, executionContext, token).ConfigureAwait(false);
 		}
 
-		public async ValueTask Cancel(string sessionId, ExternalCommunicationWrapper externalCommunication, IExecutionContext executionContext, CancellationToken token)
+		public async ValueTask Cancel(IExecutionContext executionContext, CancellationToken token)
 		{
 			var tmpInvokeId = InvokeId;
 			InvokeId = null;
 
-			await externalCommunication.CancelInvoke(sessionId, tmpInvokeId, token);
+			await _cancelInvokeEvaluator.Cancel(tmpInvokeId, executionContext, token);
 		}
-
-		private static Uri ToUri(string uri) => new Uri(uri, UriKind.RelativeOrAbsolute);
 	}
 }
