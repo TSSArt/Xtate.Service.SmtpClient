@@ -5,29 +5,30 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public class ExternalCommunicationWrapper
+	public readonly struct ExternalCommunicationWrapper
 	{
-		private const string SendIdKey = "SendId";
+		private const string ExternalCommunicationKey = "ExternalCommunication";
+		private const string SendIdKey                = "SendId";
 
-		private readonly IExternalCommunication _inner;
+		private readonly IExternalCommunication _externalCommunication;
 
-		public ExternalCommunicationWrapper(IExternalCommunication inner) => _inner = inner;
+		public ExternalCommunicationWrapper(IExternalCommunication externalCommunication) => _externalCommunication = externalCommunication;
 
-		public IReadOnlyList<IEventProcessor> GetIoProcessors(string sessionId) => _inner.GetIoProcessors(sessionId);
+		public IReadOnlyList<IEventProcessor> GetIoProcessors(string sessionId) => _externalCommunication.GetIoProcessors(sessionId);
 
-		public bool IsCommunicationError(Exception exception, out string sendId)
+		public readonly bool IsCommunicationError(Exception exception, out string sendId)
 		{
 			for (; exception != null; exception = exception.InnerException)
 			{
-				if (!exception.Data.Contains(typeof(ExternalCommunicationWrapper)))
+				if (!exception.Data.Contains(ExternalCommunicationKey))
 				{
 					continue;
 				}
 
-				if (exception.Data[typeof(ExternalCommunicationWrapper)] is ExternalCommunicationWrapper wrapper)
+				if (exception.Data[ExternalCommunicationKey] is IExternalCommunication inst)
 				{
 					sendId = exception.Data[SendIdKey] as string;
-					return ReferenceEquals(wrapper, this);
+					return ReferenceEquals(inst, _externalCommunication);
 				}
 			}
 
@@ -40,11 +41,11 @@ namespace TSSArt.StateMachine
 		{
 			try
 			{
-				await _inner.StartInvoke(sessionId, invokeId, type, source, data, token);
+				await _externalCommunication.StartInvoke(sessionId, invokeId, type, source, data, token);
 			}
 			catch (Exception ex)
 			{
-				ex.Data.Add(typeof(ExternalCommunicationWrapper), this);
+				ex.Data.Add(ExternalCommunicationKey, _externalCommunication);
 				throw;
 			}
 		}
@@ -53,11 +54,11 @@ namespace TSSArt.StateMachine
 		{
 			try
 			{
-				await _inner.CancelInvoke(sessionId, invokeId, token);
+				await _externalCommunication.CancelInvoke(sessionId, invokeId, token);
 			}
 			catch (Exception ex)
 			{
-				ex.Data.Add(typeof(ExternalCommunicationWrapper), this);
+				ex.Data.Add(ExternalCommunicationKey, _externalCommunication);
 				throw;
 			}
 		}
@@ -66,11 +67,11 @@ namespace TSSArt.StateMachine
 		{
 			try
 			{
-				await _inner.SendEvent(sessionId, @event, type, target, delayMs, token);
+				await _externalCommunication.SendEvent(sessionId, @event, type, target, delayMs, token);
 			}
 			catch (Exception ex)
 			{
-				ex.Data.Add(typeof(ExternalCommunicationWrapper), this);
+				ex.Data.Add(ExternalCommunicationKey, _externalCommunication);
 				ex.Data.Add(SendIdKey, @event.SendId);
 				throw;
 			}
@@ -80,11 +81,11 @@ namespace TSSArt.StateMachine
 		{
 			try
 			{
-				await _inner.ForwardEvent(sessionId, @event, invokeId, token);
+				await _externalCommunication.ForwardEvent(sessionId, @event, invokeId, token);
 			}
 			catch (Exception ex)
 			{
-				ex.Data.Add(typeof(ExternalCommunicationWrapper), this);
+				ex.Data.Add(ExternalCommunicationKey, _externalCommunication);
 				throw;
 			}
 		}
@@ -93,11 +94,11 @@ namespace TSSArt.StateMachine
 		{
 			try
 			{
-				await _inner.CancelEvent(sessionId, sendId, token);
+				await _externalCommunication.CancelEvent(sessionId, sendId, token);
 			}
 			catch (Exception ex)
 			{
-				ex.Data.Add(typeof(ExternalCommunicationWrapper), this);
+				ex.Data.Add(ExternalCommunicationKey, _externalCommunication);
 				ex.Data.Add(SendIdKey, sendId);
 				throw;
 			}
@@ -107,11 +108,11 @@ namespace TSSArt.StateMachine
 		{
 			try
 			{
-				await _inner.ReturnDoneEvent(sessionId, doneData, token);
+				await _externalCommunication.ReturnDoneEvent(sessionId, doneData, token);
 			}
 			catch (Exception ex)
 			{
-				ex.Data.Add(typeof(ExternalCommunicationWrapper), this);
+				ex.Data.Add(ExternalCommunicationKey, _externalCommunication);
 				throw;
 			}
 		}
