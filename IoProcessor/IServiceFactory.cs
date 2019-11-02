@@ -6,8 +6,9 @@ namespace TSSArt.StateMachine
 {
 	public interface IServiceFactory
 	{
-		Uri            TypeId      { get; }
-		Uri            AliasTypeId { get; }
-		ValueTask<IService> StartService(IService parentService, Uri source, DataModelValue data, CancellationToken token);
+		Uri TypeId      { get; }
+		Uri AliasTypeId { get; }
+
+		ValueTask<IService> StartService(Uri source, DataModelValue data, CancellationToken token);
 	}
 }

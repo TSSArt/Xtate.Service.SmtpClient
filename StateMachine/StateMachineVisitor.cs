@@ -259,7 +259,7 @@ namespace TSSArt.StateMachine
 			if (entity == null) throw new ArgumentNullException(nameof(entity));
 		}
 
-		protected virtual void Visit(ref IEvent entity)
+		protected virtual void Visit(ref IOutgoingEvent entity)
 		{
 			if (entity == null) throw new ArgumentNullException(nameof(entity));
 		}
@@ -1120,7 +1120,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref IEvent entity)
+		private void VisitWrapper(ref IOutgoingEvent entity)
 		{
 			if (entity == null) return;
 			Enter(entity);

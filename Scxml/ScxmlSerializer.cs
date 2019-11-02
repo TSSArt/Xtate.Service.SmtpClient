@@ -15,7 +15,7 @@ namespace TSSArt.StateMachine
 			Visit(ref stateMachine);
 		}
 
-		private string ToString(IEvent @event)
+		private string ToString(IOutgoingEvent @event)
 		{
 			return string.Join(separator: ".", @event.NameParts.Select(id => id.ToString()));
 		}

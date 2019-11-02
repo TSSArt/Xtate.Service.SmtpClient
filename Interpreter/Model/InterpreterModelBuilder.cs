@@ -434,7 +434,7 @@ namespace TSSArt.StateMachine
 			RegisterEntity(entity);
 		}
 
-		protected override void Visit(ref IEvent entity)
+		protected override void Visit(ref IOutgoingEvent entity)
 		{
 			NewDocumentId();
 

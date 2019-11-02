@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Dynamic;
 using System.Security;
+using System.Text;
 
 namespace TSSArt.StateMachine
 {
-	public class DataModelObject : DynamicObject
+	public class DataModelObject : DynamicObject, IFormattable
 	{
 		public delegate void ChangedHandler(ChangedAction action, string property, DataModelValue value);
 
@@ -44,6 +45,27 @@ namespace TSSArt.StateMachine
 
 				SetInternal(property, value);
 			}
+		}
+
+		public string ToString(string format, IFormatProvider formatProvider)
+		{
+			if (format == "JSON")
+			{
+				var sb = new StringBuilder();
+
+				foreach (var pair in _properties)
+				{
+					sb.Append(sb.Length == 0 ? "{ " : ", ");
+
+					sb.Append(pair.Key).Append(" : ").Append(pair.Value.ToString(format: "JSON", formatProvider));
+				}
+
+				sb.Append(sb.Length == 0 ? "{}" : " }");
+
+				return sb.ToString();
+			}
+
+			return base.ToString();
 		}
 
 		public event ChangedHandler Changed;
@@ -111,6 +133,22 @@ namespace TSSArt.StateMachine
 			this[binder.Name] = DataModelValue.FromObject(value);
 
 			return true;
+		}
+
+		public override IEnumerable<string> GetDynamicMemberNames() => Properties;
+
+		public string ToString(string format) => ToString(format, formatProvider: null);
+
+		public DataModelObject DeepClone(bool isReadOnly)
+		{
+			var clone = new DataModelObject(isReadOnly);
+
+			foreach (var pair in _properties)
+			{
+				clone._properties[pair.Key] = pair.Value.DeepClone(isReadOnly);
+			}
+
+			return clone;
 		}
 	}
 }

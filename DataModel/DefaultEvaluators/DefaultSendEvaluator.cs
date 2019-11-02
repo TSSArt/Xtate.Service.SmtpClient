@@ -44,10 +44,16 @@ namespace TSSArt.StateMachine
 			var target = TargetExpressionEvaluator != null ? ToUri(await TargetExpressionEvaluator.EvaluateString(executionContext, token).ConfigureAwait(false)) : _send.Target;
 			var delayMs = DelayExpressionEvaluator != null ? await DelayExpressionEvaluator.EvaluateInteger(executionContext, token).ConfigureAwait(false) : _send.DelayMs ?? 0;
 
-			var eventType = EventTarget.IsInternalTarget(target) ? EventType.Internal : EventType.External;
-			var eventObject = new EventObject(eventType, sendId, name, data);
+			var eventObject = new Event(name)
+							  {
+									  SendId = sendId,
+									  Type = type,
+									  Target = target,
+									  DelayMs = delayMs,
+									  Data = data
+							  };
 
-			await executionContext.Send(eventObject, type, target, delayMs, token).ConfigureAwait(false);
+			await executionContext.Send(eventObject, token).ConfigureAwait(false);
 
 			IdLocationEvaluator?.SetValue(new DefaultObject(sendId), executionContext);
 		}

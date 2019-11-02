@@ -17,8 +17,8 @@ namespace TSSArt.StateMachine
 		private readonly ITransactionalStorage                           _storage;
 
 		public StateMachinePersistedContext(string stateMachineName, string sessionId, DataModelValue arguments, ITransactionalStorage storage,
-											Dictionary<int, IEntity> entityMap, ILogger interpreterLogger, ExternalCommunicationWrapper externalCommunication)
-				: base(stateMachineName, sessionId, arguments, interpreterLogger, externalCommunication)
+											Dictionary<int, IEntity> entityMap, LoggerWrapper logger, ExternalCommunicationWrapper externalCommunication)
+				: base(stateMachineName, sessionId, arguments, logger, externalCommunication)
 		{
 			_storage = storage;
 			var bucket = new Bucket(storage);
@@ -73,11 +73,11 @@ namespace TSSArt.StateMachine
 
 		public override async ValueTask DisposeAsync()
 		{
-			await _storage.DisposeAsync();
+			await _storage.DisposeAsync().ConfigureAwait(false);
 
 			DisposeControllers();
 
-			await base.DisposeAsync();
+			await base.DisposeAsync().ConfigureAwait(false);
 		}
 
 		private enum StorageSection

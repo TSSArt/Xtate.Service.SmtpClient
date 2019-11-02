@@ -7,28 +7,31 @@ namespace TSSArt.StateMachine
 {
 	public readonly struct ExternalCommunicationWrapper
 	{
-		private const string ExternalCommunicationKey = "ExternalCommunication";
-		private const string SendIdKey                = "SendId";
+		private const string ErrorTypeKey   = "ErrorType";
+		private const string ErrorTypeValue = "Communication";
+		private const string SessionIdKey   = "SessionId";
+		private const string SendIdKey      = "SendId";
 
 		private readonly IExternalCommunication _externalCommunication;
+		private readonly string                 _sessionId;
 
-		public ExternalCommunicationWrapper(IExternalCommunication externalCommunication) => _externalCommunication = externalCommunication;
+		public ExternalCommunicationWrapper(IExternalCommunication externalCommunication, string sessionId)
+		{
+			_externalCommunication = externalCommunication;
+			_sessionId = sessionId;
+		}
 
-		public IReadOnlyList<IEventProcessor> GetIoProcessors(string sessionId) => _externalCommunication.GetIoProcessors(sessionId);
+		public IReadOnlyList<IEventProcessor> GetIoProcessors() => _externalCommunication?.GetIoProcessors() ?? Array.Empty<IEventProcessor>();
 
-		public readonly bool IsCommunicationError(Exception exception, out string sendId)
+		public bool IsCommunicationError(Exception exception, out string sendId)
 		{
 			for (; exception != null; exception = exception.InnerException)
 			{
-				if (!exception.Data.Contains(ExternalCommunicationKey))
+				if (Equals(exception.Data[ErrorTypeKey], ErrorTypeValue) && Equals(exception.Data[SessionIdKey], _sessionId))
 				{
-					continue;
-				}
+					sendId = (string) exception.Data[SendIdKey];
 
-				if (exception.Data[ExternalCommunicationKey] is IExternalCommunication inst)
-				{
-					sendId = exception.Data[SendIdKey] as string;
-					return ReferenceEquals(inst, _externalCommunication);
+					return true;
 				}
 			}
 
@@ -37,83 +40,97 @@ namespace TSSArt.StateMachine
 			return false;
 		}
 
-		public async ValueTask StartInvoke(string sessionId, string invokeId, Uri type, Uri source, DataModelValue data, CancellationToken token)
+		private void MarkAsCommunicationError(Exception exception, string sendId = null)
+		{
+			exception.Data[ErrorTypeKey] = ErrorTypeValue;
+			exception.Data[SessionIdKey] = _sessionId;
+
+			if (sendId != null)
+			{
+				exception.Data[SendIdKey] = sendId;
+			}
+		}
+
+		public async ValueTask StartInvoke(string invokeId, Uri type, Uri source, DataModelValue data, CancellationToken token)
 		{
 			try
 			{
-				await _externalCommunication.StartInvoke(sessionId, invokeId, type, source, data, token);
+				ThrowIfNoExternalCommunication();
+
+				await _externalCommunication.StartInvoke(invokeId, type, source, data, token).ConfigureAwait(false);
 			}
 			catch (Exception ex)
 			{
-				ex.Data.Add(ExternalCommunicationKey, _externalCommunication);
+				MarkAsCommunicationError(ex);
 				throw;
 			}
 		}
 
-		public async ValueTask CancelInvoke(string sessionId, string invokeId, CancellationToken token)
+		public async ValueTask CancelInvoke(string invokeId, CancellationToken token)
 		{
 			try
 			{
-				await _externalCommunication.CancelInvoke(sessionId, invokeId, token);
+				ThrowIfNoExternalCommunication();
+
+				await _externalCommunication.CancelInvoke(invokeId, token).ConfigureAwait(false);
 			}
 			catch (Exception ex)
 			{
-				ex.Data.Add(ExternalCommunicationKey, _externalCommunication);
+				MarkAsCommunicationError(ex);
 				throw;
 			}
 		}
 
-		public async ValueTask SendEvent(string sessionId, IEvent @event, Uri type, Uri target, int delayMs, CancellationToken token)
+		public async ValueTask<SendStatus> SendEvent(IOutgoingEvent @event, CancellationToken token)
 		{
 			try
 			{
-				await _externalCommunication.SendEvent(sessionId, @event, type, target, delayMs, token);
+				ThrowIfNoExternalCommunication();
+
+				return await _externalCommunication.TrySendEvent(@event, token).ConfigureAwait(false);
 			}
 			catch (Exception ex)
 			{
-				ex.Data.Add(ExternalCommunicationKey, _externalCommunication);
-				ex.Data.Add(SendIdKey, @event.SendId);
+				MarkAsCommunicationError(ex, @event.SendId);
 				throw;
 			}
 		}
 
-		public async ValueTask ForwardEvent(string sessionId, IEvent @event, string invokeId, CancellationToken token)
+		public async ValueTask ForwardEvent(IEvent @event, string invokeId, CancellationToken token)
 		{
 			try
 			{
-				await _externalCommunication.ForwardEvent(sessionId, @event, invokeId, token);
+				ThrowIfNoExternalCommunication();
+
+				await _externalCommunication.ForwardEvent(@event, invokeId, token).ConfigureAwait(false);
 			}
 			catch (Exception ex)
 			{
-				ex.Data.Add(ExternalCommunicationKey, _externalCommunication);
+				MarkAsCommunicationError(ex);
 				throw;
 			}
 		}
 
-		public async ValueTask CancelEvent(string sessionId, string sendId, CancellationToken token)
+		public async ValueTask CancelEvent(string sendId, CancellationToken token)
 		{
 			try
 			{
-				await _externalCommunication.CancelEvent(sessionId, sendId, token);
+				ThrowIfNoExternalCommunication();
+
+				await _externalCommunication.CancelEvent(sendId, token).ConfigureAwait(false);
 			}
 			catch (Exception ex)
 			{
-				ex.Data.Add(ExternalCommunicationKey, _externalCommunication);
-				ex.Data.Add(SendIdKey, sendId);
+				MarkAsCommunicationError(ex, sendId);
 				throw;
 			}
 		}
 
-		public async ValueTask ReturnDoneEvent(string sessionId, DataModelValue doneData, CancellationToken token)
+		private void ThrowIfNoExternalCommunication()
 		{
-			try
+			if (_externalCommunication == null)
 			{
-				await _externalCommunication.ReturnDoneEvent(sessionId, doneData, token);
-			}
-			catch (Exception ex)
-			{
-				ex.Data.Add(ExternalCommunicationKey, _externalCommunication);
-				throw;
+				throw new NotSupportedException("External communication does not configured for state machine interpreter");
 			}
 		}
 	}
