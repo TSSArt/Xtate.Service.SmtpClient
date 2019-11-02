@@ -7,16 +7,16 @@ namespace TSSArt.StateMachine
 {
 	internal class StateMachineContext : IStateMachineContext, IExecutionContext
 	{
+		private static readonly Uri InternalTarget = new Uri(uriString: "_internal", UriKind.Relative);
+
 		private readonly ExternalCommunicationWrapper _externalCommunication;
-		private readonly ILogger                      _interpreterLogger;
-		private readonly string                       _sessionId;
+		private readonly LoggerWrapper                _logger;
 		private readonly string                       _stateMachineName;
 
-		public StateMachineContext(string stateMachineName, string sessionId, DataModelValue arguments, ILogger interpreterLogger, ExternalCommunicationWrapper externalCommunication)
+		public StateMachineContext(string stateMachineName, string sessionId, DataModelValue arguments, LoggerWrapper logger, ExternalCommunicationWrapper externalCommunication)
 		{
 			_stateMachineName = stateMachineName;
-			_sessionId = sessionId;
-			_interpreterLogger = interpreterLogger;
+			_logger = logger;
 			_externalCommunication = externalCommunication;
 
 			DataModel = CreateDataModel(stateMachineName, sessionId, arguments);
@@ -28,52 +28,21 @@ namespace TSSArt.StateMachine
 			return Configuration.Some(node => baseId.Equals(node.Id.Base<IIdentifier>()));
 		}
 
-		public ValueTask Send(IEvent @event, Uri type, Uri target, int delayMs, CancellationToken token)
+		public async ValueTask Send(IOutgoingEvent @event, CancellationToken token)
 		{
-			if (EventTarget.IsInternalTarget(target))
+			if (IsInternalEvent(@event) || await _externalCommunication.SendEvent(@event, token).ConfigureAwait(false) == SendStatus.ToInternalQueue)
 			{
-				if (type != null)
-				{
-					throw new ApplicationException("Type should not be mentioned for internal event");
-				}
-
-				if (delayMs != 0)
-				{
-					throw new ApplicationException("Delay can't be used for internal events");
-				}
-
-				if (@event.Type != EventType.Internal || @event.InvokeId != null || @event.Origin != null || @event.OriginType != null)
-				{
-					throw new ApplicationException("Incorrect internal event structure");
-				}
-
-				InternalQueue.Enqueue(@event);
-
-				return default;
-			}
-
-			return _externalCommunication.SendEvent(_sessionId, @event, type, target, delayMs, token);
-		}
-
-		public ValueTask Cancel(string sendId, CancellationToken token) => _externalCommunication.CancelEvent(_sessionId, sendId, token);
-
-		public ValueTask Log(string label, object arguments, CancellationToken token)
-		{
-			try
-			{
-				return _interpreterLogger.Log(_sessionId, _stateMachineName, label, arguments, token);
-			}
-			catch (Exception ex)
-			{
-				ex.Data.Add(typeof(ErrorType), ErrorType.Platform);
-				throw;
+				InternalQueue.Enqueue(new EventObject(EventType.Internal, @event));
 			}
 		}
 
-		public ValueTask StartInvoke(string invokeId, Uri type, Uri source, DataModelValue data, CancellationToken token) =>
-				_externalCommunication.StartInvoke(_sessionId, invokeId, type, source, data, token);
+		public ValueTask Cancel(string sendId, CancellationToken token) => _externalCommunication.CancelEvent(sendId, token);
 
-		public ValueTask CancelInvoke(string invokeId, CancellationToken token) => _externalCommunication.CancelInvoke(_sessionId, invokeId, token);
+		public ValueTask Log(string label, DataModelValue arguments, CancellationToken token) => _logger.Log(_stateMachineName, label, arguments, token);
+
+		public ValueTask StartInvoke(string invokeId, Uri type, Uri source, DataModelValue data, CancellationToken token) => _externalCommunication.StartInvoke(invokeId, type, source, data, token);
+
+		public ValueTask CancelInvoke(string invokeId, CancellationToken token) => _externalCommunication.CancelInvoke(invokeId, token);
 
 		public IContextItems RuntimeItems { get; } = new ContextItems();
 
@@ -101,6 +70,8 @@ namespace TSSArt.StateMachine
 
 		public virtual IPersistenceContext PersistenceContext => throw new NotSupportedException();
 
+		private static bool IsInternalEvent(IOutgoingEvent @event) => @event.Target == InternalTarget && @event.Type == null;
+
 		private DataModelObject CreateDataModel(string stateMachineName, string sessionId, DataModelValue arguments)
 		{
 			var platform = new DataModelObject
@@ -112,9 +83,9 @@ namespace TSSArt.StateMachine
 			platform.Freeze();
 
 			var ioProcessors = new DataModelObject();
-			foreach (var ioProcessor in _externalCommunication.GetIoProcessors(sessionId))
+			foreach (var ioProcessor in _externalCommunication.GetIoProcessors())
 			{
-				var ioProcessorObject = new DataModelObject { ["location"] = new DataModelValue(ioProcessor.GetLocation(sessionId).ToString(), isReadOnly: true) };
+				var ioProcessorObject = new DataModelObject { ["location"] = new DataModelValue(ioProcessor.GetOrigin(sessionId).ToString(), isReadOnly: true) };
 				ioProcessorObject.Freeze();
 				ioProcessors[ioProcessor.Id.ToString()] = new DataModelValue(ioProcessorObject, isReadOnly: true);
 			}

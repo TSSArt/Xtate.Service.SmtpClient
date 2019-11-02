@@ -14,32 +14,36 @@ namespace TSSArt.StateMachine
 		private readonly string _extension;
 		private readonly string _path;
 
-		public FileStorageProvider(string path, string extension = null)
+		public FileStorageProvider(string path, string sessionId, string extension = null)
 		{
-			_path = path ?? throw new ArgumentNullException(nameof(path));
+			if (path == null) throw new ArgumentNullException(nameof(path));
+			if (string.IsNullOrEmpty(sessionId)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(sessionId));
+
+			_path = Path.Combine(_path, Escape(sessionId));
 			_extension = extension;
 		}
 
-		public async ValueTask<ITransactionalStorage> GetTransactionalStorage(string sessionId, string name, CancellationToken token)
+		public async ValueTask<ITransactionalStorage> GetTransactionalStorage(string name, CancellationToken token)
 		{
-			if (string.IsNullOrEmpty(sessionId)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(sessionId));
 			if (string.IsNullOrEmpty(name)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(name));
 
-			var dir = Path.Combine(_path, Escape(sessionId));
-			var path = Path.Combine(dir, Escape(name) + _extension);
+			if (!Directory.Exists(_path))
+			{
+				Directory.CreateDirectory(_path);
+			}
+
+			var path = Path.Combine(_path, Escape(name) + _extension);
 			var fileStream = new FileStream(path, FileMode.Create, FileAccess.ReadWrite, FileShare.None, bufferSize: 4096, FileOptions.Asynchronous);
-			var streamStorage = await StreamStorage.CreateAsync(fileStream, disposeStream: true, token);
+			var streamStorage = await StreamStorage.CreateAsync(fileStream, disposeStream: true, token).ConfigureAwait(false);
 
 			return streamStorage;
 		}
 
-		public ValueTask RemoveTransactionalStorage(string sessionId, string name, CancellationToken token)
+		public ValueTask RemoveTransactionalStorage(string name, CancellationToken token)
 		{
-			if (string.IsNullOrEmpty(sessionId)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(sessionId));
 			if (string.IsNullOrEmpty(name)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(name));
 
-			var dir = Path.Combine(_path, Escape(sessionId));
-			var path = Path.Combine(dir, Escape(name) + _extension);
+			var path = Path.Combine(_path, Escape(name) + _extension);
 
 			try
 			{
@@ -53,15 +57,11 @@ namespace TSSArt.StateMachine
 			return default;
 		}
 
-		public ValueTask RemoveAllTransactionalStorage(string sessionId, CancellationToken token)
+		public ValueTask RemoveAllTransactionalStorage(CancellationToken token)
 		{
-			if (string.IsNullOrEmpty(sessionId)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(sessionId));
-
-			var path = Path.Combine(_path, Escape(sessionId));
-
 			try
 			{
-				Directory.Delete(path, recursive: true);
+				Directory.Delete(_path, recursive: true);
 			}
 			catch
 			{

@@ -21,7 +21,7 @@ namespace TSSArt.StateMachine
 		{
 			if (_task != null)
 			{
-				await _task(executionContext, token);
+				await _task(executionContext, token).ConfigureAwait(false);
 			}
 			else
 			{

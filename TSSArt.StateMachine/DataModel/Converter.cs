@@ -7,7 +7,7 @@ namespace TSSArt.StateMachine
 	public static class Converter
 	{
 		public static async ValueTask<DataModelValue> GetData(string content, IObjectEvaluator contentExpressionEvaluator, IReadOnlyList<ILocationEvaluator> nameEvaluatorList,
-														 IReadOnlyList<DefaultParam> parameterList, IExecutionContext executionContext, CancellationToken token)
+															  IReadOnlyList<DefaultParam> parameterList, IExecutionContext executionContext, CancellationToken token)
 		{
 			var attrCount = (nameEvaluatorList?.Count ?? 0) + (parameterList?.Count ?? 0);
 
@@ -15,12 +15,12 @@ namespace TSSArt.StateMachine
 			{
 				if (contentExpressionEvaluator == null)
 				{
-					return new DataModelValue(content);
+					return new DataModelValue(content, isReadOnly: true);
 				}
 
 				var obj = await contentExpressionEvaluator.EvaluateObject(executionContext, token).ConfigureAwait(false);
 
-				return DataModelValue.FromObject(obj.ToObject());
+				return DataModelValue.FromObject(obj.ToObject()).DeepClone(true);
 			}
 
 			var attributes = new DataModelObject();
@@ -56,7 +56,7 @@ namespace TSSArt.StateMachine
 				}
 			}
 
-			return new DataModelValue(attributes);
+			return new DataModelValue(attributes).DeepClone(true);
 		}
 	}
 }

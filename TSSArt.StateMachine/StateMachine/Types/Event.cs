@@ -3,36 +3,42 @@ using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
-	public sealed class Event : IEvent
+	public struct Event : IOutgoingEvent, IAncestorProvider
 	{
-		private static readonly char[] Dot = { '.' };
+		private static readonly Uri    InternalTarget = new Uri(uriString: "_internal", UriKind.Relative);
+		private static readonly char[] Dot            = { '.' };
 
-		private readonly IReadOnlyList<IIdentifier> _parts;
-		private readonly string                     _val;
+		public DataModelValue             Data;
+		public int                        DelayMs;
+		public IReadOnlyList<IIdentifier> NameParts;
+		public string                     SendId;
+		public Uri                        Target;
+		public Uri                        Type;
 
-		private Event(string val)
+		public Event(string val) : this()
 		{
-			_val = val ?? throw new ArgumentNullException(nameof(val));
+			if (string.IsNullOrEmpty(val)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(val));
 
-			if (val == string.Empty)
-			{
-				throw new ArgumentException(message: "Event cannot be empty", nameof(val));
-			}
-
-			_parts = IdentifierList.Create(val.Split(Dot, StringSplitOptions.None), p => (Identifier) p);
+			NameParts = IdentifierList.Create(val.Split(Dot, StringSplitOptions.None), p => (Identifier) p);
+			Target = InternalTarget;
 		}
 
-		IReadOnlyList<IIdentifier> IEvent.NameParts => _parts;
+		DataModelValue IOutgoingEvent.Data => Data;
 
-		DataModelValue IEvent.Data       => DataModelValue.Undefined();
-		string IEvent.        InvokeId   => null;
-		string IEvent.        SendId     => null;
-		Uri IEvent.           Origin     => null;
-		Uri IEvent.           OriginType => null;
-		EventType IEvent.     Type       => EventType.Internal;
+		int IOutgoingEvent.DelayMs => DelayMs;
+
+		IReadOnlyList<IIdentifier> IOutgoingEvent.NameParts => NameParts;
+
+		string IOutgoingEvent.SendId => SendId;
+
+		Uri IOutgoingEvent.Target => Target;
+
+		Uri IOutgoingEvent.Type => Type;
 
 		public static explicit operator Event(string val) => new Event(val);
 
-		public override string ToString() => _val;
+		internal object Ancestor;
+
+		object IAncestorProvider.Ancestor => Ancestor;
 	}
 }

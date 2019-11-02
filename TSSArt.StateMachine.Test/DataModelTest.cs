@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Security;
@@ -54,10 +55,10 @@ namespace TSSArt.StateMachine.Test
 			channel.Writer.Complete();
 			_eventChannel = channel.Reader;
 
-			_options = new InterpreterOptions();
+			_options = new InterpreterOptions { DataModelHandlerFactories = new List<IDataModelHandlerFactory>() };
 			_logger = new Mock<ILogger>();
-			_logger.Setup(e => e.Log(It.IsNotNull<string>(), "MyName", It.IsAny<string>(), It.IsAny<object>(), It.IsAny<CancellationToken>()))
-				   .Callback((string sessionid, string name, string lbl, object prm, CancellationToken _) => Console.WriteLine(lbl + ":" + prm));
+			_logger.Setup(e => e.Log("MyName", It.IsAny<string>(), It.IsAny<DataModelValue>(), It.IsAny<CancellationToken>()))
+				   .Callback((string name, string lbl, object prm, CancellationToken _) => Console.WriteLine(lbl + ":" + prm));
 			_options.DataModelHandlerFactories.Add(EcmaScriptDataModelHandler.Factory);
 			_options.Logger = _logger.Object;
 		}
@@ -67,7 +68,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(NoNameOnEntry, innerXml: "<log label='output'/>");
 
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), null, "output", null, default), Times.Once);
+			_logger.Verify(l => l.Log(null, "output", default, default), Times.Once);
 		}
 
 		[TestMethod]
@@ -75,7 +76,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(NoNameOnEntry, innerXml: "<log expr=\"'output'\"/>");
 
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), null, null, "output", default), Times.Once);
+			_logger.Verify(l => l.Log(null, null, new DataModelValue("output", false), default), Times.Once);
 		}
 
 		[TestMethod]
@@ -83,7 +84,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(NoNameOnEntry, innerXml: "<log expr='_sessionid'/>");
 
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), null, null, It.IsNotNull<string>(), default), Times.Once);
+			_logger.Verify(l => l.Log(null, null, It.Is<DataModelValue>(v => v.AsString() != null), default), Times.Once);
 		}
 
 		[TestMethod]
@@ -91,7 +92,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(WithNameOnEntry, innerXml: "<log expr='_name'/>");
 
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), "MyName", null, "MyName", default), Times.Once);
+			_logger.Verify(l => l.Log("MyName", null, new DataModelValue("MyName", false), default), Times.Once);
 		}
 
 		[TestMethod]
@@ -99,7 +100,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(NoNameOnEntry, innerXml: "<log expr='_name'/>");
 
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), null, null, null, default), Times.Once);
+			_logger.Verify(l => l.Log(null, null, DataModelValue.Null(false), default), Times.Once);
 		}
 
 		[TestMethod]
@@ -107,7 +108,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(NoNameOnEntry, innerXml: "<log expr='_not_existed'/>");
 
-			_logger.Verify(l => l.Error(ErrorType.Execution, It.IsNotNull<string>(), null, "(#7)", It.IsAny<Exception>(), It.IsAny<CancellationToken>()), Times.Once);
+			_logger.Verify(l => l.Error(ErrorType.Execution, null, "(#7)", It.IsAny<Exception>(), It.IsAny<CancellationToken>()), Times.Once);
 			_logger.VerifyNoOtherCalls();
 		}
 
@@ -116,8 +117,8 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(WithNameOnEntry, innerXml: "<log expr='_name'/><log expr='_not_existed'/><log expr='_name'/>");
 
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), "MyName", null, "MyName", default), Times.Once);
-			_logger.Verify(l => l.Error(ErrorType.Execution, It.IsNotNull<string>(), "MyName", "(#9)", It.IsNotNull<Exception>(), default), Times.Once);
+			_logger.Verify(l => l.Log("MyName", null, new DataModelValue("MyName", false), default), Times.Once);
+			_logger.Verify(l => l.Error(ErrorType.Execution, "MyName", "(#9)", It.IsNotNull<Exception>(), default), Times.Once);
 			_logger.VerifyNoOtherCalls();
 		}
 
@@ -128,7 +129,7 @@ namespace TSSArt.StateMachine.Test
 
 			var version = typeof(StateMachineInterpreter).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), "MyName", null, version, default), Times.Once);
+			_logger.Verify(l => l.Log("MyName", null, new DataModelValue(version, false), default), Times.Once);
 			_logger.VerifyNoOtherCalls();
 		}
 
@@ -137,7 +138,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(WithNameOnEntry, innerXml: "<log expr='_x.interpreter.name'/>");
 
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), "MyName", null, "TSSArt.StateMachine.StateMachineInterpreter", default), Times.Once);
+			_logger.Verify(l => l.Log("MyName", null, new DataModelValue("TSSArt.StateMachine.StateMachineInterpreter", false), default), Times.Once);
 			_logger.VerifyNoOtherCalls();
 		}
 
@@ -146,7 +147,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(WithNameOnEntry, innerXml: "<log expr='_x.datamodel.name'/>");
 
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), "MyName", null, "TSSArt.StateMachine.EcmaScript.EcmaScriptDataModelHandler", default), Times.Once);
+			_logger.Verify(l => l.Log("MyName", null, new DataModelValue("TSSArt.StateMachine.EcmaScript.EcmaScriptDataModelHandler", false), default), Times.Once);
 			_logger.VerifyNoOtherCalls();
 		}
 
@@ -155,7 +156,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(WithNameOnEntry, innerXml: "<log expr='_x.datamodel.assembly'/>");
 
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), "MyName", null, "TSSArt.StateMachine.EcmaScript", default), Times.Once);
+			_logger.Verify(l => l.Log("MyName", null, new DataModelValue("TSSArt.StateMachine.EcmaScript", false), default), Times.Once);
 			_logger.VerifyNoOtherCalls();
 		}
 
@@ -164,7 +165,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(WithNameOnEntry, innerXml: "<log expr='_x.datamodel.version'/>");
 
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), "MyName", null, "1.0.0", default), Times.Once);
+			_logger.Verify(l => l.Log("MyName", null, new DataModelValue("1.0.0", false), default), Times.Once);
 			_logger.VerifyNoOtherCalls();
 		}
 
@@ -173,7 +174,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(WithNameOnEntry, innerXml: "<log expr='_x.datamodel.vars.JintVersion'/>");
 
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), "MyName", null, "2.11.58", default), Times.Once);
+			_logger.Verify(l => l.Log("MyName", null, new DataModelValue("2.11.58", false), default), Times.Once);
 			_logger.VerifyNoOtherCalls();
 		}
 
@@ -182,7 +183,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(WithNameOnEntry, innerXml: "<script>my='1'+'a';</script><log expr='my'/>");
 
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), "MyName", null, "1a", default), Times.Once);
+			_logger.Verify(l => l.Log("MyName", null, new DataModelValue("1a", false), default), Times.Once);
 			_logger.VerifyNoOtherCalls();
 		}
 
@@ -191,7 +192,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(WithNameOnEntry, innerXml: "<assign location='x' expr='\"Hello World\"'/><log expr='x'/>");
 
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), "MyName", null, "Hello World", default), Times.Once);
+			_logger.Verify(l => l.Log("MyName", null, new DataModelValue("Hello World", false), default), Times.Once);
 			_logger.VerifyNoOtherCalls();
 		}
 
@@ -200,7 +201,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(WithNameOnEntry, innerXml: "<script>my=[]; my[3]={};</script><assign location='my[3].yy' expr=\"'Hello World'\"/><log expr='my[3].yy'/>");
 
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), "MyName", null, "Hello World", default), Times.Once);
+			_logger.Verify(l => l.Log("MyName", null, new DataModelValue("Hello World", false), default), Times.Once);
 			_logger.VerifyNoOtherCalls();
 		}
 
@@ -209,7 +210,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(WithNameOnEntry, innerXml: "<assign location='_name1' expr=\"'Hello World'\"/><log expr='_name1'/>");
 
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), "MyName", null, "Hello World", default), Times.Once);
+			_logger.Verify(l => l.Log("MyName", null, new DataModelValue("Hello World", false), default), Times.Once);
 			_logger.VerifyNoOtherCalls();
 		}
 
@@ -218,7 +219,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(WithNameOnEntry, innerXml: "<assign location='_name' expr=\"'Hello World'\"/>");
 
-			_logger.Verify(l => l.Error(ErrorType.Execution, It.IsNotNull<string>(), "MyName", "(#7)", It.IsNotNull<SecurityException>(), default), Times.Once);
+			_logger.Verify(l => l.Error(ErrorType.Execution, "MyName", "(#7)", It.IsNotNull<SecurityException>(), default), Times.Once);
 			_logger.VerifyNoOtherCalls();
 		}
 
@@ -227,7 +228,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(WithNameOnEntry, innerXml: "<if cond='1==1'><log expr=\"'Hello World'\"/></if>");
 
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), "MyName", null, "Hello World", default), Times.Once);
+			_logger.Verify(l => l.Log("MyName", null, new DataModelValue("Hello World", false), default), Times.Once);
 			_logger.VerifyNoOtherCalls();
 		}
 
@@ -244,7 +245,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(WithNameOnEntry, innerXml: "<if cond='true'><log expr=\"'Hello World'\"/><else/><log expr=\"'Bye World'\"/></if>");
 
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), "MyName", null, "Hello World", default), Times.Once);
+			_logger.Verify(l => l.Log("MyName", null, new DataModelValue("Hello World", false), default), Times.Once);
 			_logger.VerifyNoOtherCalls();
 		}
 
@@ -253,7 +254,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(WithNameOnEntry, innerXml: "<if cond='false'><log expr=\"'Hello World'\"/><else/><log expr=\"'Bye World'\"/></if>");
 
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), "MyName", null, "Bye World", default), Times.Once);
+			_logger.Verify(l => l.Log("MyName", null, new DataModelValue("Bye World", false), default), Times.Once);
 			_logger.VerifyNoOtherCalls();
 		}
 
@@ -262,7 +263,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(WithNameOnEntry, innerXml: "<if cond='false'><log expr=\"'Hello World'\"/><elseif cond='true'/><log expr=\"'Maybe World'\"/><else/><log expr=\"'Bye World'\"/></if>");
 
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), "MyName", null, "Maybe World", default), Times.Once);
+			_logger.Verify(l => l.Log("MyName", null, new DataModelValue("Maybe World", false), default), Times.Once);
 			_logger.VerifyNoOtherCalls();
 		}
 
@@ -272,9 +273,9 @@ namespace TSSArt.StateMachine.Test
 			await RunStateMachine(WithNameOnEntry, "<script>my=[]; my[0]='aaa'; my[1]='bbb'</script><foreach array='my' item='itm'>"
 												   + "<log expr=\"itm\"/></foreach><log expr='typeof(itm)'/>");
 
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), "MyName", null, "aaa", default), Times.Once);
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), "MyName", null, "bbb", default), Times.Once);
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), "MyName", null, "undefined", default), Times.Once);
+			_logger.Verify(l => l.Log("MyName", null, new DataModelValue("aaa", false), default), Times.Once);
+			_logger.Verify(l => l.Log("MyName", null, new DataModelValue("bbb", false), default), Times.Once);
+			_logger.Verify(l => l.Log("MyName", null, new DataModelValue("undefined", false), default), Times.Once);
 			_logger.VerifyNoOtherCalls();
 		}
 
@@ -284,9 +285,9 @@ namespace TSSArt.StateMachine.Test
 			await RunStateMachine(WithNameOnEntry, "<script>my=[]; my[0]='aaa'; my[1]='bbb'</script><foreach array='my' item='itm' index='idx'>"
 												   + "<log expr=\"idx + '-' + itm\"/></foreach><log expr='typeof(itm)'/><log expr='typeof(idx)'/>");
 
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), "MyName", null, "0-aaa", default), Times.Once);
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), "MyName", null, "1-bbb", default), Times.Once);
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), "MyName", null, "undefined", default), Times.Exactly(2));
+			_logger.Verify(l => l.Log("MyName", null, new DataModelValue("0-aaa", false), default), Times.Once);
+			_logger.Verify(l => l.Log("MyName", null, new DataModelValue("1-bbb", false), default), Times.Once);
+			_logger.Verify(l => l.Log("MyName", null, new DataModelValue("undefined", false), default), Times.Exactly(2));
 			_logger.VerifyNoOtherCalls();
 		}
 
@@ -295,7 +296,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(NoneDataModel, innerXml: "<state id='s1'><transition cond='In(s1)' target='s2'/></state><state id='s2'><onentry><log label='Hello'/></onentry></state>");
 
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), null, "Hello", null, default), Times.Once);
+			_logger.Verify(l => l.Log(null, "Hello", default, default), Times.Once);
 			_logger.VerifyNoOtherCalls();
 		}
 
@@ -312,7 +313,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(EcmaScriptDataModel, innerXml: "<state id='s1'><transition cond=\"In('s1')\" target='s2'/></state><state id='s2'><onentry><log label='Hello'/></onentry></state>");
 
-			_logger.Verify(l => l.Log(It.IsNotNull<string>(), null, "Hello", null, default), Times.Once);
+			_logger.Verify(l => l.Log(null, "Hello", default, default), Times.Once);
 			_logger.VerifyNoOtherCalls();
 		}
 

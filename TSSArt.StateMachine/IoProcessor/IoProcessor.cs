@@ -1,72 +1,127 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public class IoProcessor : IExternalCommunication, IEventProcessor, IServiceFactory, INotifyStateChanged
+	using InvokedServiceDictionary = ConcurrentDictionary<(string SessionId, string InvokeId), IService>;
+
+	public class IoProcessor : IEventProcessor, IServiceFactory
 	{
 		private static readonly Uri BaseUri                   = new Uri("scxml://local/");
 		private static readonly Uri EventProcessorId          = new Uri("http://www.w3.org/TR/scxml/#SCXMLEventProcessor");
 		private static readonly Uri EventProcessorAliasId     = new Uri(uriString: "scxml", UriKind.Relative);
 		private static readonly Uri ServiceFactoryTypeId      = new Uri("http://www.w3.org/TR/scxml/");
 		private static readonly Uri ServiceFactoryAliasTypeId = new Uri(uriString: "scxml", UriKind.Relative);
+		private static readonly Uri InternalTarget            = new Uri(uriString: "#_internal", UriKind.Relative);
 
-		private readonly Dictionary<Uri, IEventProcessor>                  _eventProcessors = new Dictionary<Uri, IEventProcessor>();
-		private readonly InterpreterOptions                                _interpreterOptions;
-		private readonly List<IEventProcessor>                             _ioProcessors     = new List<IEventProcessor>();
-		private readonly Dictionary<Uri, IServiceFactory>                  _serviceFactories = new Dictionary<Uri, IServiceFactory>();
-		private readonly IStateMachineProvider                             _stateMachineProvider;
-		private readonly ConcurrentDictionary<string, StateMachineService> _stateMachines = new ConcurrentDictionary<string, StateMachineService>();
-		private readonly TimeSpan                                          _suspendIdlePeriod;
+		private static readonly IIdentifier ErrorIdentifier  = (Identifier) "error";
+		private static readonly IIdentifier DoneIdentifier   = (Identifier) "done";
+		private static readonly IIdentifier InvokeIdentifier = (Identifier) "invoke";
 
-		public IoProcessor(IoProcessorOptions options)
+		private readonly Dictionary<Uri, IEventProcessor>                     _eventProcessors = new Dictionary<Uri, IEventProcessor>();
+		private readonly List<IEventProcessor>                                _ioProcessors    = new List<IEventProcessor>();
+		private readonly IoProcessorOptions                                   _options;
+		private readonly InvokedServiceDictionary                             _serviceByInvokeId = new InvokedServiceDictionary();
+		private readonly Dictionary<Uri, IServiceFactory>                     _serviceFactories  = new Dictionary<Uri, IServiceFactory>();
+		private readonly ConcurrentDictionary<string, StateMachineController> _stateMachines     = new ConcurrentDictionary<string, StateMachineController>();
+
+		public IoProcessor(in IoProcessorOptions options)
 		{
-			if (options == null) throw new ArgumentNullException(nameof(options));
+			_options = options;
 
 			_ioProcessors.Add(this);
-
 			AddEventProcessor(this);
+
+			if (options.EventProcessors != null)
+			{
+				foreach (var eventProcessor in options.EventProcessors)
+				{
+					_ioProcessors.Add(eventProcessor);
+					AddEventProcessor(eventProcessor);
+				}
+			}
+
 			AddServiceFactory(this);
 
-			foreach (var eventProcessor in options.EventProcessors)
+			if (options.ServiceFactories != null)
 			{
-				_ioProcessors.Add(eventProcessor);
-				AddEventProcessor(eventProcessor);
+				foreach (var serviceFactory in options.ServiceFactories)
+				{
+					AddServiceFactory(serviceFactory);
+				}
 			}
-
-			foreach (var serviceFactory in options.ServiceFactories)
-			{
-				AddServiceFactory(serviceFactory);
-			}
-
-			_stateMachineProvider = options.StateMachineProvider;
-
-			_interpreterOptions = CreateInterpreterOptions(options);
-
-			_suspendIdlePeriod = options.SuspendIdlePeriod;
 		}
 
 		Uri IEventProcessor.Id => EventProcessorId;
 
 		Uri IEventProcessor.AliasId => EventProcessorAliasId;
 
-		Uri IEventProcessor.GetLocation(string sessionId) => new Uri(BaseUri, sessionId);
+		Uri IEventProcessor.GetOrigin(string sessionId) => new Uri(BaseUri, sessionId);
 
-		ValueTask IEventProcessor.Send(IEvent @event, Uri target, CancellationToken token)
+		ValueTask IEventProcessor.Dispatch(Uri origin, Uri originType, IOutgoingEvent @event, CancellationToken token)
 		{
-			var sessionId = target.GetLeftPart(UriPartial.Path);
+			var sessionId = @event.Target.GetLeftPart(UriPartial.Path);
 
 			ValidateSessionId(sessionId, out var service);
 
-			return service.Send(@event, token);
+			var serviceEvent = new EventObject(EventType.External, @event, origin, originType);
+
+			return service.Send(serviceEvent, token);
 		}
 
-		IReadOnlyList<IEventProcessor> IExternalCommunication.GetIoProcessors(string sessionId) => _ioProcessors;
+		Uri IServiceFactory.TypeId => ServiceFactoryTypeId;
 
-		async ValueTask IExternalCommunication.StartInvoke(string sessionId, string invokeId, Uri type, Uri source, DataModelValue data, CancellationToken token)
+		Uri IServiceFactory.AliasTypeId => ServiceFactoryAliasTypeId;
+
+		async ValueTask<IService> IServiceFactory.StartService(Uri source, DataModelValue arguments, CancellationToken token)
+		{
+			var sessionId = IdGenerator.NewSessionId();
+			FillInterpreterOptions(out var options);
+			options.Arguments = arguments;
+			var service = new StateMachineController(sessionId, GetStateMachine(source), this, _options.SuspendIdlePeriod, options);
+			_stateMachines.TryAdd(sessionId, service);
+
+			await service.StartAsync(token).ConfigureAwait(false);
+			var _ = OnCompleteAsync(service);
+
+			return service;
+		}
+
+		private static IReadOnlyList<IIdentifier> GetDoneInvokeNameParts(IIdentifier invokeId)  => new ReadOnlyCollection<IIdentifier>(new[] { DoneIdentifier, InvokeIdentifier, invokeId });
+		private static IReadOnlyList<IIdentifier> GetErrorInvokeNameParts(IIdentifier invokeId) => new ReadOnlyCollection<IIdentifier>(new[] { ErrorIdentifier, InvokeIdentifier, invokeId });
+
+		public async ValueTask<DataModelValue> Execute(Uri source, DataModelValue arguments = default)
+		{
+			var sessionId = IdGenerator.NewSessionId();
+			FillInterpreterOptions(out var options);
+			options.Arguments = arguments;
+			var service = new StateMachineController(sessionId, GetStateMachine(source), this, _options.SuspendIdlePeriod, options);
+			_stateMachines.TryAdd(sessionId, service);
+
+			try
+			{
+				return await service.ExecuteAsync().ConfigureAwait(false);
+			}
+			finally
+			{
+				_stateMachines.TryRemove(sessionId, out _);
+			}
+		}
+
+		private async ValueTask OnCompleteAsync(StateMachineController service)
+		{
+			await service.Result.ConfigureAwait(false);
+			_stateMachines.TryRemove(service.SessionId, out _);
+		}
+
+		public IReadOnlyList<IEventProcessor> GetIoProcessors() => _ioProcessors;
+
+		public async ValueTask StartInvoke(string sessionId, string invokeId, Uri type, Uri source, DataModelValue data, CancellationToken token)
 		{
 			ValidateSessionId(sessionId, out var service);
 
@@ -75,107 +130,99 @@ namespace TSSArt.StateMachine
 				throw new ApplicationException("Invalid type");
 			}
 
-			var invokedService = await factory.StartService(service, source, data, token).ConfigureAwait(false);
+			var invokedService = await factory.StartService(source, data, token).ConfigureAwait(false);
 
-			service.RegisterService(invokeId, invokedService);
+			if (!_serviceByInvokeId.TryAdd((sessionId, invokeId), invokedService))
+			{
+				throw new ApplicationException("InvokeId already exists");
+			}
+
+			InvokeCompleted(service, invokedService, invokeId);
 		}
 
-		ValueTask IExternalCommunication.CancelInvoke(string sessionId, string invokeId, CancellationToken token)
+		private static async void InvokeCompleted(StateMachineController parent, IService service, string invokeId)
 		{
-			ValidateSessionId(sessionId, out var service);
+			try
+			{
+				var result = await service.Result.ConfigureAwait(false);
 
-			var invokedService = service.UnregisterService(invokeId);
+				await parent.Send(new EventObject(EventType.External, GetDoneInvokeNameParts((Identifier) invokeId), result), token: default).ConfigureAwait(false);
+			}
+			catch (Exception ex)
+			{
+				var data = DataModelValue.FromException(ex, isReadOnly: true);
+				await parent.Send(new EventObject(EventType.External, GetErrorInvokeNameParts((Identifier) invokeId), data), token: default).ConfigureAwait(false);
+			}
+		}
+
+		public ValueTask CancelInvoke(string sessionId, string invokeId, CancellationToken token)
+		{
+			ValidateSessionId(sessionId, out _);
+
+			if (!_serviceByInvokeId.Remove((sessionId, invokeId), out var invokedService))
+			{
+				throw new ApplicationException("InvokeId does not exist");
+			}
 
 			return invokedService.Destroy(token);
 		}
 
-		ValueTask IExternalCommunication.SendEvent(string sessionId, IEvent @event, Uri type, Uri target, int delayMs, CancellationToken token)
+		public async ValueTask<SendStatus> DispatchEvent(string sessionId, IOutgoingEvent @event, CancellationToken token)
 		{
-			ValidateSessionId(sessionId, out var service);
+			ValidateSessionId(sessionId, out _);
 
-			if (delayMs != 0)
+			var eventProcessor = GetEventProcessor(@event.Type);
+			var origin = eventProcessor.GetOrigin(sessionId);
+
+			if (eventProcessor == this)
 			{
-				service.ScheduleEvent(@event, type, target, delayMs);
+				if (@event.Target == InternalTarget)
+				{
+					if (@event.DelayMs != 0)
+					{
+						throw new ApplicationException("Internal events can be delayed");
+					}
 
-				return default;
+					return SendStatus.ToInternalQueue;
+				}
 			}
 
-			var eventProcessor = GetEventProcessor(type);
-			var origin = eventProcessor.GetLocation(sessionId);
-			var sendEvent = new EventObject(EventType.External, @event.SendId, @event.ToString(), invokeId: null, origin, type, @event.Data);
-
-			return eventProcessor.Send(sendEvent, target, token);
-		}
-
-		ValueTask IExternalCommunication.ForwardEvent(string sessionId, IEvent @event, string invokeId, CancellationToken token)
-		{
-			ValidateSessionId(sessionId, out var service);
-
-			return service.ForwardEvent(invokeId, @event, token);
-		}
-
-		ValueTask IExternalCommunication.CancelEvent(string sessionId, string sendId, CancellationToken token)
-		{
-			ValidateSessionId(sessionId, out var service);
-
-			service.CancelEvent(sendId);
-
-			return default;
-		}
-
-		ValueTask IExternalCommunication.ReturnDoneEvent(string sessionId, DataModelValue doneData, CancellationToken token)
-		{
-			ValidateSessionId(sessionId, out var service);
-
-			return service.ReturnDoneEvent(doneData, token);
-		}
-
-		ValueTask INotifyStateChanged.OnChanged(string sessionId, StateMachineInterpreterState state)
-		{
-			ValidateSessionId(sessionId, out var service);
-
-			service.OnStateChanged(state);
-
-			return default;
-		}
-
-		Uri IServiceFactory.TypeId => ServiceFactoryTypeId;
-
-		Uri IServiceFactory.AliasTypeId => ServiceFactoryAliasTypeId;
-
-		ValueTask<IService> IServiceFactory.StartService(IService parentService, Uri source, DataModelValue data, CancellationToken token) => StartStateMachine(parentService, source, data, token);
-
-		private InterpreterOptions CreateInterpreterOptions(IoProcessorOptions options)
-		{
-			var interpreterOptions = new InterpreterOptions
-									 {
-											 ExternalCommunication = this,
-											 NotifyStateChanged = this,
-											 Logger = options.Logger,
-											 PersistenceLevel = options.PersistenceLevel,
-											 StorageProvider = options.StorageProvider,
-											 ResourceLoader = options.ResourceLoader,
-											 SuspendToken = options.SuspendToken,
-											 StopToken = options.StopToken
-									 };
-
-			foreach (var factory in options.DataModelHandlerFactories)
+			if (@event.DelayMs != 0)
 			{
-				interpreterOptions.DataModelHandlerFactories.Add(factory);
+				return SendStatus.ToSchedule;
 			}
 
-			return interpreterOptions;
+			await eventProcessor.Dispatch(origin, EventProcessorId, @event, token).ConfigureAwait(false);
+
+			return SendStatus.Sent;
 		}
 
-		private async ValueTask<IService> StartStateMachine(IService parentService, Uri source, DataModelValue data, CancellationToken token)
+		public ValueTask ForwardEvent(string sessionId, IEvent @event, string invokeId, CancellationToken token)
 		{
-			var sessionId = IdGenerator.NewSessionId();
-			var service = new StateMachineService(parentService, sessionId, GetStateMachine(source), _interpreterOptions, data, this, OnStateMachineComplete, _suspendIdlePeriod);
-			_stateMachines.TryAdd(sessionId, service);
+			ValidateSessionId(sessionId, out _);
 
-			await service.StartAsync(token);
+			if (!_serviceByInvokeId.TryGetValue((sessionId, invokeId), out var service))
+			{
+				throw new ApplicationException("Invalid InvokeId");
+			}
 
-			return service;
+			return service.Send(@event, token);
+		}
+
+		private void FillInterpreterOptions(out InterpreterOptions options)
+		{
+			options = new InterpreterOptions
+					  {
+							  PersistenceLevel = _options.PersistenceLevel,
+							  ResourceLoader = _options.ResourceLoader,
+							  StopToken = _options.StopToken,
+							  SuspendToken = _options.SuspendToken
+					  };
+
+			if (_options.DataModelHandlerFactories != null)
+			{
+				options.DataModelHandlerFactories = new List<IDataModelHandlerFactory>(_options.DataModelHandlerFactories);
+			}
 		}
 
 		private IEventProcessor GetEventProcessor(Uri type)
@@ -193,12 +240,7 @@ namespace TSSArt.StateMachine
 			throw new ApplicationException("Invalid Type");
 		}
 
-		private void OnStateMachineComplete(StateMachineService service)
-		{
-			_stateMachines.TryRemove(service.SessionId, out _);
-		}
-
-		private IStateMachine GetStateMachine(Uri source) => _stateMachineProvider.GetStateMachine(source);
+		private IStateMachine GetStateMachine(Uri source) => _options.StateMachineProvider.GetStateMachine(source);
 
 		private void AddEventProcessor(IEventProcessor eventProcessor)
 		{
@@ -222,17 +264,36 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private void ValidateSessionId(string sessionId, out StateMachineService service)
+		private void ValidateSessionId(string sessionId, out StateMachineController controller)
 		{
-			if (!_stateMachines.TryGetValue(sessionId, out service))
+			if (!_stateMachines.TryGetValue(sessionId, out controller))
 			{
 				throw new ApplicationException("Invalid SessionId");
 			}
 		}
 
-		public async ValueTask Start(Uri source, CancellationToken token = default)
+		public ValueTask Log(string sessionId, string stateMachineName, string label, DataModelValue data, in CancellationToken token)
 		{
-			await StartStateMachine(parentService: null, source, data: default, token).ConfigureAwait(false);
+			FormattableString formattableString = $"Name: [{stateMachineName}]. SessionId: [{sessionId}]. Label: \"{label}\". Data: {data:JSON}";
+
+			Trace.TraceInformation(formattableString.Format, formattableString.GetArguments());
+
+			return default;
 		}
+
+		public ValueTask Error(string sessionId, ErrorType errorType, string stateMachineName, string sourceEntityId, Exception exception, in CancellationToken token)
+		{
+			FormattableString formattableString = $"Type: [{errorType}]. Name: [{stateMachineName}]. SessionId: [{sessionId}]. SourceEntityId: [{sourceEntityId}]. Exception: {exception}";
+
+			Trace.TraceError(formattableString.Format, formattableString.GetArguments());
+
+			return default;
+		}
+
+		public ValueTask<ITransactionalStorage> GetTransactionalStorage(string sessionId, string name, in CancellationToken token) => throw new NotImplementedException();
+
+		public ValueTask RemoveTransactionalStorage(string sessionId, string name, in CancellationToken token) => throw new NotImplementedException();
+
+		public ValueTask RemoveAllTransactionalStorage(string sessionId, in CancellationToken token) => throw new NotImplementedException();
 	}
 }

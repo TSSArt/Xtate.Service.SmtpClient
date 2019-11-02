@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -41,7 +42,7 @@ namespace TSSArt.StateMachine.Test
 			channel.Writer.Complete();
 			_eventChannel = channel.Reader;
 
-			_options = new InterpreterOptions();
+			_options = new InterpreterOptions { DataModelHandlerFactories = new List<IDataModelHandlerFactory>() };
 			_logger = new Mock<ILogger>();
 
 			_options.DataModelHandlerFactories.Add(EcmaScriptDataModelHandler.Factory);
@@ -55,7 +56,7 @@ namespace TSSArt.StateMachine.Test
 								  innerXml:
 								  "<state id='s1'><onentry><raise event='my'/></onentry><transition event='my' target='s2'/></state><state id='s2'><onentry><log label='Hello'/></onentry></state>");
 
-			_logger.Verify(l => l.Log(It.IsAny<string>(), It.IsAny<string>(), "Hello", null, default), Times.Once);
+			_logger.Verify(l => l.Log(It.IsAny<string>(), "Hello", default, default), Times.Once);
 		}
 
 		[TestMethod]
@@ -65,17 +66,7 @@ namespace TSSArt.StateMachine.Test
 								  innerXml:
 								  "<state id='s1'><onentry><send event='my' target='_internal'/></onentry><transition event='my' target='s2'/></state><state id='s2'><onentry><log label='Hello'/></onentry></state>");
 
-			_logger.Verify(l => l.Log(It.IsAny<string>(), It.IsAny<string>(), "Hello", null, default), Times.Once);
-		}
-
-		[TestMethod]
-		public async Task SendInternal2Test()
-		{
-			await RunStateMachine(NoneDataModel,
-								  innerXml:
-								  "<state id='s1'><onentry><send event='my' target='#_internal'/></onentry><transition event='my' target='s2'/></state><state id='s2'><onentry><log label='Hello'/></onentry></state>");
-
-			_logger.Verify(l => l.Log(It.IsAny<string>(), It.IsAny<string>(), "Hello", null, default), Times.Once);
+			_logger.Verify(l => l.Log(It.IsAny<string>(), "Hello", default, default), Times.Once);
 		}
 
 		[TestMethod]
@@ -85,7 +76,7 @@ namespace TSSArt.StateMachine.Test
 								  innerXml:
 								  "<state id='s1'><onentry><raise event='my.suffix'/></onentry><transition event='my' target='s2'/></state><state id='s2'><onentry><log label='Hello'/></onentry></state>");
 
-			_logger.Verify(l => l.Log(It.IsAny<string>(), It.IsAny<string>(), "Hello", null, default), Times.Once);
+			_logger.Verify(l => l.Log(It.IsAny<string>(), "Hello", default, default), Times.Once);
 		}
 
 		[TestMethod]
@@ -95,7 +86,7 @@ namespace TSSArt.StateMachine.Test
 								  innerXml:
 								  "<state id='s1'><onentry><raise event='my.suffix'/></onentry><transition event='my.*' target='s2'/></state><state id='s2'><onentry><log label='Hello'/></onentry></state>");
 
-			_logger.Verify(l => l.Log(It.IsAny<string>(), It.IsAny<string>(), "Hello", null, default), Times.Once);
+			_logger.Verify(l => l.Log(It.IsAny<string>(), "Hello", default, default), Times.Once);
 		}
 	}
 }

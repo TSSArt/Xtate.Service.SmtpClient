@@ -213,6 +213,7 @@ namespace TSSArt.StateMachine
 			SysRequiredFound = 3
 		}
 
+		// ReSharper disable UnusedMember.Local
 		private enum ElementType
 		{
 			ZeroToMany         = 0,
@@ -225,6 +226,8 @@ namespace TSSArt.StateMachine
 			SysOneFound        = 6,
 			SysOneToManyFound  = 7
 		}
+
+		// ReSharper restore UnusedMember.Local
 
 		private class Policy<TEntity>
 		{

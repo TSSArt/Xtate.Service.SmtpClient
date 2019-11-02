@@ -13,7 +13,7 @@ namespace TSSArt.StateMachine
 
 		FormattableString IDebugEntityId.EntityId => $"(#{DocumentId})";
 
-		public IEvent Event => _entity.Event;
+		public IOutgoingEvent Event => _entity.Event;
 
 		protected override void Store(Bucket bucket)
 		{

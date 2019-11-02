@@ -4,10 +4,11 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Linq;
 using System.Security;
+using System.Text;
 
 namespace TSSArt.StateMachine
 {
-	public class DataModelArray : DynamicObject, IList<DataModelValue>
+	public class DataModelArray : DynamicObject, IList<DataModelValue>, IFormattable
 	{
 		public delegate void ChangedHandler(ChangedAction action, int index, DataModelValue value);
 
@@ -35,6 +36,27 @@ namespace TSSArt.StateMachine
 		public DataModelArray(IEnumerable<DataModelValue> items) => _list = new List<DataModelValue>(items);
 
 		public int Length => _list.Count;
+
+		public string ToString(string format, IFormatProvider formatProvider)
+		{
+			if (format == "JSON")
+			{
+				var sb = new StringBuilder();
+
+				for (var i = 0; i < Length; i ++)
+				{
+					sb.Append(sb.Length == 0 ? "[ " : ", ");
+
+					sb.Append(this[i].ToString(format: "JSON", formatProvider));
+				}
+
+				sb.Append(sb.Length == 0 ? "[]" : " ]");
+
+				return sb.ToString();
+			}
+
+			return base.ToString();
+		}
 
 		public bool IsReadOnly { get; private set; }
 
@@ -298,16 +320,42 @@ namespace TSSArt.StateMachine
 
 		public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object result)
 		{
-			result = this[(int) indexes[0]].ToObject();
+			if (indexes.Length == 1 && indexes[0] is IConvertible convertible)
+			{
+				result = this[convertible.ToInt32(null)].ToObject();
 
-			return true;
+				return true;
+			}
+
+			result = null;
+
+			return false;
 		}
 
 		public override bool TrySetIndex(SetIndexBinder binder, object[] indexes, object value)
 		{
-			this[(int) indexes[0]] = DataModelValue.FromObject(value);
+			if (indexes.Length == 1 && indexes[0] is IConvertible convertible)
+			{
+				this[convertible.ToInt32(null)] = DataModelValue.FromObject(value);
 
-			return true;
+				return true;
+			}
+
+			return false;
+		}
+
+		public string ToString(string format) => ToString(format, formatProvider: null);
+
+		public DataModelArray DeepClone(bool isReadOnly)
+		{
+			var clone = new DataModelArray(isReadOnly);
+
+			foreach (var val in _list)
+			{
+				clone._list.Add(val.DeepClone(isReadOnly));
+			}
+
+			return clone;
 		}
 	}
 }

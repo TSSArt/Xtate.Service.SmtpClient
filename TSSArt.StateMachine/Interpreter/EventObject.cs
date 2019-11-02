@@ -6,26 +6,24 @@ namespace TSSArt.StateMachine
 	public class EventObject : IEvent, IStoreSupport
 	{
 		private static readonly char[] Dot = { '.' };
-		private readonly        string _name;
 
-		public EventObject(EventType type, string name, DataModelValue data = default) : this(type, sendId: null, name, invokeId: null, origin: null, originType: null, data) { }
+		public EventObject(string name, string invokeId = null) : this(EventType.External, Parse(name), data: default, sendId: null, invokeId) { }
 
-		public EventObject(EventType type, string sendId, string name, DataModelValue data = default) : this(type, sendId, name, invokeId: null, origin: null, originType: null, data) { }
+		public EventObject(EventType type, IOutgoingEvent @event, Uri origin = null, Uri originType = null)
+				: this(type, sendId: null, @event.NameParts, invokeId: null, origin, originType, data: default) { }
 
-		public EventObject(EventType type, string sendId, string name, string invokeId, Uri origin, Uri originType, DataModelValue data)
+		public EventObject(EventType type, IReadOnlyList<IIdentifier> nameParts, DataModelValue data = default, string sendId = null, string invokeId = null)
+				: this(type, sendId, nameParts, invokeId, origin: null, originType: null, data) { }
+
+		private EventObject(EventType type, string sendId, IReadOnlyList<IIdentifier> nameParts, string invokeId, Uri origin, Uri originType, DataModelValue data)
 		{
-			if (string.IsNullOrEmpty(name)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(name));
-
-			_name = name;
-
 			Type = type;
 			SendId = sendId;
+			NameParts = nameParts;
 			InvokeId = invokeId;
 			Origin = origin;
 			OriginType = originType;
 			Data = data;
-
-			NameParts = IdentifierList.Create(name.Split(Dot, StringSplitOptions.None), p => (Identifier) p);
 		}
 
 		public EventObject(in Bucket bucket)
@@ -35,8 +33,8 @@ namespace TSSArt.StateMachine
 				throw new ArgumentException("Invalid TypeInfo value");
 			}
 
-			_name = bucket.GetString(Key.Name);
-			NameParts = IdentifierList.Create(_name.Split(Dot, StringSplitOptions.None), p => (Identifier) p);
+			var name = bucket.GetString(Key.Name);
+			NameParts = IdentifierList.Create(name.Split(Dot, StringSplitOptions.None), p => (Identifier) p);
 			Type = bucket.Get<EventType>(Key.Type);
 			SendId = bucket.GetString(Key.SendId);
 			Origin = bucket.GetUri(Key.Origin);
@@ -67,7 +65,7 @@ namespace TSSArt.StateMachine
 		public void Store(Bucket bucket)
 		{
 			bucket.Add(Key.TypeInfo, TypeInfo.EventObject);
-			bucket.Add(Key.Name, _name);
+			bucket.Add(Key.Name, string.Join(separator: '.', NameParts));
 			bucket.Add(Key.Type, Type);
 			bucket.Add(Key.SendId, SendId);
 			bucket.Add(Key.Origin, Origin);
@@ -82,6 +80,6 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public override string ToString() => _name;
+		private static IReadOnlyList<IIdentifier> Parse(string name) => IdentifierList.Create(name.Split(Dot, StringSplitOptions.None), p => (Identifier) p);
 	}
 }

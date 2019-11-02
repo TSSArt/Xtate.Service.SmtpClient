@@ -45,6 +45,7 @@ namespace TSSArt.StateMachine.Test
 
 			var options = new InterpreterOptions
 						  {
+								  DataModelHandlerFactories = new List<IDataModelHandlerFactory>(),
 								  ResourceLoader = _resourceLoaderMock.Object,
 								  PersistenceLevel = PersistenceLevel.ExecutableAction,
 								  StorageProvider = new TestStorage()
@@ -64,22 +65,20 @@ namespace TSSArt.StateMachine.Test
 		{
 			private readonly Dictionary<string, MemoryStream> _streams = new Dictionary<string, MemoryStream>();
 
-			public async ValueTask<ITransactionalStorage> GetTransactionalStorage(string sessionId, string name, CancellationToken token)
+			public async ValueTask<ITransactionalStorage> GetTransactionalStorage(string name, CancellationToken token)
 			{
-				var key = sessionId + "-" + name;
-
-				if (!_streams.TryGetValue(key, out var stream))
+				if (!_streams.TryGetValue(name, out var stream))
 				{
 					stream = new MemoryStream();
-					_streams.Add(key, stream);
+					_streams.Add(name, stream);
 				}
 
 				return await StreamStorage.CreateAsync(stream, disposeStream: false, token);
 			}
 
-			public ValueTask RemoveTransactionalStorage(string sessionId, string name, CancellationToken token) => default;
+			public ValueTask RemoveTransactionalStorage(string name, CancellationToken token) => default;
 
-			public ValueTask RemoveAllTransactionalStorage(string sessionId, CancellationToken token) => default;
+			public ValueTask RemoveAllTransactionalStorage(CancellationToken token) => default;
 		}
 	}
 }

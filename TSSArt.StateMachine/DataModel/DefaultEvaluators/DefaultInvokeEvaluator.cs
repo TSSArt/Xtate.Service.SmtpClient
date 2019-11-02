@@ -53,7 +53,7 @@ namespace TSSArt.StateMachine
 
 			var data = await Converter.GetData(_invoke.Content?.Value, ContentExpressionEvaluator, NameEvaluatorList, ParameterList, executionContext, token).ConfigureAwait(false);
 
-			await executionContext.StartInvoke(invokeId, type, source, data, token);
+			await executionContext.StartInvoke(invokeId, type, source, data, token).ConfigureAwait(false);
 
 			IdLocationEvaluator?.SetValue(new DefaultObject(invokeId), executionContext);
 

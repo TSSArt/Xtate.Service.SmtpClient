@@ -19,9 +19,18 @@ namespace TSSArt.StateMachine
 
 		public virtual async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
-			var arguments = ExpressionEvaluator != null ? (await ExpressionEvaluator.EvaluateObject(executionContext, token).ConfigureAwait(false)).ToObject() : null;
+			DataModelValue data;
+			if (ExpressionEvaluator != null)
+			{
+				var obj = await ExpressionEvaluator.EvaluateObject(executionContext, token).ConfigureAwait(false);
+				data = DataModelValue.FromObject(obj.ToObject()).DeepClone(true);
+			}
+			else
+			{
+				data = DataModelValue.Undefined(true);
+			}
 
-			await executionContext.Log(_log.Label, arguments, token).ConfigureAwait(false);
+			await executionContext.Log(_log.Label, data, token).ConfigureAwait(false);
 		}
 
 		public IValueExpression Expression => _log.Expression;

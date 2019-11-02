@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -31,14 +32,14 @@ namespace TSSArt.StateMachine.Test
 		{
 			var channel = Channel.CreateUnbounded<IEvent>();
 
-			await channel.Writer.WriteAsync(new EventObject(EventType.External, name: "Event1"));
-			await channel.Writer.WriteAsync(new EventObject(EventType.External, name: "Test1.done"));
-			await channel.Writer.WriteAsync(new EventObject(EventType.External, name: "Event2"));
-			await channel.Writer.WriteAsync(new EventObject(EventType.External, name: "done.state.Test2"));
-			await channel.Writer.WriteAsync(new EventObject(EventType.External, name: "Timer"));
+			await channel.Writer.WriteAsync(new EventObject("Event1"));
+			await channel.Writer.WriteAsync(new EventObject("Test1.done"));
+			await channel.Writer.WriteAsync(new EventObject("Event2"));
+			await channel.Writer.WriteAsync(new EventObject("done.state.Test2"));
+			await channel.Writer.WriteAsync(new EventObject("Timer"));
 			channel.Writer.Complete(new ArgumentException("333"));
 
-			var options = new InterpreterOptions();
+			var options = new InterpreterOptions { DataModelHandlerFactories = new List<IDataModelHandlerFactory>() };
 			options.DataModelHandlerFactories.Add(EcmaScriptDataModelHandler.Factory);
 
 			await StateMachineInterpreter.RunAsync(IdGenerator.NewSessionId(), _stateMachine, channel.Reader, options);
@@ -51,7 +52,7 @@ namespace TSSArt.StateMachine.Test
 
 			channel.Writer.Complete(new ArgumentException("333"));
 
-			var options = new InterpreterOptions();
+			var options = new InterpreterOptions { DataModelHandlerFactories = new List<IDataModelHandlerFactory>() };
 			options.DataModelHandlerFactories.Add(EcmaScriptDataModelHandler.Factory);
 
 			await StateMachineInterpreter.RunAsync(IdGenerator.NewSessionId(), _stateMachine, channel.Reader, options);

@@ -18,7 +18,7 @@ namespace TSSArt.StateMachine.EcmaScript
 				ItemEvaluator.DeclareLocalVariable(executionContext);
 				IndexEvaluator?.DeclareLocalVariable(executionContext);
 
-				await base.Execute(executionContext, token);
+				await base.Execute(executionContext, token).ConfigureAwait(false);
 			}
 			finally
 			{

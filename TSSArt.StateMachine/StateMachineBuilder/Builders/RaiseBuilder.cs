@@ -4,7 +4,7 @@ namespace TSSArt.StateMachine
 {
 	public class RaiseBuilder : IRaiseBuilder
 	{
-		private IEvent _event;
+		private IOutgoingEvent _event;
 
 		public IRaise Build()
 		{
@@ -16,6 +16,6 @@ namespace TSSArt.StateMachine
 			return new Raise { Event = _event };
 		}
 
-		public void SetEvent(IEvent @event) => _event = @event ?? throw new ArgumentNullException(nameof(@event));
+		public void SetEvent(IOutgoingEvent @event) => _event = @event ?? throw new ArgumentNullException(nameof(@event));
 	}
 }

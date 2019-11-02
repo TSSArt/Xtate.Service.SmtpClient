@@ -8,11 +8,11 @@ namespace TSSArt.StateMachine
 	{
 		public static readonly NullStorageProvider Instance = new NullStorageProvider();
 
-		public ValueTask<ITransactionalStorage> GetTransactionalStorage(string sessionId, string name, CancellationToken token) => new ValueTask<ITransactionalStorage>(Instance);
+		public ValueTask<ITransactionalStorage> GetTransactionalStorage(string name, CancellationToken token) => new ValueTask<ITransactionalStorage>(Instance);
 
-		public ValueTask RemoveTransactionalStorage(string sessionId, string name, CancellationToken token) => default;
+		public ValueTask RemoveTransactionalStorage(string name, CancellationToken token) => default;
 
-		public ValueTask RemoveAllTransactionalStorage(string sessionId, CancellationToken token) => default;
+		public ValueTask RemoveAllTransactionalStorage(CancellationToken token) => default;
 
 		public void Add(ReadOnlySpan<byte> key, ReadOnlySpan<byte> value) { }
 

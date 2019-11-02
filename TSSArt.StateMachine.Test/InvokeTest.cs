@@ -61,7 +61,7 @@ namespace TSSArt.StateMachine.Test
 							};
 
 			_externalCommunicationMock = new Mock<IExternalCommunication>();
-			_externalCommunicationMock.Setup(e => e.GetIoProcessors(It.IsAny<string>())).Returns(Array.Empty<IEventProcessor>());
+			_externalCommunicationMock.Setup(e => e.GetIoProcessors()).Returns(Array.Empty<IEventProcessor>());
 			_loggerMock = new Mock<ILogger>();
 
 			_options = new InterpreterOptions
@@ -75,17 +75,16 @@ namespace TSSArt.StateMachine.Test
 		public async Task SimpleTest()
 		{
 			var channel = Channel.CreateUnbounded<IEvent>();
-			await channel.Writer.WriteAsync(new EventObject(EventType.External, sendId: null, name: "fromInvoked", invokeId: "invoke_id", origin: null, originType: null, data: default));
-			await channel.Writer.WriteAsync(new EventObject(EventType.External, name: "ToF"));
+			await channel.Writer.WriteAsync(new EventObject(name: "fromInvoked", invokeId: "invoke_id"));
+			await channel.Writer.WriteAsync(new EventObject("ToF"));
 			await StateMachineInterpreter.RunAsync(sessionId: "session1", _stateMachine, channel, _options);
 
-			_externalCommunicationMock.Verify(l => l.GetIoProcessors("session1"));
-			_externalCommunicationMock.Verify(l => l.StartInvoke("session1", "invoke_id", new Uri("proto://type"), new Uri("proto://src"), DataModelValue.FromObject("content", false), default));
-			_externalCommunicationMock.Verify(l => l.CancelInvoke("session1", "invoke_id", default));
-			_externalCommunicationMock.Verify(l => l.ReturnDoneEvent("session1", default, default));
+			_externalCommunicationMock.Verify(l => l.GetIoProcessors());
+			_externalCommunicationMock.Verify(l => l.StartInvoke("invoke_id", new Uri("proto://type"), new Uri("proto://src"), DataModelValue.FromObject("content", false), default));
+			_externalCommunicationMock.Verify(l => l.CancelInvoke("invoke_id", default));
 			_externalCommunicationMock.VerifyNoOtherCalls();
 
-			_loggerMock.Verify(l => l.Log("session1", null, "FinalizeExecuted", null, default));
+			_loggerMock.Verify(l => l.Log(null, "FinalizeExecuted", default, default));
 			_loggerMock.VerifyNoOtherCalls();
 		}
 	}

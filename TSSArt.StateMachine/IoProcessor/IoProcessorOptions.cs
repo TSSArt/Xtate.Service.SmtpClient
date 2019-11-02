@@ -4,18 +4,18 @@ using System.Threading;
 
 namespace TSSArt.StateMachine
 {
-	public class IoProcessorOptions
+	public struct IoProcessorOptions
 	{
-		public ICollection<IEventProcessor>          EventProcessors           { get; } = new List<IEventProcessor>();
-		public ICollection<IServiceFactory>          ServiceFactories          { get; } = new List<IServiceFactory>();
-		public ICollection<IDataModelHandlerFactory> DataModelHandlerFactories { get; } = new List<IDataModelHandlerFactory>();
-		public IStateMachineProvider                 StateMachineProvider      { get; set; }
-		public ILogger                               Logger                    { get; set; }
-		public PersistenceLevel                      PersistenceLevel          { get; set; }
-		public IStorageProvider                      StorageProvider           { get; set; }
-		public IResourceLoader                       ResourceLoader            { get; set; }
-		public TimeSpan                              SuspendIdlePeriod         { get; set; }
-		public CancellationToken                     SuspendToken              { get; set; }
-		public CancellationToken                     StopToken                 { get; set; }
+		public ICollection<IEventProcessor>          EventProcessors;
+		public ICollection<IServiceFactory>          ServiceFactories;
+		public ICollection<IDataModelHandlerFactory> DataModelHandlerFactories;
+		public IStateMachineProvider                 StateMachineProvider;
+		public ILogger                               Logger;
+		public PersistenceLevel                      PersistenceLevel;
+		public IStorageProvider                      StorageProvider;
+		public IResourceLoader                       ResourceLoader;
+		public TimeSpan                              SuspendIdlePeriod;
+		public CancellationToken                     SuspendToken;
+		public CancellationToken                     StopToken;
 	}
 }

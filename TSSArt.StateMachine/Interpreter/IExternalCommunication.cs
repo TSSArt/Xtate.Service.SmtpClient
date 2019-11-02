@@ -5,15 +5,21 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
+	public enum SendStatus
+	{
+		Sent,
+		ToSchedule,
+		ToInternalQueue
+	}
+
 	public interface IExternalCommunication
 	{
-		IReadOnlyList<IEventProcessor> GetIoProcessors(string sessionId);
+		IReadOnlyList<IEventProcessor> GetIoProcessors();
 
-		ValueTask StartInvoke(string sessionId, string invokeId, Uri type, Uri source, DataModelValue data, CancellationToken token);
-		ValueTask CancelInvoke(string sessionId, string invokeId, CancellationToken token);
-		ValueTask SendEvent(string sessionId, IEvent @event, Uri type, Uri target, int delayMs, CancellationToken token);
-		ValueTask ForwardEvent(string sessionId, IEvent @event, string invokeId, CancellationToken token);
-		ValueTask CancelEvent(string sessionId, string sendId, CancellationToken token);
-		ValueTask ReturnDoneEvent(string sessionId, DataModelValue doneData, CancellationToken token);
+		ValueTask             StartInvoke(string invokeId, Uri type, Uri source, DataModelValue data, CancellationToken token);
+		ValueTask             CancelInvoke(string invokeId, CancellationToken token);
+		ValueTask<SendStatus> TrySendEvent(IOutgoingEvent @event, CancellationToken token);
+		ValueTask             ForwardEvent(IEvent @event, string invokeId, CancellationToken token);
+		ValueTask             CancelEvent(string sendId, CancellationToken token);
 	}
 }

@@ -11,8 +11,8 @@ namespace TSSArt.StateMachine
 
 		object IAncestorProvider.Ancestor => _raise.Ancestor;
 
-		public virtual ValueTask Execute(IExecutionContext executionContext, CancellationToken token) => executionContext.Send(Event, type: null, target: EventTarget.InternalTarget, delayMs: 0, token: token);
+		public virtual ValueTask Execute(IExecutionContext executionContext, CancellationToken token) => executionContext.Send(_raise.Event, token);
 
-		public IEvent Event => _raise.Event;
+		public IOutgoingEvent Event => _raise.Event;
 	}
 }
