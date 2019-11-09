@@ -4,28 +4,37 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public delegate ValueTask ExecutableTask(IExecutionContext executionContext, CancellationToken token);
-
 	public delegate void ExecutableAction(IExecutionContext executionContext);
+
+	public delegate ValueTask ExecutableTask(IExecutionContext executionContext);
+
+	public delegate ValueTask ExecutableCancellableTask(IExecutionContext executionContext, CancellationToken token);
 
 	public class RuntimeAction : IExecutableEntity, IExecEvaluator
 	{
-		private readonly ExecutableAction _action;
-		private readonly ExecutableTask   _task;
-
-		public RuntimeAction(ExecutableTask task) => _task = task ?? throw new ArgumentNullException(nameof(task));
+		private readonly object _action;
 
 		public RuntimeAction(ExecutableAction action) => _action = action ?? throw new ArgumentNullException(nameof(action));
 
+		public RuntimeAction(ExecutableTask task) => _action = task ?? throw new ArgumentNullException(nameof(task));
+
+		public RuntimeAction(ExecutableCancellableTask task) => _action = task ?? throw new ArgumentNullException(nameof(task));
+
 		public async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
-			if (_task != null)
+			switch (_action)
 			{
-				await _task(executionContext, token).ConfigureAwait(false);
-			}
-			else
-			{
-				_action(executionContext);
+				case ExecutableAction action:
+					action(executionContext);
+					break;
+
+				case ExecutableTask task:
+					await task(executionContext).ConfigureAwait(false);
+					break;
+
+				case ExecutableCancellableTask task:
+					await task(executionContext, token).ConfigureAwait(false);
+					break;
 			}
 		}
 	}

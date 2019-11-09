@@ -4,15 +4,9 @@ namespace TSSArt.StateMachine
 {
 	public struct History : IHistory, IEntity<History, IHistory>, IAncestorProvider, IDebugEntityId
 	{
-		public IIdentifier Id;
-		public HistoryType Type;
-		public ITransition Transition;
-
-		IIdentifier IHistory.Id => Id;
-
-		HistoryType IHistory.Type => Type;
-
-		ITransition IHistory.Transition => Transition;
+		public IIdentifier Id         { get; set; }
+		public HistoryType Type       { get; set; }
+		public ITransition Transition { get; set; }
 
 		void IEntity<History, IHistory>.Init(IHistory source)
 		{

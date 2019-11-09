@@ -4,18 +4,10 @@ namespace TSSArt.StateMachine
 {
 	public struct ForEach : IForEach, IEntity<ForEach, IForEach>, IAncestorProvider
 	{
-		public IReadOnlyList<IExecutableEntity> Action;
-		public IValueExpression                 Array;
-		public ILocationExpression              Index;
-		public ILocationExpression              Item;
-
-		IReadOnlyList<IExecutableEntity> IForEach.Action => Action;
-
-		IValueExpression IForEach.Array => Array;
-
-		ILocationExpression IForEach.Index => Index;
-
-		ILocationExpression IForEach.Item => Item;
+		public IReadOnlyList<IExecutableEntity> Action { get; set; }
+		public IValueExpression                 Array  { get; set; }
+		public ILocationExpression              Index  { get; set; }
+		public ILocationExpression              Item   { get; set; }
 
 		void IEntity<ForEach, IForEach>.Init(IForEach source)
 		{

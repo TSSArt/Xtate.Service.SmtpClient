@@ -2,9 +2,7 @@
 {
 	public struct Initial : IInitial, IEntity<Initial, IInitial>, IAncestorProvider
 	{
-		public ITransition Transition;
-
-		ITransition IInitial.Transition => Transition;
+		public ITransition Transition { get; set; }
 
 		void IEntity<Initial, IInitial>.Init(IInitial source)
 		{

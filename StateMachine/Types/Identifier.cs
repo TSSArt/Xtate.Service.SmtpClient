@@ -10,7 +10,7 @@ namespace TSSArt.StateMachine
 		{
 			_val = val ?? throw new ArgumentNullException(nameof(val));
 
-			if (val == string.Empty)
+			if (val.Length == 0)
 			{
 				throw new ArgumentException(message: "Identifier cannot be empty", nameof(val));
 			}
@@ -28,8 +28,8 @@ namespace TSSArt.StateMachine
 
 		public override string ToString() => _val;
 
-		public override bool Equals(object obj) => ReferenceEquals(this, obj) || obj is Identifier other && _val == other._val;
+		public override bool Equals(object obj) => ReferenceEquals(this, obj) || obj is Identifier other && _val.Equals(other._val, StringComparison.Ordinal);
 
-		public override int GetHashCode() => _val.GetHashCode();
+		public override int GetHashCode() => _val.GetHashCode(StringComparison.Ordinal);
 	}
 }

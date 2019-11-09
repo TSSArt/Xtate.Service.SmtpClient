@@ -5,27 +5,13 @@ namespace TSSArt.StateMachine
 {
 	public struct StateMachine : IStateMachine, IEntity<StateMachine, IStateMachine>, IAncestorProvider, IDebugEntityId
 	{
-		public string                      DataModelType;
-		public IInitial                    Initial;
-		public string                      Name;
-		public BindingType                 Binding;
-		public IReadOnlyList<IStateEntity> States;
-		public IDataModel                  DataModel;
-		public IExecutableEntity           Script;
-
-		string IStateMachine.Name => Name;
-
-		string IStateMachine.DataModelType => DataModelType;
-
-		BindingType IStateMachine.Binding => Binding;
-
-		IInitial IStateMachine.Initial => Initial;
-
-		IReadOnlyList<IStateEntity> IStateMachine.States => States;
-
-		IDataModel IStateMachine.DataModel => DataModel;
-
-		IExecutableEntity IStateMachine.Script => Script;
+		public string                      DataModelType { get; set; }
+		public IInitial                    Initial       { get; set; }
+		public string                      Name          { get; set; }
+		public BindingType                 Binding       { get; set; }
+		public IReadOnlyList<IStateEntity> States        { get; set; }
+		public IDataModel                  DataModel     { get; set; }
+		public IExecutableEntity           Script        { get; set; }
 
 		void IEntity<StateMachine, IStateMachine>.Init(IStateMachine source)
 		{

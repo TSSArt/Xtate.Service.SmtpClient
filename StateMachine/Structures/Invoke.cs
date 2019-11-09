@@ -5,39 +5,17 @@ namespace TSSArt.StateMachine
 {
 	public struct Invoke : IInvoke, IEntity<Invoke, IInvoke>, IAncestorProvider, IDebugEntityId
 	{
-		public bool                               AutoForward;
-		public IContent                           Content;
-		public IFinalize                          Finalize;
-		public string                             Id;
-		public ILocationExpression                IdLocation;
-		public IReadOnlyList<ILocationExpression> NameList;
-		public IReadOnlyList<IParam>              Parameters;
-		public Uri                                Source;
-		public IValueExpression                   SourceExpression;
-		public Uri                                Type;
-		public IValueExpression                   TypeExpression;
-
-		bool IInvoke.AutoForward => AutoForward;
-
-		IContent IInvoke.Content => Content;
-
-		IFinalize IInvoke.Finalize => Finalize;
-
-		string IInvoke.Id => Id;
-
-		ILocationExpression IInvoke.IdLocation => IdLocation;
-
-		IReadOnlyList<ILocationExpression> IInvoke.NameList => NameList;
-
-		IReadOnlyList<IParam> IInvoke.Parameters => Parameters;
-
-		Uri IInvoke.Source => Source;
-
-		IValueExpression IInvoke.SourceExpression => SourceExpression;
-
-		Uri IInvoke.Type => Type;
-
-		IValueExpression IInvoke.TypeExpression => TypeExpression;
+		public bool                               AutoForward      { get; set; }
+		public IContent                           Content          { get; set; }
+		public IFinalize                          Finalize         { get; set; }
+		public string                             Id               { get; set; }
+		public ILocationExpression                IdLocation       { get; set; }
+		public IReadOnlyList<ILocationExpression> NameList         { get; set; }
+		public IReadOnlyList<IParam>              Parameters       { get; set; }
+		public Uri                                Source           { get; set; }
+		public IValueExpression                   SourceExpression { get; set; }
+		public Uri                                Type             { get; set; }
+		public IValueExpression                   TypeExpression   { get; set; }
 
 		void IEntity<Invoke, IInvoke>.Init(IInvoke source)
 		{

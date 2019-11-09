@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public class StateMachineController : IService, IExternalCommunication, ILogger, IStorageProvider, INotifyStateChanged
+	public class StateMachineController : IService, IExternalCommunication, ILogger, INotifyStateChanged, IDisposable, IAsyncDisposable
 	{
 		private readonly TaskCompletionSource<object>         _acceptedTcs = new TaskCompletionSource<object>();
 		private readonly Channel<IEvent>                      _channel;
@@ -33,6 +33,29 @@ namespace TSSArt.StateMachine
 
 		public string SessionId { get; }
 
+		public virtual ValueTask DisposeAsync()
+		{
+			_destroyTokenSource.Dispose();
+			_suspendOnIdleTokenSource?.Dispose();
+
+			return default;
+		}
+
+		protected virtual void Dispose(bool dispose)
+		{
+			if (dispose)
+			{
+				_destroyTokenSource.Dispose();
+				_suspendOnIdleTokenSource?.Dispose();
+			}
+		}
+
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
 		IReadOnlyList<IEventProcessor> IExternalCommunication.GetIoProcessors() => _ioProcessor.GetIoProcessors();
 
 		async ValueTask<SendStatus> IExternalCommunication.TrySendEvent(IOutgoingEvent @event, CancellationToken token)
@@ -41,7 +64,7 @@ namespace TSSArt.StateMachine
 
 			if (sendStatus == SendStatus.ToSchedule)
 			{
-				ScheduleEvent(@event);
+				await ScheduleEvent(@event, token).ConfigureAwait(false);
 
 				return SendStatus.Sent;
 			}
@@ -49,25 +72,25 @@ namespace TSSArt.StateMachine
 			return sendStatus;
 		}
 
-		ValueTask IExternalCommunication.CancelEvent(string sendId, CancellationToken token)
+		async ValueTask IExternalCommunication.CancelEvent(string sendId, CancellationToken token)
 		{
 			foreach (var @event in _scheduledEvents)
 			{
 				if (@event.Event.SendId == sendId)
 				{
-					DisposeEvent(@event);
+					await DisposeEvent(@event, token).ConfigureAwait(false);
 				}
 			}
 
 			CleanScheduledEvents();
-
-			return default;
 		}
 
 		ValueTask IExternalCommunication.StartInvoke(string invokeId, Uri type, Uri source, DataModelValue data, CancellationToken token) =>
 				_ioProcessor.StartInvoke(SessionId, invokeId, type, source, data, token);
 
 		ValueTask IExternalCommunication.CancelInvoke(string invokeId, CancellationToken token) => _ioProcessor.CancelInvoke(SessionId, invokeId, token);
+
+		bool IExternalCommunication.IsInvokeActive(string invokeId) => _ioProcessor.IsInvokeActive(SessionId, invokeId);
 
 		ValueTask IExternalCommunication.ForwardEvent(IEvent @event, string invokeId, CancellationToken token) => _ioProcessor.ForwardEvent(SessionId, @event, invokeId, token);
 
@@ -94,18 +117,12 @@ namespace TSSArt.StateMachine
 
 		ValueTask IService.Destroy(CancellationToken token)
 		{
-			_channel.Writer.Complete();
 			_destroyTokenSource.Cancel();
+			_channel.Writer.Complete();
 			return default;
 		}
 
 		public ValueTask<DataModelValue> Result => new ValueTask<DataModelValue>(_completedTcs.Task);
-
-		ValueTask<ITransactionalStorage> IStorageProvider.GetTransactionalStorage(string name, CancellationToken token) => _ioProcessor.GetTransactionalStorage(SessionId, name, token);
-
-		ValueTask IStorageProvider.RemoveTransactionalStorage(string name, CancellationToken token) => _ioProcessor.RemoveTransactionalStorage(SessionId, name, token);
-
-		ValueTask IStorageProvider.RemoveAllTransactionalStorage(CancellationToken token) => _ioProcessor.RemoveAllTransactionalStorage(SessionId, token);
 
 		public ValueTask StartAsync(CancellationToken token)
 		{
@@ -122,7 +139,7 @@ namespace TSSArt.StateMachine
 
 			options.ExternalCommunication = this;
 			options.Logger = this;
-			options.StorageProvider = this;
+			options.StorageProvider = this as IStorageProvider;
 			options.NotifyStateChanged = this;
 
 			if (_idlePeriod > TimeSpan.Zero)
@@ -141,13 +158,23 @@ namespace TSSArt.StateMachine
 
 		public async ValueTask<DataModelValue> ExecuteAsync() => (await RunAsync(true).ConfigureAwait(false)).Result;
 
+		protected virtual ValueTask Initialize() => default;
+
 		private async ValueTask<StateMachineResult> RunAsync(bool throwOnError)
 		{
 			var exitStatus = StateMachineExitStatus.Unknown;
+			var initialized = false;
 			while (true)
 			{
 				try
 				{
+					if (!initialized)
+					{
+						initialized = true;
+
+						await Initialize().ConfigureAwait(false);
+					}
+
 					FillOptions(out var options);
 					var result = await StateMachineInterpreter.RunAsync(SessionId, _stateMachine, _channel.Reader, options).ConfigureAwait(false);
 					exitStatus = result.Status;
@@ -215,34 +242,17 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private void ScheduleEvent(IOutgoingEvent @event)
+		protected virtual ValueTask ScheduleEvent(IOutgoingEvent @event, CancellationToken token)
 		{
 			var scheduledEvent = new ScheduledEvent(@event);
 
 			_scheduledEvents.Add(scheduledEvent);
 
-			var _ = DelayedFire(scheduledEvent);
+			var _ = DelayedFire(scheduledEvent, @event.DelayMs);
 
 			CleanScheduledEvents();
-		}
 
-		private async ValueTask DelayedFire(ScheduledEvent scheduledEvent)
-		{
-			await Task.Delay(scheduledEvent.Event.DelayMs).ConfigureAwait(false);
-
-			if (!scheduledEvent.IsDisposed)
-			{
-				try
-				{
-					DisposeEvent(scheduledEvent);
-
-					await _ioProcessor.DispatchEvent(SessionId, scheduledEvent.Event, CancellationToken.None).ConfigureAwait(false);
-				}
-				catch
-				{
-					//TODO: send error.communication event into originator session
-				}
-			}
+			return default;
 		}
 
 		private void CleanScheduledEvents()
@@ -253,11 +263,44 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private void DisposeEvent(ScheduledEvent scheduledEvent)
+		protected async ValueTask DelayedFire(ScheduledEvent scheduledEvent, int delayMs)
 		{
+			await Task.Delay(delayMs).ConfigureAwait(false);
+
+			if (scheduledEvent.IsDisposed)
+			{
+				return;
+			}
+
+			await DisposeEvent(scheduledEvent, token: default).ConfigureAwait(false);
+
+			try
+			{
+				await _ioProcessor.DispatchEvent(SessionId, scheduledEvent.Event, CancellationToken.None).ConfigureAwait(false);
+			}
+			catch (Exception ex)
+			{
+				await _ioProcessor.Error(SessionId, ErrorType.Communication, _stateMachine.Name, scheduledEvent.Event.SendId, ex, token: default).ConfigureAwait(false);
+			}
+		}
+
+		protected virtual ValueTask DisposeEvent(ScheduledEvent scheduledEvent, CancellationToken token)
+		{
+			scheduledEvent.Dispose();
 			_toDelete.Enqueue(scheduledEvent);
 
-			scheduledEvent.Dispose();
+			return default;
+		}
+
+		protected class ScheduledEvent
+		{
+			public ScheduledEvent(IOutgoingEvent @event) => Event = @event;
+
+			public IOutgoingEvent Event { get; }
+
+			public bool IsDisposed { get; private set; }
+
+			public void Dispose() => IsDisposed = true;
 		}
 	}
 }

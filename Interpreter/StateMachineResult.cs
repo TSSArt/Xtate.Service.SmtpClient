@@ -4,8 +4,6 @@ namespace TSSArt.StateMachine
 {
 	public class StateMachineResult
 	{
-		public DataModelValue Result;
-
 		public StateMachineResult(StateMachineExitStatus status, DataModelValue result = default)
 		{
 			Result = result;
@@ -17,6 +15,8 @@ namespace TSSArt.StateMachine
 			Status = status;
 			Exception = exception;
 		}
+
+		public DataModelValue Result { get; }
 
 		public StateMachineExitStatus Status { get; }
 

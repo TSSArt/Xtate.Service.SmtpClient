@@ -5,35 +5,22 @@ namespace TSSArt.StateMachine
 {
 	public struct Event : IOutgoingEvent, IAncestorProvider
 	{
-		private static readonly Uri    InternalTarget = new Uri(uriString: "_internal", UriKind.Relative);
-		private static readonly char[] Dot            = { '.' };
+		private static readonly Uri InternalTarget = new Uri(uriString: "_internal", UriKind.Relative);
 
-		public DataModelValue             Data;
-		public int                        DelayMs;
-		public IReadOnlyList<IIdentifier> NameParts;
-		public string                     SendId;
-		public Uri                        Target;
-		public Uri                        Type;
+		public DataModelValue             Data      { get; set; }
+		public int                        DelayMs   { get; set; }
+		public IReadOnlyList<IIdentifier> NameParts { get; set; }
+		public string                     SendId    { get; set; }
+		public Uri                        Target    { get; set; }
+		public Uri                        Type      { get; set; }
 
 		public Event(string val) : this()
 		{
 			if (string.IsNullOrEmpty(val)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(val));
 
-			NameParts = IdentifierList.Create(val.Split(Dot, StringSplitOptions.None), p => (Identifier) p);
+			NameParts = EventName.ToParts(val);
 			Target = InternalTarget;
 		}
-
-		DataModelValue IOutgoingEvent.Data => Data;
-
-		int IOutgoingEvent.DelayMs => DelayMs;
-
-		IReadOnlyList<IIdentifier> IOutgoingEvent.NameParts => NameParts;
-
-		string IOutgoingEvent.SendId => SendId;
-
-		Uri IOutgoingEvent.Target => Target;
-
-		Uri IOutgoingEvent.Type => Type;
 
 		public static explicit operator Event(string val) => new Event(val);
 

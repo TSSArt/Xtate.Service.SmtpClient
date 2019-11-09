@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
@@ -19,7 +20,12 @@ namespace TSSArt.StateMachine
 
 		object IAncestorProvider.Ancestor => _script.Ancestor;
 
-		public virtual ValueTask Execute(IExecutionContext executionContext, CancellationToken token) => (ContentEvaluator ?? SourceEvaluator).Execute(executionContext, token);
+		public virtual ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
+		{
+			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
+
+			return (ContentEvaluator ?? SourceEvaluator).Execute(executionContext, token);
+		}
 
 		public IScriptExpression Content => _script.Content;
 

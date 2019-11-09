@@ -81,6 +81,8 @@ namespace TSSArt.StateMachine
 			}
 		}
 
+		public bool IsInvokeActive(string invokeId) => _externalCommunication?.IsInvokeActive(invokeId) == true;
+
 		public async ValueTask<SendStatus> SendEvent(IOutgoingEvent @event, CancellationToken token)
 		{
 			try

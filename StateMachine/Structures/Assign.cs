@@ -2,15 +2,9 @@
 {
 	public struct Assign : IAssign, IEntity<Assign, IAssign>, IAncestorProvider
 	{
-		public ILocationExpression Location;
-		public IValueExpression    Expression;
-		public string              InlineContent;
-
-		ILocationExpression IAssign.Location => Location;
-
-		IValueExpression IAssign.Expression => Expression;
-
-		string IAssign.InlineContent => InlineContent;
+		public ILocationExpression Location      { get; set; }
+		public IValueExpression    Expression    { get; set; }
+		public string              InlineContent { get; set; }
 
 		void IEntity<Assign, IAssign>.Init(IAssign source)
 		{

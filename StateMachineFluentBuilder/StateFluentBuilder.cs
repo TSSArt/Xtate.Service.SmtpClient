@@ -63,7 +63,19 @@ namespace TSSArt.StateMachine
 			return this;
 		}
 
-		public StateFluentBuilder<TOuterBuilder> AddOnEntryTask(ExecutableTask task)
+		public StateFluentBuilder<TOuterBuilder> AddOnEntry(ExecutableTask task)
+		{
+			if (_onEntryList == null)
+			{
+				_onEntryList = new List<IExecutableEntity>();
+			}
+
+			_onEntryList.Add(new RuntimeAction(task));
+
+			return this;
+		}
+
+		public StateFluentBuilder<TOuterBuilder> AddOnEntry(ExecutableCancellableTask task)
 		{
 			if (_onEntryList == null)
 			{
@@ -87,7 +99,19 @@ namespace TSSArt.StateMachine
 			return this;
 		}
 
-		public StateFluentBuilder<TOuterBuilder> AddOnExitTask(ExecutableTask task)
+		public StateFluentBuilder<TOuterBuilder> AddOnExit(ExecutableTask task)
+		{
+			if (_onExitList == null)
+			{
+				_onExitList = new List<IExecutableEntity>();
+			}
+
+			_onExitList.Add(new RuntimeAction(task));
+
+			return this;
+		}
+
+		public StateFluentBuilder<TOuterBuilder> AddOnExit(ExecutableCancellableTask task)
 		{
 			if (_onExitList == null)
 			{

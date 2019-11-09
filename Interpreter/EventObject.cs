@@ -5,9 +5,7 @@ namespace TSSArt.StateMachine
 {
 	public class EventObject : IEvent, IStoreSupport
 	{
-		private static readonly char[] Dot = { '.' };
-
-		public EventObject(string name, string invokeId = null) : this(EventType.External, Parse(name), data: default, sendId: null, invokeId) { }
+		public EventObject(string name, string invokeId = null) : this(EventType.External, EventName.ToParts(name), data: default, sendId: null, invokeId) { }
 
 		public EventObject(EventType type, IOutgoingEvent @event, Uri origin = null, Uri originType = null)
 				: this(type, sendId: null, @event.NameParts, invokeId: null, origin, originType, data: default) { }
@@ -15,7 +13,7 @@ namespace TSSArt.StateMachine
 		public EventObject(EventType type, IReadOnlyList<IIdentifier> nameParts, DataModelValue data = default, string sendId = null, string invokeId = null)
 				: this(type, sendId, nameParts, invokeId, origin: null, originType: null, data) { }
 
-		private EventObject(EventType type, string sendId, IReadOnlyList<IIdentifier> nameParts, string invokeId, Uri origin, Uri originType, DataModelValue data)
+		public EventObject(EventType type, string sendId, IReadOnlyList<IIdentifier> nameParts, string invokeId, Uri origin, Uri originType, DataModelValue data)
 		{
 			Type = type;
 			SendId = sendId;
@@ -34,7 +32,7 @@ namespace TSSArt.StateMachine
 			}
 
 			var name = bucket.GetString(Key.Name);
-			NameParts = IdentifierList.Create(name.Split(Dot, StringSplitOptions.None), p => (Identifier) p);
+			NameParts = EventName.ToParts(name);
 			Type = bucket.Get<EventType>(Key.Type);
 			SendId = bucket.GetString(Key.SendId);
 			Origin = bucket.GetUri(Key.Origin);
@@ -65,7 +63,7 @@ namespace TSSArt.StateMachine
 		public void Store(Bucket bucket)
 		{
 			bucket.Add(Key.TypeInfo, TypeInfo.EventObject);
-			bucket.Add(Key.Name, string.Join(separator: '.', NameParts));
+			bucket.Add(Key.Name, EventName.ToName(NameParts));
 			bucket.Add(Key.Type, Type);
 			bucket.Add(Key.SendId, SendId);
 			bucket.Add(Key.Origin, Origin);
@@ -79,7 +77,5 @@ namespace TSSArt.StateMachine
 				bucket.Nested(Key.DataValue).SetDataModelValue(tracker, Data);
 			}
 		}
-
-		private static IReadOnlyList<IIdentifier> Parse(string name) => IdentifierList.Create(name.Split(Dot, StringSplitOptions.None), p => (Identifier) p);
 	}
 }

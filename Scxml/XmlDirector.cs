@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Xml;
 
@@ -353,7 +354,7 @@ namespace TSSArt.StateMachine
 				private XmlException GetXmlException(string format, string delimiter, IEnumerable<(string ns, string name)> names)
 				{
 					var query = names.Select(n => string.IsNullOrEmpty(n.ns) ? n.name : n.ns + ":" + n.name);
-					var message = string.Format(format, string.Join(delimiter, query));
+					var message = string.Format(CultureInfo.InvariantCulture, format, string.Join(delimiter, query));
 
 					if (_xmlReader is IXmlLineInfo xmlLineInfo)
 					{

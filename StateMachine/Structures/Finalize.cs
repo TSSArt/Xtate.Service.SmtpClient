@@ -4,9 +4,7 @@ namespace TSSArt.StateMachine
 {
 	public struct Finalize : IFinalize, IEntity<Finalize, IFinalize>, IAncestorProvider
 	{
-		public IReadOnlyList<IExecutableEntity> Action;
-
-		IReadOnlyList<IExecutableEntity> IFinalize.Action => Action;
+		public IReadOnlyList<IExecutableEntity> Action { get; set; }
 
 		void IEntity<Finalize, IFinalize>.Init(IFinalize source)
 		{

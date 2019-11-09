@@ -5,33 +5,15 @@ namespace TSSArt.StateMachine
 {
 	public struct State : IState, IEntity<State, IState>, IAncestorProvider, IDebugEntityId
 	{
-		public IDataModel                  DataModel;
-		public IIdentifier                 Id;
-		public IInitial                    Initial;
-		public IReadOnlyList<IInvoke>      Invoke;
-		public IReadOnlyList<IOnEntry>     OnEntry;
-		public IReadOnlyList<IOnExit>      OnExit;
-		public IReadOnlyList<IStateEntity> States;
-		public IReadOnlyList<IHistory>     HistoryStates;
-		public IReadOnlyList<ITransition>  Transitions;
-
-		IIdentifier IState.Id => Id;
-
-		IInitial IState.Initial => Initial;
-
-		IReadOnlyList<IStateEntity> IState.States => States;
-
-		IReadOnlyList<IHistory> IState.HistoryStates => HistoryStates;
-
-		IReadOnlyList<ITransition> IState.Transitions => Transitions;
-
-		IDataModel IState.DataModel => DataModel;
-
-		IReadOnlyList<IOnEntry> IState.OnEntry => OnEntry;
-
-		IReadOnlyList<IOnExit> IState.OnExit => OnExit;
-
-		IReadOnlyList<IInvoke> IState.Invoke => Invoke;
+		public IDataModel                  DataModel     { get; set; }
+		public IIdentifier                 Id            { get; set; }
+		public IInitial                    Initial       { get; set; }
+		public IReadOnlyList<IInvoke>      Invoke        { get; set; }
+		public IReadOnlyList<IOnEntry>     OnEntry       { get; set; }
+		public IReadOnlyList<IOnExit>      OnExit        { get; set; }
+		public IReadOnlyList<IStateEntity> States        { get; set; }
+		public IReadOnlyList<IHistory>     HistoryStates { get; set; }
+		public IReadOnlyList<ITransition>  Transitions   { get; set; }
 
 		void IEntity<State, IState>.Init(IState source)
 		{

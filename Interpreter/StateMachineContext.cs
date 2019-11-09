@@ -85,7 +85,7 @@ namespace TSSArt.StateMachine
 			var ioProcessors = new DataModelObject();
 			foreach (var ioProcessor in _externalCommunication.GetIoProcessors())
 			{
-				var ioProcessorObject = new DataModelObject { ["location"] = new DataModelValue(ioProcessor.GetOrigin(sessionId).ToString(), isReadOnly: true) };
+				var ioProcessorObject = new DataModelObject { ["location"] = new DataModelValue(ioProcessor.GetTarget(sessionId).ToString(), isReadOnly: true) };
 				ioProcessorObject.Freeze();
 				ioProcessors[ioProcessor.Id.ToString()] = new DataModelValue(ioProcessorObject, isReadOnly: true);
 			}

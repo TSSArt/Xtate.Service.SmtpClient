@@ -4,12 +4,8 @@ namespace TSSArt.StateMachine
 {
 	public struct If : IIf, IEntity<If, IIf>, IAncestorProvider
 	{
-		public IReadOnlyList<IExecutableEntity> Action;
-		public IConditionExpression             Condition;
-
-		IReadOnlyList<IExecutableEntity> IIf.Action => Action;
-
-		IConditionExpression IIf.Condition => Condition;
+		public IReadOnlyList<IExecutableEntity> Action    { get; set; }
+		public IConditionExpression             Condition { get; set; }
 
 		void IEntity<If, IIf>.Init(IIf source)
 		{

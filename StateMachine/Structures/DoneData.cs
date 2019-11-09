@@ -4,12 +4,8 @@ namespace TSSArt.StateMachine
 {
 	public struct DoneData : IDoneData, IEntity<DoneData, IDoneData>, IAncestorProvider
 	{
-		public IContent              Content;
-		public IReadOnlyList<IParam> Parameters;
-
-		IContent IDoneData.Content => Content;
-
-		IReadOnlyList<IParam> IDoneData.Parameters => Parameters;
+		public IContent              Content    { get; set; }
+		public IReadOnlyList<IParam> Parameters { get; set; }
 
 		void IEntity<DoneData, IDoneData>.Init(IDoneData source)
 		{

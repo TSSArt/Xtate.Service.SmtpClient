@@ -4,9 +4,7 @@ namespace TSSArt.StateMachine
 {
 	public struct DataModel : IDataModel, IEntity<DataModel, IDataModel>, IAncestorProvider
 	{
-		public IReadOnlyList<IData> Data;
-
-		IReadOnlyList<IData> IDataModel.Data => Data;
+		public IReadOnlyList<IData> Data { get; set; }
 
 		void IEntity<DataModel, IDataModel>.Init(IDataModel source)
 		{

@@ -2,13 +2,9 @@
 {
 	public struct Content : IContent, IEntity<Content, IContent>, IAncestorProvider
 	{
-		public IValueExpression Expression;
+		public IValueExpression Expression { get; set; }
 
-		public string Value;
-
-		IValueExpression IContent.Expression => Expression;
-
-		string IContent.Value => Value;
+		public string Value { get; set; }
 
 		void IEntity<Content, IContent>.Init(IContent source)
 		{

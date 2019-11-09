@@ -2,9 +2,7 @@
 {
 	public struct ScriptExpression : IScriptExpression, IEntity<ScriptExpression, IScriptExpression>, IAncestorProvider
 	{
-		public string Expression;
-
-		string IScriptExpression.Expression => Expression;
+		public string Expression { get; set; }
 
 		void IEntity<ScriptExpression, IScriptExpression>.Init(IScriptExpression source)
 		{

@@ -5,18 +5,10 @@ namespace TSSArt.StateMachine
 {
 	public struct Final : IFinal, IEntity<Final, IFinal>, IAncestorProvider, IDebugEntityId
 	{
-		public IIdentifier             Id;
-		public IReadOnlyList<IOnEntry> OnEntry;
-		public IReadOnlyList<IOnExit>  OnExit;
-		public IDoneData               DoneData;
-
-		IIdentifier IFinal.Id => Id;
-
-		IReadOnlyList<IOnEntry> IFinal.OnEntry => OnEntry;
-
-		IReadOnlyList<IOnExit> IFinal.OnExit => OnExit;
-
-		IDoneData IFinal.DoneData => DoneData;
+		public IIdentifier             Id       { get; set; }
+		public IReadOnlyList<IOnEntry> OnEntry  { get; set; }
+		public IReadOnlyList<IOnExit>  OnExit   { get; set; }
+		public IDoneData               DoneData { get; set; }
 
 		void IEntity<Final, IFinal>.Init(IFinal source)
 		{

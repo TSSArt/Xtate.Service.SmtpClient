@@ -39,7 +39,19 @@ namespace TSSArt.StateMachine
 			keyList.Changed += OnChanged;
 		}
 
-		public void Dispose() => _keyList.Changed -= OnChanged;
+		protected virtual void Dispose(bool dispose)
+		{
+			if (dispose)
+			{
+				_keyList.Changed -= OnChanged;
+			}
+		}
+
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
 
 		private void OnChanged(KeyList<T>.ChangedAction action, IEntity entity, IReadOnlyList<T> list)
 		{

@@ -4,9 +4,7 @@ namespace TSSArt.StateMachine
 {
 	public struct OnExit : IOnExit, IEntity<OnExit, IOnExit>, IAncestorProvider
 	{
-		public IReadOnlyList<IExecutableEntity> Action;
-
-		IReadOnlyList<IExecutableEntity> IOnExit.Action => Action;
+		public IReadOnlyList<IExecutableEntity> Action { get; set; }
 
 		void IEntity<OnExit, IOnExit>.Init(IOnExit source)
 		{

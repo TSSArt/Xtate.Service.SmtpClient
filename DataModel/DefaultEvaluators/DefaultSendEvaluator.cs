@@ -37,6 +37,8 @@ namespace TSSArt.StateMachine
 
 		public virtual async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
+			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
+
 			var sendId = _send.Id ?? IdGenerator.NewSendId();
 			var name = EventExpressionEvaluator != null ? await EventExpressionEvaluator.EvaluateString(executionContext, token).ConfigureAwait(false) : _send.Event;
 			var data = await Converter.GetData(_send.Content?.Value, ContentExpressionEvaluator, NameEvaluatorList, ParameterList, executionContext, token).ConfigureAwait(false);

@@ -2,12 +2,8 @@
 {
 	public struct Script : IScript, IEntity<Script, IScript>, IAncestorProvider
 	{
-		public IScriptExpression         Content;
-		public IExternalScriptExpression Source;
-
-		IScriptExpression IScript.Content => Content;
-
-		IExternalScriptExpression IScript.Source => Source;
+		public IScriptExpression         Content { get; set; }
+		public IExternalScriptExpression Source  { get; set; }
 
 		void IEntity<Script, IScript>.Init(IScript source)
 		{

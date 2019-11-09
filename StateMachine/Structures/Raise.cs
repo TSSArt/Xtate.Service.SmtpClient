@@ -2,9 +2,7 @@
 {
 	public struct Raise : IRaise, IEntity<Raise, IRaise>, IAncestorProvider
 	{
-		public IOutgoingEvent Event;
-
-		IOutgoingEvent IRaise.Event => Event;
+		public IOutgoingEvent Event { get; set; }
 
 		void IEntity<Raise, IRaise>.Init(IRaise source)
 		{

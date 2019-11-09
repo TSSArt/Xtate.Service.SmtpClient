@@ -2,15 +2,9 @@
 {
 	public struct Param : IParam, IEntity<Param, IParam>, IAncestorProvider
 	{
-		public IValueExpression    Expression;
-		public ILocationExpression Location;
-		public string              Name;
-
-		IValueExpression IParam.Expression => Expression;
-
-		ILocationExpression IParam.Location => Location;
-
-		string IParam.Name => Name;
+		public IValueExpression    Expression { get; set; }
+		public ILocationExpression Location   { get; set; }
+		public string              Name       { get; set; }
 
 		void IEntity<Param, IParam>.Init(IParam source)
 		{

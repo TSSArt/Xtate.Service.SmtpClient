@@ -25,11 +25,11 @@ namespace TSSArt.StateMachine
 			return _queue.Dequeue();
 		}
 
-		public void Enqueue(T obj)
+		public void Enqueue(T item)
 		{
-			_queue.Enqueue(obj);
+			_queue.Enqueue(item);
 
-			Changed?.Invoke(ChangedAction.Enqueue, obj);
+			Changed?.Invoke(ChangedAction.Enqueue, item);
 		}
 	}
 }

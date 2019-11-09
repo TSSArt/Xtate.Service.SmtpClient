@@ -20,7 +20,7 @@ namespace TSSArt.StateMachine
 
 		void IStoreSupport.Store(Bucket bucket)
 		{
-			bucket.Add(Key.Id, string.Join(separator: '.', _event.NameParts));
+			bucket.Add(Key.Id, EventName.ToName(_event.NameParts));
 		}
 	}
 }

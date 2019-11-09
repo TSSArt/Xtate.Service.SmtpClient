@@ -4,18 +4,10 @@ namespace TSSArt.StateMachine
 {
 	public struct Data : IData, IEntity<Data, IData>, IAncestorProvider, IDebugEntityId
 	{
-		public string                  Id;
-		public IExternalDataExpression Source;
-		public IValueExpression        Expression;
-		public string                  InlineContent;
-
-		string IData.Id => Id;
-
-		IExternalDataExpression IData.Source => Source;
-
-		IValueExpression IData.Expression => Expression;
-
-		string IData.InlineContent => InlineContent;
+		public string                  Id            { get; set; }
+		public IExternalDataExpression Source        { get; set; }
+		public IValueExpression        Expression    { get; set; }
+		public string                  InlineContent { get; set; }
 
 		void IEntity<Data, IData>.Init(IData source)
 		{

@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
@@ -26,6 +27,8 @@ namespace TSSArt.StateMachine
 
 		public virtual async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
+			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
+
 			if (ExpressionEvaluator != null)
 			{
 				var obj = await ExpressionEvaluator.EvaluateObject(executionContext, token).ConfigureAwait(false);

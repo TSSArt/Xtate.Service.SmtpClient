@@ -30,7 +30,13 @@ namespace TSSArt.StateMachine
 
 		object IAncestorProvider.Ancestor => _invoke.Ancestor;
 
-		public virtual ValueTask Cancel(string invokeId, IExecutionContext executionContext, CancellationToken token) => executionContext.CancelInvoke(invokeId, token);
+		public virtual ValueTask Cancel(string invokeId, IExecutionContext executionContext, CancellationToken token)
+		{
+			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
+			if (string.IsNullOrEmpty(invokeId)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(invokeId));
+
+			return executionContext.CancelInvoke(invokeId, token);
+		}
 
 		public Uri                                Type             => _invoke.Type;
 		public IValueExpression                   TypeExpression   => _invoke.TypeExpression;
@@ -46,6 +52,9 @@ namespace TSSArt.StateMachine
 
 		public virtual async ValueTask<string> Start(string stateId, IExecutionContext executionContext, CancellationToken token)
 		{
+			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
+			if (string.IsNullOrEmpty(stateId)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(stateId));
+
 			var invokeId = _invoke.Id ?? IdGenerator.NewInvokeId(stateId);
 
 			var type = TypeExpressionEvaluator != null ? ToUri(await TypeExpressionEvaluator.EvaluateString(executionContext, token).ConfigureAwait(false)) : _invoke.Type;

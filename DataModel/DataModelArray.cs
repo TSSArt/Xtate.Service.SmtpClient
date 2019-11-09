@@ -320,6 +320,8 @@ namespace TSSArt.StateMachine
 
 		public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object result)
 		{
+			if (indexes == null) throw new ArgumentNullException(nameof(indexes));
+
 			if (indexes.Length == 1 && indexes[0] is IConvertible convertible)
 			{
 				result = this[convertible.ToInt32(null)].ToObject();
@@ -334,6 +336,8 @@ namespace TSSArt.StateMachine
 
 		public override bool TrySetIndex(SetIndexBinder binder, object[] indexes, object value)
 		{
+			if (indexes == null) throw new ArgumentNullException(nameof(indexes));
+
 			if (indexes.Length == 1 && indexes[0] is IConvertible convertible)
 			{
 				this[convertible.ToInt32(null)] = DataModelValue.FromObject(value);

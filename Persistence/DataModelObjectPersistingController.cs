@@ -104,6 +104,12 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public override void Dispose() => _dataModelObject.Changed -= OnChanged;
+		protected override void Dispose(bool disposing)
+		{
+			if (disposing)
+			{
+				_dataModelObject.Changed -= OnChanged;
+			}
+		}
 	}
 }

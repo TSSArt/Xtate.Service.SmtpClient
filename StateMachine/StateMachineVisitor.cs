@@ -680,174 +680,365 @@ namespace TSSArt.StateMachine
 
 		protected virtual void Build(ref IStateMachine entity, ref StateMachine properties)
 		{
-			VisitWrapper(ref properties.DataModel);
-			VisitWrapper(ref properties.Script);
-			VisitWrapper(ref properties.Initial);
-			VisitWrapper(ref properties.States);
+			var dataModel = properties.DataModel;
+			VisitWrapper(ref dataModel);
+			properties.DataModel = dataModel;
+
+			var script = properties.Script;
+			VisitWrapper(ref script);
+			properties.Script = script;
+
+			var initial = properties.Initial;
+			VisitWrapper(ref initial);
+			properties.Initial = initial;
+
+			var states = properties.States;
+			VisitWrapper(ref states);
+			properties.States = states;
 		}
 
 		protected virtual void Build(ref ITransition entity, ref Transition properties)
 		{
-			VisitWrapper(ref properties.Event);
-			VisitWrapper(ref properties.Target);
-			VisitWrapper(ref properties.Condition);
-			VisitWrapper(ref properties.Action);
+			var Event = properties.Event;
+			VisitWrapper(ref Event);
+			properties.Event = Event;
+
+			var target = properties.Target;
+			VisitWrapper(ref target);
+			properties.Target = target;
+
+			var condition = properties.Condition;
+			VisitWrapper(ref condition);
+			properties.Condition = condition;
+
+			var action = properties.Action;
+			VisitWrapper(ref action);
+			properties.Action = action;
 		}
 
 		protected virtual void Build(ref IState entity, ref State properties)
 		{
-			VisitWrapper(ref properties.Id);
-			VisitWrapper(ref properties.DataModel);
-			VisitWrapper(ref properties.Initial);
-			VisitWrapper(ref properties.States);
-			VisitWrapper(ref properties.HistoryStates);
-			VisitWrapper(ref properties.Transitions);
-			VisitWrapper(ref properties.OnEntry);
-			VisitWrapper(ref properties.OnExit);
-			VisitWrapper(ref properties.Invoke);
+			var id = properties.Id;
+			VisitWrapper(ref id);
+			properties.Id = id;
+
+			var dataModel = properties.DataModel;
+			VisitWrapper(ref dataModel);
+			properties.DataModel = dataModel;
+
+			var initial = properties.Initial;
+			VisitWrapper(ref initial);
+			properties.Initial = initial;
+
+			var states = properties.States;
+			VisitWrapper(ref states);
+			properties.States = states;
+
+			var historyStates = properties.HistoryStates;
+			VisitWrapper(ref historyStates);
+			properties.HistoryStates = historyStates;
+
+			var transitions = properties.Transitions;
+			VisitWrapper(ref transitions);
+			properties.Transitions = transitions;
+
+			var onEntry = properties.OnEntry;
+			VisitWrapper(ref onEntry);
+			properties.OnEntry = onEntry;
+
+			var onExit = properties.OnExit;
+			VisitWrapper(ref onExit);
+			properties.OnExit = onExit;
+
+			var invoke = properties.Invoke;
+			VisitWrapper(ref invoke);
+			properties.Invoke = invoke;
 		}
 
 		protected virtual void Build(ref IParallel entity, ref Parallel properties)
 		{
-			VisitWrapper(ref properties.Id);
-			VisitWrapper(ref properties.DataModel);
-			VisitWrapper(ref properties.States);
-			VisitWrapper(ref properties.HistoryStates);
-			VisitWrapper(ref properties.Transitions);
-			VisitWrapper(ref properties.OnEntry);
-			VisitWrapper(ref properties.OnExit);
-			VisitWrapper(ref properties.Invoke);
+			var id = properties.Id;
+			VisitWrapper(ref id);
+			properties.Id = id;
+
+			var dataModel = properties.DataModel;
+			VisitWrapper(ref dataModel);
+			properties.DataModel = dataModel;
+
+			var states = properties.States;
+			VisitWrapper(ref states);
+			properties.States = states;
+
+			var historyStates = properties.HistoryStates;
+			VisitWrapper(ref historyStates);
+			properties.HistoryStates = historyStates;
+
+			var transitions = properties.Transitions;
+			VisitWrapper(ref transitions);
+			properties.Transitions = transitions;
+
+			var onEntry = properties.OnEntry;
+			VisitWrapper(ref onEntry);
+			properties.OnEntry = onEntry;
+
+			var onExit = properties.OnExit;
+			VisitWrapper(ref onExit);
+			properties.OnExit = onExit;
+
+			var invoke = properties.Invoke;
+			VisitWrapper(ref invoke);
+			properties.Invoke = invoke;
 		}
 
 		protected virtual void Build(ref IInitial entity, ref Initial properties)
 		{
-			VisitWrapper(ref properties.Transition);
+			var transition = properties.Transition;
+			VisitWrapper(ref transition);
+			properties.Transition = transition;
 		}
 
 		protected virtual void Build(ref IFinal entity, ref Final properties)
 		{
-			VisitWrapper(ref properties.Id);
-			VisitWrapper(ref properties.OnEntry);
-			VisitWrapper(ref properties.OnExit);
-			VisitWrapper(ref properties.DoneData);
+			var id = properties.Id;
+			VisitWrapper(ref id);
+			properties.Id = id;
+
+			var onEntry = properties.OnEntry;
+			VisitWrapper(ref onEntry);
+			properties.OnEntry = onEntry;
+
+			var onExit = properties.OnExit;
+			VisitWrapper(ref onExit);
+			properties.OnExit = onExit;
+
+			var doneData = properties.DoneData;
+			VisitWrapper(ref doneData);
+			properties.DoneData = doneData;
 		}
 
 		protected virtual void Build(ref IHistory entity, ref History properties)
 		{
-			VisitWrapper(ref properties.Id);
-			VisitWrapper(ref properties.Transition);
+			var id = properties.Id;
+			VisitWrapper(ref id);
+			properties.Id = id;
+
+			var transition = properties.Transition;
+			VisitWrapper(ref transition);
+			properties.Transition = transition;
 		}
 
 		protected virtual void Build(ref IOnEntry entity, ref OnEntry properties)
 		{
-			VisitWrapper(ref properties.Action);
+			var action = properties.Action;
+			VisitWrapper(ref action);
+			properties.Action = action;
 		}
 
 		protected virtual void Build(ref IOnExit entity, ref OnExit properties)
 		{
-			VisitWrapper(ref properties.Action);
+			var action = properties.Action;
+			VisitWrapper(ref action);
+			properties.Action = action;
 		}
 
 		protected virtual void Build(ref IAssign entity, ref Assign properties)
 		{
-			VisitWrapper(ref properties.Location);
-			VisitWrapper(ref properties.Expression);
+			var location = properties.Location;
+			VisitWrapper(ref location);
+			properties.Location = location;
+
+			var expression = properties.Expression;
+			VisitWrapper(ref expression);
+			properties.Expression = expression;
 		}
 
 		protected virtual void Build(ref ICancel entity, ref Cancel properties)
 		{
-			VisitWrapper(ref properties.SendIdExpression);
+			var sendIdExpression = properties.SendIdExpression;
+			VisitWrapper(ref sendIdExpression);
+			properties.SendIdExpression = sendIdExpression;
 		}
 
 		protected virtual void Build(ref IElseIf entity, ref ElseIf properties)
 		{
-			VisitWrapper(ref properties.Condition);
+			var condition = properties.Condition;
+			VisitWrapper(ref condition);
+			properties.Condition = condition;
 		}
 
 		protected virtual void Build(ref IForEach entity, ref ForEach properties)
 		{
-			VisitWrapper(ref properties.Array);
-			VisitWrapper(ref properties.Item);
-			VisitWrapper(ref properties.Index);
-			VisitWrapper(ref properties.Action);
+			var array = properties.Array;
+			VisitWrapper(ref array);
+			properties.Array = array;
+
+			var item = properties.Item;
+			VisitWrapper(ref item);
+			properties.Item = item;
+
+			var index = properties.Index;
+			VisitWrapper(ref index);
+			properties.Index = index;
+
+			var action = properties.Action;
+			VisitWrapper(ref action);
+			properties.Action = action;
 		}
 
 		protected virtual void Build(ref IIf entity, ref If properties)
 		{
-			VisitWrapper(ref properties.Condition);
-			VisitWrapper(ref properties.Action);
+			var condition = properties.Condition;
+			VisitWrapper(ref condition);
+			properties.Condition = condition;
+
+			var action = properties.Action;
+			VisitWrapper(ref action);
+			properties.Action = action;
 		}
 
 		protected virtual void Build(ref ILog entity, ref Log properties)
 		{
-			VisitWrapper(ref properties.Expression);
+			var expression = properties.Expression;
+			VisitWrapper(ref expression);
+			properties.Expression = expression;
 		}
 
 		protected virtual void Build(ref IRaise entity, ref Raise properties)
 		{
-			VisitWrapper(ref properties.Event);
+			var @event = properties.Event;
+			VisitWrapper(ref @event);
+			properties.Event = @event;
 		}
 
 		protected virtual void Build(ref IScript entity, ref Script properties)
 		{
-			VisitWrapper(ref properties.Content);
-			VisitWrapper(ref properties.Source);
+			var content = properties.Content;
+			VisitWrapper(ref content);
+			properties.Content = content;
+
+			var source = properties.Source;
+			VisitWrapper(ref source);
+			properties.Source = source;
 		}
 
 		protected virtual void Build(ref ISend entity, ref Send properties)
 		{
-			VisitWrapper(ref properties.EventExpression);
-			VisitWrapper(ref properties.TargetExpression);
-			VisitWrapper(ref properties.TypeExpression);
-			VisitWrapper(ref properties.IdLocation);
-			VisitWrapper(ref properties.DelayExpression);
-			VisitWrapper(ref properties.NameList);
-			VisitWrapper(ref properties.Parameters);
-			VisitWrapper(ref properties.Content);
+			var eventExpression = properties.EventExpression;
+			VisitWrapper(ref eventExpression);
+			properties.EventExpression = eventExpression;
+
+			var targetExpression = properties.TargetExpression;
+			VisitWrapper(ref targetExpression);
+			properties.TargetExpression = targetExpression;
+
+			var typeExpression = properties.TypeExpression;
+			VisitWrapper(ref typeExpression);
+			properties.TypeExpression = typeExpression;
+
+			var idLocation = properties.IdLocation;
+			VisitWrapper(ref idLocation);
+			properties.IdLocation = idLocation;
+
+			var delayExpression = properties.DelayExpression;
+			VisitWrapper(ref delayExpression);
+			properties.DelayExpression = delayExpression;
+
+			var nameList = properties.NameList;
+			VisitWrapper(ref nameList);
+			properties.NameList = nameList;
+
+			var parameters = properties.Parameters;
+			VisitWrapper(ref parameters);
+			properties.Parameters = parameters;
+
+			var content = properties.Content;
+			VisitWrapper(ref content);
+			properties.Content = content;
 		}
 
 		protected virtual void Build(ref IDataModel entity, ref DataModel properties)
 		{
-			VisitWrapper(ref properties.Data);
+			var data = properties.Data;
+			VisitWrapper(ref data);
+			properties.Data = data;
 		}
 
 		protected virtual void Build(ref IData entity, ref Data properties)
 		{
-			VisitWrapper(ref properties.Expression);
-			VisitWrapper(ref properties.Source);
+			var expression = properties.Expression;
+			VisitWrapper(ref expression);
+			properties.Expression = expression;
+
+			var source = properties.Source;
+			VisitWrapper(ref source);
+			properties.Source = source;
 		}
 
 		protected virtual void Build(ref IDoneData entity, ref DoneData properties)
 		{
-			VisitWrapper(ref properties.Content);
-			VisitWrapper(ref properties.Parameters);
+			var content = properties.Content;
+			VisitWrapper(ref content);
+			properties.Content = content;
+
+			var parameters = properties.Parameters;
+			VisitWrapper(ref parameters);
+			properties.Parameters = parameters;
 		}
 
 		protected virtual void Build(ref IInvoke entity, ref Invoke properties)
 		{
-			VisitWrapper(ref properties.TypeExpression);
-			VisitWrapper(ref properties.SourceExpression);
-			VisitWrapper(ref properties.IdLocation);
-			VisitWrapper(ref properties.NameList);
-			VisitWrapper(ref properties.Content);
-			VisitWrapper(ref properties.Parameters);
-			VisitWrapper(ref properties.Finalize);
+			var typeExpression = properties.TypeExpression;
+			VisitWrapper(ref typeExpression);
+			properties.TypeExpression = typeExpression;
+
+			var sourceExpression = properties.SourceExpression;
+			VisitWrapper(ref sourceExpression);
+			properties.SourceExpression = sourceExpression;
+
+			var idLocation = properties.IdLocation;
+			VisitWrapper(ref idLocation);
+			properties.IdLocation = idLocation;
+
+			var nameList = properties.NameList;
+			VisitWrapper(ref nameList);
+			properties.NameList = nameList;
+
+			var content = properties.Content;
+			VisitWrapper(ref content);
+			properties.Content = content;
+
+			var parameters = properties.Parameters;
+			VisitWrapper(ref parameters);
+			properties.Parameters = parameters;
+
+			var finalize = properties.Finalize;
+			VisitWrapper(ref finalize);
+			properties.Finalize = finalize;
 		}
 
 		protected virtual void Build(ref IContent entity, ref Content properties)
 		{
-			VisitWrapper(ref properties.Expression);
+			var expression = properties.Expression;
+			VisitWrapper(ref expression);
+			properties.Expression = expression;
 		}
 
 		protected virtual void Build(ref IParam entity, ref Param properties)
 		{
-			VisitWrapper(ref properties.Expression);
-			VisitWrapper(ref properties.Location);
+			var expression = properties.Expression;
+			VisitWrapper(ref expression);
+			properties.Expression = expression;
+
+			var location = properties.Location;
+			VisitWrapper(ref location);
+			properties.Location = location;
 		}
 
 		protected virtual void Build(ref IFinalize entity, ref Finalize properties)
 		{
-			VisitWrapper(ref properties.Action);
+			var action = properties.Action;
+			VisitWrapper(ref action);
+			properties.Action = action;
 		}
 
 		protected virtual void Build(ref IElse entity, ref Else properties) { }
