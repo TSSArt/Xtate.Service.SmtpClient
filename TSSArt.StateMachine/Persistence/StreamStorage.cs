@@ -80,21 +80,30 @@ namespace TSSArt.StateMachine
 			}
 		}
 
+		protected virtual void Dispose(bool dispose)
+		{
+			if (dispose)
+			{
+				_inMemoryStorage?.Dispose();
+
+				if (_disposeStream)
+				{
+					_stream.Dispose();
+				}
+			}
+		}
+
 		public void Dispose()
 		{
-			_inMemoryStorage?.Dispose();
-
-			if (_disposeStream)
-			{
-				_stream.Dispose();
-			}
+			Dispose(true);
+			GC.SuppressFinalize(this);
 		}
 
 		public ValueTask DisposeAsync()
 		{
 			_inMemoryStorage?.Dispose();
 
-			return _disposeStream ? _stream.DisposeAsync() : new ValueTask();
+			return _disposeStream ? _stream.DisposeAsync() : default;
 		}
 
 		public static async ValueTask<StreamStorage> CreateAsync(Stream stream, bool disposeStream = true, CancellationToken token = default) =>

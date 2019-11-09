@@ -41,7 +41,7 @@ namespace TSSArt.StateMachine
 
 			var expression = properties.Expression;
 
-			if (!expression.StartsWith(value: "In(") || !expression.EndsWith(value: ")"))
+			if (!expression.StartsWith(value: "In(", StringComparison.Ordinal) || !expression.EndsWith(value: ")", StringComparison.Ordinal))
 			{
 				AddErrorMessage(message: "Incorrect format of condition expression for NONE data model");
 			}

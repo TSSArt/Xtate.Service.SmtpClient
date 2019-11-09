@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
-	public class DataModelReferenceTracker : IDisposable
+	public sealed class DataModelReferenceTracker : IDisposable
 	{
 		private readonly Bucket _bucket;
 
@@ -17,7 +17,13 @@ namespace TSSArt.StateMachine
 			bucket.TryGet(Bucket.RootKey, out _nextRefId);
 		}
 
-		public void Dispose() { }
+		public void Dispose()
+		{
+			foreach (var entry in _objects.Values)
+			{
+				entry.Controller.Dispose();
+			}
+		}
 
 		public object GetValue(int refId, DataModelValueType type, object baseObject)
 		{

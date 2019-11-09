@@ -2,12 +2,8 @@
 {
 	public struct Log : ILog, IEntity<Log, ILog>, IAncestorProvider
 	{
-		public IValueExpression Expression;
-		public string           Label;
-
-		IValueExpression ILog.Expression => Expression;
-
-		string ILog.Label => Label;
+		public IValueExpression Expression { get; set; }
+		public string           Label      { get; set; }
 
 		void IEntity<Log, ILog>.Init(ILog source)
 		{

@@ -2,9 +2,7 @@
 {
 	public struct ValueExpression : IValueExpression, IEntity<ValueExpression, IValueExpression>, IAncestorProvider
 	{
-		public string Expression;
-
-		string IValueExpression.Expression => Expression;
+		public string Expression { get; set; }
 
 		void IEntity<ValueExpression, IValueExpression>.Init(IValueExpression source)
 		{

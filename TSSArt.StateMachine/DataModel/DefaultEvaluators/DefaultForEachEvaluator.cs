@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -27,6 +28,8 @@ namespace TSSArt.StateMachine
 
 		public virtual async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
+			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
+
 			var array = await ArrayEvaluator.EvaluateArray(executionContext, token).ConfigureAwait(false);
 
 			for (var i = 0; i < array.Length; i ++)

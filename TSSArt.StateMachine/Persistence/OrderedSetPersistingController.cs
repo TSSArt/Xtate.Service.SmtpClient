@@ -57,7 +57,19 @@ namespace TSSArt.StateMachine
 			orderedSet.Changed += OnChanged;
 		}
 
-		public void Dispose() => _orderedSet.Changed -= OnChanged;
+		protected virtual void Dispose(bool dispose)
+		{
+			if (dispose)
+			{
+				_orderedSet.Changed -= OnChanged;
+			}
+		}
+
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
 
 		private void OnChanged(OrderedSet<TEntity>.ChangedAction action, TEntity item)
 		{

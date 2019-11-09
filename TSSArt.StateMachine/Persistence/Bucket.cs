@@ -418,11 +418,11 @@ namespace TSSArt.StateMachine
 
 		private static class StringConverter
 		{
-			public static int GetLength(string val) => val == string.Empty ? 1 : Encoding.UTF8.GetByteCount(val);
+			public static int GetLength(string val) => val.Length == 0 ? 1 : Encoding.UTF8.GetByteCount(val);
 
 			public static void Write(string val, Span<byte> bytes)
 			{
-				if (val == string.Empty)
+				if (val.Length == 0)
 				{
 					bytes[0] = 0xFF;
 					return;

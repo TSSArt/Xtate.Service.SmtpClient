@@ -2,9 +2,7 @@
 {
 	public struct ElseIf : IElseIf, IEntity<ElseIf, IElseIf>, IAncestorProvider
 	{
-		public IConditionExpression Condition;
-
-		IConditionExpression IElseIf.Condition => Condition;
+		public IConditionExpression Condition { get; set; }
 
 		void IEntity<ElseIf, IElseIf>.Init(IElseIf source)
 		{

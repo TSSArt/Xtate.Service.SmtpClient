@@ -50,11 +50,20 @@ namespace TSSArt.StateMachine
 			}
 		}
 
+		protected virtual void Dispose(bool dispose)
+		{
+			if (dispose)
+			{
+				TruncateLog(true);
+
+				_baselineOwner?.Dispose();
+			}
+		}
+
 		public void Dispose()
 		{
-			TruncateLog(true);
-
-			_baselineOwner?.Dispose();
+			Dispose(true);
+			GC.SuppressFinalize(this);
 		}
 
 		public void Add(ReadOnlySpan<byte> key, ReadOnlySpan<byte> value)

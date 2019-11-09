@@ -2,12 +2,8 @@
 {
 	public struct Cancel : ICancel, IEntity<Cancel, ICancel>, IAncestorProvider
 	{
-		public string           SendId;
-		public IValueExpression SendIdExpression;
-
-		string ICancel.SendId => SendId;
-
-		IValueExpression ICancel.SendIdExpression => SendIdExpression;
+		public string           SendId           { get; set; }
+		public IValueExpression SendIdExpression { get; set; }
 
 		void IEntity<Cancel, ICancel>.Init(ICancel source)
 		{

@@ -178,6 +178,10 @@ namespace TSSArt.StateMachine
 
 		public override int GetHashCode() => (_value != null ? _value.GetHashCode() : 0) + _int64.GetHashCode();
 
+		public static bool operator ==(DataModelValue left, DataModelValue right) => left.Equals(right);
+
+		public static bool operator !=(DataModelValue left, DataModelValue right) => !left.Equals(right);
+
 		public DataModelValue DeepClone(bool isReadOnly = false)
 		{
 			switch (Type)
@@ -198,14 +202,14 @@ namespace TSSArt.StateMachine
 
 		public static DataModelValue FromInlineContent(string content, bool isReadOnly = false) => new DataModelValue(content, isReadOnly);
 
-		public static DataModelValue FromObject(object obj, bool isReadOnly = false)
+		public static DataModelValue FromObject(object value, bool isReadOnly = false)
 		{
-			if (obj == null)
+			if (value == null)
 			{
 				return Null(isReadOnly);
 			}
 
-			switch (System.Type.GetTypeCode(obj.GetType()))
+			switch (System.Type.GetTypeCode(value.GetType()))
 			{
 				case TypeCode.SByte:
 				case TypeCode.Int16:
@@ -218,21 +222,21 @@ namespace TSSArt.StateMachine
 				case TypeCode.Single:
 				case TypeCode.Double:
 				case TypeCode.Decimal:
-					return new DataModelValue(Convert.ToDouble(obj), isReadOnly);
-				case TypeCode.Boolean: return new DataModelValue((bool) obj, isReadOnly);
-				case TypeCode.DateTime: return new DataModelValue((DateTime) obj, isReadOnly);
-				case TypeCode.String: return new DataModelValue((string) obj, isReadOnly);
-				case TypeCode.Object when obj is DataModelValue dataModelValue:
+					return new DataModelValue(Convert.ToDouble(value, NumberFormatInfo.InvariantInfo), isReadOnly);
+				case TypeCode.Boolean: return new DataModelValue((bool) value, isReadOnly);
+				case TypeCode.DateTime: return new DataModelValue((DateTime) value, isReadOnly);
+				case TypeCode.String: return new DataModelValue((string) value, isReadOnly);
+				case TypeCode.Object when value is DataModelValue dataModelValue:
 					return dataModelValue;
-				case TypeCode.Object when obj is DataModelObject dataModelObject:
+				case TypeCode.Object when value is DataModelObject dataModelObject:
 					return new DataModelValue(dataModelObject, isReadOnly);
-				case TypeCode.Object when obj is DataModelArray dataModelArray:
+				case TypeCode.Object when value is DataModelArray dataModelArray:
 					return new DataModelValue(dataModelArray, isReadOnly);
-				case TypeCode.Object when obj is IDictionary<string, object> dictionary:
+				case TypeCode.Object when value is IDictionary<string, object> dictionary:
 					return CreateDataModelObject(dictionary, isReadOnly);
-				case TypeCode.Object when obj is IEnumerable array:
+				case TypeCode.Object when value is IEnumerable array:
 					return CreateDataModelArray(array, isReadOnly);
-				default: throw new ArgumentException(message: "Unsupported object type", nameof(obj));
+				default: throw new ArgumentException(message: "Unsupported object type", nameof(value));
 			}
 		}
 
@@ -272,9 +276,11 @@ namespace TSSArt.StateMachine
 
 		public static DataModelValue FromEvent(IEvent @event, bool isReadOnly = false)
 		{
+			if (@event == null) throw new ArgumentNullException(nameof(@event));
+
 			var eventObject = new DataModelObject
 							  {
-									  ["name"] = new DataModelValue(string.Join(separator: '.', @event.NameParts), isReadOnly),
+									  ["name"] = new DataModelValue(EventName.ToName(@event.NameParts), isReadOnly),
 									  ["type"] = new DataModelValue(GetTypeString(@event.Type), isReadOnly),
 									  ["sendid"] = new DataModelValue(@event.SendId, isReadOnly),
 									  ["origin"] = new DataModelValue(@event.Origin?.ToString(), isReadOnly),
@@ -304,6 +310,8 @@ namespace TSSArt.StateMachine
 
 		public static DataModelValue FromException(Exception exception, bool isReadOnly = false)
 		{
+			if (exception == null) throw new ArgumentNullException(nameof(exception));
+
 			var exceptionData = new DataModelObject
 								{
 										["typeName"] = new DataModelValue(exception.GetType().Name, isReadOnly),
@@ -333,10 +341,10 @@ namespace TSSArt.StateMachine
 						DataModelValueType.Undefined => "null",
 						DataModelValueType.Null => "null",
 						DataModelValueType.String => ToJsonString(AsString()),
-						DataModelValueType.Object => AsObject().ToString(format: "JSON"),
-						DataModelValueType.Array => AsArray().ToString(format: "JSON"),
-						DataModelValueType.Number => AsNumber().ToString(format: "G17", CultureInfo.InvariantCulture),
-						DataModelValueType.DateTime => AsDateTime().ToString(format: "O", CultureInfo.InvariantCulture),
+						DataModelValueType.Object => AsObject().ToString(format: "JSON", CultureInfo.InvariantCulture),
+						DataModelValueType.Array => AsArray().ToString(format: "JSON", CultureInfo.InvariantCulture),
+						DataModelValueType.Number => AsNumber().ToString(format: "G17", NumberFormatInfo.InvariantInfo),
+						DataModelValueType.DateTime => AsDateTime().ToString(format: "O", DateTimeFormatInfo.InvariantInfo),
 						DataModelValueType.Boolean => (AsBoolean() ? "true" : "false"),
 						_ => throw new ArgumentOutOfRangeException()
 				};
@@ -385,7 +393,7 @@ namespace TSSArt.StateMachine
 							sb.Append("\\r");
 							break;
 						case var ctrl when char.IsControl(ctrl):
-							sb.AppendFormat("\\u").Append(((int) c).ToString("X4"));
+							sb.Append("\\u").Append(((int) c).ToString(format: "X4", CultureInfo.InvariantCulture));
 							break;
 						default:
 							sb.Append(c);
@@ -539,7 +547,7 @@ namespace TSSArt.StateMachine
 					case TypeCode.UInt16:
 					case TypeCode.UInt32:
 					case TypeCode.UInt64:
-						result = Convert.ChangeType(_value.AsNumber(), typeCode);
+						result = Convert.ChangeType(_value.AsNumber(), typeCode, NumberFormatInfo.InvariantInfo);
 						return true;
 				}
 

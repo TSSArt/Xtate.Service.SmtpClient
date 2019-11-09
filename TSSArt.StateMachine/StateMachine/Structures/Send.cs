@@ -5,45 +5,19 @@ namespace TSSArt.StateMachine
 {
 	public struct Send : ISend, IEntity<Send, ISend>, IAncestorProvider, IDebugEntityId
 	{
-		public IContent                           Content;
-		public IValueExpression                   DelayExpression;
-		public int?                               DelayMs;
-		public string                             Event;
-		public IValueExpression                   EventExpression;
-		public string                             Id;
-		public ILocationExpression                IdLocation;
-		public IReadOnlyList<ILocationExpression> NameList;
-		public IReadOnlyList<IParam>              Parameters;
-		public Uri                                Target;
-		public IValueExpression                   TargetExpression;
-		public Uri                                Type;
-		public IValueExpression                   TypeExpression;
-
-		IContent ISend.Content => Content;
-
-		IValueExpression ISend.DelayExpression => DelayExpression;
-
-		int? ISend.DelayMs => DelayMs;
-
-		string ISend.Event => Event;
-
-		IValueExpression ISend.EventExpression => EventExpression;
-
-		string ISend.Id => Id;
-
-		ILocationExpression ISend.IdLocation => IdLocation;
-
-		IReadOnlyList<ILocationExpression> ISend.NameList => NameList;
-
-		IReadOnlyList<IParam> ISend.Parameters => Parameters;
-
-		Uri ISend.Target => Target;
-
-		IValueExpression ISend.TargetExpression => TargetExpression;
-
-		Uri ISend.Type => Type;
-
-		IValueExpression ISend.TypeExpression => TypeExpression;
+		public IContent                           Content          { get; set; }
+		public IValueExpression                   DelayExpression  { get; set; }
+		public int?                               DelayMs          { get; set; }
+		public string                             Event            { get; set; }
+		public IValueExpression                   EventExpression  { get; set; }
+		public string                             Id               { get; set; }
+		public ILocationExpression                IdLocation       { get; set; }
+		public IReadOnlyList<ILocationExpression> NameList         { get; set; }
+		public IReadOnlyList<IParam>              Parameters       { get; set; }
+		public Uri                                Target           { get; set; }
+		public IValueExpression                   TargetExpression { get; set; }
+		public Uri                                Type             { get; set; }
+		public IValueExpression                   TypeExpression   { get; set; }
 
 		void IEntity<Send, ISend>.Init(ISend source)
 		{

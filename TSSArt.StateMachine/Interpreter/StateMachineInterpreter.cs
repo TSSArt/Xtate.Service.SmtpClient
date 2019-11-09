@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -15,16 +14,8 @@ namespace TSSArt.StateMachine
 
 	public class StateMachineInterpreter
 	{
-		private const string StateStorageName                  = "state";
-		private const string StateMachineDefinitionStorageName = "smd";
-
-		private static readonly IIdentifier DoneIdentifier  = (Identifier) "done";
-		private static readonly IIdentifier StateIdentifier = (Identifier) "state";
-		private static readonly IIdentifier ErrorIdentifier = (Identifier) "error";
-
-		private static readonly IReadOnlyList<IIdentifier> ErrorExecution     = GetErrorNameParts((Identifier) "execution");
-		private static readonly IReadOnlyList<IIdentifier> ErrorCommunication = GetErrorNameParts((Identifier) "communication");
-		private static readonly IReadOnlyList<IIdentifier> ErrorPlatform      = GetErrorNameParts((Identifier) "platform");
+		private const string StateStorageKey                  = "state";
+		private const string StateMachineDefinitionStorageKey = "smd";
 
 		private readonly CancellationToken                     _anyToken;
 		private readonly DataModelValue                        _arguments;
@@ -80,9 +71,6 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private static IReadOnlyList<IIdentifier> GetErrorNameParts(IIdentifier type)   => new ReadOnlyCollection<IIdentifier>(new[] { ErrorIdentifier, type });
-		private static IReadOnlyList<IIdentifier> GetDoneStateNameParts(IIdentifier id) => new ReadOnlyCollection<IIdentifier>(new[] { DoneIdentifier, StateIdentifier, id });
-
 		public static ValueTask<StateMachineResult> RunAsync(string sessionId, IStateMachine stateMachine, ChannelReader<IEvent> eventChannel, in InterpreterOptions options = default)
 		{
 			if (sessionId == null) throw new ArgumentNullException(nameof(sessionId));
@@ -116,7 +104,7 @@ namespace TSSArt.StateMachine
 
 		private async ValueTask<InterpreterModel> TryRestoreInterpreterModel(IStateMachine stateMachine)
 		{
-			var storage = await _storageProvider.GetTransactionalStorage(StateMachineDefinitionStorageName, _stopToken).ConfigureAwait(false);
+			var storage = await _storageProvider.GetTransactionalStorage(partition: default, StateMachineDefinitionStorageKey, _stopToken).ConfigureAwait(false);
 			await using (storage.ConfigureAwait(false))
 			{
 				var bucket = new Bucket(storage);
@@ -156,7 +144,7 @@ namespace TSSArt.StateMachine
 
 		private async ValueTask SaveInterpreterModel(InterpreterModel interpreterModel)
 		{
-			var storage = await _storageProvider.GetTransactionalStorage(StateMachineDefinitionStorageName, _stopToken).ConfigureAwait(false);
+			var storage = await _storageProvider.GetTransactionalStorage(partition: default, StateMachineDefinitionStorageKey, _stopToken).ConfigureAwait(false);
 			await using (storage.ConfigureAwait(false))
 			{
 				SaveToStorage(interpreterModel.Root.As<IStoreSupport>(), new Bucket(storage));
@@ -404,8 +392,8 @@ namespace TSSArt.StateMachine
 
 		private async ValueTask CleanupPersistedData()
 		{
-			await _storageProvider.RemoveTransactionalStorage(StateStorageName, _stopToken).ConfigureAwait(false);
-			await _storageProvider.RemoveTransactionalStorage(StateMachineDefinitionStorageName, _stopToken).ConfigureAwait(false);
+			await _storageProvider.RemoveTransactionalStorage(partition: default, StateStorageKey, _stopToken).ConfigureAwait(false);
+			await _storageProvider.RemoveTransactionalStorage(partition: default, StateMachineDefinitionStorageKey, _stopToken).ConfigureAwait(false);
 		}
 
 		private async ValueTask InitializeAllDataModels()
@@ -603,6 +591,24 @@ namespace TSSArt.StateMachine
 		}
 
 		private async ValueTask<IEvent> ReadExternalEvent()
+		{
+			while (true)
+			{
+				var @event = await ReadExternalEventUnfiltered().ConfigureAwait(false);
+
+				if (@event.InvokeId == null)
+				{
+					return @event;
+				}
+
+				if (_externalCommunication.IsInvokeActive(@event.InvokeId))
+				{
+					return @event;
+				}
+			}
+		}
+
+		private async ValueTask<IEvent> ReadExternalEventUnfiltered()
 		{
 			var externalBufferedQueue = _context.ExternalBufferedQueue;
 
@@ -860,13 +866,13 @@ namespace TSSArt.StateMachine
 							doneData = await EvaluateDoneData(final.DoneData).ConfigureAwait(false);
 						}
 
-						_context.InternalQueue.Enqueue(new EventObject(EventType.Internal, GetDoneStateNameParts(parent.Id), doneData));
+						_context.InternalQueue.Enqueue(new EventObject(EventType.Internal, EventName.GetDoneStateNameParts(parent.Id), doneData));
 
 						if (grandparent is ParallelNode)
 						{
 							if (grandparent.States.All(IsInFinalState))
 							{
-								_context.InternalQueue.Enqueue(new EventObject(EventType.Internal, GetDoneStateNameParts(grandparent.Id)));
+								_context.InternalQueue.Enqueue(new EventObject(EventType.Internal, EventName.GetDoneStateNameParts(grandparent.Id)));
 							}
 						}
 					}
@@ -1149,14 +1155,11 @@ namespace TSSArt.StateMachine
 
 		private bool IsOperationCancelled(Exception ex)
 		{
-			switch (ex)
+			return ex switch
 			{
-				case OperationCanceledException operationCanceledException:
-					return operationCanceledException.CancellationToken == _stopToken;
-
-				default:
-					return false;
-			}
+					OperationCanceledException operationCanceledException => (operationCanceledException.CancellationToken == _stopToken),
+					_ => false
+			};
 		}
 
 		private bool IsError(Exception ex) => !IsOperationCancelled(ex);
@@ -1175,9 +1178,9 @@ namespace TSSArt.StateMachine
 
 			var nameParts = errorType switch
 			{
-					ErrorType.Execution => ErrorExecution,
-					ErrorType.Communication => ErrorCommunication,
-					ErrorType.Platform => ErrorPlatform,
+					ErrorType.Execution => EventName.ErrorExecution,
+					ErrorType.Communication => EventName.ErrorCommunication,
+					ErrorType.Platform => EventName.ErrorPlatform,
 					_ => throw new ArgumentOutOfRangeException(nameof(errorType), errorType, message: null)
 			};
 
@@ -1195,7 +1198,7 @@ namespace TSSArt.StateMachine
 				{
 					try
 					{
-						await Error(source, ex, logLoggerErrors: false);
+						await Error(source, ex, logLoggerErrors: false).ConfigureAwait(false);
 					}
 					catch
 					{
@@ -1325,7 +1328,7 @@ namespace TSSArt.StateMachine
 			IStateMachineContext context;
 			if (IsPersistingEnabled)
 			{
-				var storage = await _storageProvider.GetTransactionalStorage(StateStorageName, _stopToken).ConfigureAwait(false);
+				var storage = await _storageProvider.GetTransactionalStorage(partition: default, StateStorageKey, _stopToken).ConfigureAwait(false);
 				context = new StateMachinePersistedContext(_model.Root.Name, _sessionId, _arguments, storage, _model.EntityMap, _logger, _externalCommunication);
 			}
 			else

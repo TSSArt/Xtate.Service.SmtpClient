@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Xml;
 
 namespace TSSArt.StateMachine
@@ -45,7 +46,7 @@ namespace TSSArt.StateMachine
 				throw GetXmlException(message: "List of identifiers cannot be empty");
 			}
 
-			if (val.IndexOf(Space) < 0)
+			if (val.IndexOf(Space, StringComparison.Ordinal) < 0)
 			{
 				return IdentifierList.Create(new[] { ToIdentifier(val) });
 			}
@@ -85,7 +86,7 @@ namespace TSSArt.StateMachine
 				throw GetXmlException(message: "List of events cannot be empty");
 			}
 
-			if (val.IndexOf(Space) < 0)
+			if (val.IndexOf(Space, StringComparison.Ordinal) < 0)
 			{
 				return EventDescriptorList.Create(new[] { ToEventDescriptor(val) });
 			}
@@ -111,7 +112,7 @@ namespace TSSArt.StateMachine
 				throw GetXmlException(message: "List of locations cannot be empty");
 			}
 
-			if (expression.IndexOf(Space) < 0)
+			if (expression.IndexOf(Space, StringComparison.Ordinal) < 0)
 			{
 				return LocationExpressionList.Create(new[] { (ILocationExpression) ToLocationExpression(expression) });
 			}
@@ -153,17 +154,17 @@ namespace TSSArt.StateMachine
 				return 0;
 			}
 
-			if (val.EndsWith(value: "ms"))
+			if (val.EndsWith(value: "ms", StringComparison.Ordinal))
 			{
-				return int.Parse(val.Substring(startIndex: 0, val.Length - 2));
+				return int.Parse(val.Substring(startIndex: 0, val.Length - 2), NumberFormatInfo.InvariantInfo);
 			}
 
-			if (val.EndsWith(value: "s"))
+			if (val.EndsWith(value: "s", StringComparison.Ordinal))
 			{
-				return int.Parse(val.Substring(startIndex: 0, val.Length - 1)) * 1000;
+				return int.Parse(val.Substring(startIndex: 0, val.Length - 1), NumberFormatInfo.InvariantInfo) * 1000;
 			}
 
-			throw GetXmlException("Delay parsing error. Format is ###0(ms|s).");
+			throw GetXmlException(message: "Delay parsing error. Format is ###0(ms|s).");
 		}
 
 		public IStateMachine ConstructStateMachine() => ReadStateMachine();

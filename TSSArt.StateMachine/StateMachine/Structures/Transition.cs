@@ -4,21 +4,11 @@ namespace TSSArt.StateMachine
 {
 	public struct Transition : ITransition, IEntity<Transition, ITransition>, IAncestorProvider
 	{
-		public IReadOnlyList<IEventDescriptor>  Event;
-		public IExecutableEntity                Condition;
-		public IReadOnlyList<IIdentifier>       Target;
-		public TransitionType                   Type;
-		public IReadOnlyList<IExecutableEntity> Action;
-
-		IReadOnlyList<IEventDescriptor> ITransition.Event => Event;
-
-		IExecutableEntity ITransition.Condition => Condition;
-
-		IReadOnlyList<IIdentifier> ITransition.Target => Target;
-
-		TransitionType ITransition.Type => Type;
-
-		IReadOnlyList<IExecutableEntity> ITransition.Action => Action;
+		public IReadOnlyList<IEventDescriptor>  Event     { get; set; }
+		public IExecutableEntity                Condition { get; set; }
+		public IReadOnlyList<IIdentifier>       Target    { get; set; }
+		public TransitionType                   Type      { get; set; }
+		public IReadOnlyList<IExecutableEntity> Action    { get; set; }
 
 		void IEntity<Transition, ITransition>.Init(ITransition source)
 		{

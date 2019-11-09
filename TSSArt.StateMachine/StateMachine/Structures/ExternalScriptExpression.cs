@@ -4,9 +4,7 @@ namespace TSSArt.StateMachine
 {
 	public struct ExternalScriptExpression : IExternalScriptExpression, IEntity<ExternalScriptExpression, IExternalScriptExpression>, IAncestorProvider
 	{
-		public Uri Uri;
-
-		Uri IExternalScriptExpression.Uri => Uri;
+		public Uri Uri { get; set; }
 
 		void IEntity<ExternalScriptExpression, IExternalScriptExpression>.Init(IExternalScriptExpression source)
 		{

@@ -123,6 +123,8 @@ namespace TSSArt.StateMachine
 
 		public override bool TryGetMember(GetMemberBinder binder, out object result)
 		{
+			if (binder == null) throw new ArgumentNullException(nameof(binder));
+
 			result = this[binder.Name].ToObject();
 
 			return true;
@@ -130,6 +132,8 @@ namespace TSSArt.StateMachine
 
 		public override bool TrySetMember(SetMemberBinder binder, object value)
 		{
+			if (binder == null) throw new ArgumentNullException(nameof(binder));
+
 			this[binder.Name] = DataModelValue.FromObject(value);
 
 			return true;

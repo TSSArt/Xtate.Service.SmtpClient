@@ -2,9 +2,7 @@
 {
 	public struct LocationExpression : ILocationExpression, IEntity<LocationExpression, ILocationExpression>, IAncestorProvider
 	{
-		public string Expression;
-
-		string ILocationExpression.Expression => Expression;
+		public string Expression { get; set; }
 
 		void IEntity<LocationExpression, ILocationExpression>.Init(ILocationExpression source)
 		{

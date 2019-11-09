@@ -5,30 +5,14 @@ namespace TSSArt.StateMachine
 {
 	public struct Parallel : IParallel, IEntity<Parallel, IParallel>, IAncestorProvider, IDebugEntityId
 	{
-		public IIdentifier                 Id;
-		public IReadOnlyList<IStateEntity> States;
-		public IReadOnlyList<IHistory>     HistoryStates;
-		public IReadOnlyList<ITransition>  Transitions;
-		public IDataModel                  DataModel;
-		public IReadOnlyList<IOnEntry>     OnEntry;
-		public IReadOnlyList<IOnExit>      OnExit;
-		public IReadOnlyList<IInvoke>      Invoke;
-
-		IIdentifier IParallel.Id => Id;
-
-		IReadOnlyList<IStateEntity> IParallel.States => States;
-
-		IReadOnlyList<IHistory> IParallel.HistoryStates => HistoryStates;
-
-		IReadOnlyList<ITransition> IParallel.Transitions => Transitions;
-
-		IDataModel IParallel.DataModel => DataModel;
-
-		IReadOnlyList<IOnEntry> IParallel.OnEntry => OnEntry;
-
-		IReadOnlyList<IOnExit> IParallel.OnExit => OnExit;
-
-		IReadOnlyList<IInvoke> IParallel.Invoke => Invoke;
+		public IIdentifier                 Id            { get; set; }
+		public IReadOnlyList<IStateEntity> States        { get; set; }
+		public IReadOnlyList<IHistory>     HistoryStates { get; set; }
+		public IReadOnlyList<ITransition>  Transitions   { get; set; }
+		public IDataModel                  DataModel     { get; set; }
+		public IReadOnlyList<IOnEntry>     OnEntry       { get; set; }
+		public IReadOnlyList<IOnExit>      OnExit        { get; set; }
+		public IReadOnlyList<IInvoke>      Invoke        { get; set; }
 
 		void IEntity<Parallel, IParallel>.Init(IParallel source)
 		{

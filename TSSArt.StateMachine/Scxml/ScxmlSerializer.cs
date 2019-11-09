@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
 
@@ -15,10 +16,7 @@ namespace TSSArt.StateMachine
 			Visit(ref stateMachine);
 		}
 
-		private string ToString(IOutgoingEvent @event)
-		{
-			return string.Join(separator: ".", @event.NameParts.Select(id => id.ToString()));
-		}
+		private string ToString(IOutgoingEvent @event) => EventName.ToName(@event.NameParts);
 
 		private string ToString(IEnumerable<IIdentifier> list)
 		{
@@ -68,6 +66,8 @@ namespace TSSArt.StateMachine
 
 		protected override void Visit(ref IState entity)
 		{
+			if (entity == null) throw new ArgumentNullException(nameof(entity));
+
 			_writer.WriteStartElement("state");
 
 			if (entity.Id != null)
@@ -82,6 +82,8 @@ namespace TSSArt.StateMachine
 
 		protected override void Visit(ref IParallel entity)
 		{
+			if (entity == null) throw new ArgumentNullException(nameof(entity));
+
 			_writer.WriteStartElement("parallel");
 
 			if (entity.Id != null)
@@ -96,6 +98,8 @@ namespace TSSArt.StateMachine
 
 		protected override void Visit(ref IHistory entity)
 		{
+			if (entity == null) throw new ArgumentNullException(nameof(entity));
+
 			_writer.WriteStartElement("history");
 
 			if (entity.Id != null)
@@ -115,6 +119,8 @@ namespace TSSArt.StateMachine
 
 		protected override void Visit(ref IFinal entity)
 		{
+			if (entity == null) throw new ArgumentNullException(nameof(entity));
+
 			_writer.WriteStartElement("final");
 
 			if (entity.Id != null)
@@ -129,6 +135,8 @@ namespace TSSArt.StateMachine
 
 		protected override void Visit(ref ITransition entity)
 		{
+			if (entity == null) throw new ArgumentNullException(nameof(entity));
+
 			_writer.WriteStartElement("transition");
 
 			if (entity.Type != TransitionType.External)
@@ -158,6 +166,8 @@ namespace TSSArt.StateMachine
 
 		protected override void Visit(ref ISend entity)
 		{
+			if (entity == null) throw new ArgumentNullException(nameof(entity));
+
 			_writer.WriteStartElement("send");
 
 			if (entity.Event != null)
@@ -222,6 +232,8 @@ namespace TSSArt.StateMachine
 
 		protected override void Visit(ref IScript entity)
 		{
+			if (entity == null) throw new ArgumentNullException(nameof(entity));
+
 			_writer.WriteStartElement("script");
 
 			if (entity.Source != null)
@@ -239,6 +251,8 @@ namespace TSSArt.StateMachine
 
 		protected override void Visit(ref IRaise entity)
 		{
+			if (entity == null) throw new ArgumentNullException(nameof(entity));
+
 			_writer.WriteStartElement("raise");
 
 			_writer.WriteAttributeString(localName: "event", ToString(entity.Event));
@@ -248,6 +262,8 @@ namespace TSSArt.StateMachine
 
 		protected override void Visit(ref ILog entity)
 		{
+			if (entity == null) throw new ArgumentNullException(nameof(entity));
+
 			_writer.WriteStartElement("log");
 
 			if (entity.Label != null)
@@ -265,6 +281,8 @@ namespace TSSArt.StateMachine
 
 		protected override void Visit(ref IIf entity)
 		{
+			if (entity == null) throw new ArgumentNullException(nameof(entity));
+
 			_writer.WriteStartElement("if");
 
 			_writer.WriteAttributeString(localName: "cond", entity.Condition.Expression);
@@ -276,6 +294,8 @@ namespace TSSArt.StateMachine
 
 		protected override void Visit(ref IForEach entity)
 		{
+			if (entity == null) throw new ArgumentNullException(nameof(entity));
+
 			_writer.WriteStartElement("foreach");
 
 			_writer.WriteAttributeString(localName: "array", entity.Array.Expression);
@@ -294,6 +314,8 @@ namespace TSSArt.StateMachine
 
 		protected override void Visit(ref IElseIf entity)
 		{
+			if (entity == null) throw new ArgumentNullException(nameof(entity));
+
 			_writer.WriteStartElement("elseif");
 
 			_writer.WriteAttributeString(localName: "cond", entity.Condition.Expression);
@@ -309,6 +331,8 @@ namespace TSSArt.StateMachine
 
 		protected override void Visit(ref ICancel entity)
 		{
+			if (entity == null) throw new ArgumentNullException(nameof(entity));
+
 			_writer.WriteStartElement("cancel");
 
 			if (entity.SendId != null)
@@ -326,6 +350,8 @@ namespace TSSArt.StateMachine
 
 		protected override void Visit(ref IAssign entity)
 		{
+			if (entity == null) throw new ArgumentNullException(nameof(entity));
+
 			_writer.WriteStartElement("assign");
 
 			_writer.WriteAttributeString(localName: "location", entity.Location.Expression);
@@ -372,6 +398,8 @@ namespace TSSArt.StateMachine
 
 		protected override void Visit(ref IData entity)
 		{
+			if (entity == null) throw new ArgumentNullException(nameof(entity));
+
 			_writer.WriteStartElement("data");
 
 			_writer.WriteAttributeString(localName: "id", entity.Id);
@@ -396,6 +424,8 @@ namespace TSSArt.StateMachine
 
 		protected override void Visit(ref IInvoke entity)
 		{
+			if (entity == null) throw new ArgumentNullException(nameof(entity));
+
 			_writer.WriteStartElement("invoke");
 
 			if (entity.Type != null)
@@ -454,6 +484,8 @@ namespace TSSArt.StateMachine
 
 		protected override void Visit(ref IParam entity)
 		{
+			if (entity == null) throw new ArgumentNullException(nameof(entity));
+
 			_writer.WriteStartElement("param");
 
 			_writer.WriteAttributeString(localName: "name", entity.Name);
@@ -473,6 +505,8 @@ namespace TSSArt.StateMachine
 
 		protected override void Visit(ref IContent entity)
 		{
+			if (entity == null) throw new ArgumentNullException(nameof(entity));
+
 			_writer.WriteStartElement("content");
 
 			if (entity.Expression != null)

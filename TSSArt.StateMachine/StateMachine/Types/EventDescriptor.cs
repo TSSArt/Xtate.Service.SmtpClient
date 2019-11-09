@@ -12,7 +12,7 @@ namespace TSSArt.StateMachine
 		{
 			_val = val ?? throw new ArgumentNullException(nameof(val));
 
-			if (val == string.Empty)
+			if (val.Length == 0)
 			{
 				throw new ArgumentException(message: "Event cannot be empty", nameof(val));
 			}

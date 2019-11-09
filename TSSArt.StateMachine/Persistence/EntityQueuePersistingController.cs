@@ -27,7 +27,19 @@ namespace TSSArt.StateMachine
 			entityQueue.Changed += OnChanged;
 		}
 
-		public void Dispose() => _entityQueue.Changed -= OnChanged;
+		protected virtual void Dispose(bool dispose)
+		{
+			if (dispose)
+			{
+				_entityQueue.Changed -= OnChanged;
+			}
+		}
+
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
 
 		private void OnChanged(EntityQueue<T>.ChangedAction action, T entity)
 		{

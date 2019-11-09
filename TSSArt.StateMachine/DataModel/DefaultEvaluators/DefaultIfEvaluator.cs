@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -48,6 +49,8 @@ namespace TSSArt.StateMachine
 
 		public virtual async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
+			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
+
 			foreach (var (condition, actions) in Branches)
 			{
 				if (condition == null || await condition.EvaluateBoolean(executionContext, token).ConfigureAwait(false))

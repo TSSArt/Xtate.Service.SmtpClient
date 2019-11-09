@@ -5,16 +5,16 @@ namespace TSSArt.StateMachine
 {
 	public struct InterpreterOptions
 	{
-		public ICollection<IDataModelHandlerFactory> DataModelHandlerFactories;
-		public DataModelValue                        Arguments;
-		public IExternalCommunication                ExternalCommunication;
-		public INotifyStateChanged                   NotifyStateChanged;
-		public CancellationToken                     SuspendToken;
-		public CancellationToken                     StopToken;
-		public CancellationToken                     DestroyToken;
-		public IResourceLoader                       ResourceLoader;
-		public PersistenceLevel                      PersistenceLevel;
-		public IStorageProvider                      StorageProvider;
-		public ILogger                               Logger;
+		public ICollection<IDataModelHandlerFactory> DataModelHandlerFactories { get; set; }
+		public DataModelValue                        Arguments                 { get; set; }
+		public IExternalCommunication                ExternalCommunication     { get; set; }
+		public INotifyStateChanged                   NotifyStateChanged        { get; set; }
+		public CancellationToken                     SuspendToken              { get; set; }
+		public CancellationToken                     StopToken                 { get; set; }
+		public CancellationToken                     DestroyToken              { get; set; }
+		public IResourceLoader                       ResourceLoader            { get; set; }
+		public PersistenceLevel                      PersistenceLevel          { get; set; }
+		public IStorageProvider                      StorageProvider           { get; set; }
+		public ILogger                               Logger                    { get; set; }
 	}
 }

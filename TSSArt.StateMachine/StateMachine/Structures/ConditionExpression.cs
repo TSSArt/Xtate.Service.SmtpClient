@@ -2,9 +2,7 @@
 {
 	public struct ConditionExpression : IConditionExpression, IEntity<ConditionExpression, IConditionExpression>, IAncestorProvider
 	{
-		public string Expression;
-
-		string IConditionExpression.Expression => Expression;
+		public string Expression { get; set; }
 
 		void IEntity<ConditionExpression, IConditionExpression>.Init(IConditionExpression source)
 		{

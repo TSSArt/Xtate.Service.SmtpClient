@@ -62,7 +62,7 @@ namespace TSSArt.StateMachine.EcmaScript
 		{
 			if (_declare == null)
 			{
-				throw new InvalidOperationException("Invalid variable name");
+				throw new InvalidOperationException(Resources.Error_InvalidLocalVariableName);
 			}
 
 			executionContext.Engine().Exec(_declare, startNewScope: false);
@@ -90,17 +90,12 @@ namespace TSSArt.StateMachine.EcmaScript
 				return null;
 			}
 
-			switch (expressionStatement.Expression)
+			return expressionStatement.Expression switch
 			{
-				case JintIdentifier identifier:
-					return identifier;
-
-				case MemberExpression memberExpression:
-					return memberExpression;
-
-				default:
-					return null;
-			}
+					JintIdentifier identifier => (Expression) identifier,
+					MemberExpression memberExpression => memberExpression,
+					_ => null
+			};
 		}
 	}
 }

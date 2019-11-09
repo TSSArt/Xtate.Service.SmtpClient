@@ -65,20 +65,20 @@ namespace TSSArt.StateMachine.Test
 		{
 			private readonly Dictionary<string, MemoryStream> _streams = new Dictionary<string, MemoryStream>();
 
-			public async ValueTask<ITransactionalStorage> GetTransactionalStorage(string name, CancellationToken token)
+			public async ValueTask<ITransactionalStorage> GetTransactionalStorage(string partition, string key, CancellationToken token)
 			{
-				if (!_streams.TryGetValue(name, out var stream))
+				if (!_streams.TryGetValue(partition + key, out var stream))
 				{
 					stream = new MemoryStream();
-					_streams.Add(name, stream);
+					_streams.Add(partition + key, stream);
 				}
 
 				return await StreamStorage.CreateAsync(stream, disposeStream: false, token);
 			}
 
-			public ValueTask RemoveTransactionalStorage(string name, CancellationToken token) => default;
+			public ValueTask RemoveTransactionalStorage(string partition, string key, CancellationToken token) => default;
 
-			public ValueTask RemoveAllTransactionalStorage(CancellationToken token) => default;
+			public ValueTask RemoveAllTransactionalStorage(string partition, CancellationToken token) => default;
 		}
 	}
 }

@@ -66,11 +66,7 @@ namespace TSSArt.StateMachine.Test
 
 			builder
 					.BeginState((Identifier) "S1")
-					.AddOnEntryTask((ctx, token) =>
-									{
-										ctx.DataModel["Hello"] = new DataModelValue("World");
-										return default;
-									})
+					.AddOnEntry(ctx => ctx.DataModel["Hello"] = new DataModelValue("World"))
 					.EndState();
 
 			var channel = Channel.CreateUnbounded<IEvent>();

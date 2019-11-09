@@ -4,15 +4,15 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public class NullStorageProvider : IStorageProvider, ITransactionalStorage
+	public sealed class NullStorageProvider : IStorageProvider, ITransactionalStorage
 	{
 		public static readonly NullStorageProvider Instance = new NullStorageProvider();
 
-		public ValueTask<ITransactionalStorage> GetTransactionalStorage(string name, CancellationToken token) => new ValueTask<ITransactionalStorage>(Instance);
+		public ValueTask<ITransactionalStorage> GetTransactionalStorage(string partition, string key, CancellationToken token) => new ValueTask<ITransactionalStorage>(Instance);
 
-		public ValueTask RemoveTransactionalStorage(string name, CancellationToken token) => default;
+		public ValueTask RemoveTransactionalStorage(string partition, string key, CancellationToken token) => default;
 
-		public ValueTask RemoveAllTransactionalStorage(CancellationToken token) => default;
+		public ValueTask RemoveAllTransactionalStorage(string partition, CancellationToken token) => default;
 
 		public void Add(ReadOnlySpan<byte> key, ReadOnlySpan<byte> value) { }
 

@@ -6,80 +6,41 @@ using System.Net.Mime;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
+using Castle.Core.Internal;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using TSSArt.StateMachine.EcmaScript;
 
 namespace TSSArt.StateMachine.Test
 {
-	public class HttpClientServiceFactory : IServiceFactory
+	[SimpleService("https://www.w3.org/Protocols/HTTP/", Alias = "http")]
+	public class HttpClientService : SimpleServiceBase
 	{
-		private static readonly Uri ServiceFactoryTypeId      = new Uri("https://www.w3.org/Protocols/HTTP/");
-		private static readonly Uri ServiceFactoryAliasTypeId = new Uri(uriString: "http", UriKind.Relative);
-
-		public Uri TypeId => ServiceFactoryTypeId;
-
-		public Uri AliasTypeId => ServiceFactoryAliasTypeId;
-
-		public ValueTask<IService> StartService(Uri source, DataModelValue data, CancellationToken token) => new ValueTask<IService>(new HttpClientService(source, data));
-	}
-
-	public class HttpClientService : IService
-	{
-		private readonly TaskCompletionSource<DataModelValue> _completedCompletionSource = new TaskCompletionSource<DataModelValue>();
-		private readonly CancellationTokenSource              _tokenSource               = new CancellationTokenSource();
-
-		public HttpClientService(Uri source, DataModelValue data)
+		protected override async ValueTask<DataModelValue> Execute()
 		{
-			RunAsync(source, data.ToObject());
-		}
+			dynamic data = Argument.ToObject();
 
-		public ValueTask Send(IEvent @event, CancellationToken token) => throw new NotSupportedException("Events not supported");
-
-		public ValueTask Destroy(CancellationToken token)
-		{
-			_tokenSource.Cancel();
-			_completedCompletionSource.TrySetCanceled();
-
-			return default;
-		}
-
-		public ValueTask<DataModelValue> Result => new ValueTask<DataModelValue>(_completedCompletionSource.Task);
-
-		private async void RunAsync(Uri source, dynamic data)
-		{
-			try
+			using var client = new HttpClient();
+			var request = new HttpRequestMessage(new HttpMethod(data.method), Source);
+			var headers = data.headers;
+			if (headers != null)
 			{
-				using var client = new HttpClient();
-				var request = new HttpRequestMessage(new HttpMethod(data.method), source);
-				var headers = data.headers;
-				if (headers != null)
+				foreach (var header in headers)
 				{
-					foreach (var header in headers)
-					{
-						request.Headers.Add(header.name, header.value);
-					}
+					request.Headers.Add(header.name, header.value);
 				}
-
-				var requestContent = data.content;
-				if (requestContent != null)
-				{
-					request.Content = new StringContent(requestContent);
-				}
-
-				var result = await client.SendAsync(request, _tokenSource.Token);
-				var content = await result.Content.ReadAsStringAsync();
-
-				_completedCompletionSource.TrySetResult(new DataModelValue(content));
 			}
-			catch (OperationCanceledException ex)
+
+			var requestContent = data.content;
+			if (requestContent != null)
 			{
-				_completedCompletionSource.TrySetCanceled(ex.CancellationToken);
+				request.Content = new StringContent(requestContent);
 			}
-			catch (Exception ex)
-			{
-				_completedCompletionSource.TrySetException(ex);
-			}
+
+			var result = await client.SendAsync(request, StopToken);
+			var content = await result.Content.ReadAsStringAsync();
+
+			return new DataModelValue(content);
 		}
 	}
 
@@ -162,7 +123,8 @@ namespace TSSArt.StateMachine.Test
 								  ServiceFactories = new List<IServiceFactory>(),
 								  StateMachineProvider = stateMachineProviderMock.Object
 						  };
-			options.ServiceFactories.Add(new HttpClientServiceFactory());
+
+			options.ServiceFactories.Add(SimpleServiceFactory<HttpClientService>.Instance);
 			options.DataModelHandlerFactories.Add(EcmaScriptDataModelHandler.Factory);
 
 			var ioProcessor = new IoProcessor(options);

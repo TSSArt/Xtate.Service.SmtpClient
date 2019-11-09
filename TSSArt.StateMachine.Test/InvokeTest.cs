@@ -62,6 +62,7 @@ namespace TSSArt.StateMachine.Test
 
 			_externalCommunicationMock = new Mock<IExternalCommunication>();
 			_externalCommunicationMock.Setup(e => e.GetIoProcessors()).Returns(Array.Empty<IEventProcessor>());
+			_externalCommunicationMock.Setup(e => e.IsInvokeActive(It.IsAny<string>())).Returns(true);
 			_loggerMock = new Mock<ILogger>();
 
 			_options = new InterpreterOptions
@@ -82,6 +83,7 @@ namespace TSSArt.StateMachine.Test
 			_externalCommunicationMock.Verify(l => l.GetIoProcessors());
 			_externalCommunicationMock.Verify(l => l.StartInvoke("invoke_id", new Uri("proto://type"), new Uri("proto://src"), DataModelValue.FromObject("content", false), default));
 			_externalCommunicationMock.Verify(l => l.CancelInvoke("invoke_id", default));
+			_externalCommunicationMock.Verify(l => l.IsInvokeActive("invoke_id"));
 			_externalCommunicationMock.VerifyNoOtherCalls();
 
 			_loggerMock.Verify(l => l.Log(null, "FinalizeExecuted", default, default));
