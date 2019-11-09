@@ -54,29 +54,29 @@ namespace TSSArt.StateMachine.EcmaScript
 
 		public static JsValue ConvertToJsValue(Engine engine, DataModelValue value)
 		{
-			switch (value.Type)
+			return value.Type switch
 			{
-				case DataModelValueType.Null: return JsValue.Null;
-				case DataModelValueType.Undefined: return JsValue.Undefined;
-				case DataModelValueType.String: return new JsValue(value.AsString());
-				case DataModelValueType.Number: return new JsValue(value.AsNumber());
-				case DataModelValueType.Object: return new JsValue(new DataModelObjectWrapper(engine, value.AsObject()));
-				case DataModelValueType.Array: return new JsValue(new DataModelArrayWrapper(engine, value.AsArray()));
-				default: throw new ArgumentOutOfRangeException();
-			}
+					DataModelValueType.Null => JsValue.Null,
+					DataModelValueType.Undefined => JsValue.Undefined,
+					DataModelValueType.String => new JsValue(value.AsString()),
+					DataModelValueType.Number => new JsValue(value.AsNumber()),
+					DataModelValueType.Object => new JsValue(new DataModelObjectWrapper(engine, value.AsObject())),
+					DataModelValueType.Array => new JsValue(new DataModelArrayWrapper(engine, value.AsArray())),
+					_ => throw new ArgumentOutOfRangeException(nameof(value), value.Type, Resources.Exception_UnsupportedValueType)
+			};
 		}
 
 		public static DataModelValue ConvertFromJsValue(JsValue value)
 		{
-			switch (value.Type)
+			return value.Type switch
 			{
-				case Types.Null: return new DataModelValue((string) null);
-				case Types.Undefined: return DataModelValue.Undefined();
-				case Types.String: return new DataModelValue(value.AsString());
-				case Types.Number: return new DataModelValue(value.AsNumber());
-				case Types.Object: return CreateDataModelValue(value.AsObject());
-				default: throw new ArgumentOutOfRangeException();
-			}
+					Types.Null => new DataModelValue((string) null),
+					Types.Undefined => DataModelValue.Undefined(),
+					Types.String => new DataModelValue(value.AsString()),
+					Types.Number => new DataModelValue(value.AsNumber()),
+					Types.Object => CreateDataModelValue(value.AsObject()),
+					_ => throw new ArgumentOutOfRangeException(nameof(value), value.Type, Resources.Exception_UnsupportedValueType)
+			};
 		}
 
 		private static DataModelValue CreateDataModelValue(ObjectInstance objectInstance)

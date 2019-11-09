@@ -19,7 +19,7 @@ namespace TSSArt.StateMachine.EcmaScript
 		{
 			if (_program == null)
 			{
-				throw new InvalidOperationException(message: "External script missed.");
+				throw new InvalidOperationException(Resources.Exception_ExternalScriptMissed);
 			}
 
 			executionContext.Engine().Exec(_program, startNewScope: true);

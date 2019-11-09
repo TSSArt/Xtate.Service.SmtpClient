@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Jint.Parser;
 using Jint.Parser.Ast;
 
@@ -17,6 +18,9 @@ namespace TSSArt.StateMachine.EcmaScript
 
 		public override void ExecutionContextCreated(IExecutionContext executionContext, IDictionary<string, string> dataModelVars)
 		{
+			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
+			if (dataModelVars == null) throw new ArgumentNullException(nameof(dataModelVars));
+
 			base.ExecutionContextCreated(executionContext, dataModelVars);
 
 			executionContext.RuntimeItems[EcmaScriptEngine.Key] = new EcmaScriptEngine(executionContext);
@@ -87,7 +91,7 @@ namespace TSSArt.StateMachine.EcmaScript
 
 			if (leftExpression == null)
 			{
-				AddErrorMessage("Statement must be a single assignable variable or object property");
+				AddErrorMessage(Resources.Error_InvalidLocationExpression);
 			}
 
 			if (!ValidationOnly)
