@@ -8,9 +8,9 @@ namespace TSSArt.StateMachine
 	public sealed class SimpleServiceFactory<TService> : IServiceFactory where TService : SimpleServiceBase, new()
 	{
 		public static readonly IServiceFactory Instance = new SimpleServiceFactory<TService>();
+		private readonly       Uri             _alias;
 
 		private readonly Uri _type;
-		private readonly Uri _alias;
 
 		private SimpleServiceFactory()
 		{
@@ -25,7 +25,7 @@ namespace TSSArt.StateMachine
 			_alias = serviceAttribute.Alias != null ? new Uri(serviceAttribute.Alias, UriKind.RelativeOrAbsolute) : null;
 		}
 
-		ValueTask<IService> IServiceFactory.StartService(Uri source, DataModelValue arg, CancellationToken token)
+		ValueTask<IService> IServiceFactory.StartService(Uri source, DataModelValue arg, DataModelValue parameters, CancellationToken token)
 		{
 			var service = new TService();
 

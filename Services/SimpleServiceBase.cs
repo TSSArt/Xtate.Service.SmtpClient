@@ -9,6 +9,29 @@ namespace TSSArt.StateMachine
 		private readonly TaskCompletionSource<DataModelValue> _completedTcs = new TaskCompletionSource<DataModelValue>();
 		private readonly CancellationTokenSource              _tokenSource  = new CancellationTokenSource();
 
+		protected Uri            Source   { get; private set; }
+		protected DataModelValue Argument { get; private set; }
+
+		protected CancellationToken StopToken => _tokenSource.Token;
+
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
+		ValueTask IService.Send(IEvent @event, CancellationToken token) => default;
+
+		ValueTask IService.Destroy(CancellationToken token)
+		{
+			_tokenSource.Cancel();
+			_completedTcs.TrySetCanceled();
+
+			return default;
+		}
+
+		ValueTask<DataModelValue> IService.Result => new ValueTask<DataModelValue>(_completedTcs.Task);
+
 		public void Start(Uri source, DataModelValue arg)
 		{
 			Source = source;
@@ -33,30 +56,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected Uri            Source   { get; private set; }
-		protected DataModelValue Argument { get; private set; }
-
-		protected CancellationToken StopToken => _tokenSource.Token;
-
-		ValueTask IService.Send(IEvent @event, CancellationToken token) => default;
-
-		ValueTask IService.Destroy(CancellationToken token)
-		{
-			_tokenSource.Cancel();
-			_completedTcs.TrySetCanceled();
-
-			return default;
-		}
-
-		ValueTask<DataModelValue> IService.Result => new ValueTask<DataModelValue>(_completedTcs.Task);
-
 		protected abstract ValueTask<DataModelValue> Execute();
-
-		public void Dispose()
-		{
-			Dispose(true);
-			GC.SuppressFinalize(this);
-		}
 
 		protected virtual void Dispose(bool disposing)
 		{

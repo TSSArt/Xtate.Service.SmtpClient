@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -6,21 +7,50 @@ namespace TSSArt.StateMachine
 {
 	public static class Converter
 	{
-		public static async ValueTask<DataModelValue> GetData(string content, IObjectEvaluator contentExpressionEvaluator, IReadOnlyList<ILocationEvaluator> nameEvaluatorList,
-															  IReadOnlyList<DefaultParam> parameterList, IExecutionContext executionContext, CancellationToken token)
+		public static ValueTask<DataModelValue> GetData(string content, IObjectEvaluator contentExpressionEvaluator, IReadOnlyList<ILocationEvaluator> nameEvaluatorList,
+														IReadOnlyList<DefaultParam> parameterList, IExecutionContext executionContext, CancellationToken token)
 		{
+			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
+
 			var attrCount = (nameEvaluatorList?.Count ?? 0) + (parameterList?.Count ?? 0);
 
 			if (attrCount == 0)
 			{
-				if (contentExpressionEvaluator == null)
+				return GetContent(content, contentExpressionEvaluator, executionContext, token);
+			}
+
+			return GetParameters(nameEvaluatorList, parameterList, executionContext, token);
+		}
+
+		public static async ValueTask<DataModelValue> GetContent(string content, IObjectEvaluator contentExpressionEvaluator, IExecutionContext executionContext, CancellationToken token)
+		{
+			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
+
+			if (contentExpressionEvaluator == null)
+			{
+				if (content == null)
 				{
-					return new DataModelValue(content, isReadOnly: true);
+					return DataModelValue.Undefined(true);
 				}
 
-				var obj = await contentExpressionEvaluator.EvaluateObject(executionContext, token).ConfigureAwait(false);
+				return new DataModelValue(content, isReadOnly: true);
+			}
 
-				return DataModelValue.FromObject(obj.ToObject()).DeepClone(true);
+			var obj = await contentExpressionEvaluator.EvaluateObject(executionContext, token).ConfigureAwait(false);
+
+			return DataModelValue.FromObject(obj.ToObject()).DeepClone(true);
+		}
+
+		public static async ValueTask<DataModelValue> GetParameters(IReadOnlyList<ILocationEvaluator> nameEvaluatorList, IReadOnlyList<DefaultParam> parameterList,
+																	IExecutionContext executionContext, CancellationToken token)
+		{
+			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
+
+			var attrCount = (nameEvaluatorList?.Count ?? 0) + (parameterList?.Count ?? 0);
+
+			if (attrCount == 0)
+			{
+				return DataModelValue.Undefined(true);
 			}
 
 			var attributes = new DataModelObject();

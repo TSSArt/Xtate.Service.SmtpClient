@@ -60,9 +60,10 @@ namespace TSSArt.StateMachine
 			var type = TypeExpressionEvaluator != null ? ToUri(await TypeExpressionEvaluator.EvaluateString(executionContext, token).ConfigureAwait(false)) : _invoke.Type;
 			var source = SourceExpressionEvaluator != null ? ToUri(await SourceExpressionEvaluator.EvaluateString(executionContext, token).ConfigureAwait(false)) : _invoke.Source;
 
-			var data = await Converter.GetData(_invoke.Content?.Value, ContentExpressionEvaluator, NameEvaluatorList, ParameterList, executionContext, token).ConfigureAwait(false);
+			var content = await Converter.GetContent(_invoke.Content?.Value, ContentExpressionEvaluator, executionContext, token).ConfigureAwait(false);
+			var parameters = await Converter.GetParameters(NameEvaluatorList, ParameterList, executionContext, token).ConfigureAwait(false);
 
-			await executionContext.StartInvoke(invokeId, type, source, data, token).ConfigureAwait(false);
+			await executionContext.StartInvoke(invokeId, type, source, content, parameters, token).ConfigureAwait(false);
 
 			IdLocationEvaluator?.SetValue(new DefaultObject(invokeId), executionContext);
 

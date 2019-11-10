@@ -41,15 +41,6 @@ namespace TSSArt.StateMachine
 			return default;
 		}
 
-		protected virtual void Dispose(bool dispose)
-		{
-			if (dispose)
-			{
-				_destroyTokenSource.Dispose();
-				_suspendOnIdleTokenSource?.Dispose();
-			}
-		}
-
 		public void Dispose()
 		{
 			Dispose(true);
@@ -85,8 +76,8 @@ namespace TSSArt.StateMachine
 			CleanScheduledEvents();
 		}
 
-		ValueTask IExternalCommunication.StartInvoke(string invokeId, Uri type, Uri source, DataModelValue data, CancellationToken token) =>
-				_ioProcessor.StartInvoke(SessionId, invokeId, type, source, data, token);
+		ValueTask IExternalCommunication.StartInvoke(string invokeId, Uri type, Uri source, DataModelValue content, DataModelValue parameters, CancellationToken token) =>
+				_ioProcessor.StartInvoke(SessionId, invokeId, type, source, content, parameters, token);
 
 		ValueTask IExternalCommunication.CancelInvoke(string invokeId, CancellationToken token) => _ioProcessor.CancelInvoke(SessionId, invokeId, token);
 
@@ -123,6 +114,15 @@ namespace TSSArt.StateMachine
 		}
 
 		public ValueTask<DataModelValue> Result => new ValueTask<DataModelValue>(_completedTcs.Task);
+
+		protected virtual void Dispose(bool dispose)
+		{
+			if (dispose)
+			{
+				_destroyTokenSource.Dispose();
+				_suspendOnIdleTokenSource?.Dispose();
+			}
+		}
 
 		public ValueTask StartAsync(CancellationToken token)
 		{

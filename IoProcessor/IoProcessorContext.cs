@@ -25,17 +25,19 @@ namespace TSSArt.StateMachine
 
 		public virtual ValueTask DisposeAsync() => default;
 
-		protected virtual void Dispose(bool disposing) { }
-
 		public void Dispose()
 		{
 			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
 
+		protected virtual void Dispose(bool disposing) { }
+
 		public virtual ValueTask Initialize() => default;
 
 		private IStateMachine GetStateMachine(Uri source) => _options.StateMachineProvider.GetStateMachine(source);
+
+		private IStateMachine GetStateMachine(string scxml) => _options.StateMachineProvider.GetStateMachine(scxml);
 
 		private void FillInterpreterOptions(out InterpreterOptions options)
 		{
@@ -66,11 +68,13 @@ namespace TSSArt.StateMachine
 		protected virtual StateMachineController CreateStateMachineController(string sessionId, IStateMachine stateMachine, in InterpreterOptions options) =>
 				new StateMachineController(sessionId, stateMachine, _ioProcessor, _options.SuspendIdlePeriod, options);
 
-		public virtual ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, Uri source, DataModelValue arguments)
+		public virtual ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, Uri source, DataModelValue content, DataModelValue parameters)
 		{
 			FillInterpreterOptions(out var options);
-			options.Arguments = arguments;
-			var stateMachineController = CreateStateMachineController(sessionId, GetStateMachine(source), options);
+			options.Parameters = parameters;
+
+			var stateMachine = source != null ? GetStateMachine(source) : GetStateMachine(content.AsString());
+			var stateMachineController = CreateStateMachineController(sessionId, stateMachine, options);
 			ValidateTrue(_stateMachinesBySessionId.TryAdd(sessionId, stateMachineController));
 			ValidateTrue(_parentServiceByTarget.TryAdd(_ioProcessor.GetTarget(sessionId), stateMachineController));
 
@@ -79,7 +83,7 @@ namespace TSSArt.StateMachine
 
 		public virtual ValueTask DestroyStateMachine(string sessionId)
 		{
-			ValidateTrue(_stateMachinesBySessionId.TryRemove(sessionId, out StateMachineController stateMachineController));
+			ValidateTrue(_stateMachinesBySessionId.TryRemove(sessionId, out var stateMachineController));
 			ValidateTrue(_parentServiceByTarget.TryRemove(_ioProcessor.GetTarget(sessionId), out _));
 
 			return stateMachineController.DisposeAsync();
@@ -104,9 +108,31 @@ namespace TSSArt.StateMachine
 			return default;
 		}
 
+		public virtual ValueTask<IService> TryCompleteService(string sessionId, string invokeId)
+		{
+			if (!_serviceByInvokeId.TryGetValue((sessionId, invokeId), out var service))
+			{
+				return new ValueTask<IService>((IService) null);
+			}
+
+			if (!_serviceByInvokeId.TryUpdate((sessionId, invokeId), newValue: null, service))
+			{
+				return new ValueTask<IService>((IService) null);
+			}
+
+			if (service is StateMachineController stateMachineController)
+			{
+				ValidateTrue(_serviceByTarget.TryRemove(new Uri("#_scxml_" + stateMachineController.SessionId, UriKind.Relative), out _));
+			}
+
+			ValidateTrue(_serviceByTarget.TryRemove(new Uri("#_" + invokeId, UriKind.Relative), out _));
+
+			return new ValueTask<IService>(service);
+		}
+
 		public virtual ValueTask<IService> TryRemoveService(string sessionId, string invokeId)
 		{
-			if (!_serviceByInvokeId.TryRemove((sessionId, invokeId), out var service))
+			if (!_serviceByInvokeId.TryRemove((sessionId, invokeId), out var service) || service == null)
 			{
 				return new ValueTask<IService>((IService) null);
 			}
