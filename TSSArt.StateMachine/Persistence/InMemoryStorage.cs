@@ -50,16 +50,6 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual void Dispose(bool dispose)
-		{
-			if (dispose)
-			{
-				TruncateLog(true);
-
-				_baselineOwner?.Dispose();
-			}
-		}
-
 		public void Dispose()
 		{
 			Dispose(true);
@@ -97,6 +87,16 @@ namespace TSSArt.StateMachine
 			key.CopyTo(buffer.Span);
 
 			return _readModel.TryGetValue(new Entry(buffer), out var result) ? result.Value : ReadOnlyMemory<byte>.Empty;
+		}
+
+		protected virtual void Dispose(bool dispose)
+		{
+			if (dispose)
+			{
+				TruncateLog(true);
+
+				_baselineOwner?.Dispose();
+			}
 		}
 
 		private static SortedSet<Entry> CreateReadModel() => new SortedSet<Entry>();

@@ -51,14 +51,6 @@ namespace TSSArt.StateMachine
 
 		public ValueTask DisposeAsync() => _context.DisposeAsync();
 
-		protected virtual void Dispose(bool dispose)
-		{
-			if (dispose)
-			{
-				_context.Dispose();
-			}
-		}
-
 		public void Dispose()
 		{
 			Dispose(true);
@@ -84,10 +76,10 @@ namespace TSSArt.StateMachine
 
 		Uri IServiceFactory.AliasTypeId => ServiceFactoryAliasTypeId;
 
-		async ValueTask<IService> IServiceFactory.StartService(Uri source, DataModelValue arguments, CancellationToken token)
+		async ValueTask<IService> IServiceFactory.StartService(Uri source, DataModelValue content, DataModelValue parameters, CancellationToken token)
 		{
 			var sessionId = IdGenerator.NewSessionId();
-			var service = await _context.CreateAndAddStateMachine(sessionId, source, arguments).ConfigureAwait(false);
+			var service = await _context.CreateAndAddStateMachine(sessionId, source, content, parameters).ConfigureAwait(false);
 
 			await service.StartAsync(token).ConfigureAwait(false);
 
@@ -102,12 +94,24 @@ namespace TSSArt.StateMachine
 			return service;
 		}
 
+		protected virtual void Dispose(bool dispose)
+		{
+			if (dispose)
+			{
+				_context.Dispose();
+			}
+		}
+
 		public ValueTask Initialize() => _context.Initialize();
 
-		public async ValueTask<DataModelValue> Execute(Uri source, DataModelValue arguments = default)
+		public ValueTask<DataModelValue> Execute(Uri source, DataModelValue parameters = default) => Execute(source, content: default, parameters);
+
+		public ValueTask<DataModelValue> Execute(string scxml, DataModelValue parameters = default) => Execute(source: null, new DataModelValue(scxml), parameters);
+
+		private async ValueTask<DataModelValue> Execute(Uri source, DataModelValue content, DataModelValue parameters)
 		{
 			var sessionId = IdGenerator.NewSessionId();
-			var service = await _context.CreateAndAddStateMachine(sessionId, source, arguments).ConfigureAwait(false);
+			var service = await _context.CreateAndAddStateMachine(sessionId, source, content, parameters).ConfigureAwait(false);
 
 			try
 			{
@@ -121,7 +125,7 @@ namespace TSSArt.StateMachine
 
 		public IReadOnlyList<IEventProcessor> GetIoProcessors() => _ioProcessors;
 
-		public async ValueTask StartInvoke(string sessionId, string invokeId, Uri type, Uri source, DataModelValue data, CancellationToken token)
+		public async ValueTask StartInvoke(string sessionId, string invokeId, Uri type, Uri source, DataModelValue content, DataModelValue parameters, CancellationToken token)
 		{
 			_context.ValidateSessionId(sessionId, out var service);
 
@@ -130,7 +134,7 @@ namespace TSSArt.StateMachine
 				throw new ApplicationException("Invalid type");
 			}
 
-			var invokedService = await factory.StartService(source, data, token).ConfigureAwait(false);
+			var invokedService = await factory.StartService(source, content, parameters, token).ConfigureAwait(false);
 
 			await _context.AddService(sessionId, invokeId, invokedService).ConfigureAwait(false);
 
@@ -138,25 +142,27 @@ namespace TSSArt.StateMachine
 
 			async void CompleteAsync()
 			{
+				var nameParts = EventName.GetDoneInvokeNameParts((Identifier) invokeId);
+
 				try
 				{
 					var resultData = await invokedService.Result.ConfigureAwait(false);
-					var nameParts = EventName.GetDoneInvokeNameParts((Identifier) invokeId);
 
 					await service.Send(new EventObject(EventType.External, nameParts, resultData, sendId: null, invokeId), token: default).ConfigureAwait(false);
 				}
-				catch (Exception ex)
+				catch
 				{
-					var exceptionData = DataModelValue.FromException(ex, isReadOnly: true);
-					var nameParts = EventName.GetErrorInvokeNameParts((Identifier) invokeId);
-
-					await service.Send(new EventObject(EventType.External, nameParts, exceptionData, sendId: null, invokeId), token: default).ConfigureAwait(false);
+					//TODO:Log exception
+					await service.Send(new EventObject(EventType.External, nameParts, data: default, sendId: null, invokeId), token: default).ConfigureAwait(false);
 				}
 				finally
 				{
-					await _context.TryRemoveService(sessionId, invokeId).ConfigureAwait(false);
-					
-					await DisposeInvokedService(invokedService).ConfigureAwait(false);
+					invokedService = await _context.TryCompleteService(sessionId, invokeId).ConfigureAwait(false);
+
+					if (invokedService != null)
+					{
+						await DisposeInvokedService(invokedService).ConfigureAwait(false);
+					}
 				}
 			}
 		}
@@ -165,13 +171,13 @@ namespace TSSArt.StateMachine
 		{
 			_context.ValidateSessionId(sessionId, out _);
 
-			var invokedService = await _context.TryRemoveService(sessionId, invokeId).ConfigureAwait(false);
+			var service = await _context.TryRemoveService(sessionId, invokeId).ConfigureAwait(false);
 
-			if (invokedService != null)
+			if (service != null)
 			{
-				await invokedService.Destroy(token).ConfigureAwait(false);
+				await service.Destroy(token).ConfigureAwait(false);
 
-				await DisposeInvokedService(invokedService).ConfigureAwait(false);
+				await DisposeInvokedService(service).ConfigureAwait(false);
 			}
 		}
 
@@ -231,7 +237,7 @@ namespace TSSArt.StateMachine
 				throw new ApplicationException("Invalid InvokeId");
 			}
 
-			return service.Send(@event, token);
+			return service?.Send(@event, token) ?? default;
 		}
 
 		private IEventProcessor GetEventProcessor(Uri type)

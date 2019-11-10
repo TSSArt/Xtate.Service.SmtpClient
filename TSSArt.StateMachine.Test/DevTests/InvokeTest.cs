@@ -81,7 +81,7 @@ namespace TSSArt.StateMachine.Test
 			await StateMachineInterpreter.RunAsync(sessionId: "session1", _stateMachine, channel, _options);
 
 			_externalCommunicationMock.Verify(l => l.GetIoProcessors());
-			_externalCommunicationMock.Verify(l => l.StartInvoke("invoke_id", new Uri("proto://type"), new Uri("proto://src"), DataModelValue.FromObject("content", false), default));
+			_externalCommunicationMock.Verify(l => l.StartInvoke("invoke_id", new Uri("proto://type"), new Uri("proto://src"), DataModelValue.FromObject("content", false), default, default));
 			_externalCommunicationMock.Verify(l => l.CancelInvoke("invoke_id", default));
 			_externalCommunicationMock.Verify(l => l.IsInvokeActive("invoke_id"));
 			_externalCommunicationMock.VerifyNoOtherCalls();

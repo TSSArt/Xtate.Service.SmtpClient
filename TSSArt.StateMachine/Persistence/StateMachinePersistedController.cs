@@ -24,6 +24,27 @@ namespace TSSArt.StateMachine
 			_stopToken = defaultOptions.StopToken;
 		}
 
+		ValueTask<ITransactionalStorage> IStorageProvider.GetTransactionalStorage(string partition, string key, CancellationToken token)
+		{
+			if (partition != null) throw new ArgumentException(message: "Partition argument should be null", nameof(partition));
+
+			return _storageProvider.GetTransactionalStorage(SessionId, key, token);
+		}
+
+		ValueTask IStorageProvider.RemoveTransactionalStorage(string partition, string key, CancellationToken token)
+		{
+			if (partition != null) throw new ArgumentException(message: "Partition argument should be null", nameof(partition));
+
+			return _storageProvider.RemoveTransactionalStorage(SessionId, key, token);
+		}
+
+		ValueTask IStorageProvider.RemoveAllTransactionalStorage(string partition, CancellationToken token)
+		{
+			if (partition != null) throw new ArgumentException(message: "Partition argument should be null", nameof(partition));
+
+			return _storageProvider.RemoveAllTransactionalStorage(SessionId, token);
+		}
+
 		public override ValueTask DisposeAsync()
 		{
 			_scheduledEventsLock.Dispose();
@@ -167,32 +188,16 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		ValueTask<ITransactionalStorage> IStorageProvider.GetTransactionalStorage(string partition, string key, CancellationToken token)
-		{
-			if (partition != null) throw new ArgumentException(message: "Partition argument should be null", nameof(partition));
-
-			return _storageProvider.GetTransactionalStorage(SessionId, key, token);
-		}
-
-		ValueTask IStorageProvider.RemoveTransactionalStorage(string partition, string key, CancellationToken token)
-		{
-			if (partition != null) throw new ArgumentException(message: "Partition argument should be null", nameof(partition));
-
-			return _storageProvider.RemoveTransactionalStorage(SessionId, key, token);
-		}
-
-		ValueTask IStorageProvider.RemoveAllTransactionalStorage(string partition, CancellationToken token)
-		{
-			if (partition != null) throw new ArgumentException(message: "Partition argument should be null", nameof(partition));
-
-			return _storageProvider.RemoveAllTransactionalStorage(SessionId, token);
-		}
-
 		protected class ScheduledPersistedEvent : ScheduledEvent, IStoreSupport
 		{
 			private readonly long _fireOnUtcTicks;
 
-			public ScheduledPersistedEvent(IOutgoingEvent @event) : base(@event) => _fireOnUtcTicks = DateTime.UtcNow.Ticks + @event.DelayMs * TimeSpan.TicksPerMillisecond;
+			public ScheduledPersistedEvent(IOutgoingEvent @event) : base(@event)
+			{
+				if (@event == null) throw new ArgumentNullException(nameof(@event));
+
+				_fireOnUtcTicks = DateTime.UtcNow.Ticks + @event.DelayMs * TimeSpan.TicksPerMillisecond;
+			}
 
 			public ScheduledPersistedEvent(Bucket bucket) : base(RestoreEvent(bucket))
 			{

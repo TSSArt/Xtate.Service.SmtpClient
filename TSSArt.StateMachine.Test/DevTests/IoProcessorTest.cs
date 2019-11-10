@@ -6,7 +6,6 @@ using System.Net.Mime;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using Castle.Core.Internal;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using TSSArt.StateMachine.EcmaScript;
@@ -107,7 +106,6 @@ namespace TSSArt.StateMachine.Test
     <param name='headers' expr=""[{name: 'Accept', value: 'text/plain'}]""/>
     </invoke>
     <transition event='done.invoke.tid' target='fin'/>
-    <transition event='error' target='finErr'><log label='Error Event' expr='_event'/></transition>
 </state>
 <final id='fin'>
 	<donedata><content expr='_event.data'/></donedata>
@@ -149,6 +147,16 @@ namespace TSSArt.StateMachine.Test
 		{
 			using var stream = new FileStream(source.AbsolutePath, FileMode.Open);
 			var xmlReader = XmlReader.Create(stream);
+
+			var director = new ScxmlDirector(xmlReader, new BuilderFactory());
+
+			return director.ConstructStateMachine();
+		}
+
+		public IStateMachine GetStateMachine(string scxml)
+		{
+			var reader = new StringReader(scxml);
+			var xmlReader = XmlReader.Create(reader);
 
 			var director = new ScxmlDirector(xmlReader, new BuilderFactory());
 

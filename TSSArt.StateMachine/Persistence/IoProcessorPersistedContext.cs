@@ -85,24 +85,47 @@ namespace TSSArt.StateMachine
 			}
 		}
 
+		private async ValueTask RemoveInvokedService(string sessionId, string invokeId)
+		{
+			if (!_invokedServices.Remove((sessionId, invokeId)))
+			{
+				return;
+			}
+
+			var bucket = new Bucket(_storage).Nested(InvokedServicesKey);
+			if (bucket.TryGet(sessionId, out int recordId))
+			{
+				bucket.RemoveSubtree(recordId);
+
+				await _storage.CheckPoint(level: 0, _stopToken).ConfigureAwait(false);
+			}
+
+			await ShrinkInvokedServices(_stopToken).ConfigureAwait(false);
+		}
+
 		public override async ValueTask<IService> TryRemoveService(string sessionId, string invokeId)
 		{
 			await _lockInvokedServices.WaitAsync(_stopToken).ConfigureAwait(false);
 			try
 			{
-				_invokedServices.Remove((sessionId, invokeId));
-
-				var bucket = new Bucket(_storage).Nested(InvokedServicesKey);
-				if (bucket.TryGet(sessionId, out int recordId))
-				{
-					bucket.RemoveSubtree(recordId);
-
-					await _storage.CheckPoint(level: 0, _stopToken).ConfigureAwait(false);
-				}
-
-				await ShrinkInvokedServices(_stopToken).ConfigureAwait(false);
+				await RemoveInvokedService(sessionId, invokeId).ConfigureAwait(false);
 
 				return await base.TryRemoveService(sessionId, invokeId).ConfigureAwait(false);
+			}
+			finally
+			{
+				_lockInvokedServices.Release();
+			}
+		}
+
+		public override async ValueTask<IService> TryCompleteService(string sessionId, string invokeId)
+		{
+			await _lockInvokedServices.WaitAsync(_stopToken).ConfigureAwait(false);
+			try
+			{
+				await RemoveInvokedService(sessionId, invokeId).ConfigureAwait(false);
+
+				return await base.TryCompleteService(sessionId, invokeId).ConfigureAwait(false);
 			}
 			finally
 			{
@@ -113,17 +136,17 @@ namespace TSSArt.StateMachine
 		protected override StateMachineController CreateStateMachineController(string sessionId, IStateMachine stateMachine, in InterpreterOptions options) =>
 				new StateMachinePersistedController(sessionId, stateMachine, _ioProcessor, _storageProvider, _idlePeriod, options);
 
-		public override async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, Uri source, DataModelValue arguments)
+		public override async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, Uri source, DataModelValue content, DataModelValue parameters)
 		{
 			await _lockStateMachines.WaitAsync(_stopToken).ConfigureAwait(false);
 			try
 			{
-				var stateMachineController = await base.CreateAndAddStateMachine(sessionId, source, arguments).ConfigureAwait(false);
+				var stateMachineController = await base.CreateAndAddStateMachine(sessionId, source, content, parameters).ConfigureAwait(false);
 
 				var bucket = new Bucket(_storage).Nested(StateMachinesKey);
 				var recordId = _stateMachineRecordId ++;
 
-				var stateMachine = new StateMachine(sessionId, source, arguments) { RecordId = recordId, Controller = stateMachineController };
+				var stateMachine = new StateMachine(sessionId, source, content, parameters) { RecordId = recordId, Controller = stateMachineController };
 				_stateMachines.Add(sessionId, stateMachine);
 
 				bucket.Add(Bucket.RootKey, _stateMachineRecordId);
@@ -213,7 +236,8 @@ namespace TSSArt.StateMachine
 					if (eventBucket.TryGet(Key.TypeInfo, out TypeInfo typeInfo) && typeInfo == TypeInfo.StateMachine)
 					{
 						var stateMachine = new StateMachine(bucket) { RecordId = i };
-						var stateMachineController = await base.CreateAndAddStateMachine(stateMachine.SessionId, stateMachine.Source, stateMachine.Arguments).ConfigureAwait(false);
+						var stateMachineController = await base.CreateAndAddStateMachine(stateMachine.SessionId, stateMachine.Source, stateMachine.Content, stateMachine.Parameters)
+															   .ConfigureAwait(false);
 						stateMachine.Controller = stateMachineController;
 
 						_stateMachines.Add(stateMachine.SessionId, stateMachine);
@@ -282,7 +306,7 @@ namespace TSSArt.StateMachine
 						}
 						else if (_stateMachines.TryGetValue(invokedService.ParentSessionId, out var invokingStateMachine))
 						{
-							var nameParts = EventName.GetErrorInvokeNameParts((Identifier) invokedService.InvokeId);
+							var nameParts = EventName.GetDoneInvokeNameParts((Identifier) invokedService.InvokeId);
 							var controller = invokingStateMachine.Controller;
 							await controller.Send(new EventObject(EventType.External, nameParts, data: default, sendId: null, invokedService.InvokeId), token: default).ConfigureAwait(false);
 						}
@@ -297,11 +321,12 @@ namespace TSSArt.StateMachine
 
 		private class StateMachine : IStoreSupport
 		{
-			public StateMachine(string sessionId, Uri source, in DataModelValue arguments)
+			public StateMachine(string sessionId, Uri source, DataModelValue content, DataModelValue parameters)
 			{
 				SessionId = sessionId;
 				Source = source;
-				Arguments = arguments;
+				Content = content;
+				Parameters = parameters;
 			}
 
 			public StateMachine(Bucket bucket)
@@ -309,14 +334,19 @@ namespace TSSArt.StateMachine
 				SessionId = bucket.GetString(Key.SessionId);
 				Source = bucket.GetUri(Key.Source);
 
-				var argBucket = bucket.Nested(Key.Data);
-				using var tracker = new DataModelReferenceTracker(argBucket.Nested(Key.DataReferences));
-				argBucket.GetDataModelValue(tracker, Arguments);
+				var contentBucket = bucket.Nested(Key.Content);
+				using var contentTracker = new DataModelReferenceTracker(contentBucket.Nested(Key.DataReferences));
+				contentBucket.GetDataModelValue(contentTracker, Content);
+
+				var parametersBucket = bucket.Nested(Key.Parameters);
+				using var parametersTracker = new DataModelReferenceTracker(parametersBucket.Nested(Key.DataReferences));
+				parametersBucket.GetDataModelValue(parametersTracker, Content);
 			}
 
 			public string                 SessionId  { get; }
 			public Uri                    Source     { get; }
-			public DataModelValue         Arguments  { get; }
+			public DataModelValue         Content    { get; }
+			public DataModelValue         Parameters { get; }
 			public int                    RecordId   { get; set; }
 			public StateMachineController Controller { get; set; }
 
@@ -326,11 +356,18 @@ namespace TSSArt.StateMachine
 				bucket.Add(Key.SessionId, SessionId);
 				bucket.Add(Key.Source, Source);
 
-				if (Arguments.Type != DataModelValueType.Undefined)
+				if (Content.Type != DataModelValueType.Undefined)
 				{
-					var argBucket = bucket.Nested(Key.Data);
+					var argBucket = bucket.Nested(Key.Content);
 					using var tracker = new DataModelReferenceTracker(argBucket.Nested(Key.DataReferences));
-					argBucket.SetDataModelValue(tracker, Arguments);
+					argBucket.SetDataModelValue(tracker, Content);
+				}
+
+				if (Parameters.Type != DataModelValueType.Undefined)
+				{
+					var argBucket = bucket.Nested(Key.Parameters);
+					using var tracker = new DataModelReferenceTracker(argBucket.Nested(Key.DataReferences));
+					argBucket.SetDataModelValue(tracker, Parameters);
 				}
 			}
 		}

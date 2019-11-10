@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Mime;
@@ -63,22 +64,34 @@ namespace TSSArt.StateMachine.Test
 
 		private class TestStorage : IStorageProvider
 		{
-			private readonly Dictionary<string, MemoryStream> _streams = new Dictionary<string, MemoryStream>();
+			private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, MemoryStream>> _storage = new ConcurrentDictionary<string, ConcurrentDictionary<string, MemoryStream>>();
 
 			public async ValueTask<ITransactionalStorage> GetTransactionalStorage(string partition, string key, CancellationToken token)
 			{
-				if (!_streams.TryGetValue(partition + key, out var stream))
-				{
-					stream = new MemoryStream();
-					_streams.Add(partition + key, stream);
-				}
+				if (string.IsNullOrEmpty(key)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(key));
 
-				return await StreamStorage.CreateAsync(stream, disposeStream: false, token);
+				var partitionStorage = _storage.GetOrAdd(partition ?? "", p => new ConcurrentDictionary<string, MemoryStream>());
+				var memStream = partitionStorage.GetOrAdd(key, k => new MemoryStream());
+
+				return await StreamStorage.CreateAsync(memStream, disposeStream: false, token);
 			}
 
-			public ValueTask RemoveTransactionalStorage(string partition, string key, CancellationToken token) => default;
+			public ValueTask RemoveTransactionalStorage(string partition, string key, CancellationToken token)
+			{
+				if (string.IsNullOrEmpty(key)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(key));
 
-			public ValueTask RemoveAllTransactionalStorage(string partition, CancellationToken token) => default;
+				var partitionStorage = _storage.GetOrAdd(partition ?? "", p => new ConcurrentDictionary<string, MemoryStream>());
+				partitionStorage.TryRemove(key, out _);
+
+				return default;
+			}
+
+			public ValueTask RemoveAllTransactionalStorage(string partition, CancellationToken token)
+			{
+				_storage.TryRemove(partition ?? "", out _);
+
+				return default;
+			}
 		}
 	}
 }

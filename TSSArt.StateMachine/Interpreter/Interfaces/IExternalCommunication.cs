@@ -16,7 +16,7 @@ namespace TSSArt.StateMachine
 	{
 		IReadOnlyList<IEventProcessor> GetIoProcessors();
 
-		ValueTask             StartInvoke(string invokeId, Uri type, Uri source, DataModelValue data, CancellationToken token);
+		ValueTask             StartInvoke(string invokeId, Uri type, Uri source, DataModelValue content, DataModelValue parameters, CancellationToken token);
 		ValueTask             CancelInvoke(string invokeId, CancellationToken token);
 		bool                  IsInvokeActive(string invokeId);
 		ValueTask<SendStatus> TrySendEvent(IOutgoingEvent @event, CancellationToken token);
