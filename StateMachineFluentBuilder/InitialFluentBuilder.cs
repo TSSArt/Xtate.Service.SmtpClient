@@ -11,7 +11,7 @@ namespace TSSArt.StateMachine
 
 		public InitialFluentBuilder(IBuilderFactory factory, TOuterBuilder outerBuilder, Action<IInitial> builtAction)
 		{
-			_factory = factory;
+			_factory = factory ?? throw new ArgumentNullException(nameof(factory));
 			_builder = factory.CreateInitialBuilder();
 			_outerBuilder = outerBuilder;
 			_builtAction = builtAction;
@@ -26,6 +26,8 @@ namespace TSSArt.StateMachine
 		public TransitionFluentBuilder<InitialFluentBuilder<TOuterBuilder>> BeginTransition() =>
 				new TransitionFluentBuilder<InitialFluentBuilder<TOuterBuilder>>(_factory, this, _builder.SetTransition);
 
-		public InitialFluentBuilder<TOuterBuilder> AddTransition(Identifier target) => BeginTransition().SetTarget(target).EndTransition();
+		public InitialFluentBuilder<TOuterBuilder> AddTransition(string target) => AddTransition((Identifier) target);
+
+		public InitialFluentBuilder<TOuterBuilder> AddTransition(IIdentifier target) => BeginTransition().SetTarget(target).EndTransition();
 	}
 }

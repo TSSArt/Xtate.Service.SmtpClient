@@ -6,7 +6,20 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public class IoProcessor : IEventProcessor, IServiceFactory, IDisposable, IAsyncDisposable
+	public interface IIoProcessor
+	{
+		Uri                            GetTarget(string sessionId);
+		IReadOnlyList<IEventProcessor> GetIoProcessors();
+		ValueTask<SendStatus>          DispatchEvent(string sessionId, IOutgoingEvent @event, CancellationToken token);
+		ValueTask                      StartInvoke(string sessionId, string invokeId, Uri type, Uri source, DataModelValue content, DataModelValue parameters, CancellationToken token);
+		ValueTask                      CancelInvoke(string sessionId, string invokeId, CancellationToken token);
+		bool                           IsInvokeActive(string sessionId, string invokeId);
+		ValueTask                      ForwardEvent(string sessionId, IEvent @event, string invokeId, CancellationToken token);
+		ValueTask                      Log(string sessionId, string stateMachineName, string label, DataModelValue data, CancellationToken token);
+		ValueTask                      Error(string sessionId, ErrorType errorType, string stateMachineName, string sourceEntityId, Exception exception, CancellationToken token);
+	}
+
+	public class IoProcessor : IEventProcessor, IServiceFactory, IIoProcessor, IDisposable, IAsyncDisposable
 	{
 		private static readonly Uri BaseUri                   = new Uri("scxml://local/");
 		private static readonly Uri EventProcessorId          = new Uri("http://www.w3.org/TR/scxml/#SCXMLEventProcessor");
@@ -49,7 +62,7 @@ namespace TSSArt.StateMachine
 					: new IoProcessorContext(this, options);
 		}
 
-		public ValueTask DisposeAsync() => _context.DisposeAsync();
+		ValueTask IAsyncDisposable.DisposeAsync() => _context.DisposeAsync();
 
 		public void Dispose()
 		{
@@ -61,7 +74,11 @@ namespace TSSArt.StateMachine
 
 		Uri IEventProcessor.AliasId => EventProcessorAliasId;
 
-		public Uri GetTarget(string sessionId) => new Uri(BaseUri, sessionId);
+		private Uri GetTarget(string sessionId) => new Uri(BaseUri, sessionId);
+
+		Uri IIoProcessor.GetTarget(string sessionId) => GetTarget(sessionId);
+
+		Uri IEventProcessor.GetTarget(string sessionId) => GetTarget(sessionId);
 
 		ValueTask IEventProcessor.Dispatch(Uri origin, Uri originType, IOutgoingEvent @event, CancellationToken token)
 		{
@@ -79,7 +96,7 @@ namespace TSSArt.StateMachine
 		async ValueTask<IService> IServiceFactory.StartService(Uri source, DataModelValue content, DataModelValue parameters, CancellationToken token)
 		{
 			var sessionId = IdGenerator.NewSessionId();
-			var service = await _context.CreateAndAddStateMachine(sessionId, source, content, parameters).ConfigureAwait(false);
+			var service = await _context.CreateAndAddStateMachine(sessionId, stateMachine: null, source, content, parameters).ConfigureAwait(false);
 
 			await service.StartAsync(token).ConfigureAwait(false);
 
@@ -104,14 +121,16 @@ namespace TSSArt.StateMachine
 
 		public ValueTask Initialize() => _context.Initialize();
 
-		public ValueTask<DataModelValue> Execute(Uri source, DataModelValue parameters = default) => Execute(source, content: default, parameters);
+		public ValueTask<DataModelValue> Execute(IStateMachine stateMachine, DataModelValue parameters = default) => Execute(stateMachine, source: null, content: default, parameters);
 
-		public ValueTask<DataModelValue> Execute(string scxml, DataModelValue parameters = default) => Execute(source: null, new DataModelValue(scxml), parameters);
+		public ValueTask<DataModelValue> Execute(Uri source, DataModelValue parameters = default) => Execute(stateMachine: null, source, content: default, parameters);
 
-		private async ValueTask<DataModelValue> Execute(Uri source, DataModelValue content, DataModelValue parameters)
+		public ValueTask<DataModelValue> Execute(string scxml, DataModelValue parameters = default) => Execute(stateMachine: null, source: null, new DataModelValue(scxml), parameters);
+
+		private async ValueTask<DataModelValue> Execute(IStateMachine stateMachine, Uri source, DataModelValue content, DataModelValue parameters)
 		{
 			var sessionId = IdGenerator.NewSessionId();
-			var service = await _context.CreateAndAddStateMachine(sessionId, source, content, parameters).ConfigureAwait(false);
+			var service = await _context.CreateAndAddStateMachine(sessionId, stateMachine, source, content, parameters).ConfigureAwait(false);
 
 			try
 			{
@@ -123,9 +142,9 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public IReadOnlyList<IEventProcessor> GetIoProcessors() => _ioProcessors;
+		IReadOnlyList<IEventProcessor> IIoProcessor.GetIoProcessors() => _ioProcessors;
 
-		public async ValueTask StartInvoke(string sessionId, string invokeId, Uri type, Uri source, DataModelValue content, DataModelValue parameters, CancellationToken token)
+		async ValueTask IIoProcessor.StartInvoke(string sessionId, string invokeId, Uri type, Uri source, DataModelValue content, DataModelValue parameters, CancellationToken token)
 		{
 			_context.ValidateSessionId(sessionId, out var service);
 
@@ -167,7 +186,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public async ValueTask CancelInvoke(string sessionId, string invokeId, CancellationToken token)
+		async ValueTask IIoProcessor.CancelInvoke(string sessionId, string invokeId, CancellationToken token)
 		{
 			_context.ValidateSessionId(sessionId, out _);
 
@@ -196,10 +215,12 @@ namespace TSSArt.StateMachine
 			return default;
 		}
 
-		public bool IsInvokeActive(string sessionId, string invokeId) => _context.TryGetService(sessionId, invokeId, out _);
+		bool IIoProcessor.IsInvokeActive(string sessionId, string invokeId) => _context.TryGetService(sessionId, invokeId, out _);
 
-		public async ValueTask<SendStatus> DispatchEvent(string sessionId, IOutgoingEvent @event, CancellationToken token)
+		async ValueTask<SendStatus> IIoProcessor.DispatchEvent(string sessionId, IOutgoingEvent @event, CancellationToken token)
 		{
+			if (@event == null) throw new ArgumentNullException(nameof(@event));
+
 			_context.ValidateSessionId(sessionId, out _);
 
 			var eventProcessor = GetEventProcessor(@event.Type);
@@ -228,7 +249,7 @@ namespace TSSArt.StateMachine
 			return SendStatus.Sent;
 		}
 
-		public ValueTask ForwardEvent(string sessionId, IEvent @event, string invokeId, CancellationToken token)
+		ValueTask IIoProcessor.ForwardEvent(string sessionId, IEvent @event, string invokeId, CancellationToken token)
 		{
 			_context.ValidateSessionId(sessionId, out _);
 
@@ -277,7 +298,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public ValueTask Log(string sessionId, string stateMachineName, string label, DataModelValue data, CancellationToken token)
+		ValueTask IIoProcessor.Log(string sessionId, string stateMachineName, string label, DataModelValue data, CancellationToken token)
 		{
 			FormattableString formattableString = $"Name: [{stateMachineName}]. SessionId: [{sessionId}]. Label: \"{label}\". Data: {data:JSON}";
 
@@ -286,7 +307,7 @@ namespace TSSArt.StateMachine
 			return default;
 		}
 
-		public ValueTask Error(string sessionId, ErrorType errorType, string stateMachineName, string sourceEntityId, Exception exception, CancellationToken token)
+		ValueTask IIoProcessor.Error(string sessionId, ErrorType errorType, string stateMachineName, string sourceEntityId, Exception exception, CancellationToken token)
 		{
 			FormattableString formattableString = $"Type: [{errorType}]. Name: [{stateMachineName}]. SessionId: [{sessionId}]. SourceEntityId: [{sourceEntityId}]. Exception: {exception}";
 

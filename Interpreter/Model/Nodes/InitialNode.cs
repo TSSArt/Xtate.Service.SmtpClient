@@ -17,7 +17,7 @@ namespace TSSArt.StateMachine
 
 		public InitialNode(LinkedListNode<int> documentIdNode, TransitionNode transition) : base(documentIdNode, children: null)
 		{
-			Transition = transition;
+			Transition = transition ?? throw new ArgumentNullException(nameof(transition));
 
 			Transition.SetSource(this);
 		}

@@ -50,6 +50,8 @@ namespace TSSArt.StateMachine
 
 		public void Union(IReadOnlyList<T> orderedSet)
 		{
+			if (orderedSet == null) throw new ArgumentNullException(nameof(orderedSet));
+
 			foreach (var item in orderedSet)
 			{
 				Add(item);
@@ -58,6 +60,8 @@ namespace TSSArt.StateMachine
 
 		public bool HasIntersection(OrderedSet<T> orderedSet)
 		{
+			if (orderedSet == null) throw new ArgumentNullException(nameof(orderedSet));
+
 			foreach (var item in orderedSet._items)
 			{
 				if (_items.Contains(item))

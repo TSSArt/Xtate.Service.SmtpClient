@@ -14,7 +14,7 @@ namespace TSSArt.StateMachine
 
 		public StateFluentBuilder(IBuilderFactory factory, TOuterBuilder outerBuilder, Action<IState> builtAction)
 		{
-			_factory = factory;
+			_factory = factory ?? throw new ArgumentNullException(nameof(factory));
 			_builder = factory.CreateStateBuilder();
 			_outerBuilder = outerBuilder;
 			_builtAction = builtAction;
@@ -37,14 +37,23 @@ namespace TSSArt.StateMachine
 			return _outerBuilder;
 		}
 
-		public StateFluentBuilder<TOuterBuilder> SetId(Identifier id)
+		public StateFluentBuilder<TOuterBuilder> SetId(string id) => SetId((Identifier) id);
+
+		public StateFluentBuilder<TOuterBuilder> SetId(IIdentifier id)
 		{
 			_builder.SetId(id);
 
 			return this;
 		}
 
-		public StateFluentBuilder<TOuterBuilder> SetInitial(params Identifier[] initial)
+		public StateFluentBuilder<TOuterBuilder> SetInitial(params string[] initial)
+		{
+			_builder.SetInitial(IdentifierList.Create(initial, Identifier.FromString));
+
+			return this;
+		}
+
+		public StateFluentBuilder<TOuterBuilder> SetInitial(params IIdentifier[] initial)
 		{
 			_builder.SetInitial(IdentifierList.Create(initial));
 
@@ -133,22 +142,34 @@ namespace TSSArt.StateMachine
 
 		public HistoryFluentBuilder<StateFluentBuilder<TOuterBuilder>> BeginHistory() => new HistoryFluentBuilder<StateFluentBuilder<TOuterBuilder>>(_factory, this, _builder.AddHistory);
 
-		public StateFluentBuilder<StateFluentBuilder<TOuterBuilder>> BeginState(Identifier id) =>
+		public StateFluentBuilder<StateFluentBuilder<TOuterBuilder>> BeginState(string id) => BeginState((Identifier) id);
+
+		public StateFluentBuilder<StateFluentBuilder<TOuterBuilder>> BeginState(IIdentifier id) =>
 				new StateFluentBuilder<StateFluentBuilder<TOuterBuilder>>(_factory, this, _builder.AddState).SetId(id);
 
-		public ParallelFluentBuilder<StateFluentBuilder<TOuterBuilder>> BeginParallel(Identifier id) =>
+		public ParallelFluentBuilder<StateFluentBuilder<TOuterBuilder>> BeginParallel(string id) => BeginParallel((Identifier) id);
+
+		public ParallelFluentBuilder<StateFluentBuilder<TOuterBuilder>> BeginParallel(IIdentifier id) =>
 				new ParallelFluentBuilder<StateFluentBuilder<TOuterBuilder>>(_factory, this, _builder.AddParallel).SetId(id);
 
-		public FinalFluentBuilder<StateFluentBuilder<TOuterBuilder>> BeginFinal(Identifier id) =>
+		public FinalFluentBuilder<StateFluentBuilder<TOuterBuilder>> BeginFinal(string id) => BeginFinal((Identifier) id);
+
+		public FinalFluentBuilder<StateFluentBuilder<TOuterBuilder>> BeginFinal(IIdentifier id) =>
 				new FinalFluentBuilder<StateFluentBuilder<TOuterBuilder>>(_factory, this, _builder.AddFinal).SetId(id);
 
-		public HistoryFluentBuilder<StateFluentBuilder<TOuterBuilder>> BeginHistory(Identifier id) =>
+		public HistoryFluentBuilder<StateFluentBuilder<TOuterBuilder>> BeginHistory(string id) => BeginHistory((Identifier) id);
+
+		public HistoryFluentBuilder<StateFluentBuilder<TOuterBuilder>> BeginHistory(IIdentifier id) =>
 				new HistoryFluentBuilder<StateFluentBuilder<TOuterBuilder>>(_factory, this, _builder.AddHistory).SetId(id);
 
 		public TransitionFluentBuilder<StateFluentBuilder<TOuterBuilder>> BeginTransition() => new TransitionFluentBuilder<StateFluentBuilder<TOuterBuilder>>(_factory, this, _builder.AddTransition);
 
-		public StateFluentBuilder<TOuterBuilder> AddTransition(EventDescriptor eventDescriptor, Identifier target) => BeginTransition().SetEvent(eventDescriptor).SetTarget(target).EndTransition();
+		public StateFluentBuilder<TOuterBuilder> AddTransition(EventDescriptor eventDescriptor, string target) => AddTransition(eventDescriptor, (Identifier) target);
 
-		public StateFluentBuilder<TOuterBuilder> AddTransition(Predicate condition, Identifier target) => BeginTransition().SetCondition(condition).SetTarget(target).EndTransition();
+		public StateFluentBuilder<TOuterBuilder> AddTransition(EventDescriptor eventDescriptor, IIdentifier target) => BeginTransition().SetEvent(eventDescriptor).SetTarget(target).EndTransition();
+
+		public StateFluentBuilder<TOuterBuilder> AddTransition(Predicate condition, string target) => AddTransition(condition, (Identifier) target);
+
+		public StateFluentBuilder<TOuterBuilder> AddTransition(Predicate condition, IIdentifier target) => BeginTransition().SetCondition(condition).SetTarget(target).EndTransition();
 	}
 }

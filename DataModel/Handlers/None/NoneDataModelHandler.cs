@@ -26,6 +26,8 @@ namespace TSSArt.StateMachine
 
 		public static void Validate(IStateMachine stateMachine)
 		{
+			if (stateMachine == null) throw new ArgumentNullException(nameof(stateMachine));
+
 			if (stateMachine.DataModelType == null || stateMachine.DataModelType == DataModelType)
 			{
 				var validator = new NoneDataModelHandler();
