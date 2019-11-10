@@ -56,6 +56,8 @@ namespace TSSArt.StateMachine
 
 		protected Exception GetXmlException(string message, Exception innerException)
 		{
+			if (innerException == null) throw new ArgumentNullException(nameof(innerException));
+
 			if (IsTopLevelExceptionsInternal(innerException))
 			{
 				return innerException;
@@ -77,6 +79,8 @@ namespace TSSArt.StateMachine
 
 		protected TEntity Populate<TEntity>(TEntity entity, Action<IPolicyBuilder<TEntity>> buildPolicy)
 		{
+			if (buildPolicy == null) throw new ArgumentNullException(nameof(buildPolicy));
+
 			var policy = GetPolicy(buildPolicy);
 
 			var validationContext = policy.CreateValidationContext(_xmlReader);

@@ -7,12 +7,15 @@ namespace TSSArt.StateMachine
 	{
 		private readonly IFinalBuilder           _builder;
 		private readonly Action<IFinal>          _builtAction;
+		private readonly IBuilderFactory         _factory;
 		private readonly TOuterBuilder           _outerBuilder;
 		private          List<IExecutableEntity> _onEntryList;
 		private          List<IExecutableEntity> _onExitList;
+		private          IValueExpression        _contentExpression;
 
 		public FinalFluentBuilder(IBuilderFactory factory, TOuterBuilder outerBuilder, Action<IFinal> builtAction)
 		{
+			_factory = factory ?? throw new ArgumentNullException(nameof(factory));
 			_builder = factory.CreateFinalBuilder();
 			_outerBuilder = outerBuilder;
 			_builtAction = builtAction;
@@ -30,14 +33,48 @@ namespace TSSArt.StateMachine
 				_builder.AddOnExit(new OnExit { Action = ExecutableEntityList.Create(_onExitList) });
 			}
 
+			if (_contentExpression != null)
+			{
+				var contentBuilder = _factory.CreateContentBuilder();
+				contentBuilder.SetExpression(_contentExpression);
+
+				var doneData = _factory.CreateDoneDataBuilder();
+				doneData.SetContent(contentBuilder.Build());
+
+				_builder.SetDoneData(doneData.Build());
+			}
+
 			_builtAction(_builder.Build());
 
 			return _outerBuilder;
 		}
 
-		public FinalFluentBuilder<TOuterBuilder> SetId(Identifier id)
+		public FinalFluentBuilder<TOuterBuilder> SetId(string id) => SetId((Identifier) id);
+
+		public FinalFluentBuilder<TOuterBuilder> SetId(IIdentifier id)
 		{
 			_builder.SetId(id);
+
+			return this;
+		}
+
+		public FinalFluentBuilder<TOuterBuilder> SetDoneData(Evaluator evaluator)
+		{
+			_contentExpression = new RuntimeEvaluator(evaluator);
+
+			return this;
+		}
+
+		public FinalFluentBuilder<TOuterBuilder> SetDoneData(EvaluatorTask task)
+		{
+			_contentExpression = new RuntimeEvaluator(task);
+
+			return this;
+		}
+
+		public FinalFluentBuilder<TOuterBuilder> SetDoneData(EvaluatorCancellableTask task)
+		{
+			_contentExpression = new RuntimeEvaluator(task);
 
 			return this;
 		}

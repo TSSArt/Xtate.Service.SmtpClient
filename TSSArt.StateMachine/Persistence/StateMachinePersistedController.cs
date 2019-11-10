@@ -17,7 +17,7 @@ namespace TSSArt.StateMachine
 		private          int                              _recordId;
 		private          ITransactionalStorage            _storage;
 
-		public StateMachinePersistedController(string sessionId, IStateMachine stateMachine, IoProcessor ioProcessor, IStorageProvider storageProvider, TimeSpan idlePeriod,
+		public StateMachinePersistedController(string sessionId, IStateMachine stateMachine, IIoProcessor ioProcessor, IStorageProvider storageProvider, TimeSpan idlePeriod,
 											   in InterpreterOptions defaultOptions) : base(sessionId, stateMachine, ioProcessor, idlePeriod, defaultOptions)
 		{
 			_storageProvider = storageProvider;
@@ -100,6 +100,8 @@ namespace TSSArt.StateMachine
 
 		protected override async ValueTask DisposeEvent(ScheduledEvent scheduledEvent, CancellationToken token)
 		{
+			if (scheduledEvent == null) throw new ArgumentNullException(nameof(scheduledEvent));
+
 			var scheduledPersistedEvent = (ScheduledPersistedEvent) scheduledEvent;
 
 			scheduledPersistedEvent.Dispose();

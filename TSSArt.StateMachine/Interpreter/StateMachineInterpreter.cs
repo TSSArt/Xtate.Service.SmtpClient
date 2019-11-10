@@ -52,7 +52,7 @@ namespace TSSArt.StateMachine
 			_storageProvider = options.StorageProvider ?? NullStorageProvider.Instance;
 			_persistenceLevel = options.PersistenceLevel;
 			_notifyStateChanged = options.NotifyStateChanged;
-			_arguments = options.Parameters;
+			_arguments = options.Arguments;
 		}
 
 		private bool IsPersistingEnabled => _persistenceLevel != PersistenceLevel.None;

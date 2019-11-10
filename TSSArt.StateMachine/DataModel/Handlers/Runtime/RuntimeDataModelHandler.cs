@@ -1,4 +1,6 @@
-﻿namespace TSSArt.StateMachine
+﻿using System;
+
+namespace TSSArt.StateMachine
 {
 	public class RuntimeDataModelHandler : DataModelHandlerBase
 	{
@@ -12,7 +14,6 @@
 
 		protected override void Visit(ref IScript script)       => AddErrorMessage(message: "Scripting not supported in RUNTIME data model.");
 		protected override void Visit(ref IDataModel dataModel) => AddErrorMessage(message: "DataModel not supported in RUNTIME data model.");
-		protected override void Visit(ref IDoneData doneData)   => AddErrorMessage(message: "DoneData not supported in RUNTIME data model.");
 
 		protected override void Visit(ref IExecutableEntity executableEntity)
 		{
@@ -24,6 +25,8 @@
 
 		public static void Validate(IStateMachine stateMachine)
 		{
+			if (stateMachine == null) throw new ArgumentNullException(nameof(stateMachine));
+
 			if (stateMachine.DataModelType == DataModelType)
 			{
 				var validator = new RuntimeDataModelHandler();

@@ -15,13 +15,13 @@ namespace TSSArt.StateMachine
 		private readonly InterpreterOptions                   _defaultOptions;
 		private readonly CancellationTokenSource              _destroyTokenSource = new CancellationTokenSource();
 		private readonly TimeSpan                             _idlePeriod;
-		private readonly IoProcessor                          _ioProcessor;
+		private readonly IIoProcessor                         _ioProcessor;
 		private readonly HashSet<ScheduledEvent>              _scheduledEvents = new HashSet<ScheduledEvent>();
 		private readonly IStateMachine                        _stateMachine;
 		private readonly ConcurrentQueue<ScheduledEvent>      _toDelete = new ConcurrentQueue<ScheduledEvent>();
 		private          CancellationTokenSource              _suspendOnIdleTokenSource;
 
-		public StateMachineController(string sessionId, IStateMachine stateMachine, IoProcessor ioProcessor, TimeSpan idlePeriod, in InterpreterOptions defaultOptions)
+		public StateMachineController(string sessionId, IStateMachine stateMachine, IIoProcessor ioProcessor, TimeSpan idlePeriod, in InterpreterOptions defaultOptions)
 		{
 			SessionId = sessionId;
 			_stateMachine = stateMachine;
@@ -244,6 +244,8 @@ namespace TSSArt.StateMachine
 
 		protected virtual ValueTask ScheduleEvent(IOutgoingEvent @event, CancellationToken token)
 		{
+			if (@event == null) throw new ArgumentNullException(nameof(@event));
+
 			var scheduledEvent = new ScheduledEvent(@event);
 
 			_scheduledEvents.Add(scheduledEvent);
@@ -265,6 +267,8 @@ namespace TSSArt.StateMachine
 
 		protected async ValueTask DelayedFire(ScheduledEvent scheduledEvent, int delayMs)
 		{
+			if (scheduledEvent == null) throw new ArgumentNullException(nameof(scheduledEvent));
+
 			await Task.Delay(delayMs).ConfigureAwait(false);
 
 			if (scheduledEvent.IsDisposed)
@@ -286,6 +290,8 @@ namespace TSSArt.StateMachine
 
 		protected virtual ValueTask DisposeEvent(ScheduledEvent scheduledEvent, CancellationToken token)
 		{
+			if (scheduledEvent == null) throw new ArgumentNullException(nameof(scheduledEvent));
+
 			scheduledEvent.Dispose();
 			_toDelete.Enqueue(scheduledEvent);
 

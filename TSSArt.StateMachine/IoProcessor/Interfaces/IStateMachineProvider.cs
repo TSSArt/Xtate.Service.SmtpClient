@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
 	public interface IStateMachineProvider
 	{
-		IStateMachine GetStateMachine(Uri source);
-		IStateMachine GetStateMachine(string scxml);
+		ValueTask<IStateMachine> GetStateMachine(Uri source);
+		ValueTask<IStateMachine> GetStateMachine(string scxml);
 	}
 }

@@ -10,14 +10,14 @@ namespace TSSArt.StateMachine
 	{
 		private static readonly Uri ParentTarget = new Uri(uriString: "#_parent", UriKind.Relative);
 
-		private readonly IoProcessor                                                         _ioProcessor;
+		private readonly IIoProcessor                                                        _ioProcessor;
 		private readonly IoProcessorOptions                                                  _options;
 		private readonly ConcurrentDictionary<Uri, IService>                                 _parentServiceByTarget    = new ConcurrentDictionary<Uri, IService>();
 		private readonly ConcurrentDictionary<(string SessionId, string InvokeId), IService> _serviceByInvokeId        = new ConcurrentDictionary<(string SessionId, string InvokeId), IService>();
 		private readonly ConcurrentDictionary<Uri, IService>                                 _serviceByTarget          = new ConcurrentDictionary<Uri, IService>();
 		private readonly ConcurrentDictionary<string, StateMachineController>                _stateMachinesBySessionId = new ConcurrentDictionary<string, StateMachineController>();
 
-		public IoProcessorContext(IoProcessor ioProcessor, in IoProcessorOptions options)
+		public IoProcessorContext(IIoProcessor ioProcessor, in IoProcessorOptions options)
 		{
 			_ioProcessor = ioProcessor;
 			_options = options;
@@ -34,10 +34,6 @@ namespace TSSArt.StateMachine
 		protected virtual void Dispose(bool disposing) { }
 
 		public virtual ValueTask Initialize() => default;
-
-		private IStateMachine GetStateMachine(Uri source) => _options.StateMachineProvider.GetStateMachine(source);
-
-		private IStateMachine GetStateMachine(string scxml) => _options.StateMachineProvider.GetStateMachine(scxml);
 
 		private void FillInterpreterOptions(out InterpreterOptions options)
 		{
@@ -68,17 +64,23 @@ namespace TSSArt.StateMachine
 		protected virtual StateMachineController CreateStateMachineController(string sessionId, IStateMachine stateMachine, in InterpreterOptions options) =>
 				new StateMachineController(sessionId, stateMachine, _ioProcessor, _options.SuspendIdlePeriod, options);
 
-		public virtual ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, Uri source, DataModelValue content, DataModelValue parameters)
+		public virtual async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, IStateMachine stateMachine, Uri source, DataModelValue content, DataModelValue parameters)
 		{
 			FillInterpreterOptions(out var options);
-			options.Parameters = parameters;
+			options.Arguments = parameters;
 
-			var stateMachine = source != null ? GetStateMachine(source) : GetStateMachine(content.AsString());
+			if (stateMachine == null)
+			{
+				stateMachine = source != null
+						? await _options.StateMachineProvider.GetStateMachine(source).ConfigureAwait(false)
+						: await _options.StateMachineProvider.GetStateMachine(content.AsString()).ConfigureAwait(false);
+			}
+
 			var stateMachineController = CreateStateMachineController(sessionId, stateMachine, options);
 			ValidateTrue(_stateMachinesBySessionId.TryAdd(sessionId, stateMachineController));
 			ValidateTrue(_parentServiceByTarget.TryAdd(_ioProcessor.GetTarget(sessionId), stateMachineController));
 
-			return new ValueTask<StateMachineController>(stateMachineController);
+			return stateMachineController;
 		}
 
 		public virtual ValueTask DestroyStateMachine(string sessionId)
@@ -91,6 +93,8 @@ namespace TSSArt.StateMachine
 
 		public void ValidateSessionId(string sessionId, out StateMachineController controller)
 		{
+			if (sessionId == null) throw new ArgumentNullException(nameof(sessionId));
+
 			ValidateTrue(_stateMachinesBySessionId.TryGetValue(sessionId, out controller));
 		}
 
@@ -151,6 +155,9 @@ namespace TSSArt.StateMachine
 
 		public IService GetService(Uri origin, Uri target)
 		{
+			if (origin == null) throw new ArgumentNullException(nameof(origin));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+
 			var result = target == ParentTarget
 					? _parentServiceByTarget.TryGetValue(origin, out var service)
 					: _serviceByTarget.TryGetValue(target, out service);

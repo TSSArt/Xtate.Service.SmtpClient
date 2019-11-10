@@ -10,6 +10,8 @@ namespace TSSArt.StateMachine
 
 		public TransitionFluentBuilder(IBuilderFactory factory, TOuterBuilder outerBuilder, Action<ITransition> builtAction)
 		{
+			if (factory == null) throw new ArgumentNullException(nameof(factory));
+
 			_builder = factory.CreateTransitionBuilder();
 			_outerBuilder = outerBuilder;
 			_builtAction = builtAction;
@@ -27,7 +29,7 @@ namespace TSSArt.StateMachine
 			return this;
 		}
 
-		public TransitionFluentBuilder<TOuterBuilder> SetCondition(PredicateTask predicate)
+		public TransitionFluentBuilder<TOuterBuilder> SetCondition(PredicateCancellableTask predicate)
 		{
 			_builder.SetCondition(new RuntimePredicate(predicate));
 			return this;
@@ -39,7 +41,13 @@ namespace TSSArt.StateMachine
 			return this;
 		}
 
-		public TransitionFluentBuilder<TOuterBuilder> SetTarget(params Identifier[] target)
+		public TransitionFluentBuilder<TOuterBuilder> SetTarget(params string[] target)
+		{
+			_builder.SetTarget(IdentifierList.Create(target, Identifier.FromString));
+			return this;
+		}
+
+		public TransitionFluentBuilder<TOuterBuilder> SetTarget(params IIdentifier[] target)
 		{
 			_builder.SetTarget(IdentifierList.Create(target));
 			return this;

@@ -11,7 +11,7 @@ namespace TSSArt.StateMachine
 
 		public HistoryFluentBuilder(IBuilderFactory factory, TOuterBuilder outerBuilder, Action<IHistory> builtAction)
 		{
-			_factory = factory;
+			_factory = factory ?? throw new ArgumentNullException(nameof(factory));
 			_builder = factory.CreateHistoryBuilder();
 			_outerBuilder = outerBuilder;
 			_builtAction = builtAction;
@@ -23,7 +23,9 @@ namespace TSSArt.StateMachine
 			return _outerBuilder;
 		}
 
-		public HistoryFluentBuilder<TOuterBuilder> SetId(Identifier id)
+		public HistoryFluentBuilder<TOuterBuilder> SetId(string id) => SetId((Identifier) id);
+
+		public HistoryFluentBuilder<TOuterBuilder> SetId(IIdentifier id)
 		{
 			_builder.SetId(id);
 			return this;
@@ -38,6 +40,8 @@ namespace TSSArt.StateMachine
 		public TransitionFluentBuilder<HistoryFluentBuilder<TOuterBuilder>> BeginTransition() =>
 				new TransitionFluentBuilder<HistoryFluentBuilder<TOuterBuilder>>(_factory, this, _builder.SetTransition);
 
-		public HistoryFluentBuilder<TOuterBuilder> AddTransition(Identifier target) => BeginTransition().SetTarget(target).EndTransition();
+		public HistoryFluentBuilder<TOuterBuilder> AddTransition(string target) => AddTransition((Identifier) target);
+		
+		public HistoryFluentBuilder<TOuterBuilder> AddTransition(IIdentifier target) => BeginTransition().SetTarget(target).EndTransition();
 	}
 }

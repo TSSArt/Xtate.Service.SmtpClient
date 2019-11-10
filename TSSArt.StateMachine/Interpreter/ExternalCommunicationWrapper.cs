@@ -85,6 +85,8 @@ namespace TSSArt.StateMachine
 
 		public async ValueTask<SendStatus> SendEvent(IOutgoingEvent @event, CancellationToken token)
 		{
+			if (@event == null) throw new ArgumentNullException(nameof(@event));
+
 			try
 			{
 				ThrowIfNoExternalCommunication();

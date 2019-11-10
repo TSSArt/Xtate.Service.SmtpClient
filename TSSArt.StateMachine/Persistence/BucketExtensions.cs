@@ -6,7 +6,7 @@ namespace TSSArt.StateMachine
 {
 	public static class BucketExtensions
 	{
-		public static void AddEntity<T>(this Bucket bucket, Key key, T entity) where T : IEntity
+		public static void AddEntity<T>(this in Bucket bucket, Key key, T entity) where T : IEntity
 		{
 			if (entity != null)
 			{
@@ -14,7 +14,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public static void AddEntityList<T>(this Bucket bucket, Key key, IReadOnlyList<T> list) where T : IEntity
+		public static void AddEntityList<T>(this in Bucket bucket, Key key, IReadOnlyList<T> list) where T : IEntity
 		{
 			if (list == null)
 			{
@@ -42,20 +42,20 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public static IReadOnlyList<T> RestoreList<T>(this Bucket bucket, Key key, Func<Bucket, T> factory)
+		public static IReadOnlyList<T> RestoreList<T>(this in Bucket bucket, Key key, Func<Bucket, T> factory)
 		{
 			if (!bucket.TryGet(key, out int length))
 			{
 				return null;
 			}
 
-			bucket = bucket.Nested(key);
+			var itemsBucket = bucket.Nested(key);
 
 			var list = new T[length];
 
 			for (var i = 0; i < length; i ++)
 			{
-				list[i] = factory(bucket.Nested(i));
+				list[i] = factory(itemsBucket.Nested(i));
 			}
 
 			return new ReadOnlyCollection<T>(list);
@@ -74,6 +74,8 @@ namespace TSSArt.StateMachine
 
 		public static DataModelValue GetDataModelValue(this in Bucket bucket, DataModelReferenceTracker tracker, DataModelValue baseValue)
 		{
+			if (tracker == null) throw new ArgumentNullException(nameof(tracker));
+
 			var type = bucket.Get<DataModelValueType>(Key.Type);
 			bucket.TryGet(Key.ReadOnly, out bool isReadOnly);
 
@@ -99,6 +101,8 @@ namespace TSSArt.StateMachine
 
 		public static void SetDataModelValue(this in Bucket bucket, DataModelReferenceTracker tracker, DataModelValue item)
 		{
+			if (tracker == null) throw new ArgumentNullException(nameof(tracker));
+
 			bucket.Add(Key.Type, item.Type);
 			if (item.IsReadOnly)
 			{

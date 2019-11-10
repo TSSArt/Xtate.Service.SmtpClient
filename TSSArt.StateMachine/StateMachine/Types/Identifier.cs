@@ -26,6 +26,8 @@ namespace TSSArt.StateMachine
 
 		public static explicit operator Identifier(string val) => new Identifier(val);
 
+		public static Identifier FromString(string val) => new Identifier(val);
+
 		public override string ToString() => _val;
 
 		public override bool Equals(object obj) => ReferenceEquals(this, obj) || obj is Identifier other && _val.Equals(other._val, StringComparison.Ordinal);

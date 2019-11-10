@@ -14,7 +14,7 @@ namespace TSSArt.StateMachine
 
 		public ParallelFluentBuilder(IBuilderFactory factory, TOuterBuilder outerBuilder, Action<IParallel> builtAction)
 		{
-			_factory = factory;
+			_factory = factory ?? throw new ArgumentNullException(nameof(factory));
 			_builder = factory.CreateParallelBuilder();
 			_outerBuilder = outerBuilder;
 			_builtAction = builtAction;
@@ -36,7 +36,9 @@ namespace TSSArt.StateMachine
 			return _outerBuilder;
 		}
 
-		public ParallelFluentBuilder<TOuterBuilder> SetId(Identifier id)
+		public ParallelFluentBuilder<TOuterBuilder> SetId(string id) => SetId((Identifier) id);
+
+		public ParallelFluentBuilder<TOuterBuilder> SetId(IIdentifier id)
 		{
 			_builder.SetId(id);
 
@@ -121,20 +123,30 @@ namespace TSSArt.StateMachine
 
 		public HistoryFluentBuilder<ParallelFluentBuilder<TOuterBuilder>> BeginHistory() => new HistoryFluentBuilder<ParallelFluentBuilder<TOuterBuilder>>(_factory, this, _builder.AddHistory);
 
-		public StateFluentBuilder<ParallelFluentBuilder<TOuterBuilder>> BeginState(Identifier id) =>
+		public StateFluentBuilder<ParallelFluentBuilder<TOuterBuilder>> BeginState(string id) => BeginState((Identifier) id);
+
+		public StateFluentBuilder<ParallelFluentBuilder<TOuterBuilder>> BeginState(IIdentifier id) =>
 				new StateFluentBuilder<ParallelFluentBuilder<TOuterBuilder>>(_factory, this, _builder.AddState).SetId(id);
 
-		public ParallelFluentBuilder<ParallelFluentBuilder<TOuterBuilder>> BeginParallel(Identifier id) =>
+		public ParallelFluentBuilder<ParallelFluentBuilder<TOuterBuilder>> BeginParallel(string id) => BeginParallel((Identifier) id);
+
+		public ParallelFluentBuilder<ParallelFluentBuilder<TOuterBuilder>> BeginParallel(IIdentifier id) =>
 				new ParallelFluentBuilder<ParallelFluentBuilder<TOuterBuilder>>(_factory, this, _builder.AddParallel).SetId(id);
 
-		public HistoryFluentBuilder<ParallelFluentBuilder<TOuterBuilder>> BeginHistory(Identifier id) =>
+		public HistoryFluentBuilder<ParallelFluentBuilder<TOuterBuilder>> BeginHistory(string id) => BeginHistory((Identifier) id);
+
+		public HistoryFluentBuilder<ParallelFluentBuilder<TOuterBuilder>> BeginHistory(IIdentifier id) =>
 				new HistoryFluentBuilder<ParallelFluentBuilder<TOuterBuilder>>(_factory, this, _builder.AddHistory).SetId(id);
 
 		public TransitionFluentBuilder<ParallelFluentBuilder<TOuterBuilder>> BeginTransition() =>
 				new TransitionFluentBuilder<ParallelFluentBuilder<TOuterBuilder>>(_factory, this, _builder.AddTransition);
 
-		public ParallelFluentBuilder<TOuterBuilder> AddTransition(EventDescriptor eventDescriptor, Identifier target) => BeginTransition().SetEvent(eventDescriptor).SetTarget(target).EndTransition();
+		public ParallelFluentBuilder<TOuterBuilder> AddTransition(EventDescriptor eventDescriptor, string target) => AddTransition(eventDescriptor, (Identifier) target);
 
-		public ParallelFluentBuilder<TOuterBuilder> AddTransition(Predicate condition, Identifier target) => BeginTransition().SetCondition(condition).SetTarget(target).EndTransition();
+		public ParallelFluentBuilder<TOuterBuilder> AddTransition(EventDescriptor eventDescriptor, IIdentifier target) => BeginTransition().SetEvent(eventDescriptor).SetTarget(target).EndTransition();
+
+		public ParallelFluentBuilder<TOuterBuilder> AddTransition(Predicate condition, string target) => AddTransition(condition, (Identifier) target);
+
+		public ParallelFluentBuilder<TOuterBuilder> AddTransition(Predicate condition, IIdentifier target) => BeginTransition().SetCondition(condition).SetTarget(target).EndTransition();
 	}
 }

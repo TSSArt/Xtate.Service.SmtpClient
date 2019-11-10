@@ -81,7 +81,7 @@ namespace TSSArt.StateMachine.Test
 			var stateMachine = GetStateMachine("<datamodel><data id='dmValue' expr='111'/></datamodel><final id='fin'><donedata><content expr='dmValue'/></donedata></final>");
 
 			var stateMachineProviderMock = new Mock<IStateMachineProvider>();
-			stateMachineProviderMock.Setup(x => x.GetStateMachine(new Uri("scxml://a"))).Returns(stateMachine);
+			stateMachineProviderMock.Setup(x => x.GetStateMachine(new Uri("scxml://a"))).Returns(new ValueTask<IStateMachine>(stateMachine));
 
 			var options = new IoProcessorOptions
 						  {
@@ -113,7 +113,7 @@ namespace TSSArt.StateMachine.Test
 <final id='finErr'></final>");
 
 			var stateMachineProviderMock = new Mock<IStateMachineProvider>();
-			stateMachineProviderMock.Setup(x => x.GetStateMachine(new Uri("scxml://a"))).Returns(stateMachine);
+			stateMachineProviderMock.Setup(x => x.GetStateMachine(new Uri("scxml://a"))).Returns(new ValueTask<IStateMachine>(stateMachine));
 
 			var options = new IoProcessorOptions
 						  {
@@ -143,24 +143,24 @@ namespace TSSArt.StateMachine.Test
 
 	public class StateMachineProvider : IStateMachineProvider
 	{
-		public IStateMachine GetStateMachine(Uri source)
+		public ValueTask<IStateMachine> GetStateMachine(Uri source)
 		{
 			using var stream = new FileStream(source.AbsolutePath, FileMode.Open);
 			var xmlReader = XmlReader.Create(stream);
 
 			var director = new ScxmlDirector(xmlReader, new BuilderFactory());
 
-			return director.ConstructStateMachine();
+			return new ValueTask<IStateMachine>(director.ConstructStateMachine());
 		}
 
-		public IStateMachine GetStateMachine(string scxml)
+		public ValueTask<IStateMachine> GetStateMachine(string scxml)
 		{
 			var reader = new StringReader(scxml);
 			var xmlReader = XmlReader.Create(reader);
 
 			var director = new ScxmlDirector(xmlReader, new BuilderFactory());
 
-			return director.ConstructStateMachine();
+			return new ValueTask<IStateMachine>(director.ConstructStateMachine());
 		}
 	}
 }

@@ -13,18 +13,18 @@ namespace TSSArt.StateMachine
 		private const int    InvokedServicesKey   = 1;
 
 		private readonly TimeSpan                                                        _idlePeriod;
-		private readonly Dictionary<(string SessionId, string InvokeId), InvokedService> _invokedServices = new Dictionary<(string SessionId, string InvokeId), InvokedService>();
-		private readonly IoProcessor                                                     _ioProcessor;
+		private readonly Dictionary<(string SessionId, string InvokeId), InvokedServiceMeta> _invokedServices = new Dictionary<(string SessionId, string InvokeId), InvokedServiceMeta>();
+		private readonly IIoProcessor                                                    _ioProcessor;
 		private readonly SemaphoreSlim                                                   _lockInvokedServices = new SemaphoreSlim(initialCount: 1, maxCount: 1);
 		private readonly SemaphoreSlim                                                   _lockStateMachines   = new SemaphoreSlim(initialCount: 1, maxCount: 1);
-		private readonly Dictionary<string, StateMachine>                                _stateMachines       = new Dictionary<string, StateMachine>();
+		private readonly Dictionary<string, StateMachineMeta>                                _stateMachines       = new Dictionary<string, StateMachineMeta>();
 		private readonly CancellationToken                                               _stopToken;
 		private readonly IStorageProvider                                                _storageProvider;
 		private          int                                                             _invokedServiceRecordId;
 		private          int                                                             _stateMachineRecordId;
 		private          ITransactionalStorage                                           _storage;
 
-		public IoProcessorPersistedContext(IoProcessor ioProcessor, in IoProcessorOptions options) : base(ioProcessor, options)
+		public IoProcessorPersistedContext(IIoProcessor ioProcessor, in IoProcessorOptions options) : base(ioProcessor, options)
 		{
 			_ioProcessor = ioProcessor;
 			_storageProvider = options.StorageProvider ?? throw new ArgumentNullException(nameof(options.StorageProvider));
@@ -70,7 +70,7 @@ namespace TSSArt.StateMachine
 				var recordId = _invokedServiceRecordId ++;
 
 				var invokedSessionId = service is StateMachineController stateMachineController ? stateMachineController.SessionId : null;
-				var invokedService = new InvokedService(sessionId, invokeId, invokedSessionId) { RecordId = recordId };
+				var invokedService = new InvokedServiceMeta(sessionId, invokeId, invokedSessionId) { RecordId = recordId };
 				_invokedServices.Add((sessionId, invokeId), invokedService);
 
 				bucket.Add(Bucket.RootKey, _invokedServiceRecordId);
@@ -136,26 +136,31 @@ namespace TSSArt.StateMachine
 		protected override StateMachineController CreateStateMachineController(string sessionId, IStateMachine stateMachine, in InterpreterOptions options) =>
 				new StateMachinePersistedController(sessionId, stateMachine, _ioProcessor, _storageProvider, _idlePeriod, options);
 
-		public override async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, Uri source, DataModelValue content, DataModelValue parameters)
+		public override async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, IStateMachine stateMachine, Uri source, DataModelValue content, DataModelValue parameters)
 		{
+			if (stateMachine != null)
+			{
+				return await base.CreateAndAddStateMachine(sessionId, stateMachine, source, content, parameters).ConfigureAwait(false);
+			}
+
 			await _lockStateMachines.WaitAsync(_stopToken).ConfigureAwait(false);
 			try
 			{
-				var stateMachineController = await base.CreateAndAddStateMachine(sessionId, source, content, parameters).ConfigureAwait(false);
+				var stateMachineController = await base.CreateAndAddStateMachine(sessionId, stateMachine: null, source, content, parameters).ConfigureAwait(false);
 
 				var bucket = new Bucket(_storage).Nested(StateMachinesKey);
 				var recordId = _stateMachineRecordId ++;
 
-				var stateMachine = new StateMachine(sessionId, source, content, parameters) { RecordId = recordId, Controller = stateMachineController };
-				_stateMachines.Add(sessionId, stateMachine);
+				var stateMachineMeta = new StateMachineMeta(sessionId, source, content, parameters) { RecordId = recordId, Controller = stateMachineController };
+				_stateMachines.Add(sessionId, stateMachineMeta);
 
 				bucket.Add(Bucket.RootKey, _stateMachineRecordId);
 
-				stateMachine.Store(bucket.Nested(recordId));
+				stateMachineMeta.Store(bucket.Nested(recordId));
 
 				await _storage.CheckPoint(level: 0, _stopToken).ConfigureAwait(false);
 
-				stateMachine.Controller = stateMachineController;
+				stateMachineMeta.Controller = stateMachineController;
 
 				return stateMachineController;
 			}
@@ -235,8 +240,8 @@ namespace TSSArt.StateMachine
 					var eventBucket = bucket.Nested(i);
 					if (eventBucket.TryGet(Key.TypeInfo, out TypeInfo typeInfo) && typeInfo == TypeInfo.StateMachine)
 					{
-						var stateMachine = new StateMachine(bucket) { RecordId = i };
-						var stateMachineController = await base.CreateAndAddStateMachine(stateMachine.SessionId, stateMachine.Source, stateMachine.Content, stateMachine.Parameters)
+						var stateMachine = new StateMachineMeta(bucket) { RecordId = i };
+						var stateMachineController = await base.CreateAndAddStateMachine(stateMachine.SessionId, stateMachine: null, stateMachine.Source, stateMachine.Content, stateMachine.Parameters)
 															   .ConfigureAwait(false);
 						stateMachine.Controller = stateMachineController;
 
@@ -295,7 +300,7 @@ namespace TSSArt.StateMachine
 					var eventBucket = bucket.Nested(i);
 					if (eventBucket.TryGet(Key.TypeInfo, out TypeInfo typeInfo) && typeInfo == TypeInfo.InvokedService)
 					{
-						var invokedService = new InvokedService(bucket) { RecordId = i };
+						var invokedService = new InvokedServiceMeta(bucket) { RecordId = i };
 
 						if (invokedService.SessionId != null)
 						{
@@ -319,9 +324,9 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private class StateMachine : IStoreSupport
+		private class StateMachineMeta : IStoreSupport
 		{
-			public StateMachine(string sessionId, Uri source, DataModelValue content, DataModelValue parameters)
+			public StateMachineMeta(string sessionId, Uri source, DataModelValue content, DataModelValue parameters)
 			{
 				SessionId = sessionId;
 				Source = source;
@@ -329,7 +334,7 @@ namespace TSSArt.StateMachine
 				Parameters = parameters;
 			}
 
-			public StateMachine(Bucket bucket)
+			public StateMachineMeta(Bucket bucket)
 			{
 				SessionId = bucket.GetString(Key.SessionId);
 				Source = bucket.GetUri(Key.Source);
@@ -372,16 +377,16 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private class InvokedService : IStoreSupport
+		private class InvokedServiceMeta : IStoreSupport
 		{
-			public InvokedService(string parentSessionId, string invokeId, string sessionId)
+			public InvokedServiceMeta(string parentSessionId, string invokeId, string sessionId)
 			{
 				ParentSessionId = parentSessionId;
 				InvokeId = invokeId;
 				SessionId = sessionId;
 			}
 
-			public InvokedService(Bucket bucket)
+			public InvokedServiceMeta(Bucket bucket)
 			{
 				ParentSessionId = bucket.GetString(Key.ParentSessionId);
 				InvokeId = bucket.GetString(Key.InvokeId);
