@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public class StreamStorage : ITransactionalStorage
+	public sealed class StreamStorage : ITransactionalStorage
 	{
 		private const byte SkipMark        = 0;
 		private const int  SkipBlockMark   = 2;
@@ -82,8 +82,12 @@ namespace TSSArt.StateMachine
 
 		public void Dispose()
 		{
-			Dispose(true);
-			GC.SuppressFinalize(this);
+			_inMemoryStorage?.Dispose();
+
+			if (_disposeStream)
+			{
+				_stream.Dispose();
+			}
 		}
 
 		public ValueTask DisposeAsync()
@@ -91,19 +95,6 @@ namespace TSSArt.StateMachine
 			_inMemoryStorage?.Dispose();
 
 			return _disposeStream ? _stream.DisposeAsync() : default;
-		}
-
-		protected virtual void Dispose(bool dispose)
-		{
-			if (dispose)
-			{
-				_inMemoryStorage?.Dispose();
-
-				if (_disposeStream)
-				{
-					_stream.Dispose();
-				}
-			}
 		}
 
 		public static async ValueTask<StreamStorage> CreateAsync(Stream stream, bool disposeStream = true, CancellationToken token = default) =>

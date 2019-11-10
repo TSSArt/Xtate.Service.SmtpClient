@@ -23,10 +23,9 @@ namespace TSSArt.StateMachine
 
 		public async ValueTask<ITransactionalStorage> GetTransactionalStorage(string partition, string key, CancellationToken token)
 		{
-			if (string.IsNullOrEmpty(partition)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(partition));
 			if (string.IsNullOrEmpty(key)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(key));
 
-			var dir = Path.Combine(_path, Escape(partition));
+			var dir = !string.IsNullOrEmpty(partition) ? Path.Combine(_path, Escape(partition)) : _path;
 
 			if (!Directory.Exists(dir))
 			{
@@ -42,10 +41,9 @@ namespace TSSArt.StateMachine
 
 		public ValueTask RemoveTransactionalStorage(string partition, string key, CancellationToken token)
 		{
-			if (string.IsNullOrEmpty(partition)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(partition));
 			if (string.IsNullOrEmpty(key)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(key));
 
-			var dir = Path.Combine(_path, Escape(partition));
+			var dir = !string.IsNullOrEmpty(partition) ? Path.Combine(_path, Escape(partition)) : _path;
 			var path = Path.Combine(dir, Escape(key) + _extension);
 
 			try
@@ -59,9 +57,7 @@ namespace TSSArt.StateMachine
 
 		public ValueTask RemoveAllTransactionalStorage(string partition, CancellationToken token)
 		{
-			if (string.IsNullOrEmpty(partition)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(partition));
-
-			var path = Path.Combine(_path, Escape(partition));
+			var path = !string.IsNullOrEmpty(partition) ? Path.Combine(_path, Escape(partition)) : _path;
 
 			try
 			{
