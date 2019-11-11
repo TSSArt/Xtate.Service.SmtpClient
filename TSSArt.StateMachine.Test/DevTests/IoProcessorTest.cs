@@ -17,7 +17,7 @@ namespace TSSArt.StateMachine.Test
 	{
 		protected override async ValueTask<DataModelValue> Execute()
 		{
-			dynamic data = Argument.ToObject();
+			dynamic data = Parameters.ToObject();
 
 			using var client = new HttpClient();
 			var request = new HttpRequestMessage(new HttpMethod(data.method), Source);

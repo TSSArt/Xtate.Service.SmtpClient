@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public class IoProcessorContext : IAsyncDisposable, IDisposable
+	internal class IoProcessorContext : IAsyncDisposable, IDisposable
 	{
 		private static readonly Uri ParentTarget = new Uri(uriString: "#_parent", UriKind.Relative);
 

@@ -2,13 +2,16 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Security;
 using System.Text;
 
 namespace TSSArt.StateMachine
 {
-	public class DataModelArray : DynamicObject, IList<DataModelValue>, IFormattable
+	public class DataModelArray : IDynamicMetaObjectProvider, IList<DataModelValue>, IFormattable
 	{
 		public delegate void ChangedHandler(ChangedAction action, int index, DataModelValue value);
 
@@ -318,36 +321,6 @@ namespace TSSArt.StateMachine
 			return index >= _list.Count || !_list[index].IsReadOnly;
 		}
 
-		public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object result)
-		{
-			if (indexes == null) throw new ArgumentNullException(nameof(indexes));
-
-			if (indexes.Length == 1 && indexes[0] is IConvertible convertible)
-			{
-				result = this[convertible.ToInt32(null)].ToObject();
-
-				return true;
-			}
-
-			result = null;
-
-			return false;
-		}
-
-		public override bool TrySetIndex(SetIndexBinder binder, object[] indexes, object value)
-		{
-			if (indexes == null) throw new ArgumentNullException(nameof(indexes));
-
-			if (indexes.Length == 1 && indexes[0] is IConvertible convertible)
-			{
-				this[convertible.ToInt32(null)] = DataModelValue.FromObject(value);
-
-				return true;
-			}
-
-			return false;
-		}
-
 		public string ToString(string format) => ToString(format, formatProvider: null);
 
 		public DataModelArray DeepClone(bool isReadOnly)
@@ -360,6 +333,92 @@ namespace TSSArt.StateMachine
 			}
 
 			return clone;
+		}
+
+		DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter) => new MetaObject(parameter, this, Dynamic.CreateMetaObject);
+
+		private class Dynamic : DynamicObject
+		{
+			private static readonly IDynamicMetaObjectProvider Instance = new Dynamic(default);
+
+			private static readonly ConstructorInfo ConstructorInfo = typeof(Dynamic).GetConstructor(new[] { typeof(DataModelArray) });
+
+			public static DynamicMetaObject CreateMetaObject(Expression expression)
+			{
+				var newExpression = Expression.New(ConstructorInfo, Expression.Convert(expression, typeof(DataModelArray)));
+				return Instance.GetMetaObject(newExpression);
+			}
+
+			private readonly DataModelArray _arr;
+
+			public Dynamic(DataModelArray arr) => _arr = arr;
+
+			public override bool TryGetMember(GetMemberBinder binder, out object result)
+			{
+				if (binder == null) throw new ArgumentNullException(nameof(binder));
+
+				if (binder.Name == "Length" || binder.Name == "length")
+				{
+					result = _arr.Length;
+
+					return true;
+				}
+
+				result = null;
+
+				return false;
+			}
+
+			public override bool TrySetMember(SetMemberBinder binder, object value)
+			{
+				if (binder == null) throw new ArgumentNullException(nameof(binder));
+
+				if ((binder.Name == "Length" || binder.Name == "length") && value is IConvertible convertible)
+				{
+					_arr.SetLength(convertible.ToInt32(NumberFormatInfo.InvariantInfo));
+
+					return true;
+				}
+
+				return false;
+			}
+
+			public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object result)
+			{
+				if (indexes == null) throw new ArgumentNullException(nameof(indexes));
+
+				if (indexes.Length == 1 && indexes[0] is IConvertible convertible)
+				{
+					result = _arr[convertible.ToInt32(NumberFormatInfo.InvariantInfo)].ToObject();
+
+					return true;
+				}
+
+				result = null;
+
+				return false;
+			}
+
+			public override bool TrySetIndex(SetIndexBinder binder, object[] indexes, object value)
+			{
+				if (indexes == null) throw new ArgumentNullException(nameof(indexes));
+
+				if (indexes.Length == 1 && indexes[0] is IConvertible convertible)
+				{
+					_arr[convertible.ToInt32(NumberFormatInfo.InvariantInfo)] = DataModelValue.FromObject(value);
+
+					return true;
+				}
+
+				return false;
+			}
+
+			public override bool TryConvert(ConvertBinder binder, out object result)
+			{
+				result = _arr;
+
+				return binder.Type == typeof(DataModelArray);
+			}
 		}
 	}
 }

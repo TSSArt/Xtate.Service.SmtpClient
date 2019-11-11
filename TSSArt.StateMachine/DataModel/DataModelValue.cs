@@ -407,48 +407,20 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter) => new MetaObject(parameter, this);
-
-		private class MetaObject : DynamicMetaObject
-		{
-			private static readonly Dynamic         DynamicInstance        = new Dynamic(default);
-			private static readonly ConstructorInfo DynamicConstructorInfo = typeof(Dynamic).GetConstructor(new[] { typeof(DataModelValue) });
-
-			private readonly DynamicMetaObject _obj;
-
-			public MetaObject(Expression expression, DataModelValue val) : base(expression, BindingRestrictions.Empty, val)
-			{
-				var newExpression = Expression.New(DynamicConstructorInfo, Expression.Convert(expression, typeof(DataModelValue)));
-				_obj = DynamicInstance.GetMetaObject(newExpression);
-			}
-
-			public override DynamicMetaObject BindGetMember(GetMemberBinder binder) => _obj.BindGetMember(binder);
-
-			public override DynamicMetaObject BindSetMember(SetMemberBinder binder, DynamicMetaObject value) => _obj.BindSetMember(binder, value);
-
-			public override DynamicMetaObject BindDeleteMember(DeleteMemberBinder binder) => _obj.BindDeleteMember(binder);
-
-			public override DynamicMetaObject BindGetIndex(GetIndexBinder binder, DynamicMetaObject[] indexes) => _obj.BindGetIndex(binder, indexes);
-
-			public override DynamicMetaObject BindSetIndex(SetIndexBinder binder, DynamicMetaObject[] indexes, DynamicMetaObject value) => _obj.BindSetIndex(binder, indexes, value);
-
-			public override DynamicMetaObject BindDeleteIndex(DeleteIndexBinder binder, DynamicMetaObject[] indexes) => _obj.BindDeleteIndex(binder, indexes);
-
-			public override DynamicMetaObject BindInvokeMember(InvokeMemberBinder binder, DynamicMetaObject[] args) => _obj.BindInvokeMember(binder, args);
-
-			public override DynamicMetaObject BindInvoke(InvokeBinder binder, DynamicMetaObject[] args) => _obj.BindInvoke(binder, args);
-
-			public override DynamicMetaObject BindCreateInstance(CreateInstanceBinder binder, DynamicMetaObject[] args) => _obj.BindCreateInstance(binder, args);
-
-			public override DynamicMetaObject BindUnaryOperation(UnaryOperationBinder binder) => _obj.BindUnaryOperation(binder);
-
-			public override DynamicMetaObject BindBinaryOperation(BinaryOperationBinder binder, DynamicMetaObject arg) => _obj.BindBinaryOperation(binder, arg);
-
-			public override DynamicMetaObject BindConvert(ConvertBinder binder) => _obj.BindConvert(binder);
-		}
+		DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter) => new MetaObject(parameter, this, Dynamic.CreateMetaObject);
 
 		private class Dynamic : DynamicObject
 		{
+			private static readonly IDynamicMetaObjectProvider Instance = new Dynamic(default);
+
+			private static readonly ConstructorInfo ConstructorInfo = typeof(Dynamic).GetConstructor(new[] { typeof(DataModelValue) });
+
+			public static DynamicMetaObject CreateMetaObject(Expression expression)
+			{
+				var newExpression = Expression.New(ConstructorInfo, Expression.Convert(expression, typeof(DataModelValue)));
+				return Instance.GetMetaObject(newExpression);
+			}
+
 			private readonly DataModelValue _value;
 
 			public Dynamic(DataModelValue value) => _value = value;
@@ -490,7 +462,7 @@ namespace TSSArt.StateMachine
 
 				if (indexes.Length == 1 && indexes[0] is IConvertible convertible && _value.Type == DataModelValueType.Array)
 				{
-					result = _value.AsArray()[convertible.ToInt32(null)].ToObject();
+					result = _value.AsArray()[convertible.ToInt32(NumberFormatInfo.InvariantInfo)].ToObject();
 
 					return true;
 				}
@@ -511,7 +483,7 @@ namespace TSSArt.StateMachine
 
 				if (indexes.Length == 1 && indexes[0] is IConvertible convertible && _value.Type == DataModelValueType.Array)
 				{
-					_value.AsArray()[convertible.ToInt32(null)] = FromObject(value);
+					_value.AsArray()[convertible.ToInt32(NumberFormatInfo.InvariantInfo)] = FromObject(value);
 
 					return true;
 				}
@@ -549,6 +521,20 @@ namespace TSSArt.StateMachine
 					case TypeCode.UInt64:
 						result = Convert.ChangeType(_value.AsNumber(), typeCode, NumberFormatInfo.InvariantInfo);
 						return true;
+				}
+
+				if (binder.Type == typeof(DataModelObject))
+				{
+					result = _value.AsObject();
+
+					return true;
+				}
+
+				if (binder.Type == typeof(DataModelArray))
+				{
+					result = _value.AsArray();
+
+					return true;
 				}
 
 				result = null;
