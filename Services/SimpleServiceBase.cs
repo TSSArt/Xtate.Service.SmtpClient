@@ -10,7 +10,8 @@ namespace TSSArt.StateMachine
 		private readonly CancellationTokenSource              _tokenSource  = new CancellationTokenSource();
 
 		protected Uri            Source   { get; private set; }
-		protected DataModelValue Argument { get; private set; }
+		protected DataModelValue Content { get; private set; }
+		protected DataModelValue Parameters { get; private set; }
 
 		protected CancellationToken StopToken => _tokenSource.Token;
 
@@ -32,10 +33,11 @@ namespace TSSArt.StateMachine
 
 		ValueTask<DataModelValue> IService.Result => new ValueTask<DataModelValue>(_completedTcs.Task);
 
-		public void Start(Uri source, DataModelValue arg)
+		public void Start(Uri source, DataModelValue content, DataModelValue parameters)
 		{
 			Source = source;
-			Argument = arg;
+			Content = content;
+			Parameters = parameters;
 
 			RunAsync();
 

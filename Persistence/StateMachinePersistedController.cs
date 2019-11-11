@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public class StateMachinePersistedController : StateMachineController, IStorageProvider
+	internal class StateMachinePersistedController : StateMachineController, IStorageProvider
 	{
 		private const string ControllerStateKey = "cs";
 		private const int    ScheduledEventsKey = 0;

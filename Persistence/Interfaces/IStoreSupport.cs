@@ -1,6 +1,6 @@
 ﻿namespace TSSArt.StateMachine
 {
-	public interface IStoreSupport
+	internal interface IStoreSupport
 	{
 		void Store(Bucket bucket);
 	}

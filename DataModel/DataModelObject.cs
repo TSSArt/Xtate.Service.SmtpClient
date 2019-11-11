@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Security;
 using System.Text;
 
 namespace TSSArt.StateMachine
 {
-	public class DataModelObject : DynamicObject, IFormattable
+	public class DataModelObject : IDynamicMetaObjectProvider, IFormattable
 	{
 		public delegate void ChangedHandler(ChangedAction action, string property, DataModelValue value);
 
@@ -121,26 +123,6 @@ namespace TSSArt.StateMachine
 			RemoveInternal(property);
 		}
 
-		public override bool TryGetMember(GetMemberBinder binder, out object result)
-		{
-			if (binder == null) throw new ArgumentNullException(nameof(binder));
-
-			result = this[binder.Name].ToObject();
-
-			return true;
-		}
-
-		public override bool TrySetMember(SetMemberBinder binder, object value)
-		{
-			if (binder == null) throw new ArgumentNullException(nameof(binder));
-
-			this[binder.Name] = DataModelValue.FromObject(value);
-
-			return true;
-		}
-
-		public override IEnumerable<string> GetDynamicMemberNames() => Properties;
-
 		public string ToString(string format) => ToString(format, formatProvider: null);
 
 		public DataModelObject DeepClone(bool isReadOnly)
@@ -153,6 +135,77 @@ namespace TSSArt.StateMachine
 			}
 
 			return clone;
+		}
+
+		DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter) => new MetaObject(parameter, this, Dynamic.CreateMetaObject);
+
+		private class Dynamic : DynamicObject
+		{
+			private static readonly IDynamicMetaObjectProvider Instance = new Dynamic(default);
+
+			private static readonly ConstructorInfo ConstructorInfo = typeof(Dynamic).GetConstructor(new[] { typeof(DataModelObject) });
+
+			public static DynamicMetaObject CreateMetaObject(Expression expression)
+			{
+				var newExpression = Expression.New(ConstructorInfo, Expression.Convert(expression, typeof(DataModelObject)));
+				return Instance.GetMetaObject(newExpression);
+			}
+
+			private readonly DataModelObject _obj;
+
+			public Dynamic(DataModelObject obj) => _obj = obj;
+
+			public override bool TryGetMember(GetMemberBinder binder, out object result)
+			{
+				if (binder == null) throw new ArgumentNullException(nameof(binder));
+
+				result = _obj[binder.Name].ToObject();
+
+				return true;
+			}
+
+			public override bool TrySetMember(SetMemberBinder binder, object value)
+			{
+				if (binder == null) throw new ArgumentNullException(nameof(binder));
+
+				_obj[binder.Name] = DataModelValue.FromObject(value);
+
+				return true;
+			}
+
+			public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object result)
+			{
+				if (indexes.Length == 1 && indexes[0] is string key)
+				{
+					result = _obj[key].ToObject();
+
+					return true;
+				}
+
+				result = null;
+
+				return false;
+			}
+
+			public override bool TrySetIndex(SetIndexBinder binder, object[] indexes, object value)
+			{
+				if (indexes.Length == 1 && indexes[0] is string key)
+				{
+					_obj[key] = DataModelValue.FromObject(value);
+
+					return true;
+				}
+
+				return false;
+			}
+			public override bool TryConvert(ConvertBinder binder, out object result)
+			{
+				result = _obj;
+				
+				return binder.Type == typeof(DataModelObject);
+			}
+
+			public override IEnumerable<string> GetDynamicMemberNames() => _obj.Properties;
 		}
 	}
 }

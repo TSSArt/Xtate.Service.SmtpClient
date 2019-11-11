@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public class StateMachineController : IService, IExternalCommunication, ILogger, INotifyStateChanged, IDisposable, IAsyncDisposable
+	internal class StateMachineController : IService, IExternalCommunication, ILogger, INotifyStateChanged, IDisposable, IAsyncDisposable
 	{
 		private readonly TaskCompletionSource<object>         _acceptedTcs = new TaskCompletionSource<object>();
 		private readonly Channel<IEvent>                      _channel;

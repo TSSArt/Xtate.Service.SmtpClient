@@ -25,11 +25,11 @@ namespace TSSArt.StateMachine
 			_alias = serviceAttribute.Alias != null ? new Uri(serviceAttribute.Alias, UriKind.RelativeOrAbsolute) : null;
 		}
 
-		ValueTask<IService> IServiceFactory.StartService(Uri source, DataModelValue arg, DataModelValue parameters, CancellationToken token)
+		ValueTask<IService> IServiceFactory.StartService(Uri source, DataModelValue content, DataModelValue parameters, CancellationToken token)
 		{
 			var service = new TService();
 
-			service.Start(source, arg);
+			service.Start(source, content, parameters);
 
 			return new ValueTask<IService>(service);
 		}

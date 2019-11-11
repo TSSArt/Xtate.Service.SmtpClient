@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public class IoProcessorPersistedContext : IoProcessorContext
+	internal class IoProcessorPersistedContext : IoProcessorContext
 	{
 		private const string IoProcessorPartition = "IoProcessor";
 		private const string ContextKey           = "context";
