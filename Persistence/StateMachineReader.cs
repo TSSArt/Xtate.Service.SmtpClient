@@ -210,7 +210,7 @@ namespace TSSArt.StateMachine
 
 		private static IEventDescriptor RestoreEventDescriptor(Bucket bucket) => (EventDescriptor) bucket.GetString(Key.Id);
 
-		private static IOutgoingEvent RestoreEvent(Bucket bucket) => (Event) bucket.GetString(Key.Id);
+		private static IOutgoingEvent RestoreEvent(Bucket bucket) => new Event(bucket.GetString(Key.Id)) { Target = Event.InternalTarget };
 
 		private IExecutableEntity RestoreExecutableEntity(Bucket bucket)
 		{

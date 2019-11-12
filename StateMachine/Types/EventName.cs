@@ -20,6 +20,7 @@ namespace TSSArt.StateMachine
 		private static  IReadOnlyList<IIdentifier> GetErrorNameParts(IIdentifier type)          => new ReadOnlyCollection<IIdentifier>(new[] { ErrorIdentifier, type });
 		internal static IReadOnlyList<IIdentifier> GetDoneStateNameParts(IIdentifier id)        => new ReadOnlyCollection<IIdentifier>(new[] { DoneIdentifier, StateIdentifier, id });
 		internal static IReadOnlyList<IIdentifier> GetDoneInvokeNameParts(IIdentifier invokeId) => new ReadOnlyCollection<IIdentifier>(new[] { DoneIdentifier, InvokeIdentifier, invokeId });
+		internal static IReadOnlyList<IIdentifier> GetErrorInvokeNameParts(IIdentifier invokeId) => new ReadOnlyCollection<IIdentifier>(new[] { ErrorIdentifier, InvokeIdentifier, invokeId });
 
 		public static string ToName(IReadOnlyList<IIdentifier> nameParts)
 		{
@@ -30,7 +31,7 @@ namespace TSSArt.StateMachine
 
 		public static IReadOnlyList<IIdentifier> ToParts(string name)
 		{
-			if (name == null) throw new ArgumentNullException(nameof(name));
+			if (string.IsNullOrEmpty(name)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(name));
 
 			return IdentifierList.Create(name.Split(Dot, StringSplitOptions.None), p => (Identifier) p);
 		}

@@ -314,11 +314,13 @@ namespace TSSArt.StateMachine
 
 			var exceptionData = new DataModelObject
 								{
-										["typeName"] = new DataModelValue(exception.GetType().Name, isReadOnly),
-										["typeFullName"] = new DataModelValue(exception.GetType().FullName, isReadOnly),
 										["message"] = new DataModelValue(exception.Message, isReadOnly),
+										["typeName"] = new DataModelValue(exception.GetType().Name, isReadOnly),
+										["source"] = new DataModelValue(exception.Source, isReadOnly),
+										["typeFullName"] = new DataModelValue(exception.GetType().FullName, isReadOnly),
+										["stackTrace"] = new DataModelValue(exception.StackTrace, isReadOnly),
 										["text"] = new DataModelValue(exception.ToString(), isReadOnly)
-								};
+			};
 
 			if (isReadOnly)
 			{

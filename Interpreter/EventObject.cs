@@ -7,8 +7,8 @@ namespace TSSArt.StateMachine
 	{
 		public EventObject(string name, string invokeId = null) : this(EventType.External, EventName.ToParts(name), data: default, sendId: null, invokeId) { }
 
-		public EventObject(EventType type, IOutgoingEvent @event, Uri origin = null, Uri originType = null)
-				: this(type, sendId: null, @event.NameParts, invokeId: null, origin, originType, data: default) { }
+		public EventObject(EventType type, IOutgoingEvent @event, Uri origin = null, Uri originType = null, string invokeId = null)
+				: this(type, @event.SendId, @event.NameParts, invokeId, origin, originType, @event.Data) { }
 
 		public EventObject(EventType type, IReadOnlyList<IIdentifier> nameParts, DataModelValue data = default, string sendId = null, string invokeId = null)
 				: this(type, sendId, nameParts, invokeId, origin: null, originType: null, data) { }

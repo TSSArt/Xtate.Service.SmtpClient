@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public class IoProcessor : IEventProcessor, IServiceFactory, IIoProcessor, IDisposable, IAsyncDisposable
+	public sealed class IoProcessor : IEventProcessor, IServiceFactory, IIoProcessor, IDisposable, IAsyncDisposable
 	{
 		private static readonly Uri BaseUri                   = new Uri("scxml://local/");
 		private static readonly Uri EventProcessorId          = new Uri("http://www.w3.org/TR/scxml/#SCXMLEventProcessor");
@@ -51,11 +51,7 @@ namespace TSSArt.StateMachine
 
 		ValueTask IAsyncDisposable.DisposeAsync() => _context.DisposeAsync();
 
-		public void Dispose()
-		{
-			Dispose(true);
-			GC.SuppressFinalize(this);
-		}
+		public void Dispose() => _context.Dispose();
 
 		Uri IEventProcessor.Id => EventProcessorId;
 
@@ -76,11 +72,30 @@ namespace TSSArt.StateMachine
 			return service.Send(serviceEvent, token);
 		}
 
+		ValueTask IIoProcessor.DispatchServiceEvent(string sessionId, string invokeId, IOutgoingEvent @event, CancellationToken token)
+		{
+			_context.ValidateSessionId(sessionId, out var controller);
+
+			if (@event.Type != null || @event.SendId != null || @event.DelayMs != 0)
+			{
+				throw new InvalidOperationException("Type, SendId, DelayMs can't be specified for this event");
+			}
+
+			if (@event.Target != Event.ParentTarget && @event.Target != null)
+			{
+				throw new InvalidOperationException("Target should be equal to '_parent' or null");
+			}
+
+			var eventObject = new EventObject(EventType.External, @event, invokeId: invokeId);
+
+			return controller.Send(eventObject, token);
+		}
+
 		Uri IServiceFactory.TypeId => ServiceFactoryTypeId;
 
 		Uri IServiceFactory.AliasTypeId => ServiceFactoryAliasTypeId;
 
-		async ValueTask<IService> IServiceFactory.StartService(Uri source, DataModelValue content, DataModelValue parameters, CancellationToken token)
+		async ValueTask<IService> IServiceFactory.StartService(Uri source, DataModelValue content, DataModelValue parameters, IServiceCommunication serviceCommunication, CancellationToken token)
 		{
 			var sessionId = IdGenerator.NewSessionId();
 			var service = await _context.CreateAndAddStateMachine(sessionId, stateMachine: null, source, content, parameters).ConfigureAwait(false);
@@ -96,14 +111,6 @@ namespace TSSArt.StateMachine
 			}
 
 			return service;
-		}
-
-		protected virtual void Dispose(bool dispose)
-		{
-			if (dispose)
-			{
-				_context.Dispose();
-			}
 		}
 
 		public ValueTask Initialize() => _context.Initialize();
@@ -140,7 +147,8 @@ namespace TSSArt.StateMachine
 				throw new ApplicationException("Invalid type");
 			}
 
-			var invokedService = await factory.StartService(source, content, parameters, token).ConfigureAwait(false);
+			var serviceCommunication = new ServiceCommunication(this, sessionId, invokeId);
+			var invokedService = await factory.StartService(source, content, parameters, serviceCommunication, token).ConfigureAwait(false);
 
 			await _context.AddService(sessionId, invokeId, invokedService).ConfigureAwait(false);
 
@@ -148,18 +156,19 @@ namespace TSSArt.StateMachine
 
 			async void CompleteAsync()
 			{
-				var nameParts = EventName.GetDoneInvokeNameParts((Identifier) invokeId);
-
 				try
 				{
+					var nameParts = EventName.GetDoneInvokeNameParts((Identifier) invokeId);
 					var resultData = await invokedService.Result.ConfigureAwait(false);
 
 					await service.Send(new EventObject(EventType.External, nameParts, resultData, sendId: null, invokeId), token: default).ConfigureAwait(false);
 				}
-				catch
+				catch (Exception ex)
 				{
-					//TODO:Log exception
-					await service.Send(new EventObject(EventType.External, nameParts, data: default, sendId: null, invokeId), token: default).ConfigureAwait(false);
+					var nameParts = EventName.GetErrorInvokeNameParts((Identifier) invokeId);
+					var exceptionData = DataModelValue.FromException(ex, true);
+
+					await service.Send(new EventObject(EventType.External, nameParts, exceptionData, sendId: null, invokeId), token: default).ConfigureAwait(false);
 				}
 				finally
 				{
