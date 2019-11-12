@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net.Http;
 using System.Net.Mime;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,40 +8,10 @@ using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using TSSArt.StateMachine.EcmaScript;
+using TSSArt.StateMachine.Services;
 
 namespace TSSArt.StateMachine.Test
 {
-	[SimpleService("https://www.w3.org/Protocols/HTTP/", Alias = "http")]
-	public class HttpClientService : SimpleServiceBase
-	{
-		protected override async ValueTask<DataModelValue> Execute()
-		{
-			dynamic data = Parameters.ToObject();
-
-			using var client = new HttpClient();
-			var request = new HttpRequestMessage(new HttpMethod(data.method), Source);
-			var headers = data.headers;
-			if (headers != null)
-			{
-				foreach (var header in headers)
-				{
-					request.Headers.Add(header.name, header.value);
-				}
-			}
-
-			var requestContent = data.content;
-			if (requestContent != null)
-			{
-				request.Content = new StringContent(requestContent);
-			}
-
-			var result = await client.SendAsync(request, StopToken);
-			var content = await result.Content.ReadAsStringAsync();
-
-			return new DataModelValue(content);
-		}
-	}
-
 	[TestClass]
 	public class IoProcessorTest
 	{
@@ -102,15 +71,19 @@ namespace TSSArt.StateMachine.Test
 			var stateMachine = GetStateMachine(@"
 <state id='Intro'>
     <invoke id='tid' src='http://google.com' type='http'>
-    <param name='method' expr=""'get'""/>
-    <param name='headers' expr=""[{name: 'Accept', value: 'text/plain'}]""/>
+		<param name='autoRedirect' expr='""true""'/>
+		<param name='method' expr=""'get'""/>
+		<param name='headers' expr=""[{name: 'Accept', value: 'text/plain'}]""/>
     </invoke>
     <transition event='done.invoke.tid' target='fin'/>
+    <transition event='error.invoke.tid' target='finErr'/>
 </state>
 <final id='fin'>
 	<donedata><content expr='_event.data'/></donedata>
 </final>
-<final id='finErr'></final>");
+<final id='finErr'>
+	<donedata><content expr='_event.data'/></donedata>
+</final>");
 
 			var stateMachineProviderMock = new Mock<IStateMachineProvider>();
 			stateMachineProviderMock.Setup(x => x.GetStateMachine(new Uri("scxml://a"))).Returns(new ValueTask<IStateMachine>(stateMachine));
@@ -122,21 +95,14 @@ namespace TSSArt.StateMachine.Test
 								  StateMachineProvider = stateMachineProviderMock.Object
 						  };
 
-			options.ServiceFactories.Add(SimpleServiceFactory<HttpClientService>.Instance);
+			options.ServiceFactories.Add(HttpClientService.Factory);
 			options.DataModelHandlerFactories.Add(EcmaScriptDataModelHandler.Factory);
 
 			var ioProcessor = new IoProcessor(options);
 
-			dynamic args = new DataModelObject();
-			args.method = "get";
-			args.header = new DataModelObject();
-			args.header.name = "value";
-			args.content = "HTML";
+			var result = await ioProcessor.Execute(new Uri("scxml://a"));
 
-			var fromObject = DataModelValue.FromObject((DataModelObject) args);
-			var result = await ioProcessor.Execute(new Uri("scxml://a"), fromObject);
-
-			//Console.WriteLine(result.ToString("J"));
+			Console.WriteLine(result.AsObject().ToString("JSON"));
 			Assert.IsTrue(result.Type != DataModelValueType.Undefined);
 		}
 	}

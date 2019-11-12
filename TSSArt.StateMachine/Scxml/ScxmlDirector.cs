@@ -31,7 +31,7 @@ namespace TSSArt.StateMachine
 		{
 			try
 			{
-				return (Event) val;
+				return new Event(val) { Target = Event.InternalTarget };
 			}
 			catch (ArgumentException ex)
 			{

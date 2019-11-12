@@ -5,7 +5,8 @@ namespace TSSArt.StateMachine
 {
 	public struct Event : IOutgoingEvent, IAncestorProvider
 	{
-		private static readonly Uri InternalTarget = new Uri(uriString: "_internal", UriKind.Relative);
+		public static readonly Uri InternalTarget = new Uri(uriString: "_internal", UriKind.Relative);
+		public static readonly Uri ParentTarget = new Uri(uriString: "_parent", UriKind.Relative);
 
 		public DataModelValue             Data      { get; set; }
 		public int                        DelayMs   { get; set; }
@@ -16,13 +17,8 @@ namespace TSSArt.StateMachine
 
 		public Event(string val) : this()
 		{
-			if (string.IsNullOrEmpty(val)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(val));
-
 			NameParts = EventName.ToParts(val);
-			Target = InternalTarget;
 		}
-
-		public static explicit operator Event(string val) => new Event(val);
 
 		internal object Ancestor;
 

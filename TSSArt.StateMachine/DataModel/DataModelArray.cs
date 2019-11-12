@@ -46,14 +46,31 @@ namespace TSSArt.StateMachine
 			{
 				var sb = new StringBuilder();
 
-				for (var i = 0; i < Length; i ++)
+				if (Length > 0)
 				{
-					sb.Append(sb.Length == 0 ? "[ " : ", ");
+					var vertical = this.Any(i => i.Type == DataModelValueType.Object || i.Type == DataModelValueType.Array);
 
-					sb.Append(this[i].ToString(format: "JSON", formatProvider));
+					for (var i = 0; i < Length; i ++)
+					{
+						if (vertical)
+						{
+							sb.Append(sb.Length == 0 ? "[\r\n  " : ",\r\n  ");
+						}
+						else
+						{
+							sb.Append(sb.Length == 0 ? "[" : ", ");
+						}
+
+						var value = this[i].ToString(format: "JSON", formatProvider).Replace(oldValue: "\r\n", newValue: "\r\n  ", StringComparison.Ordinal);
+						sb.Append(value);
+					}
+
+					sb.Append(vertical ? "\r\n]" : "]");
 				}
-
-				sb.Append(sb.Length == 0 ? "[]" : " ]");
+				else
+				{
+					sb.Append("[]");
+				}
 
 				return sb.ToString();
 			}

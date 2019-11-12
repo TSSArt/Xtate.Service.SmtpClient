@@ -1,6 +1,4 @@
-﻿using System.IO;
-using System.Threading.Tasks;
-using System.Xml;
+﻿using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TSSArt.StateMachine.EcmaScript;
 
@@ -25,7 +23,7 @@ namespace TSSArt.StateMachine.Test
 		<param name='str' expr=""'value1'""/>
 		<param name='int' expr=""11""/>
 		<param name='arr' expr=""[1, 2.5, '3']""/>
-		<param name='obj' expr=""{key: 'val'}""/>
+		<param name='obj' expr=""({key: 'val'})""/>
     </invoke>
     <transition event='done.invoke' target='final'/>
 </state>

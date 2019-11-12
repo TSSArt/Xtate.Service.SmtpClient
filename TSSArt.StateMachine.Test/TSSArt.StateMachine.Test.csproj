@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TSSArt.StateMachine.EcmaScript\TSSArt.StateMachine.EcmaScript.csproj" />
+    <ProjectReference Include="..\TSSArt.StateMachine.HttpClientService\TSSArt.StateMachine.HttpClientService.csproj" />
     <ProjectReference Include="..\TSSArt.StateMachine\TSSArt.StateMachine.csproj" />
   </ItemGroup>
 

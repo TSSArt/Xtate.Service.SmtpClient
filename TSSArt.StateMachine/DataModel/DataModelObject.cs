@@ -55,14 +55,24 @@ namespace TSSArt.StateMachine
 			{
 				var sb = new StringBuilder();
 
-				foreach (var pair in _properties)
+				if (_properties.Count > 0)
 				{
-					sb.Append(sb.Length == 0 ? "{ " : ", ");
+					foreach (var pair in _properties)
+					{
+						if (pair.Value.Type != DataModelValueType.Undefined && pair.Value.Type != DataModelValueType.Null)
+						{
+							sb.Append(sb.Length == 0 ? "{\r\n  " : ",\r\n  ");
 
-					sb.Append(pair.Key).Append(" : ").Append(pair.Value.ToString(format: "JSON", formatProvider));
+							var value = pair.Value.ToString(format: "JSON", formatProvider).Replace(oldValue: "\r\n", newValue: "\r\n  ", StringComparison.Ordinal);
+							sb.Append("\"").Append(pair.Key).Append("\": ").Append(value);
+						}
+					}
+					sb.Append("\r\n}");
 				}
-
-				sb.Append(sb.Length == 0 ? "{}" : " }");
+				else
+				{
+					sb.Append("{}");
+				}
 
 				return sb.ToString();
 			}

@@ -9,6 +9,6 @@ namespace TSSArt.StateMachine
 		Uri TypeId      { get; }
 		Uri AliasTypeId { get; }
 
-		ValueTask<IService> StartService(Uri source, DataModelValue content, DataModelValue parameters, CancellationToken token);
+		ValueTask<IService> StartService(Uri source, DataModelValue content, DataModelValue parameters, IServiceCommunication serviceCommunication, CancellationToken token);
 	}
 }
