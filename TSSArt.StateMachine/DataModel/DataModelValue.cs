@@ -320,7 +320,7 @@ namespace TSSArt.StateMachine
 										["typeFullName"] = new DataModelValue(exception.GetType().FullName, isReadOnly),
 										["stackTrace"] = new DataModelValue(exception.StackTrace, isReadOnly),
 										["text"] = new DataModelValue(exception.ToString(), isReadOnly)
-			};
+								};
 
 			if (isReadOnly)
 			{
@@ -417,15 +417,15 @@ namespace TSSArt.StateMachine
 
 			private static readonly ConstructorInfo ConstructorInfo = typeof(Dynamic).GetConstructor(new[] { typeof(DataModelValue) });
 
+			private readonly DataModelValue _value;
+
+			public Dynamic(DataModelValue value) => _value = value;
+
 			public static DynamicMetaObject CreateMetaObject(Expression expression)
 			{
 				var newExpression = Expression.New(ConstructorInfo, Expression.Convert(expression, typeof(DataModelValue)));
 				return Instance.GetMetaObject(newExpression);
 			}
-
-			private readonly DataModelValue _value;
-
-			public Dynamic(DataModelValue value) => _value = value;
 
 			public override bool TryGetMember(GetMemberBinder binder, out object result)
 			{

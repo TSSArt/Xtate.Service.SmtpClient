@@ -34,6 +34,8 @@
 
 		public IScriptBuilder CreateScriptBuilder() => new ScriptBuilder();
 
+		public ICustomActionBuilder CreateCustomActionBuilder() => new CustomActionBuilder();
+
 		public IDataModelBuilder CreateDataModelBuilder() => new DataModelBuilder();
 
 		public IDataBuilder CreateDataBuilder() => new DataBuilder();

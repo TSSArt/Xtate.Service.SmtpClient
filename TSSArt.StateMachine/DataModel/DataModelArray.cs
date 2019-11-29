@@ -40,6 +40,8 @@ namespace TSSArt.StateMachine
 
 		public int Length => _list.Count;
 
+		DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter) => new MetaObject(parameter, this, Dynamic.CreateMetaObject);
+
 		public string ToString(string format, IFormatProvider formatProvider)
 		{
 			if (format == "JSON")
@@ -352,23 +354,21 @@ namespace TSSArt.StateMachine
 			return clone;
 		}
 
-		DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter) => new MetaObject(parameter, this, Dynamic.CreateMetaObject);
-
 		private class Dynamic : DynamicObject
 		{
 			private static readonly IDynamicMetaObjectProvider Instance = new Dynamic(default);
 
 			private static readonly ConstructorInfo ConstructorInfo = typeof(Dynamic).GetConstructor(new[] { typeof(DataModelArray) });
 
+			private readonly DataModelArray _arr;
+
+			public Dynamic(DataModelArray arr) => _arr = arr;
+
 			public static DynamicMetaObject CreateMetaObject(Expression expression)
 			{
 				var newExpression = Expression.New(ConstructorInfo, Expression.Convert(expression, typeof(DataModelArray)));
 				return Instance.GetMetaObject(newExpression);
 			}
-
-			private readonly DataModelArray _arr;
-
-			public Dynamic(DataModelArray arr) => _arr = arr;
 
 			public override bool TryGetMember(GetMemberBinder binder, out object result)
 			{

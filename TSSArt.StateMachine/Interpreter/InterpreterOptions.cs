@@ -6,7 +6,8 @@ namespace TSSArt.StateMachine
 	public struct InterpreterOptions
 	{
 		public ICollection<IDataModelHandlerFactory> DataModelHandlerFactories { get; set; }
-		public DataModelValue                        Arguments                { get; set; }
+		public ICollection<ICustomActionProvider>    CustomActionProviders     { get; set; }
+		public DataModelValue                        Arguments                 { get; set; }
 		public IExternalCommunication                ExternalCommunication     { get; set; }
 		public INotifyStateChanged                   NotifyStateChanged        { get; set; }
 		public CancellationToken                     SuspendToken              { get; set; }

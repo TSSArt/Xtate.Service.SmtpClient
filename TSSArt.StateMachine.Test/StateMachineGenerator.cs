@@ -12,9 +12,7 @@ namespace TSSArt.StateMachine.Test
 			return new ScxmlDirector(xmlReader, new BuilderFactory()).ConstructStateMachine();
 		}
 
-		public static IStateMachine FromInnerScxml_EcmaScript(string innerScxml)
-		{
-			return FromScxml("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' datamodel='ecmascript'>" + innerScxml + "</scxml>");
-		}
+		public static IStateMachine FromInnerScxml_EcmaScript(string innerScxml) =>
+				FromScxml("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' datamodel='ecmascript'>" + innerScxml + "</scxml>");
 	}
 }

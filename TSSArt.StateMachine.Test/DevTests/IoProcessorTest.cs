@@ -66,17 +66,25 @@ namespace TSSArt.StateMachine.Test
 		}
 
 		[TestMethod]
+		[Ignore("Makes HTTP request. Not a unit test.")]
 		public async Task HttpInvokeHttpGoogleComTest()
 		{
 			var stateMachine = GetStateMachine(@"
 <state id='Intro'>
     <invoke id='tid' src='http://google.com' type='http'>
-		<param name='autoRedirect' expr='""true""'/>
+		<param name='autoRedirect' expr='true'/>
 		<param name='method' expr=""'get'""/>
 		<param name='headers' expr=""[{name: 'Accept', value: 'text/plain'}]""/>
+		<param name='capture' expr=""
+
+({
+capture1: {xpath:'//div[@aria-owner]', attr:'id'}
+})
+
+""/>
     </invoke>
     <transition event='done.invoke.tid' target='fin'/>
-    <transition event='error.invoke.tid' target='finErr'/>
+    <transition event='error.invoke.tid' target='finErr'><log label='fail' /></transition>
 </state>
 <final id='fin'>
 	<donedata><content expr='_event.data'/></donedata>
@@ -101,6 +109,87 @@ namespace TSSArt.StateMachine.Test
 			var ioProcessor = new IoProcessor(options);
 
 			var result = await ioProcessor.Execute(new Uri("scxml://a"));
+
+			Console.WriteLine(result.AsObject().ToString("JSON"));
+			Assert.IsTrue(result.Type != DataModelValueType.Undefined);
+		}
+
+		[TestMethod]
+
+		[Ignore("Makes HTTP request. Not a unit test.")]
+		public async Task HttpInvokeHttpSendEmailTest()
+		{
+			var stateMachine = StateMachineGenerator.FromInnerScxml_EcmaScript(@"
+<datamodel>
+	<data id=""email"" />
+</datamodel>
+<state id='RegisterEmail'>
+    <invoke src='http://mid.dev.tssart.com/MailServer/Web2/api/Mail' type='http'>
+		<param name='method' expr=""'post'""/>
+		<param name='accept' expr=""'application/json'""/>
+		<finalize>
+			<assign location='email' expr='_event.data.content.Email' />
+		</finalize>
+    </invoke>
+    <transition event='done.invoke' target='SendEmail'/>
+    <transition event='error' target='finErr' />
+</state>
+<state id='SendEmail'>
+    <invoke type='smtp'>
+		<param name='server' expr=""'hare.tssart.com'""/>
+		<param name='from' expr=""'ser@tssart.com'""/>
+		<param name='to' expr='email'/>
+		<param name='subject' expr=""'This is Subject'""/>
+		<param name='body' expr=""'This is BODY'""/>
+    </invoke>
+    <transition event='done.invoke' target='ReCaptcha'/>
+    <transition event='error' target='finErr'/>
+</state>
+<state id='ReCaptcha'>
+    <invoke src='https://www.tssart.com/wp-login.php' type='browser'>
+		<param name='type' expr='GoogleRecaptchaV2'/>
+		<param name='sitekey' expr='6LdI3RYTAAAAAMkmqOQSdno04oej6pDHGFpU3TRG'/>
+    </invoke>
+    <transition event='done.invoke' target='WaitForEmail'/>
+    <transition event='error' target='finErr'/>
+</state>
+<state id='WaitForEmail'>
+    <invoke srcexpr='&quot;http://mid.dev.tssart.com/MailServer/Web2/api/Mail?lastReceivedOnUtc=2019-01-01&amp;email=&quot; + email' type='http'>
+		<param name='accept' expr=""'application/json'""/>
+		<finalize xmlns:basic='http://tssart.com/scxml/customaction/basic' xmlns:mime='http://tssart.com/scxml/customaction/mime'>
+			<assign location='emailContent' expr='_event.data.content.EmailEntries[0].ContentRaw' />
+			<basic:base64decode source='emailContent' destination='emailContent'>
+			<mime:parseEmail source='emailContent' destination='confirmationUrl' xpath='' attr='' regex=''>
+		</finalize>
+    </invoke>
+    <transition event='done.invoke' target='fin'/>
+    <transition event='error' target='finErr' />
+</state>
+<final id='fin'>
+	<donedata><content expr='_event.data'/></donedata>
+</final>
+<final id='finErr'>
+	<donedata><content expr='_event.data'/></donedata>
+</final>");
+
+			var options = new IoProcessorOptions
+						  {
+								  DataModelHandlerFactories = new List<IDataModelHandlerFactory>(),
+								  ServiceFactories = new List<IServiceFactory>(),
+								  CustomActionProviders = new List<ICustomActionProvider>()
+						  };
+
+			options.ServiceFactories.Add(HttpClientService.Factory);
+			options.ServiceFactories.Add(SmtpClientService.Factory);
+			options.ServiceFactories.Add(WebBrowserService.GetFactory<CefSharpWebBrowserService>());
+			options.DataModelHandlerFactories.Add(EcmaScriptDataModelHandler.Factory);
+
+			options.CustomActionProviders.Add(BasicCustomActionProvider.Instance);
+			options.CustomActionProviders.Add(MimeCustomActionProvider.Instance);
+
+			var ioProcessor = new IoProcessor(options);
+
+			var result = await ioProcessor.Execute(stateMachine);
 
 			Console.WriteLine(result.AsObject().ToString("JSON"));
 			Assert.IsTrue(result.Type != DataModelValueType.Undefined);

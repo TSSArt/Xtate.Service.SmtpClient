@@ -49,6 +49,8 @@ namespace TSSArt.StateMachine
 			}
 		}
 
+		DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter) => new MetaObject(parameter, this, Dynamic.CreateMetaObject);
+
 		public string ToString(string format, IFormatProvider formatProvider)
 		{
 			if (format == "JSON")
@@ -67,6 +69,7 @@ namespace TSSArt.StateMachine
 							sb.Append("\"").Append(pair.Key).Append("\": ").Append(value);
 						}
 					}
+
 					sb.Append("\r\n}");
 				}
 				else
@@ -147,23 +150,21 @@ namespace TSSArt.StateMachine
 			return clone;
 		}
 
-		DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter) => new MetaObject(parameter, this, Dynamic.CreateMetaObject);
-
 		private class Dynamic : DynamicObject
 		{
 			private static readonly IDynamicMetaObjectProvider Instance = new Dynamic(default);
 
 			private static readonly ConstructorInfo ConstructorInfo = typeof(Dynamic).GetConstructor(new[] { typeof(DataModelObject) });
 
+			private readonly DataModelObject _obj;
+
+			public Dynamic(DataModelObject obj) => _obj = obj;
+
 			public static DynamicMetaObject CreateMetaObject(Expression expression)
 			{
 				var newExpression = Expression.New(ConstructorInfo, Expression.Convert(expression, typeof(DataModelObject)));
 				return Instance.GetMetaObject(newExpression);
 			}
-
-			private readonly DataModelObject _obj;
-
-			public Dynamic(DataModelObject obj) => _obj = obj;
 
 			public override bool TryGetMember(GetMemberBinder binder, out object result)
 			{
@@ -208,10 +209,11 @@ namespace TSSArt.StateMachine
 
 				return false;
 			}
+
 			public override bool TryConvert(ConvertBinder binder, out object result)
 			{
 				result = _obj;
-				
+
 				return binder.Type == typeof(DataModelObject);
 			}
 

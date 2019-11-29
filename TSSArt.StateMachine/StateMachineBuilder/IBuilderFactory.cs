@@ -28,5 +28,6 @@
 		IRaiseBuilder        CreateRaiseBuilder();
 		IAssignBuilder       CreateAssignBuilder();
 		ICancelBuilder       CreateCancelBuilder();
+		ICustomActionBuilder CreateCustomActionBuilder();
 	}
 }

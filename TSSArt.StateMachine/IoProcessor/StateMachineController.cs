@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	internal class StateMachineController : IService, IExternalCommunication, ILogger, INotifyStateChanged, IDisposable, IAsyncDisposable
+	internal class StateMachineController : IService, IExternalCommunication, INotifyStateChanged, IDisposable, IAsyncDisposable
 	{
 		private readonly TaskCompletionSource<object>         _acceptedTcs = new TaskCompletionSource<object>();
 		private readonly Channel<IEvent>                      _channel;
@@ -29,6 +29,11 @@ namespace TSSArt.StateMachine
 			_defaultOptions = defaultOptions;
 			_idlePeriod = idlePeriod;
 			_channel = Channel.CreateUnbounded<IEvent>();
+
+			if (_defaultOptions.Logger == null)
+			{
+				_defaultOptions.Logger = DefaultLogger.Instance;
+			}
 		}
 
 		public string SessionId { get; }
@@ -85,11 +90,6 @@ namespace TSSArt.StateMachine
 
 		ValueTask IExternalCommunication.ForwardEvent(IEvent @event, string invokeId, CancellationToken token) => _ioProcessor.ForwardEvent(SessionId, @event, invokeId, token);
 
-		ValueTask ILogger.Log(string stateMachineName, string label, DataModelValue data, CancellationToken token) => _ioProcessor.Log(SessionId, stateMachineName, label, data, token);
-
-		ValueTask ILogger.Error(ErrorType errorType, string stateMachineName, string sourceEntityId, Exception exception, CancellationToken token) =>
-				_ioProcessor.Error(SessionId, errorType, stateMachineName, sourceEntityId, exception, token);
-
 		ValueTask INotifyStateChanged.OnChanged(StateMachineInterpreterState state)
 		{
 			if (state == StateMachineInterpreterState.Accepted)
@@ -138,7 +138,6 @@ namespace TSSArt.StateMachine
 			options = _defaultOptions;
 
 			options.ExternalCommunication = this;
-			options.Logger = this;
 			options.StorageProvider = this as IStorageProvider;
 			options.NotifyStateChanged = this;
 
@@ -284,7 +283,7 @@ namespace TSSArt.StateMachine
 			}
 			catch (Exception ex)
 			{
-				await _ioProcessor.Error(SessionId, ErrorType.Communication, _stateMachine.Name, scheduledEvent.Event.SendId, ex, token: default).ConfigureAwait(false);
+				await _defaultOptions.Logger.Error(ErrorType.Communication, SessionId, _stateMachine.Name, scheduledEvent.Event.SendId, ex, token: default).ConfigureAwait(false);
 			}
 		}
 

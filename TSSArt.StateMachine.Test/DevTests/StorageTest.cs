@@ -249,7 +249,7 @@ namespace TSSArt.StateMachine.Test
 
 			var imBuilder = new InterpreterModelBuilder();
 			var dataModelHandler = EcmaScriptDataModelHandler.Factory.CreateHandler(imBuilder);
-			var model = imBuilder.Build(stateMachine, dataModelHandler);
+			var model = imBuilder.Build(stateMachine, dataModelHandler, customActionProviders: null);
 			var storeSupport = model.Root.As<IStoreSupport>();
 
 			var storage = new InMemoryStorage();

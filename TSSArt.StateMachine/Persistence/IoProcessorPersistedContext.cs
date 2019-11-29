@@ -12,17 +12,17 @@ namespace TSSArt.StateMachine
 		private const int    StateMachinesKey     = 0;
 		private const int    InvokedServicesKey   = 1;
 
-		private readonly TimeSpan                                                        _idlePeriod;
+		private readonly TimeSpan                                                            _idlePeriod;
 		private readonly Dictionary<(string SessionId, string InvokeId), InvokedServiceMeta> _invokedServices = new Dictionary<(string SessionId, string InvokeId), InvokedServiceMeta>();
-		private readonly IIoProcessor                                                    _ioProcessor;
-		private readonly SemaphoreSlim                                                   _lockInvokedServices = new SemaphoreSlim(initialCount: 1, maxCount: 1);
-		private readonly SemaphoreSlim                                                   _lockStateMachines   = new SemaphoreSlim(initialCount: 1, maxCount: 1);
+		private readonly IIoProcessor                                                        _ioProcessor;
+		private readonly SemaphoreSlim                                                       _lockInvokedServices = new SemaphoreSlim(initialCount: 1, maxCount: 1);
+		private readonly SemaphoreSlim                                                       _lockStateMachines   = new SemaphoreSlim(initialCount: 1, maxCount: 1);
 		private readonly Dictionary<string, StateMachineMeta>                                _stateMachines       = new Dictionary<string, StateMachineMeta>();
-		private readonly CancellationToken                                               _stopToken;
-		private readonly IStorageProvider                                                _storageProvider;
-		private          int                                                             _invokedServiceRecordId;
-		private          int                                                             _stateMachineRecordId;
-		private          ITransactionalStorage                                           _storage;
+		private readonly CancellationToken                                                   _stopToken;
+		private readonly IStorageProvider                                                    _storageProvider;
+		private          int                                                                 _invokedServiceRecordId;
+		private          int                                                                 _stateMachineRecordId;
+		private          ITransactionalStorage                                               _storage;
 
 		public IoProcessorPersistedContext(IIoProcessor ioProcessor, in IoProcessorOptions options) : base(ioProcessor, options)
 		{

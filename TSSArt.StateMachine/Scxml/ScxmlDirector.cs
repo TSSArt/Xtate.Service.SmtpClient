@@ -257,7 +257,8 @@ namespace TSSArt.StateMachine
 							   .MultipleElements(name: "raise", (dr, b) => b.AddAction(dr.ReadRaise()))
 							   .MultipleElements(name: "send", (dr, b) => b.AddAction(dr.ReadSend()))
 							   .MultipleElements(name: "cancel", (dr, b) => b.AddAction(dr.ReadCancel()))
-							   .MultipleElements(name: "script", (dr, b) => b.AddAction(dr.ReadScript()))).Build();
+							   .MultipleElements(name: "script", (dr, b) => b.AddAction(dr.ReadScript()))
+							   .UnknownElement((dr, b) => b.AddAction(dr.ReadCustomAction()))).Build();
 
 		private ILog ReadLog() =>
 				Populate(_factory.CreateLogBuilder(),
@@ -305,7 +306,8 @@ namespace TSSArt.StateMachine
 							   .MultipleElements(name: "raise", (dr, b) => b.AddAction(dr.ReadRaise()))
 							   .MultipleElements(name: "send", (dr, b) => b.AddAction(dr.ReadSend()))
 							   .MultipleElements(name: "cancel", (dr, b) => b.AddAction(dr.ReadCancel()))
-							   .MultipleElements(name: "script", (dr, b) => b.AddAction(dr.ReadScript()))).Build();
+							   .MultipleElements(name: "script", (dr, b) => b.AddAction(dr.ReadScript()))
+							   .UnknownElement((dr, b) => b.AddAction(dr.ReadCustomAction()))).Build();
 
 		private IOnExit ReadOnExit() =>
 				Populate(_factory.CreateOnExitBuilder(),
@@ -317,7 +319,8 @@ namespace TSSArt.StateMachine
 							   .MultipleElements(name: "raise", (dr, b) => b.AddAction(dr.ReadRaise()))
 							   .MultipleElements(name: "send", (dr, b) => b.AddAction(dr.ReadSend()))
 							   .MultipleElements(name: "cancel", (dr, b) => b.AddAction(dr.ReadCancel()))
-							   .MultipleElements(name: "script", (dr, b) => b.AddAction(dr.ReadScript()))).Build();
+							   .MultipleElements(name: "script", (dr, b) => b.AddAction(dr.ReadScript()))
+							   .UnknownElement((dr, b) => b.AddAction(dr.ReadCustomAction()))).Build();
 
 		private IInvoke ReadInvoke() =>
 				Populate(_factory.CreateInvokeBuilder(),
@@ -342,7 +345,15 @@ namespace TSSArt.StateMachine
 							   .MultipleElements(name: "if", (dr, b) => b.AddAction(dr.ReadIf()))
 							   .MultipleElements(name: "log", (dr, b) => b.AddAction(dr.ReadLog()))
 							   .MultipleElements(name: "cancel", (dr, b) => b.AddAction(dr.ReadCancel()))
-							   .MultipleElements(name: "script", (dr, b) => b.AddAction(dr.ReadScript()))).Build();
+							   .MultipleElements(name: "script", (dr, b) => b.AddAction(dr.ReadScript()))
+							   .UnknownElement((dr, b) => b.AddAction(dr.ReadCustomAction()))).Build();
+
+		private ICustomAction ReadCustomAction()
+		{
+			var builder = _factory.CreateCustomActionBuilder();
+			builder.SetXml(ReadOuterXml());
+			return builder.Build();
+		}
 
 		private IScript ReadScript() =>
 				Populate(_factory.CreateScriptBuilder(),
@@ -381,7 +392,8 @@ namespace TSSArt.StateMachine
 							   .MultipleElements(name: "raise", (dr, b) => b.AddAction(dr.ReadRaise()))
 							   .MultipleElements(name: "send", (dr, b) => b.AddAction(dr.ReadSend()))
 							   .MultipleElements(name: "cancel", (dr, b) => b.AddAction(dr.ReadCancel()))
-							   .MultipleElements(name: "script", (dr, b) => b.AddAction(dr.ReadScript()))).Build();
+							   .MultipleElements(name: "script", (dr, b) => b.AddAction(dr.ReadScript()))
+							   .UnknownElement((dr, b) => b.AddAction(dr.ReadCustomAction()))).Build();
 
 		private IIf ReadIf() =>
 				Populate(_factory.CreateIfBuilder(),
@@ -396,7 +408,8 @@ namespace TSSArt.StateMachine
 							   .MultipleElements(name: "raise", (dr, b) => b.AddAction(dr.ReadRaise()))
 							   .MultipleElements(name: "send", (dr, b) => b.AddAction(dr.ReadSend()))
 							   .MultipleElements(name: "cancel", (dr, b) => b.AddAction(dr.ReadCancel()))
-							   .MultipleElements(name: "script", (dr, b) => b.AddAction(dr.ReadScript()))).Build();
+							   .MultipleElements(name: "script", (dr, b) => b.AddAction(dr.ReadScript()))
+							   .UnknownElement((dr, b) => b.AddAction(dr.ReadCustomAction()))).Build();
 
 		private IElse ReadElse() => Populate(_factory.CreateElseBuilder(), pb => { }).Build();
 

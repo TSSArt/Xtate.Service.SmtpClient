@@ -63,7 +63,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			var interpreterModelBuilder = new InterpreterModelBuilder();
 			var dataModelHandler = EcmaScriptDataModelHandler.Factory.CreateHandler(interpreterModelBuilder);
-			var interpreterModel = interpreterModelBuilder.Build(_stateMachine, dataModelHandler);
+			var interpreterModel = interpreterModelBuilder.Build(_stateMachine, dataModelHandler, customActionProviders: null);
 			var serializer = new ScxmlSerializer();
 			var text = new StringWriter();
 			using (var xmlWriter = XmlWriter.Create(text, new XmlWriterSettings { Encoding = Encoding.UTF8, Indent = true }))

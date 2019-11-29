@@ -1,14 +1,13 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
 	internal class ServiceCommunication : IServiceCommunication
 	{
+		private readonly string       _invokeId;
 		private readonly IIoProcessor _ioProcessor;
 		private readonly string       _sessionId;
-		private readonly string       _invokeId;
 
 		public ServiceCommunication(IIoProcessor ioProcessor, string sessionId, string invokeId)
 		{

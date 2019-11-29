@@ -17,9 +17,9 @@ namespace TSSArt.StateMachine
 		public static readonly IReadOnlyList<IIdentifier> ErrorCommunication = GetErrorNameParts((Identifier) "communication");
 		public static readonly IReadOnlyList<IIdentifier> ErrorPlatform      = GetErrorNameParts((Identifier) "platform");
 
-		private static  IReadOnlyList<IIdentifier> GetErrorNameParts(IIdentifier type)          => new ReadOnlyCollection<IIdentifier>(new[] { ErrorIdentifier, type });
-		internal static IReadOnlyList<IIdentifier> GetDoneStateNameParts(IIdentifier id)        => new ReadOnlyCollection<IIdentifier>(new[] { DoneIdentifier, StateIdentifier, id });
-		internal static IReadOnlyList<IIdentifier> GetDoneInvokeNameParts(IIdentifier invokeId) => new ReadOnlyCollection<IIdentifier>(new[] { DoneIdentifier, InvokeIdentifier, invokeId });
+		private static  IReadOnlyList<IIdentifier> GetErrorNameParts(IIdentifier type)           => new ReadOnlyCollection<IIdentifier>(new[] { ErrorIdentifier, type });
+		internal static IReadOnlyList<IIdentifier> GetDoneStateNameParts(IIdentifier id)         => new ReadOnlyCollection<IIdentifier>(new[] { DoneIdentifier, StateIdentifier, id });
+		internal static IReadOnlyList<IIdentifier> GetDoneInvokeNameParts(IIdentifier invokeId)  => new ReadOnlyCollection<IIdentifier>(new[] { DoneIdentifier, InvokeIdentifier, invokeId });
 		internal static IReadOnlyList<IIdentifier> GetErrorInvokeNameParts(IIdentifier invokeId) => new ReadOnlyCollection<IIdentifier>(new[] { ErrorIdentifier, InvokeIdentifier, invokeId });
 
 		public static string ToName(IReadOnlyList<IIdentifier> nameParts)

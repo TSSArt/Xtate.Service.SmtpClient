@@ -7,7 +7,7 @@ namespace TSSArt.StateMachine.Test
 	{
 		public static IoProcessorOptions Create(Action<IoProcessorOptions> build)
 		{
-			var options = new IoProcessorOptions()
+			var options = new IoProcessorOptions
 						  {
 								  DataModelHandlerFactories = new List<IDataModelHandlerFactory>(),
 								  EventProcessors = new List<IEventProcessor>(),

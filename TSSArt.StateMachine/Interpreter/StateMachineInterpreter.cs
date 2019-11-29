@@ -19,6 +19,7 @@ namespace TSSArt.StateMachine
 
 		private readonly CancellationToken                     _anyToken;
 		private readonly DataModelValue                        _arguments;
+		private readonly ICollection<ICustomActionProvider>    _customActionProviders;
 		private readonly ICollection<IDataModelHandlerFactory> _dataModelHandlerFactories;
 		private readonly CancellationToken                     _destroyToken;
 		private readonly ChannelReader<IEvent>                 _eventChannel;
@@ -46,8 +47,9 @@ namespace TSSArt.StateMachine
 			_destroyToken = options.DestroyToken;
 			_anyToken = CancellationTokenSource.CreateLinkedTokenSource(_suspendToken, _destroyToken, _stopToken).Token;
 			_resourceLoader = options.ResourceLoader ?? DefaultResourceLoader.Instance;
+			_customActionProviders = options.CustomActionProviders;
 			_dataModelHandlerFactories = options.DataModelHandlerFactories;
-			_logger = new LoggerWrapper(options.Logger, sessionId);
+			_logger = new LoggerWrapper(options.Logger ?? DefaultLogger.Instance, sessionId);
 			_externalCommunication = new ExternalCommunicationWrapper(options.ExternalCommunication, sessionId);
 			_storageProvider = options.StorageProvider ?? NullStorageProvider.Instance;
 			_persistenceLevel = options.PersistenceLevel;
@@ -92,7 +94,7 @@ namespace TSSArt.StateMachine
 			var dataModelHandlerFactory = GetDataModelHandlerFactory(stateMachine.DataModelType, _dataModelHandlerFactories);
 			_dataModelHandler = dataModelHandlerFactory.CreateHandler(interpreterModelBuilder);
 
-			interpreterModel = await interpreterModelBuilder.Build(stateMachine, _dataModelHandler, _resourceLoader, _stopToken).ConfigureAwait(false);
+			interpreterModel = await interpreterModelBuilder.Build(stateMachine, _dataModelHandler, _customActionProviders, _resourceLoader, _stopToken).ConfigureAwait(false);
 
 			if (IsPersistingEnabled)
 			{
@@ -130,7 +132,7 @@ namespace TSSArt.StateMachine
 				var dataModelHandlerFactory = GetDataModelHandlerFactory(smdBucket.GetString(Key.DataModelType), _dataModelHandlerFactories);
 				_dataModelHandler = dataModelHandlerFactory.CreateHandler(interpreterModelBuilder);
 
-				var entityMap = stateMachine != null ? interpreterModelBuilder.Build(stateMachine, _dataModelHandler).EntityMap : null;
+				var entityMap = stateMachine != null ? interpreterModelBuilder.Build(stateMachine, _dataModelHandler, _customActionProviders).EntityMap : null;
 				var restoredStateMachine = new StateMachineReader().Build(smdBucket, entityMap);
 
 				if (stateMachine != null)
@@ -138,7 +140,7 @@ namespace TSSArt.StateMachine
 					//TODO: Validate stateMachine vs restoredStateMachine (number of elements should be the same and documentId should point to the same entity type)
 				}
 
-				return interpreterModelBuilder.Build(restoredStateMachine, _dataModelHandler);
+				return interpreterModelBuilder.Build(restoredStateMachine, _dataModelHandler, _customActionProviders);
 			}
 		}
 

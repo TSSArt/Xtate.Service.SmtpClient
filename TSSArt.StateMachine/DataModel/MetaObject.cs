@@ -8,10 +8,8 @@ namespace TSSArt.StateMachine
 	{
 		private readonly DynamicMetaObject _metaObject;
 
-		public MetaObject(Expression expression, object val, Func<Expression, DynamicMetaObject> metaObjectCreator) : base(expression, BindingRestrictions.Empty, val)
-		{
-			_metaObject = metaObjectCreator(expression);
-		}
+		public MetaObject(Expression expression, object val, Func<Expression, DynamicMetaObject> metaObjectCreator) : base(expression, BindingRestrictions.Empty, val) =>
+				_metaObject = metaObjectCreator(expression);
 
 		public override DynamicMetaObject BindGetMember(GetMemberBinder binder) => _metaObject.BindGetMember(binder);
 

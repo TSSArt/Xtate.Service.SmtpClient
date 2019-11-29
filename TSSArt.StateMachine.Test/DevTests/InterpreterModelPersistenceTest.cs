@@ -30,7 +30,7 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public void SaveInterpreterModelTest()
 		{
-			var model = _imBuilder.Build(_allStateMachine, _dataModelHandler);
+			var model = _imBuilder.Build(_allStateMachine, _dataModelHandler, customActionProviders: null);
 			var storeSupport = model.Root.As<IStoreSupport>();
 
 			var storage = new InMemoryStorage(false);
@@ -42,7 +42,7 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public void SaveRestoreInterpreterModelWithStorageRecreateTest()
 		{
-			var model = _imBuilder.Build(_allStateMachine, _dataModelHandler);
+			var model = _imBuilder.Build(_allStateMachine, _dataModelHandler, customActionProviders: null);
 			var storeSupport = model.Root.As<IStoreSupport>();
 
 			byte[] transactionLog;
@@ -61,7 +61,7 @@ namespace TSSArt.StateMachine.Test
 				restoredStateMachine = new StateMachineReader().Build(new Bucket(newStorage));
 			}
 
-			_imBuilder.Build(restoredStateMachine, _dataModelHandler);
+			_imBuilder.Build(restoredStateMachine, _dataModelHandler, customActionProviders: null);
 		}
 
 		[TestMethod]
@@ -74,7 +74,7 @@ namespace TSSArt.StateMachine.Test
 							   .EndState()
 							   .Build();
 
-			var model = _imBuilder.Build(stateMachine, _dataModelHandler);
+			var model = _imBuilder.Build(stateMachine, _dataModelHandler, customActionProviders: null);
 			var storeSupport = model.Root.As<IStoreSupport>();
 
 			byte[] transactionLog;
@@ -91,7 +91,7 @@ namespace TSSArt.StateMachine.Test
 				restoredStateMachine = new StateMachineReader().Build(new Bucket(newStorage), model.EntityMap);
 			}
 
-			_imBuilder.Build(restoredStateMachine, _dataModelHandler);
+			_imBuilder.Build(restoredStateMachine, _dataModelHandler, customActionProviders: null);
 		}
 	}
 }

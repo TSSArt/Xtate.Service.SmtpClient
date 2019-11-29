@@ -249,6 +249,13 @@ namespace TSSArt.StateMachine
 			_writer.WriteEndElement();
 		}
 
+		protected override void Build(ref ICustomAction entity, ref CustomAction properties)
+		{
+			if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+			_writer.WriteRaw(entity.Xml);
+		}
+
 		protected override void Visit(ref IRaise entity)
 		{
 			if (entity == null) throw new ArgumentNullException(nameof(entity));

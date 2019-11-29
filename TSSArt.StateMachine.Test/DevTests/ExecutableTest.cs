@@ -13,9 +13,10 @@ namespace TSSArt.StateMachine.Test
 	[TestClass]
 	public class ExecutableTest
 	{
-		private ChannelReader<IEvent> _eventChannel;
-		private Mock<ILogger>         _logger;
-		private InterpreterOptions    _options;
+		private Mock<ICustomActionProvider> _customActionProvider;
+		private ChannelReader<IEvent>       _eventChannel;
+		private Mock<ILogger>               _logger;
+		private InterpreterOptions          _options;
 
 		private IStateMachine GetStateMachine(string scxml)
 		{
@@ -42,11 +43,20 @@ namespace TSSArt.StateMachine.Test
 			channel.Writer.Complete();
 			_eventChannel = channel.Reader;
 
-			_options = new InterpreterOptions { DataModelHandlerFactories = new List<IDataModelHandlerFactory>() };
+			_options = new InterpreterOptions { DataModelHandlerFactories = new List<IDataModelHandlerFactory>(), CustomActionProviders = new List<ICustomActionProvider>() };
 			_logger = new Mock<ILogger>();
+			_customActionProvider = new Mock<ICustomActionProvider>();
+			_customActionProvider.Setup(x => x.GetAction(It.IsAny<string>()))
+								 .Returns((context, token) =>
+										  {
+											  context.Log(label: "Custom", arguments: default, token: default);
+											  return default;
+										  });
+			_customActionProvider.Setup(x => x.CanHandle(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
 
 			_options.DataModelHandlerFactories.Add(EcmaScriptDataModelHandler.Factory);
 			_options.Logger = _logger.Object;
+			_options.CustomActionProviders.Add(_customActionProvider.Object);
 		}
 
 		[TestMethod]
@@ -56,7 +66,7 @@ namespace TSSArt.StateMachine.Test
 								  innerXml:
 								  "<state id='s1'><onentry><raise event='my'/></onentry><transition event='my' target='s2'/></state><state id='s2'><onentry><log label='Hello'/></onentry></state>");
 
-			_logger.Verify(l => l.Log(It.IsAny<string>(), "Hello", default, default), Times.Once);
+			_logger.Verify(l => l.Log(It.IsAny<string>(), It.IsAny<string>(), "Hello", default, default), Times.Once);
 		}
 
 		[TestMethod]
@@ -66,7 +76,7 @@ namespace TSSArt.StateMachine.Test
 								  innerXml:
 								  "<state id='s1'><onentry><send event='my' target='_internal'/></onentry><transition event='my' target='s2'/></state><state id='s2'><onentry><log label='Hello'/></onentry></state>");
 
-			_logger.Verify(l => l.Log(It.IsAny<string>(), "Hello", default, default), Times.Once);
+			_logger.Verify(l => l.Log(It.IsAny<string>(), It.IsAny<string>(), "Hello", default, default), Times.Once);
 		}
 
 		[TestMethod]
@@ -76,7 +86,7 @@ namespace TSSArt.StateMachine.Test
 								  innerXml:
 								  "<state id='s1'><onentry><raise event='my.suffix'/></onentry><transition event='my' target='s2'/></state><state id='s2'><onentry><log label='Hello'/></onentry></state>");
 
-			_logger.Verify(l => l.Log(It.IsAny<string>(), "Hello", default, default), Times.Once);
+			_logger.Verify(l => l.Log(It.IsAny<string>(), It.IsAny<string>(), "Hello", default, default), Times.Once);
 		}
 
 		[TestMethod]
@@ -86,7 +96,17 @@ namespace TSSArt.StateMachine.Test
 								  innerXml:
 								  "<state id='s1'><onentry><raise event='my.suffix'/></onentry><transition event='my.*' target='s2'/></state><state id='s2'><onentry><log label='Hello'/></onentry></state>");
 
-			_logger.Verify(l => l.Log(It.IsAny<string>(), "Hello", default, default), Times.Once);
+			_logger.Verify(l => l.Log(It.IsAny<string>(), It.IsAny<string>(), "Hello", default, default), Times.Once);
+		}
+
+		[TestMethod]
+		public async Task CustomActionTest()
+		{
+			await RunStateMachine(NoneDataModel,
+								  innerXml:
+								  "<state id='s1'><onentry><custom my='name'/></onentry></state>");
+
+			_logger.Verify(l => l.Log(It.IsAny<string>(), It.IsAny<string>(), "Custom", default, default), Times.Once);
 		}
 	}
 }

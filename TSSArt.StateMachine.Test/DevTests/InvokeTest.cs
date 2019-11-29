@@ -86,7 +86,7 @@ namespace TSSArt.StateMachine.Test
 			_externalCommunicationMock.Verify(l => l.IsInvokeActive("invoke_id"));
 			_externalCommunicationMock.VerifyNoOtherCalls();
 
-			_loggerMock.Verify(l => l.Log(null, "FinalizeExecuted", default, default));
+			_loggerMock.Verify(l => l.Log(It.IsAny<string>(), null, "FinalizeExecuted", default, default));
 			_loggerMock.VerifyNoOtherCalls();
 		}
 	}

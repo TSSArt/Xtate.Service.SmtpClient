@@ -48,7 +48,5 @@ namespace TSSArt.StateMachine.Test
 			//Assert
 			Assert.AreEqual(expected: 33, result.AsNumber());
 		}
-
-
 	}
 }
