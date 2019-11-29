@@ -15,6 +15,8 @@ namespace TSSArt.StateMachine.Services
 	[SimpleService("https://www.w3.org/Protocols/HTTP/", Alias = "http")]
 	public class HttpClientService : SimpleServiceBase
 	{
+		private const string MediaTypeApplicationJson = " application/json";
+
 		public static readonly IServiceFactory Factory = SimpleServiceFactory<HttpClientService>.Instance;
 
 		private static readonly FieldInfo DomainTableField = typeof(CookieContainer).GetField(name: "m_domainTable", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -96,7 +98,7 @@ namespace TSSArt.StateMachine.Services
 			result["statusDescription"] = new DataModelValue(response.StatusDescription);
 
 			var contentType = new ContentType(response.ContentType);
-			if (contentType.MediaType == MediaTypeNames.Application.Json)
+			if (contentType.MediaType == MediaTypeApplicationJson)
 			{
 				using var jsonDocument = JsonDocument.Parse(response.GetResponseStream());
 
@@ -185,7 +187,7 @@ namespace TSSArt.StateMachine.Services
 			return new DataModelValue(obj);
 		}
 
-		private static DataModelValue CaptureEntry(HtmlDocument htmlDocument, string xpath, string attr, string regex)
+		private static DataModelValue CaptureEntry(HtmlDocument htmlDocument, string xpath, string attr, string pattern)
 		{
 			var node = htmlDocument.DocumentNode;
 
@@ -206,12 +208,13 @@ namespace TSSArt.StateMachine.Services
 				return DataModelValue.Undefined();
 			}
 
-			if (regex == null)
+			if (pattern == null)
 			{
 				return new DataModelValue(text);
 			}
 
-			var match = Regex.Match(text, regex);
+			var regex = new Regex(pattern);
+			var match = regex.Match(text);
 
 			if (!match.Success)
 			{
@@ -224,9 +227,9 @@ namespace TSSArt.StateMachine.Services
 			}
 
 			var obj = new DataModelObject();
-			foreach (Group matchGroup in match.Groups)
+			foreach (string name in regex.GetGroupNames())
 			{
-				obj[matchGroup.Name] = new DataModelValue(matchGroup.Value);
+				obj[name] = new DataModelValue(match.Groups[name].Value);
 			}
 
 			return new DataModelValue(obj);
