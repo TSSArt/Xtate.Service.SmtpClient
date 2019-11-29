@@ -32,6 +32,6 @@ namespace TSSArt.StateMachine
 
 		public override bool Equals(object obj) => ReferenceEquals(this, obj) || obj is Identifier other && _val.Equals(other._val, StringComparison.Ordinal);
 
-		public override int GetHashCode() => _val.GetHashCode(StringComparison.Ordinal);
+		public override int GetHashCode() => _val.GetHashCode();
 	}
 }

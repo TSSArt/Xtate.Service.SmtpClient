@@ -40,8 +40,7 @@ namespace TSSArt.StateMachine
 
 		public virtual ValueTask DisposeAsync()
 		{
-			_destroyTokenSource.Dispose();
-			_suspendOnIdleTokenSource?.Dispose();
+			Dispose();
 
 			return default;
 		}

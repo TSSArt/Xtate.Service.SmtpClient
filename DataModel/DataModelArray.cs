@@ -63,7 +63,7 @@ namespace TSSArt.StateMachine
 							sb.Append(sb.Length == 0 ? "[" : ", ");
 						}
 
-						var value = this[i].ToString(format: "JSON", formatProvider).Replace(oldValue: "\r\n", newValue: "\r\n  ", StringComparison.Ordinal);
+						var value = this[i].ToString(format: "JSON", formatProvider).Replace(oldValue: "\r\n", newValue: "\r\n  ");
 						sb.Append(value);
 					}
 
