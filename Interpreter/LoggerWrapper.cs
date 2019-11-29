@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,8 +15,8 @@ namespace TSSArt.StateMachine
 
 		public LoggerWrapper(ILogger logger, string sessionId)
 		{
-			_logger = logger;
-			_sessionId = sessionId;
+			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
+			_sessionId = sessionId ?? throw new ArgumentNullException(nameof(sessionId));
 		}
 
 		public bool IsPlatformError(Exception exception)
@@ -37,16 +36,7 @@ namespace TSSArt.StateMachine
 		{
 			try
 			{
-				if (_logger != null)
-				{
-					return _logger.Log(stateMachineName, label, data, token);
-				}
-
-				FormattableString formattableString = $"Name: [{stateMachineName}]. SessionId: [{_sessionId}]. Label: \"{label}\". Data: {data:JSON}";
-
-				Trace.TraceInformation(formattableString.Format, formattableString.GetArguments());
-
-				return default;
+				return _logger.Log(_sessionId, stateMachineName, label, data, token);
 			}
 			catch (Exception ex)
 			{
@@ -60,16 +50,7 @@ namespace TSSArt.StateMachine
 		{
 			try
 			{
-				if (_logger != null)
-				{
-					return _logger.Error(errorType, stateMachineName, sourceEntityId, exception, token);
-				}
-
-				FormattableString formattableString = $"Type: [{errorType}]. Name: [{stateMachineName}]. SessionId: [{_sessionId}]. SourceEntityId: [{sourceEntityId}]. Exception: {exception}";
-
-				Trace.TraceError(formattableString.Format, formattableString.GetArguments());
-
-				return default;
+				return _logger.Error(errorType, _sessionId, stateMachineName, sourceEntityId, exception, token);
 			}
 			catch (Exception ex)
 			{

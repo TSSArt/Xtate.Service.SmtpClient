@@ -185,6 +185,18 @@ namespace TSSArt.StateMachine
 			script = new DefaultScriptEvaluator(scriptProperties);
 		}
 
+		protected override void Build(ref ICustomAction customAction, ref CustomAction customActionProperties)
+		{
+			base.Build(ref customAction, ref customActionProperties);
+
+			if (ValidationOnly)
+			{
+				return;
+			}
+
+			customAction = new DefaultCustomActionEvaluator(customActionProperties);
+		}
+
 		protected override void Build(ref IInvoke invoke, ref Invoke invokeProperties)
 		{
 			base.Build(ref invoke, ref invokeProperties);

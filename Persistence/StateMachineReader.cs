@@ -219,6 +219,7 @@ namespace TSSArt.StateMachine
 			{
 				case TypeInfo.AssignNode: return RestoreAssign(bucket);
 				case TypeInfo.CancelNode: return RestoreCancel(bucket);
+				case TypeInfo.CustomActionNode: return RestoreCustomAction(bucket);
 				case TypeInfo.ForEachNode: return RestoreForEach(bucket);
 				case TypeInfo.IfNode: return RestoreIf(bucket);
 				case TypeInfo.ElseIfNode: return RestoreElseIf(bucket);
@@ -260,6 +261,15 @@ namespace TSSArt.StateMachine
 								  Content = RestoreScriptExpression(bucket.Nested(Key.Content))
 						  }
 						: (IScript) null;
+
+		private static ICustomAction RestoreCustomAction(Bucket bucket) =>
+				Exist(bucket, TypeInfo.CustomActionNode)
+						? new CustomAction
+						  {
+								  Ancestor = new EntityData(bucket),
+								  Xml = bucket.GetString(Key.Content)
+						  }
+						: (ICustomAction) null;
 
 		private static ISend RestoreSend(Bucket bucket) =>
 				Exist(bucket, TypeInfo.SendNode)

@@ -9,9 +9,9 @@ namespace TSSArt.StateMachine
 		private readonly TaskCompletionSource<DataModelValue> _completedTcs = new TaskCompletionSource<DataModelValue>();
 		private readonly CancellationTokenSource              _tokenSource  = new CancellationTokenSource();
 
-		protected Uri            Source   { get; private set; }
-		protected DataModelValue Content { get; private set; }
-		protected DataModelValue Parameters { get; private set; }
+		protected Uri                   Source               { get; private set; }
+		protected DataModelValue        Content              { get; private set; }
+		protected DataModelValue        Parameters           { get; private set; }
 		protected IServiceCommunication ServiceCommunication { get; private set; }
 
 		protected CancellationToken StopToken => _tokenSource.Token;
@@ -34,7 +34,7 @@ namespace TSSArt.StateMachine
 
 		ValueTask<DataModelValue> IService.Result => new ValueTask<DataModelValue>(_completedTcs.Task);
 
-		public void Start(Uri source, DataModelValue content, DataModelValue parameters, IServiceCommunication serviceCommunication)
+		internal void Start(Uri source, DataModelValue content, DataModelValue parameters, IServiceCommunication serviceCommunication)
 		{
 			Source = source;
 			Content = content;

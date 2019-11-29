@@ -21,6 +21,8 @@ namespace TSSArt.StateMachine
 
 		protected string Current => _current ?? _xmlReader.Value;
 
+		protected string ReadOuterXml() => _xmlReader.ReadOuterXml();
+
 		protected void Skip() => _xmlReader.Skip();
 
 		protected Exception GetXmlException(string message)
@@ -207,6 +209,7 @@ namespace TSSArt.StateMachine
 			IPolicyBuilder<TEntity> IgnoreUnknownElements();
 			IPolicyBuilder<TEntity> DenyUnknownElements();
 			IPolicyBuilder<TEntity> RawContent(Action<TDirector, TEntity> action);
+			IPolicyBuilder<TEntity> UnknownElement(Action<TDirector, TEntity> located);
 		}
 
 		private enum AttributeType
@@ -242,7 +245,9 @@ namespace TSSArt.StateMachine
 			private readonly Dictionary<(string ns, string name), (Action<TDirector, TEntity> located, ElementType type)> _elements =
 					new Dictionary<(string ns, string name), (Action<TDirector, TEntity> located, ElementType type)>();
 
-			public Action<TDirector, TEntity> RawContentAction;
+			public Action<TDirector, TEntity> RawContentAction { get; set; }
+
+			public Action<TDirector, TEntity> UnknownElementAction { get; set; }
 
 			public bool   IgnoreUnknownElements { get; set; }
 			public string ElementNamespace      { get; set; }
@@ -260,7 +265,7 @@ namespace TSSArt.StateMachine
 
 			public Action<TDirector, TEntity> AttributeLocated(string ns, string name) => _attributes.TryGetValue((ns, name), out var val) ? val.located : null;
 
-			public Action<TDirector, TEntity> ElementLocated(string ns, string name) => _elements.TryGetValue((ns, name), out var val) ? val.located : null;
+			public Action<TDirector, TEntity> ElementLocated(string ns, string name) => _elements.TryGetValue((ns, name), out var val) ? val.located : UnknownElementAction;
 
 			public ValidationContext CreateValidationContext(XmlReader xmlReader) => new ValidationContext(this, xmlReader);
 
@@ -294,7 +299,7 @@ namespace TSSArt.StateMachine
 						}
 					}
 
-					_ignoreUnknownElements = policy.IgnoreUnknownElements;
+					_ignoreUnknownElements = policy.IgnoreUnknownElements || policy.UnknownElementAction != null;
 
 					if (policy.ElementName != null)
 					{
@@ -481,6 +486,13 @@ namespace TSSArt.StateMachine
 
 				UseRawContent(val: false);
 				_policy.AddElement(options?.Namespace ?? _globalOptions.ElementDefaultNamespace ?? string.Empty, name, located, ElementType.ZeroToMany);
+
+				return this;
+			}
+
+			public IPolicyBuilder<TEntity> UnknownElement(Action<TDirector, TEntity> located)
+			{
+				_policy.UnknownElementAction = located ?? throw new ArgumentNullException(nameof(located));
 
 				return this;
 			}

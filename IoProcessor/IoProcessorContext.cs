@@ -12,7 +12,7 @@ namespace TSSArt.StateMachine
 
 		private readonly IIoProcessor                                                        _ioProcessor;
 		private readonly IoProcessorOptions                                                  _options;
-		private readonly ConcurrentDictionary<Uri, IService>                                 _parentServiceByTarget    = new ConcurrentDictionary<Uri, IService>();
+		private readonly ConcurrentDictionary<string, IService>                              _parentServiceBySessionId = new ConcurrentDictionary<string, IService>();
 		private readonly ConcurrentDictionary<(string SessionId, string InvokeId), IService> _serviceByInvokeId        = new ConcurrentDictionary<(string SessionId, string InvokeId), IService>();
 		private readonly ConcurrentDictionary<Uri, IService>                                 _serviceByTarget          = new ConcurrentDictionary<Uri, IService>();
 		private readonly ConcurrentDictionary<string, StateMachineController>                _stateMachinesBySessionId = new ConcurrentDictionary<string, StateMachineController>();
@@ -41,8 +41,10 @@ namespace TSSArt.StateMachine
 					  {
 							  PersistenceLevel = _options.PersistenceLevel,
 							  ResourceLoader = _options.ResourceLoader,
+							  CustomActionProviders = _options.CustomActionProviders,
 							  StopToken = _options.StopToken,
-							  SuspendToken = _options.SuspendToken
+							  SuspendToken = _options.SuspendToken,
+							  Logger = _options.Logger
 					  };
 
 			if (_options.DataModelHandlerFactories != null)
@@ -78,7 +80,7 @@ namespace TSSArt.StateMachine
 
 			var stateMachineController = CreateStateMachineController(sessionId, stateMachine, options);
 			ValidateTrue(_stateMachinesBySessionId.TryAdd(sessionId, stateMachineController));
-			ValidateTrue(_parentServiceByTarget.TryAdd(_ioProcessor.GetTarget(sessionId), stateMachineController));
+			ValidateTrue(_parentServiceBySessionId.TryAdd(sessionId, stateMachineController));
 
 			return stateMachineController;
 		}
@@ -86,7 +88,7 @@ namespace TSSArt.StateMachine
 		public virtual ValueTask DestroyStateMachine(string sessionId)
 		{
 			ValidateTrue(_stateMachinesBySessionId.TryRemove(sessionId, out var stateMachineController));
-			ValidateTrue(_parentServiceByTarget.TryRemove(_ioProcessor.GetTarget(sessionId), out _));
+			ValidateTrue(_parentServiceBySessionId.TryRemove(sessionId, out _));
 
 			return stateMachineController.DisposeAsync();
 		}
@@ -153,13 +155,13 @@ namespace TSSArt.StateMachine
 
 		public bool TryGetService(string sessionId, string invokeId, out IService service) => _serviceByInvokeId.TryGetValue((sessionId, invokeId), out service);
 
-		public IService GetService(Uri origin, Uri target)
+		public IService GetService(string sessionId, Uri target)
 		{
-			if (origin == null) throw new ArgumentNullException(nameof(origin));
+			if (sessionId == null) throw new ArgumentNullException(nameof(sessionId));
 			if (target == null) throw new ArgumentNullException(nameof(target));
 
 			var result = target == ParentTarget
-					? _parentServiceByTarget.TryGetValue(origin, out var service)
+					? _parentServiceBySessionId.TryGetValue(sessionId, out var service)
 					: _serviceByTarget.TryGetValue(target, out service);
 
 			if (result)
@@ -167,9 +169,9 @@ namespace TSSArt.StateMachine
 				return service;
 			}
 
-			var sessionId = ExtractSessionId(target);
+			var targetSessionId = ExtractSessionId(target);
 
-			if (_stateMachinesBySessionId.TryGetValue(sessionId, out var stateMachineController))
+			if (_stateMachinesBySessionId.TryGetValue(targetSessionId, out var stateMachineController))
 			{
 				return stateMachineController;
 			}

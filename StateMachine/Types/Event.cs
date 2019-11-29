@@ -6,7 +6,7 @@ namespace TSSArt.StateMachine
 	public struct Event : IOutgoingEvent, IAncestorProvider
 	{
 		public static readonly Uri InternalTarget = new Uri(uriString: "_internal", UriKind.Relative);
-		public static readonly Uri ParentTarget = new Uri(uriString: "_parent", UriKind.Relative);
+		public static readonly Uri ParentTarget   = new Uri(uriString: "_parent", UriKind.Relative);
 
 		public DataModelValue             Data      { get; set; }
 		public int                        DelayMs   { get; set; }
@@ -15,10 +15,7 @@ namespace TSSArt.StateMachine
 		public Uri                        Target    { get; set; }
 		public Uri                        Type      { get; set; }
 
-		public Event(string val) : this()
-		{
-			NameParts = EventName.ToParts(val);
-		}
+		public Event(string val) : this() => NameParts = EventName.ToParts(val);
 
 		internal object Ancestor;
 

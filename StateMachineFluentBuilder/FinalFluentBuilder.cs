@@ -9,9 +9,9 @@ namespace TSSArt.StateMachine
 		private readonly Action<IFinal>          _builtAction;
 		private readonly IBuilderFactory         _factory;
 		private readonly TOuterBuilder           _outerBuilder;
+		private          IValueExpression        _contentExpression;
 		private          List<IExecutableEntity> _onEntryList;
 		private          List<IExecutableEntity> _onExitList;
-		private          IValueExpression        _contentExpression;
 
 		public FinalFluentBuilder(IBuilderFactory factory, TOuterBuilder outerBuilder, Action<IFinal> builtAction)
 		{

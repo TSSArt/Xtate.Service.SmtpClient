@@ -7,6 +7,7 @@
 		CompoundNode,
 		ConditionExpressionNode,
 		ContentNode,
+		CustomActionNode,
 		DataModelNode,
 		DataNode,
 		DoneDataNode,

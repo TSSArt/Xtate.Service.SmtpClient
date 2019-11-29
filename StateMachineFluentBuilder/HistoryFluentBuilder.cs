@@ -41,7 +41,7 @@ namespace TSSArt.StateMachine
 				new TransitionFluentBuilder<HistoryFluentBuilder<TOuterBuilder>>(_factory, this, _builder.SetTransition);
 
 		public HistoryFluentBuilder<TOuterBuilder> AddTransition(string target) => AddTransition((Identifier) target);
-		
+
 		public HistoryFluentBuilder<TOuterBuilder> AddTransition(IIdentifier target) => BeginTransition().SetTarget(target).EndTransition();
 	}
 }

@@ -383,6 +383,13 @@ namespace TSSArt.StateMachine
 			data.Update(ref entity);
 		}
 
+		protected virtual void Visit(ref ICustomAction entity)
+		{
+			var data = new VisitData<CustomAction, ICustomAction>(entity);
+			Build(ref entity, ref data.Properties);
+			data.Update(ref entity);
+		}
+
 		protected virtual void Visit(ref ISend entity)
 		{
 			var data = new VisitData<Send, ISend>(entity);
@@ -507,6 +514,11 @@ namespace TSSArt.StateMachine
 				case IConditionExpression conditionExpression:
 					Visit(ref conditionExpression);
 					entity = conditionExpression;
+					break;
+
+				case ICustomAction customAction:
+					Visit(ref customAction);
+					entity = customAction;
 					break;
 
 				case IElse @else:
@@ -1040,6 +1052,8 @@ namespace TSSArt.StateMachine
 			VisitWrapper(ref action);
 			properties.Action = action;
 		}
+
+		protected virtual void Build(ref ICustomAction entity, ref CustomAction properties) { }
 
 		protected virtual void Build(ref IElse entity, ref Else properties) { }
 
