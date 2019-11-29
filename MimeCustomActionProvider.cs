@@ -28,7 +28,7 @@ namespace TSSArt.StateMachine.Services
 			var destination = xmlReader.GetAttribute("destination");
 			var xpath = xmlReader.GetAttribute("xpath");
 			var attr = xmlReader.GetAttribute("attr");
-			var regex = xmlReader.GetAttribute("regex");
+			var pattern = xmlReader.GetAttribute("regex");
 
 			return (context, token) =>
 				   {
@@ -65,12 +65,13 @@ namespace TSSArt.StateMachine.Services
 					return DataModelValue.Undefined();
 				}
 
-				if (regex == null)
+				if (pattern == null)
 				{
 					return new DataModelValue(text);
 				}
 
-				var match = Regex.Match(text, regex);
+				var regex = new Regex(pattern);
+				var match = regex.Match(text);
 
 				if (!match.Success)
 				{
@@ -83,12 +84,13 @@ namespace TSSArt.StateMachine.Services
 				}
 
 				var obj = new DataModelObject();
-				foreach (Group matchGroup in match.Groups)
+				foreach (string name in regex.GetGroupNames())
 				{
-					obj[matchGroup.Name] = new DataModelValue(matchGroup.Value);
+					obj[name] = new DataModelValue(match.Groups[name].Value);
 				}
 
 				return new DataModelValue(obj);
+
 			}
 		}
 	}
