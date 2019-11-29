@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFrameworks>netcoreapp3.0;net461</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
@@ -26,8 +27,7 @@
     <ProjectReference Include="..\TSSArt.StateMachine.EcmaScript\TSSArt.StateMachine.EcmaScript.csproj" />
     <ProjectReference Include="..\TSSArt.StateMachine.HttpClientService\TSSArt.StateMachine.HttpClientService.csproj" />
     <ProjectReference Include="..\TSSArt.StateMachine.SmtpClientService\TSSArt.StateMachine.SmtpClientService.csproj" />
-    <ProjectReference
-      Include="..\TSSArt.StateMachine.WebBrowserService.CefSharp\TSSArt.StateMachine.WebBrowserService.CefSharp.csproj">
+    <ProjectReference Include="..\TSSArt.StateMachine.WebBrowserService.CefSharp\TSSArt.StateMachine.WebBrowserService.CefSharp.csproj">
       <Private>true</Private>
     </ProjectReference>
     <ProjectReference Include="..\TSSArt.StateMachine.WebBrowserService\TSSArt.StateMachine.WebBrowserService.csproj" />

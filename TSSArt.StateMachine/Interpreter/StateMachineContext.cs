@@ -67,7 +67,12 @@ namespace TSSArt.StateMachine
 
 		public virtual void Dispose() { }
 
-		public virtual ValueTask DisposeAsync() => default;
+		public virtual ValueTask DisposeAsync()
+		{
+			Dispose();
+
+			return default;
+		}
 
 		public virtual IPersistenceContext PersistenceContext => throw new NotSupportedException();
 

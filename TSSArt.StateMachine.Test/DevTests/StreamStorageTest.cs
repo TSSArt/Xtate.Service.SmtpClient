@@ -9,7 +9,7 @@ namespace TSSArt.StateMachine.Test
 {
 	public interface IStreamCapture
 	{
-		void DisposeAsync();
+		void Dispose();
 
 		void FlushAsync();
 
@@ -30,10 +30,11 @@ namespace TSSArt.StateMachine.Test
 
 		public int FailWriteCountdown { get; set; }
 
-		public override ValueTask DisposeAsync()
+		protected override void Dispose(bool disposing)
 		{
-			_capture.DisposeAsync();
-			return base.DisposeAsync();
+			_capture.Dispose();
+
+			base.Dispose(disposing);
 		}
 
 		public override Task FlushAsync(CancellationToken cancellationToken)
@@ -42,32 +43,32 @@ namespace TSSArt.StateMachine.Test
 			return base.FlushAsync(cancellationToken);
 		}
 
-		public override async ValueTask<int> ReadAsync(Memory<byte> destination, CancellationToken cancellationToken = new CancellationToken())
+		public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
 		{
-			if (destination.Length == 0)
+			if (count == 0)
 			{
 				throw new ApplicationException("Zero len");
 			}
 
-			var result = await base.ReadAsync(destination, cancellationToken);
-			_capture.ReadAsync(destination.Length, result);
+			var result = await base.ReadAsync(buffer, offset, count, cancellationToken);
+			_capture.ReadAsync(count, result);
 			return result;
 		}
 
-		public override ValueTask WriteAsync(ReadOnlyMemory<byte> source, CancellationToken cancellationToken = new CancellationToken())
+		public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
 		{
-			if (source.Length == 0)
+			if (count == 0)
 			{
 				throw new ApplicationException("Zero len");
 			}
 
-			if (-- FailWriteCountdown == 0)
+			if (--FailWriteCountdown == 0)
 			{
 				throw new ApplicationException();
 			}
 
-			_capture.WriteAsync(source.Length);
-			return base.WriteAsync(source, cancellationToken);
+			_capture.WriteAsync(count);
+			return base.WriteAsync(buffer, offset, count, cancellationToken);
 		}
 
 		public override void SetLength(long value)
@@ -106,7 +107,7 @@ namespace TSSArt.StateMachine.Test
 			_streamCaptureMock.Verify(l => l.ReadAsync(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
 			_streamCaptureMock.Verify(l => l.SetLength(It.IsAny<long>()), Times.Never);
 			_streamCaptureMock.Verify(l => l.WriteAsync(It.IsAny<int>()), Times.Never);
-			_streamCaptureMock.Verify(l => l.DisposeAsync(), Times.Once);
+			_streamCaptureMock.Verify(l => l.Dispose(), Times.Once);
 		}
 
 		[TestMethod]
@@ -129,7 +130,7 @@ namespace TSSArt.StateMachine.Test
 			_streamCaptureMock.Verify(l => l.ReadAsync(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
 			_streamCaptureMock.Verify(l => l.SetLength(It.IsAny<long>()), Times.Never);
 			_streamCaptureMock.Verify(l => l.WriteAsync(It.IsAny<int>()), Times.Once);
-			_streamCaptureMock.Verify(l => l.DisposeAsync(), Times.Once);
+			_streamCaptureMock.Verify(l => l.Dispose(), Times.Once);
 		}
 
 		[TestMethod]

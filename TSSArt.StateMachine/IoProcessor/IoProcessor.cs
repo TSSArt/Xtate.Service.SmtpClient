@@ -264,7 +264,7 @@ namespace TSSArt.StateMachine
 			{
 				return asyncDisposable.DisposeAsync();
 			}
-
+			
 			if (service is IDisposable disposable)
 			{
 				disposable.Dispose();

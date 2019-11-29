@@ -11,7 +11,9 @@ namespace TSSArt.StateMachine.Core.Host
 		[STAThread]
 		public static async Task Main()
 		{
+#if NETCOREAPP3_0
 			Application.SetHighDpiMode(HighDpiMode.SystemAware);
+#endif
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
 

@@ -76,6 +76,25 @@ namespace TSSArt.StateMachine
 			AddToReadModel(keyMemory, valueMemory);
 		}
 
+		private bool ReadModelTryGetValue(Entry equalEntry, out Entry actualEntry)
+		{
+#if NETSTANDARD2_1
+			return _readModel.TryGetValue(equalEntry, out actualEntry);
+#else
+			foreach (var entry in _readModel)
+			{
+				if (entry.CompareTo(equalEntry) == 0)
+				{
+					actualEntry = entry;
+					return true;
+				}
+			}
+
+			actualEntry = default;
+			return false;
+#endif
+		}
+
 		public ReadOnlyMemory<byte> Get(ReadOnlySpan<byte> key)
 		{
 			if (_readModel == null)
@@ -86,7 +105,7 @@ namespace TSSArt.StateMachine
 			var buffer = AllocateBuffer(key.Length, shared: true);
 			key.CopyTo(buffer.Span);
 
-			return _readModel.TryGetValue(new Entry(buffer), out var result) ? result.Value : ReadOnlyMemory<byte>.Empty;
+			return ReadModelTryGetValue(new Entry(buffer), out var result) ? result.Value : ReadOnlyMemory<byte>.Empty;
 		}
 
 		protected virtual void Dispose(bool dispose)
@@ -119,7 +138,7 @@ namespace TSSArt.StateMachine
 					var from = new Entry(value);
 					var to = new Entry(GetTo(value));
 
-					if (_readModel.TryGetValue(to, out var toValue))
+					if (ReadModelTryGetValue(to, out var toValue))
 					{
 						_readModel.GetViewBetween(from, to).Clear();
 						_readModel.Add(toValue);

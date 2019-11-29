@@ -2,20 +2,22 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Web;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.WebUtilities;
 
 namespace TSSArt.StateMachine
 {
 	public sealed class HttpEventProcessor : IEventProcessor
 	{
-		private const string EventNameParameterName = "_scxmleventname";
+		private const string MediaTypeApplicationJson = " application/json";
+		private const string EventNameParameterName   = "_scxmleventname";
 
 		private static readonly Uri            EventProcessorId      = new Uri("http://www.w3.org/TR/scxml/#BasicHTTPEventProcessor");
 		private static readonly Uri            EventProcessorAliasId = new Uri(uriString: "http", UriKind.Relative);
@@ -43,7 +45,7 @@ namespace TSSArt.StateMachine
 
 			if (@event.NameParts != null)
 			{
-				requestUri = new Uri(requestUri, "?" + EventNameParameterName + "=" + HttpUtility.UrlEncode(EventName.ToName(@event.NameParts)));
+				requestUri = new Uri(requestUri, "?" + EventNameParameterName + "=" + WebUtility.UrlEncode(EventName.ToName(@event.NameParts)));
 			}
 
 			var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, requestUri)
@@ -89,12 +91,12 @@ namespace TSSArt.StateMachine
 					return new FormUrlEncodedContent(GetParameters(dataModelObject));
 				}
 
-				return new StringContent(dataModelObject.ToString(format: "JSON", CultureInfo.InvariantCulture), Encoding.UTF8, MediaTypeNames.Application.Json);
+				return new StringContent(dataModelObject.ToString(format: "JSON", CultureInfo.InvariantCulture), Encoding.UTF8, MediaTypeApplicationJson);
 			}
 
 			if (data.Type == DataModelValueType.Array)
 			{
-				return new StringContent(data.AsArray().ToString(format: "JSON", CultureInfo.InvariantCulture), Encoding.UTF8, MediaTypeNames.Application.Json);
+				return new StringContent(data.AsArray().ToString(format: "JSON", CultureInfo.InvariantCulture), Encoding.UTF8, MediaTypeApplicationJson);
 			}
 
 			throw new NotSupportedException();
@@ -192,18 +194,18 @@ namespace TSSArt.StateMachine
 
 			if (mediaType == "application/x-www-form-urlencoded")
 			{
-				var pairs = HttpUtility.ParseQueryString(body);
+				var pairs = QueryHelpers.ParseQuery(body);
 				var dataModelObject = new DataModelObject();
 
-				foreach (var key in pairs.AllKeys)
+				foreach (var pair in pairs)
 				{
-					dataModelObject[key] = new DataModelValue(pairs[key]);
+					dataModelObject[pair.Key] = new DataModelValue(pair.Value.ToString());
 				}
 
 				return new DataModelValue(dataModelObject);
 			}
 
-			if (mediaType == MediaTypeNames.Application.Json)
+			if (mediaType == MediaTypeApplicationJson)
 			{
 				var jsonDocument = JsonDocument.Parse(body);
 				return Map(jsonDocument.RootElement);

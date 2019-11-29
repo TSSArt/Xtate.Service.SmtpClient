@@ -14,11 +14,11 @@ namespace TSSArt.StateMachine
 		private const byte FinalMark       = 4;
 		private const int  FinalMarkLength = 1;
 
-		private static readonly int  MaxInt32Length = Encode.GetEncodedLength(int.MaxValue);
-		private readonly        bool _disposeStream;
+		private static readonly int MaxInt32Length = Encode.GetEncodedLength(int.MaxValue);
 
 		private readonly Stream          _stream;
 		private          bool            _canShrink = true;
+		private          bool            _disposeStream;
 		private          InMemoryStorage _inMemoryStorage;
 
 		private StreamStorage(Stream stream, bool disposeStream)
@@ -61,7 +61,7 @@ namespace TSSArt.StateMachine
 
 				_inMemoryStorage.WriteTransactionLogToSpan(buf.AsSpan(markSizeLength));
 
-				await _stream.WriteAsync(buf.AsMemory(start: 0, markSizeLength + transactionLogSize), token).ConfigureAwait(false);
+				await _stream.WriteAsync(buf, offset: 0, markSizeLength + transactionLogSize, token).ConfigureAwait(false);
 				await _stream.FlushAsync(token).ConfigureAwait(false);
 			}
 			finally
@@ -87,14 +87,20 @@ namespace TSSArt.StateMachine
 			if (_disposeStream)
 			{
 				_stream.Dispose();
+				
+				_disposeStream = false;
 			}
 		}
 
-		public ValueTask DisposeAsync()
+		public async ValueTask DisposeAsync()
 		{
-			_inMemoryStorage?.Dispose();
+			if (_disposeStream && _stream is IAsyncDisposable asyncDisposable)
+			{
+				await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+				_disposeStream = false;
+			}
 
-			return _disposeStream ? _stream.DisposeAsync() : default;
+			Dispose();
 		}
 
 		public static async ValueTask<StreamStorage> CreateAsync(Stream stream, bool disposeStream = true, CancellationToken token = default) =>
@@ -130,18 +136,18 @@ namespace TSSArt.StateMachine
 			var buf = ArrayPool<byte>.Shared.Rent(streamLength + 8 * MaxInt32Length);
 			try
 			{
-				var memory = buf.AsMemory();
+				var memoryOffset = 0;
 
 				stream.Seek(offset: 0, SeekOrigin.Begin);
 				while (true)
 				{
-					var len = await stream.ReadAsync(memory.Slice(start: 0, length: 1), token).ConfigureAwait(false);
+					var len = await stream.ReadAsync(buf, memoryOffset, count: 1, token).ConfigureAwait(false);
 					if (len == 0)
 					{
 						break;
 					}
 
-					var byteMark = memory.Span[0];
+					var byteMark = buf[memoryOffset];
 
 					if (byteMark == FinalMark)
 					{
@@ -154,24 +160,24 @@ namespace TSSArt.StateMachine
 					}
 
 					var levelLength = Encode.GetLength(byteMark);
-					if (levelLength > 1 && await stream.ReadAsync(memory.Slice(start: 1, levelLength - 1), token).ConfigureAwait(false) < levelLength - 1)
+					if (levelLength > 1 && await stream.ReadAsync(buf, memoryOffset + 1, levelLength - 1, token).ConfigureAwait(false) < levelLength - 1)
 					{
 						throw GetIncorrectDataFormatException();
 					}
 
-					var level = Encode.Decode(memory.Span.Slice(start: 0, levelLength));
-					if (await stream.ReadAsync(memory.Slice(start: 0, length: 1), token).ConfigureAwait(false) < 1)
+					var level = Encode.Decode(buf.AsSpan(memoryOffset, levelLength));
+					if (await stream.ReadAsync(buf, memoryOffset, count: 1, token).ConfigureAwait(false) < 1)
 					{
 						throw GetIncorrectDataFormatException();
 					}
 
-					var sizeLength = Encode.GetLength(memory.Span[0]);
-					if (sizeLength > 1 && await stream.ReadAsync(memory.Slice(start: 1, sizeLength - 1), token).ConfigureAwait(false) < sizeLength - 1)
+					var sizeLength = Encode.GetLength(buf[memoryOffset]);
+					if (sizeLength > 1 && await stream.ReadAsync(buf, memoryOffset + 1, sizeLength - 1, token).ConfigureAwait(false) < sizeLength - 1)
 					{
 						throw GetIncorrectDataFormatException();
 					}
 
-					var size = Encode.Decode(memory.Span.Slice(start: 0, sizeLength));
+					var size = Encode.Decode(buf.AsSpan(memoryOffset, sizeLength));
 
 					if (level == SkipBlockMark)
 					{
@@ -179,14 +185,14 @@ namespace TSSArt.StateMachine
 						continue;
 					}
 
-					if (await stream.ReadAsync(memory.Slice(start: 0, size), token).ConfigureAwait(false) < size)
+					if (await stream.ReadAsync(buf, memoryOffset, size, token).ConfigureAwait(false) < size)
 					{
 						throw GetIncorrectDataFormatException();
 					}
 
 					total += size;
 					streamTotal += levelLength + sizeLength + size;
-					memory = memory.Slice(size);
+					memoryOffset += size;
 
 					if (level >> 1 <= rollbackLevel)
 					{
@@ -219,62 +225,63 @@ namespace TSSArt.StateMachine
 					return null;
 				}
 
-				memory = buf.AsMemory();
-				memory.Span[0] = FinalMark;
-				memory = memory.Slice(FinalMarkLength);
+				//var memory = buf.AsMemory();
+				buf[0] = FinalMark;
+				memoryOffset = FinalMarkLength;
 
 				var tranSize = streamTotal - streamEnd;
 
 				var controlDataSize = dataSize > 0 ? GetMarkSizeLength(mark: 1, dataSize) : 0;
 				if (dataSize > 0)
 				{
-					WriteMarkSize(memory.Slice(start: 0, controlDataSize).Span, mark: 1, dataSize);
-					memory = memory.Slice(controlDataSize);
+					WriteMarkSize(buf.AsSpan(memoryOffset, controlDataSize), mark: 1, dataSize);
+					memoryOffset += controlDataSize;
 
-					baseline.WriteDataToSpan(memory.Slice(start: 0, dataSize).Span);
-					memory = memory.Slice(dataSize);
+					baseline.WriteDataToSpan(buf.AsSpan(memoryOffset, dataSize));
+					memoryOffset += dataSize;
 				}
 
 				if (tranSize > 0)
 				{
 					stream.Seek(streamEnd, SeekOrigin.Begin);
-					await stream.ReadAsync(memory.Slice(start: 0, tranSize), token).ConfigureAwait(false);
-					memory = memory.Slice(tranSize);
+					await stream.ReadAsync(buf, memoryOffset, tranSize, token).ConfigureAwait(false);
+					memoryOffset += tranSize;
 				}
 
-				memory.Span[0] = FinalMark;
-				memory = memory.Slice(FinalMarkLength);
+				buf[memoryOffset] = FinalMark;
+				memoryOffset += FinalMarkLength;
 
 				stream.Seek(offset: 0, SeekOrigin.End);
 				var extLength = FinalMarkLength + controlDataSize + dataSize + tranSize;
-				await stream.WriteAsync(buf.AsMemory(start: 0, extLength), token).ConfigureAwait(false);
+				await stream.WriteAsync(buf, offset: 0, extLength, token).ConfigureAwait(false);
 				await stream.FlushAsync(token).ConfigureAwait(false);
 
 				var bypassLength = streamTotal + FinalMarkLength;
 				var initBlockLength1 = GetMarkSizeLength(SkipBlockMark, bypassLength);
-				var initBlock = memory.Slice(start: 0, bypassLength < initBlockLength1 ? bypassLength : initBlockLength1);
-				initBlock.Span.Clear();
+				var initBlockLength = bypassLength < initBlockLength1 ? bypassLength : initBlockLength1;
+				Array.Clear(buf, memoryOffset, initBlockLength);
 				if (bypassLength >= initBlockLength1)
 				{
 					bypassLength -= initBlockLength1;
 					var initBlockLength2 = GetMarkSizeLength(SkipBlockMark, bypassLength);
-					WriteMarkSize(initBlock.Slice(initBlockLength1 - initBlockLength2).Span, SkipBlockMark, bypassLength);
+					var delta = initBlockLength1 - initBlockLength2;
+					WriteMarkSize(buf.AsSpan(memoryOffset + delta, initBlockLength - delta), SkipBlockMark, bypassLength);
 				}
 
 				stream.Seek(offset: 0, SeekOrigin.Begin);
-				await stream.WriteAsync(initBlock, token).ConfigureAwait(false);
+				await stream.WriteAsync(buf, memoryOffset, initBlockLength, token).ConfigureAwait(false);
 				await stream.FlushAsync(token).ConfigureAwait(false);
 
-				var bufOffset = FinalMarkLength + initBlock.Length;
-				var bufLength = controlDataSize + dataSize + tranSize + FinalMarkLength - initBlock.Length;
+				var bufOffset = FinalMarkLength + initBlockLength;
+				var bufLength = controlDataSize + dataSize + tranSize + FinalMarkLength - initBlockLength;
 				if (bufLength > 0)
 				{
-					await stream.WriteAsync(buf.AsMemory(bufOffset, bufLength), token).ConfigureAwait(false);
+					await stream.WriteAsync(buf, bufOffset, bufLength, token).ConfigureAwait(false);
 					await stream.FlushAsync(token).ConfigureAwait(false);
 				}
 
 				stream.Seek(offset: 0, SeekOrigin.Begin);
-				await stream.WriteAsync(buf.AsMemory(FinalMarkLength, initBlock.Length), token).ConfigureAwait(false);
+				await stream.WriteAsync(buf, FinalMarkLength, initBlockLength, token).ConfigureAwait(false);
 				await stream.FlushAsync(token).ConfigureAwait(false);
 
 				stream.SetLength(controlDataSize + dataSize + tranSize);

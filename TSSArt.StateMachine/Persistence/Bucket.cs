@@ -295,8 +295,13 @@ namespace TSSArt.StateMachine
 				if (key == null) throw new ArgumentNullException(nameof(key));
 
 				bytes[0] = 7;
-				Encoding.UTF8.GetBytes(key, bytes.Slice(start: 1, bytes.Length - 2));
-				bytes[^1] = 0xFF;
+				bytes[bytes.Length - 1] = 0xFF;
+				var dest = bytes.Slice(start: 1, bytes.Length - 2);
+#if NETSTANDARD2_1
+				Encoding.UTF8.GetBytes(key, dest);
+#else
+				Encoding.UTF8.GetBytes(key).CopyTo(dest);
+#endif
 			}
 		}
 
@@ -428,7 +433,11 @@ namespace TSSArt.StateMachine
 					return;
 				}
 
+#if NETSTANDARD2_1
 				Encoding.UTF8.GetBytes(val, bytes);
+#else
+				Encoding.UTF8.GetBytes(val).CopyTo(bytes);
+#endif
 			}
 
 			public static string Get(ReadOnlySpan<byte> bytes)
@@ -438,7 +447,11 @@ namespace TSSArt.StateMachine
 					return string.Empty;
 				}
 
+#if NETSTANDARD2_1
 				return Encoding.UTF8.GetString(bytes);
+#else
+				return Encoding.UTF8.GetString(bytes.ToArray());
+#endif
 			}
 		}
 

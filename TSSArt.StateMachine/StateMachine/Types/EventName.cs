@@ -26,7 +26,7 @@ namespace TSSArt.StateMachine
 		{
 			if (nameParts == null) throw new ArgumentNullException(nameof(nameParts));
 
-			return string.Join(separator: '.', nameParts);
+			return string.Join(separator: ".", nameParts);
 		}
 
 		public static IReadOnlyList<IIdentifier> ToParts(string name)

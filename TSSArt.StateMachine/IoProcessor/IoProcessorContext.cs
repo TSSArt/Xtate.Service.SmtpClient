@@ -23,7 +23,12 @@ namespace TSSArt.StateMachine
 			_options = options;
 		}
 
-		public virtual ValueTask DisposeAsync() => default;
+		public virtual ValueTask DisposeAsync()
+		{
+			Dispose();
+
+			return default;
+		}
 
 		public void Dispose()
 		{

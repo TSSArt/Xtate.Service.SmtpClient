@@ -46,7 +46,7 @@ namespace TSSArt.StateMachine
 				throw GetXmlException(message: "List of identifiers cannot be empty");
 			}
 
-			if (val.IndexOf(Space, StringComparison.Ordinal) < 0)
+			if (val.IndexOf(Space) < 0)
 			{
 				return IdentifierList.Create(new[] { ToIdentifier(val) });
 			}
@@ -86,7 +86,7 @@ namespace TSSArt.StateMachine
 				throw GetXmlException(message: "List of events cannot be empty");
 			}
 
-			if (val.IndexOf(Space, StringComparison.Ordinal) < 0)
+			if (val.IndexOf(Space) < 0)
 			{
 				return EventDescriptorList.Create(new[] { ToEventDescriptor(val) });
 			}
@@ -112,7 +112,7 @@ namespace TSSArt.StateMachine
 				throw GetXmlException(message: "List of locations cannot be empty");
 			}
 
-			if (expression.IndexOf(Space, StringComparison.Ordinal) < 0)
+			if (expression.IndexOf(Space) < 0)
 			{
 				return LocationExpressionList.Create(new[] { (ILocationExpression) ToLocationExpression(expression) });
 			}

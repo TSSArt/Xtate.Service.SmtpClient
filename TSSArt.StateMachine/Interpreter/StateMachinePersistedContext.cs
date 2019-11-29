@@ -75,8 +75,6 @@ namespace TSSArt.StateMachine
 		{
 			await _storage.DisposeAsync().ConfigureAwait(false);
 
-			DisposeControllers();
-
 			await base.DisposeAsync().ConfigureAwait(false);
 		}
 

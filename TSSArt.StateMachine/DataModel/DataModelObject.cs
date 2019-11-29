@@ -65,7 +65,7 @@ namespace TSSArt.StateMachine
 						{
 							sb.Append(sb.Length == 0 ? "{\r\n  " : ",\r\n  ");
 
-							var value = pair.Value.ToString(format: "JSON", formatProvider).Replace(oldValue: "\r\n", newValue: "\r\n  ", StringComparison.Ordinal);
+							var value = pair.Value.ToString(format: "JSON", formatProvider).Replace(oldValue: "\r\n", newValue: "\r\n  ");
 							sb.Append("\"").Append(pair.Key).Append("\": ").Append(value);
 						}
 					}
