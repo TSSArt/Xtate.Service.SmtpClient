@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine.Services
 {
-	[SimpleService("https://tools.ietf.org/html/rfc5321", Alias = "smtp")]
+	[SimpleService("http://tssart.com/scxml/service/#SMTPClient", Alias = "smtp")]
 	public class SmtpClientService : SimpleServiceBase
 	{
 		public static readonly IServiceFactory Factory = SimpleServiceFactory<SmtpClientService>.Instance;
