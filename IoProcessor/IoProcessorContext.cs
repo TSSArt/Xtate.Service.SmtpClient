@@ -14,7 +14,7 @@ namespace TSSArt.StateMachine
 		private readonly IoProcessorOptions                                                  _options;
 		private readonly ConcurrentDictionary<string, IService>                              _parentServiceBySessionId = new ConcurrentDictionary<string, IService>();
 		private readonly ConcurrentDictionary<(string SessionId, string InvokeId), IService> _serviceByInvokeId        = new ConcurrentDictionary<(string SessionId, string InvokeId), IService>();
-		private readonly ConcurrentDictionary<Uri, IService>                                 _serviceByTarget          = new ConcurrentDictionary<Uri, IService>();
+		private readonly ConcurrentDictionary<Uri, IService>                                 _serviceByTarget          = new ConcurrentDictionary<Uri, IService>(UriComparer.Instance);
 		private readonly ConcurrentDictionary<string, StateMachineController>                _stateMachinesBySessionId = new ConcurrentDictionary<string, StateMachineController>();
 
 		public IoProcessorContext(IIoProcessor ioProcessor, in IoProcessorOptions options)

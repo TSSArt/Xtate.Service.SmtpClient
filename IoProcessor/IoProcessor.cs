@@ -7,7 +7,7 @@ namespace TSSArt.StateMachine
 {
 	public sealed class IoProcessor : IEventProcessor, IServiceFactory, IIoProcessor, IEventConsumer, IDisposable, IAsyncDisposable
 	{
-		private static readonly Uri BaseUri                   = new Uri("scxml://local/");
+		private static readonly Uri BaseUri                   = new Uri("ioprocessor://./");
 		private static readonly Uri EventProcessorId          = new Uri("http://www.w3.org/TR/scxml/#SCXMLEventProcessor");
 		private static readonly Uri EventProcessorAliasId     = new Uri(uriString: "scxml", UriKind.Relative);
 		private static readonly Uri ServiceFactoryTypeId      = new Uri("http://www.w3.org/TR/scxml/");
@@ -15,9 +15,9 @@ namespace TSSArt.StateMachine
 		private static readonly Uri InternalTarget            = new Uri(uriString: "#_internal", UriKind.Relative);
 
 		private readonly IoProcessorContext               _context;
-		private readonly Dictionary<Uri, IEventProcessor> _eventProcessors  = new Dictionary<Uri, IEventProcessor>();
+		private readonly Dictionary<Uri, IEventProcessor> _eventProcessors  = new Dictionary<Uri, IEventProcessor>(UriComparer.Instance);
 		private readonly List<IEventProcessor>            _ioProcessors     = new List<IEventProcessor>();
-		private readonly Dictionary<Uri, IServiceFactory> _serviceFactories = new Dictionary<Uri, IServiceFactory>();
+		private readonly Dictionary<Uri, IServiceFactory> _serviceFactories = new Dictionary<Uri, IServiceFactory>(UriComparer.Instance);
 
 		public IoProcessor(in IoProcessorOptions options)
 		{
@@ -47,9 +47,12 @@ namespace TSSArt.StateMachine
 					? new IoProcessorPersistedContext(this, options)
 					: new IoProcessorContext(this, options);
 
-			foreach (var eventProcessor in _eventProcessors.Values)
+			if (options.EventProcessors != null)
 			{
-				eventProcessor.RegisterEventConsumer(this);
+				foreach (var eventProcessor in options.EventProcessors)
+				{
+					eventProcessor.RegisterEventConsumer(this);
+				}
 			}
 		}
 
@@ -237,15 +240,26 @@ namespace TSSArt.StateMachine
 
 		public ValueTask Initialize() => _context.Initialize();
 
-		public ValueTask<DataModelValue> Execute(IStateMachine stateMachine, DataModelValue parameters = default) => Execute(stateMachine, source: null, content: default, parameters);
+		public ValueTask<DataModelValue> Execute(IStateMachine stateMachine, DataModelValue parameters = default) =>
+				Execute(stateMachine, source: null, content: default, IdGenerator.NewSessionId(), parameters);
 
-		public ValueTask<DataModelValue> Execute(Uri source, DataModelValue parameters = default) => Execute(stateMachine: null, source, content: default, parameters);
+		public ValueTask<DataModelValue> Execute(Uri source, DataModelValue parameters = default) => Execute(stateMachine: null, source, content: default, IdGenerator.NewSessionId(), parameters);
 
-		public ValueTask<DataModelValue> Execute(string scxml, DataModelValue parameters = default) => Execute(stateMachine: null, source: null, new DataModelValue(scxml), parameters);
+		public ValueTask<DataModelValue> Execute(string scxml, DataModelValue parameters = default) =>
+				Execute(stateMachine: null, source: null, new DataModelValue(scxml), IdGenerator.NewSessionId(), parameters);
 
-		private async ValueTask<DataModelValue> Execute(IStateMachine stateMachine, Uri source, DataModelValue content, DataModelValue parameters)
+		public ValueTask<DataModelValue> Execute(string sessionId, IStateMachine stateMachine, DataModelValue parameters = default) =>
+				Execute(stateMachine, source: null, content: default, sessionId, parameters);
+
+		public ValueTask<DataModelValue> Execute(string sessionId, Uri source, DataModelValue parameters = default) => Execute(stateMachine: null, source, content: default, sessionId, parameters);
+
+		public ValueTask<DataModelValue> Execute(string sessionId, string scxml, DataModelValue parameters = default) =>
+				Execute(stateMachine: null, source: null, new DataModelValue(scxml), sessionId, parameters);
+
+		private async ValueTask<DataModelValue> Execute(IStateMachine stateMachine, Uri source, DataModelValue content, string sessionId, DataModelValue parameters)
 		{
-			var sessionId = IdGenerator.NewSessionId();
+			if (sessionId == null) throw new ArgumentNullException(nameof(sessionId));
+
 			var service = await _context.CreateAndAddStateMachine(sessionId, stateMachine, source, content, parameters).ConfigureAwait(false);
 
 			try
@@ -264,7 +278,7 @@ namespace TSSArt.StateMachine
 			{
 				return asyncDisposable.DisposeAsync();
 			}
-			
+
 			if (service is IDisposable disposable)
 			{
 				disposable.Dispose();

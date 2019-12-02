@@ -7,6 +7,8 @@ namespace TSSArt.StateMachine
 {
 	public class ScxmlSerializer : StateMachineVisitor
 	{
+		private const string ScxmlNs = "http://www.w3.org/2005/07/scxml";
+
 		private XmlWriter _writer;
 
 		public void Serialize(IStateMachine stateMachine, XmlWriter writer)
@@ -35,7 +37,7 @@ namespace TSSArt.StateMachine
 
 		protected override void Build(ref IStateMachine entity, ref StateMachine properties)
 		{
-			_writer.WriteStartElement(prefix: "", localName: "scxml", ns: "http://www.w3.org/2005/07/scxml");
+			_writer.WriteStartElement(prefix: "", localName: "scxml", ScxmlNs);
 			_writer.WriteAttributeString(localName: "version", value: "1.0");
 
 			if (properties.DataModelType != null)

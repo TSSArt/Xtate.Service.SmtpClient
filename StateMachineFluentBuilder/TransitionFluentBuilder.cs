@@ -65,7 +65,13 @@ namespace TSSArt.StateMachine
 			return this;
 		}
 
-		public TransitionFluentBuilder<TOuterBuilder> AddOnTransitionTask(ExecutableTask task)
+		public TransitionFluentBuilder<TOuterBuilder> AddOnTransition(ExecutableTask task)
+		{
+			_builder.AddAction(new RuntimeAction(task));
+			return this;
+		}
+
+		public TransitionFluentBuilder<TOuterBuilder> AddOnTransition(ExecutableCancellableTask task)
 		{
 			_builder.AddAction(new RuntimeAction(task));
 			return this;
