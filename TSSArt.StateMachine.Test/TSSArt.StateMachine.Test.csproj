@@ -40,6 +40,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\TSSArt.StateMachine.BasicCustomAction\TSSArt.StateMachine.BasicCustomAction.csproj" />
     <ProjectReference Include="..\TSSArt.StateMachine.EcmaScript\TSSArt.StateMachine.EcmaScript.csproj" />
     <ProjectReference Include="..\TSSArt.StateMachine.HttpClientService\TSSArt.StateMachine.HttpClientService.csproj" />
     <ProjectReference Include="..\TSSArt.StateMachine.SmtpClientService\TSSArt.StateMachine.SmtpClientService.csproj" />

@@ -6,7 +6,7 @@ namespace TSSArt.StateMachine.Services
 {
 	public abstract class WebBrowserService : IService
 	{
-		private static readonly Uri TypeId      = new Uri("http://tssart.com/scxml/service/browser");
+		private static readonly Uri TypeId      = new Uri("http://tssart.com/scxml/service/#WebBrowser");
 		private static readonly Uri AliasTypeId = new Uri(uriString: "browser", UriKind.Relative);
 
 		private readonly TaskCompletionSource<DataModelValue> _completedTcs = new TaskCompletionSource<DataModelValue>();

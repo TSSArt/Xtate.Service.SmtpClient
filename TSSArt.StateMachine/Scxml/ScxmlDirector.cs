@@ -7,8 +7,9 @@ namespace TSSArt.StateMachine
 {
 	public class ScxmlDirector : XmlDirector<ScxmlDirector>
 	{
-		private const           string ScxmlNs       = "http://www.w3.org/2005/07/scxml";
-		private const           char   Space         = ' ';
+		private const string ScxmlNs = "http://www.w3.org/2005/07/scxml";
+		private const char   Space   = ' ';
+
 		private static readonly char[] SpaceSplitter = { Space };
 
 		private readonly IBuilderFactory _factory;

@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 
 namespace TSSArt.StateMachine
 {
-	public class HttpEventProcessorHandler
+	public sealed class HttpEventProcessorHandler : IDisposable
 	{
 		private readonly Uri                      _baseUri;
 		private readonly List<HttpEventProcessor> _httpEventProcessors = new List<HttpEventProcessor>();
@@ -15,9 +14,15 @@ namespace TSSArt.StateMachine
 
 		public HttpEventProcessorHandler(Uri baseUri) => _baseUri = baseUri;
 
+		public void Dispose()
+		{
+			_rwLock.Dispose();
+		}
+
 		public IEventProcessor CreateEventProcessor(string path = null)
 		{
 			_rwLock.EnterWriteLock();
+
 			try
 			{
 				var httpEventProcessor = new HttpEventProcessor(_baseUri, path);
@@ -33,14 +38,13 @@ namespace TSSArt.StateMachine
 		public async Task ProcessRequest(HttpContext context)
 		{
 			_rwLock.EnterReadLock();
+
 			try
 			{
 				foreach (var httpEventProcessor in _httpEventProcessors)
 				{
-					if (await httpEventProcessor.Handle(context))
+					if (await httpEventProcessor.Handle(context).ConfigureAwait(false))
 					{
-						context.Response.StatusCode = (int) HttpStatusCode.OK;
-
 						return;
 					}
 				}

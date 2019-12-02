@@ -1,4 +1,6 @@
+using System;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace TSSArt.StateMachine.Services
 {
@@ -8,11 +10,11 @@ namespace TSSArt.StateMachine.Services
 
 		protected override async ValueTask<DataModelValue> Execute()
 		{
-			using var form = new BrowserForm("http://google.com/");
+			using var form = new BrowserForm(Source.ToString());
 
 			form.Closed += (sender, args) => _tcs.SetResult(new DataModelValue(55));
 
-			form.Show();
+			Application.OpenForms[0].Invoke(new Action(() => { form.Show(); }));
 
 			return await _tcs.Task.ConfigureAwait(false);
 		}

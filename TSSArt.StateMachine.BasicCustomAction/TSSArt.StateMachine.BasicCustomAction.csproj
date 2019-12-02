@@ -1,15 +1,12 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>WinExe</OutputType>
-    <TargetFrameworks>netcoreapp3.0;net461</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1;netstandard2.0;net461</TargetFrameworks>
     <LangVersion>latest</LangVersion>
-    <UseWindowsForms>true</UseWindowsForms>
-    <Platforms>x86;x64</Platforms>
+    <RootNamespace>TSSArt.StateMachine</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(Configuration)'=='Debug'">
@@ -32,9 +29,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TSSArt.StateMachine.HttpEventProcessor\TSSArt.StateMachine.HttpEventProcessor.csproj" />
-    <ProjectReference Include="..\TSSArt.StateMachine.WebBrowserService.CefSharp\TSSArt.StateMachine.WebBrowserService.CefSharp.csproj" />
-    <ProjectReference Include="..\TSSArt.StateMachine.WebBrowserService\TSSArt.StateMachine.WebBrowserService.csproj" />
     <ProjectReference Include="..\TSSArt.StateMachine\TSSArt.StateMachine.csproj" />
   </ItemGroup>
 

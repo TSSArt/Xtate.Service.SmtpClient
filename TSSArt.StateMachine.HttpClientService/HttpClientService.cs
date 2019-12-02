@@ -12,7 +12,7 @@ using HtmlAgilityPack;
 
 namespace TSSArt.StateMachine.Services
 {
-	[SimpleService("https://www.w3.org/Protocols/HTTP/", Alias = "http")]
+	[SimpleService("http://tssart.com/scxml/service/#HTTPClient", Alias = "http")]
 	public class HttpClientService : SimpleServiceBase
 	{
 		private const string MediaTypeApplicationJson = " application/json";

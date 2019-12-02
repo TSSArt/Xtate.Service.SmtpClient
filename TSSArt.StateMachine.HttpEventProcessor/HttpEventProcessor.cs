@@ -14,16 +14,16 @@ using Microsoft.AspNetCore.WebUtilities;
 
 namespace TSSArt.StateMachine
 {
-	public sealed class HttpEventProcessor : IEventProcessor
+	[EventProcessor("http://www.w3.org/TR/scxml/#BasicHTTPEventProcessor", Alias = "http")]
+	public sealed class HttpEventProcessor : EventProcessorBase
 	{
-		private const string MediaTypeApplicationJson = " application/json";
-		private const string EventNameParameterName   = "_scxmleventname";
+		private const string MediaTypeTextPlain                 = "text/plain";
+		private const string MediaTypeApplicationJson           = "application/json";
+		private const string MediaTypeApplicationFormUrlEncoded = "application/x-www-form-urlencoded";
+		private const string EventNameParameterName             = "_scxmleventname";
 
-		private static readonly Uri            EventProcessorId      = new Uri("http://www.w3.org/TR/scxml/#BasicHTTPEventProcessor");
-		private static readonly Uri            EventProcessorAliasId = new Uri(uriString: "http", UriKind.Relative);
-		private readonly        Uri            _baseUri;
-		private readonly        string         _path;
-		private                 IEventConsumer _eventConsumer;
+		private readonly Uri    _baseUri;
+		private readonly string _path;
 
 		public HttpEventProcessor(Uri baseUri, string path)
 		{
@@ -31,13 +31,9 @@ namespace TSSArt.StateMachine
 			_path = path;
 		}
 
-		Uri IEventProcessor.Id => EventProcessorId;
+		protected override Uri GetTarget(string sessionId) => new Uri(_baseUri, sessionId);
 
-		Uri IEventProcessor.AliasId => EventProcessorAliasId;
-
-		Uri IEventProcessor.GetTarget(string sessionId) => GetTarget(sessionId);
-
-		async ValueTask IEventProcessor.Dispatch(string sessionId, IOutgoingEvent @event, CancellationToken token)
+		protected override async ValueTask OutgoingEvent(string sessionId, IOutgoingEvent @event, CancellationToken token)
 		{
 			using var client = new HttpClient();
 
@@ -57,18 +53,6 @@ namespace TSSArt.StateMachine
 			httpResponseMessage.EnsureSuccessStatusCode();
 		}
 
-		void IEventProcessor.RegisterEventConsumer(IEventConsumer eventConsumer)
-		{
-			if (eventConsumer == null) throw new ArgumentNullException(nameof(eventConsumer));
-
-			if (Interlocked.CompareExchange(ref _eventConsumer, eventConsumer, comparand: null) != null)
-			{
-				throw new InvalidOperationException("Event consumer already has been registered.");
-			}
-		}
-
-		private Uri GetTarget(string sessionId) => new Uri(_baseUri, sessionId);
-
 		private static HttpContent GetContent(IOutgoingEvent @event)
 		{
 			var data = @event.Data;
@@ -79,7 +63,7 @@ namespace TSSArt.StateMachine
 
 			if (data.Type == DataModelValueType.String)
 			{
-				return new StringContent(data.AsString(), Encoding.UTF8, MediaTypeNames.Text.Plain);
+				return new StringContent(data.AsString(), Encoding.UTF8, MediaTypeTextPlain);
 			}
 
 			if (data.Type == DataModelValueType.Object)
@@ -147,11 +131,11 @@ namespace TSSArt.StateMachine
 
 			if (_path == null)
 			{
-				sessionId = context.Request.Path;
+				sessionId = Path.GetFileName(context.Request.Path);
 			}
 			else if (context.Request.Path.StartsWithSegments(_path, out var sessionIdPathString))
 			{
-				sessionId = sessionIdPathString.ToString();
+				sessionId = Path.GetFileName(sessionIdPathString);
 			}
 			else
 			{
@@ -159,7 +143,7 @@ namespace TSSArt.StateMachine
 			}
 
 			var @event = await CreateEvent(context.Request).ConfigureAwait(false);
-			await _eventConsumer.Dispatch(sessionId, @event, token: default).ConfigureAwait(false);
+			await IncomingEvent(sessionId, @event, token: default).ConfigureAwait(false);
 
 			return true;
 		}
@@ -173,7 +157,7 @@ namespace TSSArt.StateMachine
 				eventName = request.Method;
 			}
 
-			var contentType = new ContentType(request.ContentType);
+			var contentType = request.ContentType != null ? new ContentType(request.ContentType) : new ContentType();
 			var encoding = contentType.CharSet != null ? Encoding.GetEncoding(contentType.CharSet) : Encoding.ASCII;
 
 			string body;
@@ -187,12 +171,12 @@ namespace TSSArt.StateMachine
 
 		private DataModelValue CreateData(string mediaType, string body)
 		{
-			if (mediaType == MediaTypeNames.Text.Plain)
+			if (mediaType == MediaTypeTextPlain)
 			{
 				return new DataModelValue(body);
 			}
 
-			if (mediaType == "application/x-www-form-urlencoded")
+			if (mediaType == MediaTypeApplicationFormUrlEncoded)
 			{
 				var pairs = QueryHelpers.ParseQuery(body);
 				var dataModelObject = new DataModelObject();
