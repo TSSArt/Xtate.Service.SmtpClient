@@ -2,7 +2,7 @@
 
 namespace TSSArt.StateMachine
 {
-	[AttributeUsage(AttributeTargets.Class, Inherited = false)]
+	[AttributeUsage(AttributeTargets.Class)]
 	public sealed class EventProcessorAttribute : Attribute
 	{
 		public EventProcessorAttribute(string type)

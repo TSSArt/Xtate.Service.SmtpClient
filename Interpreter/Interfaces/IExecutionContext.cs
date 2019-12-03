@@ -12,15 +12,15 @@ namespace TSSArt.StateMachine
 
 		bool InState(IIdentifier id);
 
-		ValueTask Cancel(string sendId, CancellationToken token);
+		ValueTask Cancel(string sendId, CancellationToken token = default);
 
-		ValueTask Log(string label, DataModelValue arguments, CancellationToken token);
+		ValueTask Log(string label, DataModelValue arguments = default, CancellationToken token = default);
 
-		ValueTask Send(IOutgoingEvent @event, CancellationToken token);
+		ValueTask Send(IOutgoingEvent @event, CancellationToken token = default);
 
-		ValueTask StartInvoke(string invokeId, Uri type, Uri source, DataModelValue content, DataModelValue parameters, CancellationToken token);
+		ValueTask StartInvoke(string invokeId, Uri type, Uri source = null, DataModelValue content = default, DataModelValue parameters = default, CancellationToken token = default);
 
-		ValueTask CancelInvoke(string invokeId, CancellationToken token);
+		ValueTask CancelInvoke(string invokeId, CancellationToken token = default);
 	}
 
 	public interface IContextItems
