@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Net;
 using System.Net.Http;
 using System.Net.Mime;
 using System.Text;
@@ -35,20 +34,23 @@ namespace TSSArt.StateMachine
 
 		protected override async ValueTask OutgoingEvent(string sessionId, IOutgoingEvent @event, CancellationToken token)
 		{
+			if (@event == null) throw new ArgumentNullException(nameof(@event));
+
 			using var client = new HttpClient();
 
-			var requestUri = new Uri(_baseUri, sessionId);
+			var targetUri = @event.Target.ToString();
 
 			if (@event.NameParts != null)
 			{
-				requestUri = new Uri(requestUri, "?" + EventNameParameterName + "=" + WebUtility.UrlEncode(EventName.ToName(@event.NameParts)));
+				targetUri = QueryHelpers.AddQueryString(targetUri, EventNameParameterName, EventName.ToName(@event.NameParts));
 			}
 
-			var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, requestUri)
+			var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, targetUri)
 									 {
 											 Content = GetContent(@event),
 											 Headers = { { "Origin", GetTarget(sessionId).ToString() } }
 									 };
+
 			var httpResponseMessage = await client.SendAsync(httpRequestMessage, token).ConfigureAwait(false);
 			httpResponseMessage.EnsureSuccessStatusCode();
 		}
@@ -123,17 +125,17 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public async ValueTask<bool> Handle(HttpContext context)
+		public async ValueTask<bool> Handle(HttpRequest request)
 		{
-			if (context == null) throw new ArgumentNullException(nameof(context));
+			if (request == null) throw new ArgumentNullException(nameof(request));
 
 			string sessionId;
 
 			if (_path == null)
 			{
-				sessionId = Path.GetFileName(context.Request.Path);
+				sessionId = Path.GetFileName(request.Path);
 			}
-			else if (context.Request.Path.StartsWithSegments(_path, out var sessionIdPathString))
+			else if (request.Path.StartsWithSegments(_path, out var sessionIdPathString))
 			{
 				sessionId = Path.GetFileName(sessionIdPathString);
 			}
@@ -142,7 +144,7 @@ namespace TSSArt.StateMachine
 				return false;
 			}
 
-			var @event = await CreateEvent(context.Request).ConfigureAwait(false);
+			var @event = await CreateEvent(request).ConfigureAwait(false);
 			await IncomingEvent(sessionId, @event, token: default).ConfigureAwait(false);
 
 			return true;
@@ -166,7 +168,9 @@ namespace TSSArt.StateMachine
 				body = await streamReader.ReadToEndAsync().ConfigureAwait(false);
 			}
 
-			return new EventObject(EventType.External, EventName.ToParts(eventName), CreateData(contentType.MediaType, body));
+			var origin = new Uri(request.Headers["Origin"].ToString());
+
+			return new EventObject(EventType.External, sendId: null, EventName.ToParts(eventName), invokeId: null, origin, EventProcessorId, CreateData(contentType.MediaType, body));
 		}
 
 		private DataModelValue CreateData(string mediaType, string body)

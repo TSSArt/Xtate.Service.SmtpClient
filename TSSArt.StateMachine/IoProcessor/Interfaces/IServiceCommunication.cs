@@ -5,6 +5,6 @@ namespace TSSArt.StateMachine
 {
 	public interface IServiceCommunication
 	{
-		ValueTask SendToCreator(IOutgoingEvent outgoingEvent, CancellationToken token);
+		ValueTask SendToCreator(IOutgoingEvent outgoingEvent, CancellationToken token = default);
 	}
 }

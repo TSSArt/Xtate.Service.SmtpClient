@@ -1,8 +1,12 @@
 using System;
+using System.Diagnostics;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Xml;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using TSSArt.StateMachine.EcmaScript;
 using TSSArt.StateMachine.Services;
 
 namespace TSSArt.StateMachine.Core.Host
@@ -23,12 +27,15 @@ namespace TSSArt.StateMachine.Core.Host
 			var options = new IoProcessorOptions
 						  {
 								  EventProcessors = new[] { httpEventProcessor },
-								  ServiceFactories = new[] { WebBrowserService.GetFactory<CefSharpWebBrowserService>() }
+								  ServiceFactories = new[] { WebBrowserService.GetFactory<CefSharpWebBrowserService>() },
+								  DataModelHandlerFactories = new[] { EcmaScriptDataModelHandler.Factory },
 						  };
 
 			await using var ioProcessor = new IoProcessor(options);
 
-			var captchaTask = ioProcessor.Execute(sessionId: "captcha", GetCaptchaStateMachine());
+#pragma warning disable 4014
+			ioProcessor.Execute(sessionId: "captcha", GetCaptchaStateMachine());
+#pragma warning restore 4014
 
 			var webHost = new WebHostBuilder()
 						  .Configure(builder => builder.Run(handler.ProcessRequest))
@@ -37,33 +44,15 @@ namespace TSSArt.StateMachine.Core.Host
 
 			await webHost.StartAsync().ConfigureAwait(false);
 
-			Application.Run(new MainForm());
-
-			//await Task.Delay(-1).ConfigureAwait(false);
+			Application.Run();
 		}
 
 		private static IStateMachine GetCaptchaStateMachine()
 		{
-			return new StateMachineFluentBuilder(new BuilderFactory())
-					.BeginState("idle")
-						.AddTransition(eventDescriptor: "show", target: "dialog")
-						.AddOnEntry(ctx => ctx.Log("Enter in idle", default, default))
-						.AddOnExit(ctx => ctx.Log("Exit from idle", default, default))
-					.EndState()
-					.BeginState("dialog")
-						.AddOnEntry((context, token) => context.Send(new Event("timeout") { DelayMs = 60_000 }, token))
-						.AddTransition(eventDescriptor: "close", target: "idle")
-						.AddTransition(eventDescriptor: "timeout", target: "idle")
-						.AddOnEntry(ctx => ctx.Log("Enter in dialog", default, default))
-						.AddOnExit(ctx => ctx.Log("Exit from dialog", default, default))
-						.AddOnEntry(ctx =>
-									{
-										var source = ctx.DataModel["_event"].AsObject()["data"].AsObject()["source"].AsString();
-										return ctx.StartInvoke("brw", new Uri("http://tssart.com/scxml/service/browser"), new Uri(source), default, default, default);
-									})
-						.AddOnExit(ctx => ctx.CancelInvoke("brw", default))
-					.EndState()
-					.Build();
+			using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("TSSArt.StateMachine.Core.Host.Scxml.Captcha.xml");
+			Debug.Assert(stream != null, nameof(stream) + " != null");
+			using var xmlReader = XmlReader.Create(stream);
+			return new ScxmlDirector(xmlReader, new BuilderFactory()).ConstructStateMachine();
 		}
 	}
 }

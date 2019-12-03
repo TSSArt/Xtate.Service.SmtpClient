@@ -37,13 +37,15 @@ namespace TSSArt.StateMachine
 
 		public async Task ProcessRequest(HttpContext context)
 		{
+			if (context == null) throw new ArgumentNullException(nameof(context));
+
 			_rwLock.EnterReadLock();
 
 			try
 			{
 				foreach (var httpEventProcessor in _httpEventProcessors)
 				{
-					if (await httpEventProcessor.Handle(context).ConfigureAwait(false))
+					if (await httpEventProcessor.Handle(context.Request).ConfigureAwait(false))
 					{
 						return;
 					}

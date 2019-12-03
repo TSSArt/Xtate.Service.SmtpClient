@@ -2,7 +2,7 @@
 
 namespace TSSArt.StateMachine
 {
-	[AttributeUsage(AttributeTargets.Class, Inherited = false)]
+	[AttributeUsage(AttributeTargets.Class)]
 	public sealed class CustomActionProviderAttribute : Attribute
 	{
 		public CustomActionProviderAttribute(string @namespace)

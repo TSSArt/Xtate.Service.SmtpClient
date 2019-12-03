@@ -8,8 +8,7 @@ namespace TSSArt.StateMachine
 	public abstract class EventProcessorBase : IEventProcessor
 	{
 		private readonly Uri            _eventProcessorAliasId;
-		private readonly Uri            _eventProcessorId;
-		private          IEventConsumer _eventConsumer;
+		private IEventConsumer _eventConsumer;
 
 		protected EventProcessorBase()
 		{
@@ -20,17 +19,19 @@ namespace TSSArt.StateMachine
 				throw new InvalidOperationException("EventProcessorAttribute did not provided for type " + GetType());
 			}
 
-			_eventProcessorId = new Uri(eventProcessorAttribute.Type, UriKind.RelativeOrAbsolute);
+			EventProcessorId = new Uri(eventProcessorAttribute.Type, UriKind.RelativeOrAbsolute);
 			_eventProcessorAliasId = eventProcessorAttribute.Alias != null ? new Uri(eventProcessorAttribute.Alias, UriKind.RelativeOrAbsolute) : null;
 		}
 
-		Uri IEventProcessor.Id => _eventProcessorId;
+		Uri IEventProcessor.Id => EventProcessorId;
 
 		Uri IEventProcessor.AliasId => _eventProcessorAliasId;
 
 		Uri IEventProcessor.GetTarget(string sessionId) => GetTarget(sessionId);
 
 		ValueTask IEventProcessor.Dispatch(string sessionId, IOutgoingEvent @event, CancellationToken token) => OutgoingEvent(sessionId, @event, token);
+
+		protected Uri EventProcessorId { get; }
 
 		void IEventProcessor.RegisterEventConsumer(IEventConsumer eventConsumer)
 		{

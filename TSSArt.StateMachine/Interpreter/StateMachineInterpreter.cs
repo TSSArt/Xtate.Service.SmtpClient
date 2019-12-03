@@ -460,6 +460,8 @@ namespace TSSArt.StateMachine
 		{
 			var internalEvent = _context.InternalQueue.Dequeue();
 
+			_logger.ProcessingEvent(internalEvent);
+
 			_context.DataModel.SetInternal(property: "_event", DataModelValue.FromEvent(internalEvent, isReadOnly: true));
 
 			return SelectTransitions(internalEvent);
@@ -535,6 +537,8 @@ namespace TSSArt.StateMachine
 					_anyToken.ThrowIfCancellationRequested();
 
 					var externalEvent = await ReadExternalEvent().ConfigureAwait(false);
+
+					_logger.ProcessingEvent(externalEvent);
 
 					_context.DataModel.SetInternal(property: "_event", DataModelValue.FromEvent(externalEvent, isReadOnly: true));
 
@@ -802,6 +806,8 @@ namespace TSSArt.StateMachine
 
 			foreach (var state in states)
 			{
+				_logger.ExitingState(state);
+
 				foreach (var onExit in state.OnExit)
 				{
 					await DoOperation(StateBagKey.OnExit, onExit, RunExecutableEntity, onExit.ActionEvaluators).ConfigureAwait(false);
@@ -835,6 +841,8 @@ namespace TSSArt.StateMachine
 				{
 					await DoOperation(StateBagKey.InitializeDataModel, state.DataModel, InitializeDataModel, state.DataModel).ConfigureAwait(false);
 				}
+
+				_logger.EnteringState(state);
 
 				foreach (var onEntry in state.OnEntry)
 				{
@@ -1128,6 +1136,8 @@ namespace TSSArt.StateMachine
 		{
 			foreach (var transition in transitions)
 			{
+				_logger.PerformingTransition(transition);
+
 				await DoOperation(StateBagKey.RunExecutableEntity, transition, RunExecutableEntity, transition.ActionEvaluators).ConfigureAwait(false);
 			}
 
