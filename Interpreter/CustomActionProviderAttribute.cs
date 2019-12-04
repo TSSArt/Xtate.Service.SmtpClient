@@ -8,7 +8,7 @@ namespace TSSArt.StateMachine
 		public CustomActionProviderAttribute(string @namespace)
 		{
 			if (string.IsNullOrEmpty(@namespace)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(@namespace));
-			
+
 			Namespace = @namespace;
 		}
 

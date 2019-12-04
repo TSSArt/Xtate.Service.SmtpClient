@@ -26,14 +26,6 @@ namespace TSSArt.StateMachine
 			_namespace = customActionProviderAttribute.Namespace;
 		}
 
-		protected void Register(string name, Func<XmlReader, CustomActionBase> actionFactory)
-		{
-			if (name == null) throw new ArgumentNullException(nameof(name));
-			if (actionFactory == null) throw new ArgumentNullException(nameof(actionFactory));
-
-			_actions.Add(name, actionFactory);
-		}
-
 		public bool CanHandle(string ns, string name) => ns == _namespace && _actions.ContainsKey(name);
 
 		public Func<IExecutionContext, CancellationToken, ValueTask> GetAction(string xml)
@@ -44,6 +36,14 @@ namespace TSSArt.StateMachine
 			xmlReader.MoveToContent();
 
 			return _actions[xmlReader.Name](xmlReader).Action;
+		}
+
+		protected void Register(string name, Func<XmlReader, CustomActionBase> actionFactory)
+		{
+			if (name == null) throw new ArgumentNullException(nameof(name));
+			if (actionFactory == null) throw new ArgumentNullException(nameof(actionFactory));
+
+			_actions.Add(name, actionFactory);
 		}
 	}
 }

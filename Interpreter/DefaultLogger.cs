@@ -58,7 +58,8 @@ namespace TSSArt.StateMachine
 
 		public void TraceProcessingEvent(string sessionId, EventType eventType, string name, string sendId, string invokeId, DataModelValue data, string originType, string origin)
 		{
-			FormattableString formattableString = $"Processing {eventType} event [{name}]. SendId: [{sendId}]. InvokeId: [{invokeId}]. Data: [{data:JSON}]. OriginType: [{originType}]. Origin: [{origin}]. SessionId: [{sessionId}].";
+			FormattableString formattableString =
+					$"Processing {eventType} event [{name}]. SendId: [{sendId}]. InvokeId: [{invokeId}]. Data: [{data:JSON}]. OriginType: [{originType}]. Origin: [{origin}]. SessionId: [{sessionId}].";
 
 			Trace.TraceInformation(formattableString.Format, formattableString.GetArguments());
 		}
