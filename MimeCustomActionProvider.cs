@@ -10,11 +10,11 @@ namespace TSSArt.StateMachine.Services
 {
 	public class ParseEmail : CustomActionBase
 	{
-		private readonly string _source;
-		private readonly string _destination;
-		private readonly string _xpath;
 		private readonly string _attr;
+		private readonly string _destination;
 		private readonly string _pattern;
+		private readonly string _source;
+		private readonly string _xpath;
 
 		public ParseEmail(XmlReader xmlReader)
 		{
@@ -84,7 +84,7 @@ namespace TSSArt.StateMachine.Services
 			}
 
 			var obj = new DataModelObject();
-			foreach (string name in regex.GetGroupNames())
+			foreach (var name in regex.GetGroupNames())
 			{
 				obj[name] = new DataModelValue(match.Groups[name].Value);
 			}
