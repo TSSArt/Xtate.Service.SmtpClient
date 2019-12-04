@@ -11,7 +11,7 @@ using System.Text;
 
 namespace TSSArt.StateMachine
 {
-	public class DataModelArray : IDynamicMetaObjectProvider, IList<DataModelValue>, IFormattable
+	public sealed class DataModelArray : IDynamicMetaObjectProvider, IList<DataModelValue>, IFormattable
 	{
 		public delegate void ChangedHandler(ChangedAction action, int index, DataModelValue value);
 
