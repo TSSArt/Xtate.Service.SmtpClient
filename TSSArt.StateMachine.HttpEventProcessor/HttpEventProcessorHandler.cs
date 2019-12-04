@@ -19,8 +19,10 @@ namespace TSSArt.StateMachine
 			_rwLock.Dispose();
 		}
 
-		public IEventProcessor CreateEventProcessor(string path = null)
+		public IEventProcessor CreateEventProcessor(string path = "/")
 		{
+			if (string.IsNullOrEmpty(path)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(path));
+			
 			_rwLock.EnterWriteLock();
 
 			try

@@ -9,14 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Form\google_v2.htm" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Form\google_v2.htm" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="CefSharp.WinForms" Version="75.1.143" />
     <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="2.2.0" />
   </ItemGroup>

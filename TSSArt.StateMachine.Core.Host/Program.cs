@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -22,11 +21,9 @@ namespace TSSArt.StateMachine.Core.Host
 			Application.EnableVisualStyles();
 			Application.SetCompatibleTextRenderingDefault(false);
 
-			var host = args.Length > 0 ? args[0] : "localhost";
-			var port = args.Length > 1 ? int.Parse(args[1], NumberFormatInfo.InvariantInfo) : 5000;
-
-			var handler = new HttpEventProcessorHandler(new Uri("http://" + host + ":" + port + "/"));
-			var httpEventProcessor = handler.CreateEventProcessor();
+			var baseUri = new Uri(args.Length > 0 ? args[0] : "http://localhost:5000/");
+			using var handler = new HttpEventProcessorHandler(baseUri);
+			var httpEventProcessor = handler.CreateEventProcessor(baseUri.AbsolutePath);
 			var options = new IoProcessorOptions
 						  {
 								  EventProcessors = new[] { httpEventProcessor },
@@ -37,24 +34,26 @@ namespace TSSArt.StateMachine.Core.Host
 			await using var ioProcessor = new IoProcessor(options);
 
 			var prefix = Assembly.GetExecutingAssembly().GetName().Name + ".Autorun.";
-			var suffix = ".xml";
+			const string suffix = ".xml";
 			foreach (var name in Assembly.GetExecutingAssembly().GetManifestResourceNames())
 			{
 				if (name.StartsWith(prefix) && name.EndsWith(suffix))
 				{
 					var sessionId = name.Substring(prefix.Length, name.Length - prefix.Length - suffix.Length);
-					ioProcessor.Execute(sessionId, GetStateMachine(name));
+					var task = ioProcessor.Execute(sessionId, GetStateMachine(name));
 				}
 			}
 
 			var webHost = new WebHostBuilder()
 						  .Configure(builder => builder.Run(handler.ProcessRequest))
-						  .UseKestrel(serverOptions => serverOptions.ListenAnyIP(port))
+						  .UseKestrel(serverOptions => serverOptions.ListenAnyIP(baseUri.Port))
 						  .Build();
 
 			await webHost.StartAsync().ConfigureAwait(false);
 
 			Application.Run();
+
+			await webHost.StopAsync().ConfigureAwait(false);
 		}
 
 		private static IStateMachine GetStateMachine(string name)

@@ -26,6 +26,8 @@ namespace TSSArt.StateMachine
 
 		public HttpEventProcessor(Uri baseUri, string path)
 		{
+			if (string.IsNullOrEmpty(path)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(path));
+
 			_baseUri = new Uri(baseUri, path);
 			_path = path;
 		}
@@ -45,7 +47,7 @@ namespace TSSArt.StateMachine
 				targetUri = QueryHelpers.AddQueryString(targetUri, EventNameParameterName, EventName.ToName(@event.NameParts));
 			}
 
-			var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, targetUri)
+			using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, targetUri)
 									 {
 											 Content = GetContent(@event),
 											 Headers = { { "Origin", GetTarget(sessionId).ToString() } }
@@ -131,7 +133,7 @@ namespace TSSArt.StateMachine
 
 			string sessionId;
 
-			if (_path == null)
+			if (_path == "/")
 			{
 				sessionId = Path.GetFileName(request.Path);
 			}

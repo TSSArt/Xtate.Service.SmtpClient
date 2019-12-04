@@ -8,7 +8,7 @@ using System.Text;
 
 namespace TSSArt.StateMachine
 {
-	public class DataModelObject : IDynamicMetaObjectProvider, IFormattable
+	public sealed class DataModelObject : IDynamicMetaObjectProvider, IFormattable
 	{
 		public delegate void ChangedHandler(ChangedAction action, string property, DataModelValue value);
 

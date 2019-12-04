@@ -1,4 +1,6 @@
-using System.Collections.Generic;
+using System;
+using System.Globalization;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -6,29 +8,13 @@ namespace TSSArt.StateMachine.Services
 {
 	public class CefSharpWebBrowserService : WebBrowserService
 	{
-		private readonly Dictionary<string, string> _vars = new Dictionary<string, string>();
-		private          string                     _source;
-		private          string                     _type;
+		private string _url;
+		private string _content;
 
 		protected override async ValueTask<DataModelValue> Execute()
 		{
-			var parameters = Parameters.AsObject();
-			_source = parameters["source"].AsString();
-			_type = parameters["type"].AsString();
-
-			var varsValue = parameters["vars"];
-			if (varsValue.Type == DataModelValueType.Object)
-			{
-				var vars = varsValue.AsObject();
-				foreach (var name in vars.Properties)
-				{
-					var val = vars[name];
-					if (val.Type == DataModelValueType.String)
-					{
-						_vars[name] = val.AsString();
-					}
-				}
-			}
+			_url = Convert.ToString(Source, CultureInfo.InvariantCulture);
+			_content = Convert.ToString(Content.ToObject(), CultureInfo.InvariantCulture);
 
 			await Task.Factory.StartNew(Show, StopToken, TaskCreationOptions.LongRunning, TaskScheduler.Current).ConfigureAwait(false);
 
@@ -37,7 +23,7 @@ namespace TSSArt.StateMachine.Services
 
 		private async Task Show()
 		{
-			using var form = new BrowserForm(_source, _type, _vars);
+			using var form = new BrowserForm(_url, _content);
 
 			StopToken.Register(() => form.Close(DialogResult.Abort, DataModelValue.Undefined()));
 
@@ -45,7 +31,9 @@ namespace TSSArt.StateMachine.Services
 
 			Application.Run(form);
 
-			var @event = form.DialogResult == DialogResult.OK ? new Event("browser.submit") { Data = form.Result } : new Event("browser.cancel");
+			var @event = form.DialogResult == DialogResult.OK
+					? new Event("browser.submit") { Data = form.Result }
+					: new Event("browser.cancel");
 
 			await ServiceCommunication.SendToCreator(@event).ConfigureAwait(false);
 		}
