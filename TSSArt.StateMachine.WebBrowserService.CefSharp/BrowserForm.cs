@@ -34,6 +34,8 @@ namespace TSSArt.StateMachine.Services
 						 });
 		}
 
+		public DataModelValue Result { get; private set; }
+
 		public void Close(DialogResult dialogResult, DataModelValue result)
 		{
 			Result = result;
@@ -49,18 +51,13 @@ namespace TSSArt.StateMachine.Services
 			}
 		}
 
-		public DataModelValue Result { get; private set; }
-
 		private class CustomRequestHandler : RequestHandler
 		{
 			private static readonly IResourceRequestHandler EmptyHtmlHandler = new InMemoryResourceRequestHandler(Encoding.ASCII.GetBytes("<html/>"), mimeType: null);
 
 			private readonly BrowserForm _parent;
 
-			public CustomRequestHandler(BrowserForm parent)
-			{
-				_parent = parent;
-			}
+			public CustomRequestHandler(BrowserForm parent) => _parent = parent;
 
 			protected override IResourceRequestHandler GetResourceRequestHandler(IWebBrowser chromiumWebBrowser, IBrowser browser, IFrame frame, IRequest request,
 																				 bool isNavigation, bool isDownload, string requestInitiator, ref bool disableDefaultHandling)
@@ -81,7 +78,7 @@ namespace TSSArt.StateMachine.Services
 						var reader = new StreamReader(stream, Encoding.ASCII);
 						var template = reader.ReadToEnd();
 
-						var dataString = Regex.Replace(template, @"\<\#(\w+)\#\>", match => _parent._vars[match.Groups[1].Value]);
+						var dataString = Regex.Replace(template, pattern: @"\<\#(\w+)\#\>", match => _parent._vars[match.Groups[1].Value]);
 
 						return new InMemoryResourceRequestHandler(Encoding.ASCII.GetBytes(dataString), mimeType: null);
 					}

@@ -7,7 +7,7 @@ namespace TSSArt.StateMachine.EcmaScript
 {
 	public class EcmaScriptDataModelHandler : DataModelHandlerBase
 	{
-		private const string DataModelType = "http://tssart.com/scxml/datamodel/#ECMAScript";
+		private const string DataModelType      = "http://tssart.com/scxml/datamodel/#ECMAScript";
 		private const string DataModelTypeAlias = "ecmascript";
 
 		public static readonly IDataModelHandlerFactory Factory = new DataModelHandlerFactory();

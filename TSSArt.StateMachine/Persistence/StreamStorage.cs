@@ -87,7 +87,7 @@ namespace TSSArt.StateMachine
 			if (_disposeStream)
 			{
 				_stream.Dispose();
-				
+
 				_disposeStream = false;
 			}
 		}

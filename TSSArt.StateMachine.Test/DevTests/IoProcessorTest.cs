@@ -115,7 +115,6 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 		}
 
 		[TestMethod]
-
 		[Ignore("Makes HTTP request. Not a unit test.")]
 		public async Task HttpInvokeHttpSendEmailTest()
 		{

@@ -5,9 +5,9 @@
 
   <state id="dialog">
     <datamodel>
-      <data id="origin"/>
-      <data id="origintype"/>
-      <data id="result"/>
+      <data id="origin" />
+      <data id="origintype" />
+      <data id="result" />
     </datamodel>
 
     <transition event="show" target="dialog" />
@@ -17,12 +17,13 @@
       <assign location="origintype" expr="_event.origintype" />
     </onentry>
 
-    <transition event="cancel" condition="origin == _event.origin &amp;&amp; origintype == _event.origintype" target="idle" />
-    
+    <transition event="cancel" condition="origin == _event.origin &amp;&amp; origintype == _event.origintype"
+                target="idle" />
+
     <invoke type="browser">
-      <param name="source" expr="_event.data.source"/>
-      <param name="type" expr="_event.data.type"/>
-      <param name="vars" expr="_event.data"/>
+      <param name="source" expr="_event.data.source" />
+      <param name="type" expr="_event.data.type" />
+      <param name="vars" expr="_event.data" />
       <finalize>
         <assign location="result" expr="_event.data" />
       </finalize>

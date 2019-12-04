@@ -49,7 +49,7 @@ namespace TSSArt.StateMachine.Test
 			_customActionProvider.Setup(x => x.GetAction(It.IsAny<string>()))
 								 .Returns((context, token) =>
 										  {
-											  context.Log(label: "Custom", arguments: default, token: default);
+											  context.Log(label: "Custom");
 											  return default;
 										  });
 			_customActionProvider.Setup(x => x.CanHandle(It.IsAny<string>(), It.IsAny<string>())).Returns(true);

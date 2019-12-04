@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -7,10 +6,9 @@ namespace TSSArt.StateMachine.Services
 {
 	public class CefSharpWebBrowserService : WebBrowserService
 	{
-		private string _source;
-		private string _type;
-
 		private readonly Dictionary<string, string> _vars = new Dictionary<string, string>();
+		private          string                     _source;
+		private          string                     _type;
 
 		protected override async ValueTask<DataModelValue> Execute()
 		{

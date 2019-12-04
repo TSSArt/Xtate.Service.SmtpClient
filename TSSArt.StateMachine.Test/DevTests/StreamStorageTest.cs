@@ -62,7 +62,7 @@ namespace TSSArt.StateMachine.Test
 				throw new ApplicationException("Zero len");
 			}
 
-			if (--FailWriteCountdown == 0)
+			if (-- FailWriteCountdown == 0)
 			{
 				throw new ApplicationException();
 			}

@@ -227,7 +227,7 @@ namespace TSSArt.StateMachine.Services
 			}
 
 			var obj = new DataModelObject();
-			foreach (string name in regex.GetGroupNames())
+			foreach (var name in regex.GetGroupNames())
 			{
 				obj[name] = new DataModelValue(match.Groups[name].Value);
 			}

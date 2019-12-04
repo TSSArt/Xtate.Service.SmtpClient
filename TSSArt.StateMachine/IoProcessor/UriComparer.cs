@@ -11,9 +11,6 @@ namespace TSSArt.StateMachine
 
 		public int GetHashCode(Uri uri) => (uri.GetHashCode() * 397) ^ GetSafeFragment(uri).GetHashCode();
 
-		private static string GetSafeFragment(Uri uri)
-		{
-			return uri != null && uri.IsAbsoluteUri ? uri.Fragment : string.Empty;
-		}
+		private static string GetSafeFragment(Uri uri) => uri != null && uri.IsAbsoluteUri ? uri.Fragment : string.Empty;
 	}
 }

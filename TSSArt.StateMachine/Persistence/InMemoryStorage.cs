@@ -76,6 +76,19 @@ namespace TSSArt.StateMachine
 			AddToReadModel(keyMemory, valueMemory);
 		}
 
+		public ReadOnlyMemory<byte> Get(ReadOnlySpan<byte> key)
+		{
+			if (_readModel == null)
+			{
+				throw new InvalidOperationException("Storage not available for read operations");
+			}
+
+			var buffer = AllocateBuffer(key.Length, shared: true);
+			key.CopyTo(buffer.Span);
+
+			return ReadModelTryGetValue(new Entry(buffer), out var result) ? result.Value : ReadOnlyMemory<byte>.Empty;
+		}
+
 		private bool ReadModelTryGetValue(Entry equalEntry, out Entry actualEntry)
 		{
 #if NETSTANDARD2_1
@@ -93,19 +106,6 @@ namespace TSSArt.StateMachine
 			actualEntry = default;
 			return false;
 #endif
-		}
-
-		public ReadOnlyMemory<byte> Get(ReadOnlySpan<byte> key)
-		{
-			if (_readModel == null)
-			{
-				throw new InvalidOperationException("Storage not available for read operations");
-			}
-
-			var buffer = AllocateBuffer(key.Length, shared: true);
-			key.CopyTo(buffer.Span);
-
-			return ReadModelTryGetValue(new Entry(buffer), out var result) ? result.Value : ReadOnlyMemory<byte>.Empty;
 		}
 
 		protected virtual void Dispose(bool dispose)
