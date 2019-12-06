@@ -10,12 +10,15 @@ namespace TSSArt.StateMachine
 	{
 		private static readonly Uri ParentTarget = new Uri(uriString: "#_parent", UriKind.Relative);
 
-		private readonly IIoProcessor                                                        _ioProcessor;
-		private readonly IoProcessorOptions                                                  _options;
-		private readonly ConcurrentDictionary<string, IService>                              _parentServiceBySessionId = new ConcurrentDictionary<string, IService>();
-		private readonly ConcurrentDictionary<(string SessionId, string InvokeId), IService> _serviceByInvokeId        = new ConcurrentDictionary<(string SessionId, string InvokeId), IService>();
-		private readonly ConcurrentDictionary<Uri, IService>                                 _serviceByTarget          = new ConcurrentDictionary<Uri, IService>(UriComparer.Instance);
-		private readonly ConcurrentDictionary<string, StateMachineController>                _stateMachinesBySessionId = new ConcurrentDictionary<string, StateMachineController>();
+		private readonly IIoProcessor                           _ioProcessor;
+		private readonly IoProcessorOptions                     _options;
+		private readonly ConcurrentDictionary<string, IService> _parentServiceBySessionId = new ConcurrentDictionary<string, IService>();
+
+		private readonly ConcurrentDictionary<(string SessionId, string InvokeId), (string InvokeUniqueId, IService Service)> _serviceByInvokeId =
+				new ConcurrentDictionary<(string SessionId, string InvokeId), (string InvokeUniqueId, IService Service)>();
+
+		private readonly ConcurrentDictionary<Uri, IService>                  _serviceByTarget          = new ConcurrentDictionary<Uri, IService>(UriComparer.Instance);
+		private readonly ConcurrentDictionary<string, StateMachineController> _stateMachinesBySessionId = new ConcurrentDictionary<string, StateMachineController>();
 
 		public IoProcessorContext(IIoProcessor ioProcessor, in IoProcessorOptions options)
 		{
@@ -105,9 +108,9 @@ namespace TSSArt.StateMachine
 			ValidateTrue(_stateMachinesBySessionId.TryGetValue(sessionId, out controller));
 		}
 
-		public virtual ValueTask AddService(string sessionId, string invokeId, IService service)
+		public virtual ValueTask AddService(string sessionId, string invokeId, string invokeUniqueId, IService service)
 		{
-			ValidateTrue(_serviceByInvokeId.TryAdd((sessionId, invokeId), service));
+			ValidateTrue(_serviceByInvokeId.TryAdd((sessionId, invokeId), (invokeUniqueId, service)));
 
 			if (service is StateMachineController stateMachineController)
 			{
@@ -121,44 +124,44 @@ namespace TSSArt.StateMachine
 
 		public virtual ValueTask<IService> TryCompleteService(string sessionId, string invokeId)
 		{
-			if (!_serviceByInvokeId.TryGetValue((sessionId, invokeId), out var service))
+			if (!_serviceByInvokeId.TryGetValue((sessionId, invokeId), out var pair))
 			{
 				return new ValueTask<IService>((IService) null);
 			}
 
-			if (!_serviceByInvokeId.TryUpdate((sessionId, invokeId), newValue: null, service))
+			if (!_serviceByInvokeId.TryUpdate((sessionId, invokeId), (pair.InvokeUniqueId, null), pair))
 			{
 				return new ValueTask<IService>((IService) null);
 			}
 
-			if (service is StateMachineController stateMachineController)
+			if (pair.Service is StateMachineController stateMachineController)
 			{
-				ValidateTrue(_serviceByTarget.TryRemove(new Uri("#_scxml_" + stateMachineController.SessionId, UriKind.Relative), out _));
+				_serviceByTarget.TryRemove(new Uri("#_scxml_" + stateMachineController.SessionId, UriKind.Relative), out _);
 			}
 
-			ValidateTrue(_serviceByTarget.TryRemove(new Uri("#_" + invokeId, UriKind.Relative), out _));
+			_serviceByTarget.TryRemove(new Uri("#_" + invokeId, UriKind.Relative), out _);
 
-			return new ValueTask<IService>(service);
+			return new ValueTask<IService>(pair.Service);
 		}
 
 		public virtual ValueTask<IService> TryRemoveService(string sessionId, string invokeId)
 		{
-			if (!_serviceByInvokeId.TryRemove((sessionId, invokeId), out var service) || service == null)
+			if (!_serviceByInvokeId.TryRemove((sessionId, invokeId), out var pair) || pair.Service == null)
 			{
 				return new ValueTask<IService>((IService) null);
 			}
 
-			if (service is StateMachineController stateMachineController)
+			if (pair.Service is StateMachineController stateMachineController)
 			{
-				ValidateTrue(_serviceByTarget.TryRemove(new Uri("#_scxml_" + stateMachineController.SessionId, UriKind.Relative), out _));
+				_serviceByTarget.TryRemove(new Uri("#_scxml_" + stateMachineController.SessionId, UriKind.Relative), out _);
 			}
 
-			ValidateTrue(_serviceByTarget.TryRemove(new Uri("#_" + invokeId, UriKind.Relative), out _));
+			_serviceByTarget.TryRemove(new Uri("#_" + invokeId, UriKind.Relative), out _);
 
-			return new ValueTask<IService>(service);
+			return new ValueTask<IService>(pair.Service);
 		}
 
-		public bool TryGetService(string sessionId, string invokeId, out IService service) => _serviceByInvokeId.TryGetValue((sessionId, invokeId), out service);
+		public bool TryGetService(string sessionId, string invokeId, out (string InvokeUniqueId, IService Service) pair) => _serviceByInvokeId.TryGetValue((sessionId, invokeId), out pair);
 
 		public IService GetService(string sessionId, Uri target)
 		{

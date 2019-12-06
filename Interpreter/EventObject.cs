@@ -5,20 +5,22 @@ namespace TSSArt.StateMachine
 {
 	public class EventObject : IEvent, IStoreSupport
 	{
-		public EventObject(string name, string invokeId = null) : this(EventType.External, EventName.ToParts(name), data: default, sendId: null, invokeId) { }
+		public EventObject(string name, string invokeId = null, string invokeUniqueId = null) :
+				this(EventType.External, EventName.ToParts(name), data: default, sendId: null, invokeId, invokeUniqueId) { }
 
-		public EventObject(EventType type, IOutgoingEvent @event, Uri origin = null, Uri originType = null, string invokeId = null)
-				: this(type, @event.SendId, @event.NameParts, invokeId, origin, originType, @event.Data) { }
+		public EventObject(EventType type, IOutgoingEvent @event, Uri origin = null, Uri originType = null, string invokeId = null, string invokeUniqueId = null)
+				: this(type, @event.SendId, @event.NameParts, invokeId, invokeUniqueId, origin, originType, @event.Data) { }
 
-		public EventObject(EventType type, IReadOnlyList<IIdentifier> nameParts, DataModelValue data = default, string sendId = null, string invokeId = null)
-				: this(type, sendId, nameParts, invokeId, origin: null, originType: null, data) { }
+		public EventObject(EventType type, IReadOnlyList<IIdentifier> nameParts, DataModelValue data = default, string sendId = null, string invokeId = null, string invokeUniqueId = null)
+				: this(type, sendId, nameParts, invokeId, invokeUniqueId, origin: null, originType: null, data) { }
 
-		public EventObject(EventType type, string sendId, IReadOnlyList<IIdentifier> nameParts, string invokeId, Uri origin, Uri originType, DataModelValue data)
+		public EventObject(EventType type, string sendId, IReadOnlyList<IIdentifier> nameParts, string invokeId, string invokeUniqueId, Uri origin, Uri originType, DataModelValue data)
 		{
 			Type = type;
 			SendId = sendId;
 			NameParts = nameParts;
 			InvokeId = invokeId;
+			InvokeUniqueId = invokeUniqueId;
 			Origin = origin;
 			OriginType = originType;
 			Data = data;
@@ -49,6 +51,8 @@ namespace TSSArt.StateMachine
 		public DataModelValue Data { get; }
 
 		public string InvokeId { get; }
+
+		public string InvokeUniqueId { get; }
 
 		public IReadOnlyList<IIdentifier> NameParts { get; }
 

@@ -546,7 +546,7 @@ namespace TSSArt.StateMachine
 					{
 						foreach (var invoke in state.Invoke)
 						{
-							if (invoke.InvokeId == externalEvent.InvokeId)
+							if (invoke.InvokeUniqueId == externalEvent.InvokeUniqueId)
 							{
 								await ApplyFinalize(invoke).ConfigureAwait(false);
 							}
@@ -607,7 +607,7 @@ namespace TSSArt.StateMachine
 					return @event;
 				}
 
-				if (_externalCommunication.IsInvokeActive(@event.InvokeId))
+				if (_externalCommunication.IsInvokeActive(@event.InvokeId, @event.InvokeUniqueId))
 				{
 					return @event;
 				}

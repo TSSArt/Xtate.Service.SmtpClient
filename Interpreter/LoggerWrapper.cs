@@ -111,11 +111,21 @@ namespace TSSArt.StateMachine
 
 		private string ToString(IEnumerable<IIdentifier> list)
 		{
+			if (list == null)
+			{
+				return null;
+			}
+
 			return string.Join(separator: " ", list.Select(id => id.Base<IIdentifier>().ToString()));
 		}
 
 		private string ToString(IEnumerable<IEventDescriptor> list)
 		{
+			if (list == null)
+			{
+				return null;
+			}
+
 			return string.Join(separator: " ", list.Select(id => id.Base<IEventDescriptor>().ToString()));
 		}
 	}

@@ -25,6 +25,8 @@ namespace TSSArt.StateMachine
 
 		public string InvokeId { get; private set; }
 
+		public string InvokeUniqueId { get; private set; }
+
 		public FinalizeNode Finalize { get; }
 
 		object IAncestorProvider.Ancestor => _invoke.Ancestor;
@@ -66,13 +68,14 @@ namespace TSSArt.StateMachine
 
 		public async ValueTask Start(IExecutionContext executionContext, CancellationToken token)
 		{
-			InvokeId = await _startInvokeEvaluator.Start(_stateId, executionContext, token).ConfigureAwait(false);
+			(InvokeId, InvokeUniqueId) = await _startInvokeEvaluator.Start(_stateId, executionContext, token).ConfigureAwait(false);
 		}
 
 		public async ValueTask Cancel(IExecutionContext executionContext, CancellationToken token)
 		{
 			var tmpInvokeId = InvokeId;
 			InvokeId = null;
+			InvokeUniqueId = null;
 
 			await _cancelInvokeEvaluator.Cancel(tmpInvokeId, executionContext, token).ConfigureAwait(false);
 		}

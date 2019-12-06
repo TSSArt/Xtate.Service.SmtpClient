@@ -40,8 +40,8 @@ namespace TSSArt.StateMachine
 
 		public ValueTask Log(string label, DataModelValue arguments, CancellationToken token) => _logger.Log(_stateMachineName, label, arguments, token);
 
-		public ValueTask StartInvoke(string invokeId, Uri type, Uri source, DataModelValue content, DataModelValue parameters, CancellationToken token) =>
-				_externalCommunication.StartInvoke(invokeId, type, source, content, parameters, token);
+		public ValueTask StartInvoke(string invokeId, string invokeUniqueId, Uri type, Uri source, DataModelValue content, DataModelValue parameters, CancellationToken token) =>
+				_externalCommunication.StartInvoke(invokeId, invokeUniqueId, type, source, content, parameters, token);
 
 		public ValueTask CancelInvoke(string invokeId, CancellationToken token) => _externalCommunication.CancelInvoke(invokeId, token);
 

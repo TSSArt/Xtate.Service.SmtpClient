@@ -1,21 +1,42 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
 	internal class ServiceCommunication : IServiceCommunication
 	{
-		private readonly string       _invokeId;
-		private readonly IIoProcessor _ioProcessor;
-		private readonly string       _sessionId;
+		private readonly StateMachineController _creator;
+		private readonly string                 _invokeId;
+		private readonly string                 _invokeUniqueId;
+		private readonly Uri                    _originType;
+		private          Uri                    _origin;
 
-		public ServiceCommunication(IIoProcessor ioProcessor, string sessionId, string invokeId)
+		public ServiceCommunication(StateMachineController creator, Uri originType, string invokeId, string invokeUniqueId)
 		{
-			_ioProcessor = ioProcessor;
-			_sessionId = sessionId;
+			_creator = creator;
+			_originType = originType;
 			_invokeId = invokeId;
+			_invokeUniqueId = invokeUniqueId;
 		}
 
-		public ValueTask SendToCreator(IOutgoingEvent outgoingEvent, CancellationToken token) => _ioProcessor.DispatchServiceEvent(_sessionId, _invokeId, outgoingEvent, token);
+		public ValueTask SendToCreator(IOutgoingEvent @event, CancellationToken token)
+		{
+			if (@event.Type != null || @event.SendId != null || @event.DelayMs != 0)
+			{
+				throw new InvalidOperationException("Type, SendId, DelayMs can't be specified for this event");
+			}
+
+			if (@event.Target != Event.ParentTarget && @event.Target != null)
+			{
+				throw new InvalidOperationException("Target should be equal to '_parent' or null");
+			}
+
+			_origin ??= new Uri("#_" + _invokeId);
+
+			var eventObject = new EventObject(EventType.External, @event, _origin, _originType, _invokeId, _invokeUniqueId);
+
+			return _creator.Send(eventObject, token);
+		}
 	}
 }

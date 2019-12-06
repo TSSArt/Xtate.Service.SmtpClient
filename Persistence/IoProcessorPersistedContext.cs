@@ -59,18 +59,18 @@ namespace TSSArt.StateMachine
 			return _storage.DisposeAsync();
 		}
 
-		public override async ValueTask AddService(string sessionId, string invokeId, IService service)
+		public override async ValueTask AddService(string sessionId, string invokeId, string invokeUniqueId, IService service)
 		{
 			await _lockInvokedServices.WaitAsync(_stopToken).ConfigureAwait(false);
 			try
 			{
-				await base.AddService(sessionId, invokeId, service).ConfigureAwait(false);
+				await base.AddService(sessionId, invokeId, invokeUniqueId, service).ConfigureAwait(false);
 
 				var bucket = new Bucket(_storage).Nested(InvokedServicesKey);
 				var recordId = _invokedServiceRecordId ++;
 
 				var invokedSessionId = service is StateMachineController stateMachineController ? stateMachineController.SessionId : null;
-				var invokedService = new InvokedServiceMeta(sessionId, invokeId, invokedSessionId) { RecordId = recordId };
+				var invokedService = new InvokedServiceMeta(sessionId, invokeId, invokeUniqueId, invokedSessionId) { RecordId = recordId };
 				_invokedServices.Add((sessionId, invokeId), invokedService);
 
 				bucket.Add(Bucket.RootKey, _invokedServiceRecordId);
@@ -305,7 +305,7 @@ namespace TSSArt.StateMachine
 						if (invokedService.SessionId != null)
 						{
 							var stateMachine = _stateMachines[invokedService.SessionId];
-							await base.AddService(invokedService.ParentSessionId, invokedService.InvokeId, stateMachine.Controller).ConfigureAwait(false);
+							await base.AddService(invokedService.ParentSessionId, invokedService.InvokeId, invokedService.InvokeUniqueId, stateMachine.Controller).ConfigureAwait(false);
 
 							_invokedServices.Add((invokedService.ParentSessionId, invokedService.InvokeId), invokedService);
 						}
@@ -313,7 +313,8 @@ namespace TSSArt.StateMachine
 						{
 							var nameParts = EventName.GetDoneInvokeNameParts((Identifier) invokedService.InvokeId);
 							var controller = invokingStateMachine.Controller;
-							await controller.Send(new EventObject(EventType.External, nameParts, data: default, sendId: null, invokedService.InvokeId), token: default).ConfigureAwait(false);
+							await controller.Send(new EventObject(EventType.External, nameParts, data: default, sendId: null, invokedService.InvokeId, invokedService.InvokeUniqueId), token: default)
+											.ConfigureAwait(false);
 						}
 					}
 				}
@@ -379,10 +380,11 @@ namespace TSSArt.StateMachine
 
 		private class InvokedServiceMeta : IStoreSupport
 		{
-			public InvokedServiceMeta(string parentSessionId, string invokeId, string sessionId)
+			public InvokedServiceMeta(string parentSessionId, string invokeId, string invokeUniqueId, string sessionId)
 			{
 				ParentSessionId = parentSessionId;
 				InvokeId = invokeId;
+				InvokeUniqueId = invokeUniqueId;
 				SessionId = sessionId;
 			}
 
@@ -390,11 +392,13 @@ namespace TSSArt.StateMachine
 			{
 				ParentSessionId = bucket.GetString(Key.ParentSessionId);
 				InvokeId = bucket.GetString(Key.InvokeId);
+				InvokeUniqueId = bucket.GetString(Key.InvokeUniqueId);
 				SessionId = bucket.GetString(Key.SessionId);
 			}
 
 			public string ParentSessionId { get; }
 			public string InvokeId        { get; }
+			public string InvokeUniqueId  { get; }
 			public string SessionId       { get; }
 			public int    RecordId        { get; set; }
 
@@ -403,6 +407,7 @@ namespace TSSArt.StateMachine
 				bucket.Add(Key.TypeInfo, TypeInfo.InvokedService);
 				bucket.Add(Key.ParentSessionId, ParentSessionId);
 				bucket.Add(Key.InvokeId, InvokeId);
+				bucket.Add(Key.InvokeUniqueId, InvokeUniqueId);
 				bucket.Add(Key.SessionId, SessionId);
 			}
 		}

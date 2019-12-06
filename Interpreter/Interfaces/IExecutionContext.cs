@@ -18,7 +18,8 @@ namespace TSSArt.StateMachine
 
 		ValueTask Send(IOutgoingEvent @event, CancellationToken token = default);
 
-		ValueTask StartInvoke(string invokeId, Uri type, Uri source = null, DataModelValue content = default, DataModelValue parameters = default, CancellationToken token = default);
+		ValueTask StartInvoke(string invokeId, string invokeUniqueId, Uri type, Uri source = null, DataModelValue content = default, DataModelValue parameters = default,
+							  CancellationToken token = default);
 
 		ValueTask CancelInvoke(string invokeId, CancellationToken token = default);
 	}

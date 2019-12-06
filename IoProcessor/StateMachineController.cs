@@ -80,12 +80,12 @@ namespace TSSArt.StateMachine
 			CleanScheduledEvents();
 		}
 
-		ValueTask IExternalCommunication.StartInvoke(string invokeId, Uri type, Uri source, DataModelValue content, DataModelValue parameters, CancellationToken token) =>
-				_ioProcessor.StartInvoke(SessionId, invokeId, type, source, content, parameters, token);
+		ValueTask IExternalCommunication.StartInvoke(string invokeId, string invokeUniqueId, Uri type, Uri source, DataModelValue content, DataModelValue parameters, CancellationToken token) =>
+				_ioProcessor.StartInvoke(SessionId, invokeId, invokeUniqueId, type, source, content, parameters, token);
 
 		ValueTask IExternalCommunication.CancelInvoke(string invokeId, CancellationToken token) => _ioProcessor.CancelInvoke(SessionId, invokeId, token);
 
-		bool IExternalCommunication.IsInvokeActive(string invokeId) => _ioProcessor.IsInvokeActive(SessionId, invokeId);
+		bool IExternalCommunication.IsInvokeActive(string invokeId, string invokeUniqueId) => _ioProcessor.IsInvokeActive(SessionId, invokeId, invokeUniqueId);
 
 		ValueTask IExternalCommunication.ForwardEvent(IEvent @event, string invokeId, CancellationToken token) => _ioProcessor.ForwardEvent(SessionId, @event, invokeId, token);
 
