@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Primitives;
 
 namespace TSSArt.StateMachine
 {
@@ -42,31 +43,34 @@ namespace TSSArt.StateMachine
 
 			var targetUri = @event.Target.ToString();
 
-			if (@event.NameParts != null)
+			var content = GetContent(@event, out var eventNameInContent);
+			if (@event.NameParts != null && !eventNameInContent)
 			{
 				targetUri = QueryHelpers.AddQueryString(targetUri, EventNameParameterName, EventName.ToName(@event.NameParts));
 			}
 
 			using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, targetUri)
-									 {
-											 Content = GetContent(@event),
-											 Headers = { { "Origin", GetTarget(sessionId).ToString() } }
-									 };
+										   {
+												   Content = content,
+												   Headers = { { "Origin", GetTarget(sessionId).ToString() } }
+										   };
 
 			var httpResponseMessage = await client.SendAsync(httpRequestMessage, token).ConfigureAwait(false);
 			httpResponseMessage.EnsureSuccessStatusCode();
 		}
 
-		private static HttpContent GetContent(IOutgoingEvent @event)
+		private static HttpContent GetContent(IOutgoingEvent @event, out bool eventNameInContent)
 		{
 			var data = @event.Data;
 			if (data.Type == DataModelValueType.Undefined || data.Type == DataModelValueType.Null)
 			{
-				return null;
+				eventNameInContent = @event.NameParts != null;
+				return eventNameInContent ? new FormUrlEncodedContent(GetParameters(@event.NameParts, dataModelObject: null)) : null;
 			}
 
 			if (data.Type == DataModelValueType.String)
 			{
+				eventNameInContent = false;
 				return new StringContent(data.AsString(), Encoding.UTF8, MediaTypeTextPlain);
 			}
 
@@ -74,23 +78,26 @@ namespace TSSArt.StateMachine
 			{
 				var dataModelObject = data.AsObject();
 
-				if (IsAllValuesAreSimple(dataModelObject))
+				if (IsStringDictionary(dataModelObject))
 				{
-					return new FormUrlEncodedContent(GetParameters(dataModelObject));
+					eventNameInContent = true;
+					return new FormUrlEncodedContent(GetParameters(@event.NameParts, dataModelObject));
 				}
 
+				eventNameInContent = false;
 				return new StringContent(dataModelObject.ToString(format: "JSON", CultureInfo.InvariantCulture), Encoding.UTF8, MediaTypeApplicationJson);
 			}
 
 			if (data.Type == DataModelValueType.Array)
 			{
+				eventNameInContent = false;
 				return new StringContent(data.AsArray().ToString(format: "JSON", CultureInfo.InvariantCulture), Encoding.UTF8, MediaTypeApplicationJson);
 			}
 
-			throw new NotSupportedException();
+			throw new NotSupportedException("Data format not supported");
 		}
 
-		private static bool IsAllValuesAreSimple(DataModelObject dataModelObject)
+		private static bool IsStringDictionary(DataModelObject dataModelObject)
 		{
 			foreach (var name in dataModelObject.Properties)
 			{
@@ -98,14 +105,14 @@ namespace TSSArt.StateMachine
 				{
 					case DataModelValueType.Object:
 					case DataModelValueType.Array:
+					case DataModelValueType.Number:
+					case DataModelValueType.DateTime:
+					case DataModelValueType.Boolean:
 						return false;
 
 					case DataModelValueType.Undefined:
 					case DataModelValueType.Null:
 					case DataModelValueType.String:
-					case DataModelValueType.Number:
-					case DataModelValueType.DateTime:
-					case DataModelValueType.Boolean:
 						break;
 
 					default: throw new ArgumentOutOfRangeException();
@@ -115,13 +122,18 @@ namespace TSSArt.StateMachine
 			return true;
 		}
 
-		private static IEnumerable<KeyValuePair<string, string>> GetParameters(DataModelObject dataModelObject)
+		private static IEnumerable<KeyValuePair<string, string>> GetParameters(IReadOnlyList<IIdentifier> eventNameParts, DataModelObject dataModelObject)
 		{
-			foreach (var name in dataModelObject.Properties)
+			if (eventNameParts != null)
 			{
-				var value = dataModelObject[name].ToObject();
-				if (value != null)
+				yield return new KeyValuePair<string, string>(EventNameParameterName, EventName.ToName(eventNameParts));
+			}
+
+			if (dataModelObject != null)
+			{
+				foreach (var name in dataModelObject.Properties)
 				{
+					var value = dataModelObject[name].ToObject();
 					yield return new KeyValuePair<string, string>(name, Convert.ToString(value, CultureInfo.InvariantCulture));
 				}
 			}
@@ -154,13 +166,6 @@ namespace TSSArt.StateMachine
 
 		private async ValueTask<IEvent> CreateEvent(HttpRequest request)
 		{
-			var eventName = request.Query[EventNameParameterName].ToString();
-
-			if (string.IsNullOrEmpty(eventName))
-			{
-				eventName = request.Method;
-			}
-
 			var contentType = request.ContentType != null ? new ContentType(request.ContentType) : new ContentType();
 			var encoding = contentType.CharSet != null ? Encoding.GetEncoding(contentType.CharSet) : Encoding.ASCII;
 
@@ -172,11 +177,20 @@ namespace TSSArt.StateMachine
 
 			var origin = new Uri(request.Headers["Origin"].ToString());
 
-			return new EventObject(EventType.External, sendId: null, EventName.ToParts(eventName), invokeId: null, origin, EventProcessorId, CreateData(contentType.MediaType, body));
+			var data = CreateData(contentType.MediaType, body, out var eventNameInContent);
+
+			var eventNameInQueryString = request.Query[EventNameParameterName];
+			var eventName = !StringValues.IsNullOrEmpty(eventNameInQueryString) ? eventNameInQueryString[0] : null;
+
+			eventName ??= eventNameInContent ?? request.Method;
+
+			return new EventObject(EventType.External, sendId: null, EventName.ToParts(eventName), invokeId: null, invokeUniqueId: null, origin, EventProcessorId, data);
 		}
 
-		private DataModelValue CreateData(string mediaType, string body)
+		private DataModelValue CreateData(string mediaType, string body, out string eventName)
 		{
+			eventName = null;
+
 			if (mediaType == MediaTypeTextPlain)
 			{
 				return new DataModelValue(body);
@@ -187,9 +201,17 @@ namespace TSSArt.StateMachine
 				var pairs = QueryHelpers.ParseQuery(body);
 				var dataModelObject = new DataModelObject();
 
+
 				foreach (var pair in pairs)
 				{
-					dataModelObject[pair.Key] = new DataModelValue(pair.Value.ToString());
+					if (pair.Key == EventNameParameterName)
+					{
+						eventName = pair.Value[0];
+					}
+					else
+					{
+						dataModelObject[pair.Key] = new DataModelValue(pair.Value.ToString());
+					}
 				}
 
 				return new DataModelValue(dataModelObject);
@@ -198,6 +220,7 @@ namespace TSSArt.StateMachine
 			if (mediaType == MediaTypeApplicationJson)
 			{
 				var jsonDocument = JsonDocument.Parse(body);
+
 				return Map(jsonDocument.RootElement);
 			}
 

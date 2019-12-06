@@ -43,10 +43,10 @@ namespace TSSArt.StateMachine.Services
 	public class CustomRequestHandler : RequestHandler
 	{
 		private static readonly IResourceRequestHandler EmptyHtmlHandler = new InMemoryResourceRequestHandler(Encoding.ASCII.GetBytes("<html/>"), mimeType: null);
+		private readonly        string                  _content;
 
 		private readonly BrowserForm _form;
 		private readonly string      _url;
-		private readonly string      _content;
 
 		public CustomRequestHandler(BrowserForm form, string url, string content)
 		{

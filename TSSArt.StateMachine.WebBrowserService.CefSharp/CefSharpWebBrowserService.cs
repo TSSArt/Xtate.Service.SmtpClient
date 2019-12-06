@@ -1,6 +1,5 @@
 using System;
 using System.Globalization;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -8,34 +7,34 @@ namespace TSSArt.StateMachine.Services
 {
 	public class CefSharpWebBrowserService : WebBrowserService
 	{
-		private string _url;
 		private string _content;
+		private string _url;
 
-		protected override async ValueTask<DataModelValue> Execute()
+		protected override ValueTask<DataModelValue> Execute()
 		{
 			_url = Convert.ToString(Source, CultureInfo.InvariantCulture);
 			_content = Convert.ToString(Content.ToObject(), CultureInfo.InvariantCulture);
 
-			await Task.Factory.StartNew(Show, StopToken, TaskCreationOptions.LongRunning, TaskScheduler.Current).ConfigureAwait(false);
+			var task = Task.Factory.StartNew(Show, StopToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
 
-			return DataModelValue.Undefined();
+			return new ValueTask<DataModelValue>(task);
 		}
 
-		private async Task Show()
+		private DataModelValue Show()
 		{
 			using var form = new BrowserForm(_url, _content);
-
-			StopToken.Register(() => form.Close(DialogResult.Abort, DataModelValue.Undefined()));
+			using var registration = StopToken.Register(() => form.Close(DialogResult.Abort, DataModelValue.Undefined()));
 
 			form.Closed += (sender, args) => Application.ExitThread();
 
 			Application.Run(form);
 
-			var @event = form.DialogResult == DialogResult.OK
-					? new Event("browser.submit") { Data = form.Result }
-					: new Event("browser.cancel");
+			if (form.DialogResult == DialogResult.OK)
+			{
+				return form.Result;
+			}
 
-			await ServiceCommunication.SendToCreator(@event).ConfigureAwait(false);
+			throw new OperationCanceledException();
 		}
 	}
 }

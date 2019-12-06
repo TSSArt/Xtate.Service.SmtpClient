@@ -59,6 +59,7 @@
 		SourceExpression,
 		StateMachineDefinition,
 		States,
+		InvokeUniqueId,
 		Target,
 		TargetExpression,
 		Transition,

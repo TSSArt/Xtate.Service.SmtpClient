@@ -5,6 +5,6 @@ namespace TSSArt.StateMachine
 {
 	public interface IStartInvokeEvaluator
 	{
-		ValueTask<string> Start(string stateId, IExecutionContext executionContext, CancellationToken token);
+		ValueTask<(string InvokeId, string InvokeUniqueId)> Start(string stateId, IExecutionContext executionContext, CancellationToken token);
 	}
 }

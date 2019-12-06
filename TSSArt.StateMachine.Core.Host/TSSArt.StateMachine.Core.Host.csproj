@@ -44,4 +44,8 @@
     <EmbeddedResource Include="Autorun\captcha.xml" />
   </ItemGroup>
 
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="taskkill /f /im $(TargetName).exe 2&gt;nul 1&gt;nul &amp; exit 0" />
+  </Target>
+
 </Project>

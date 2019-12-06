@@ -50,12 +50,13 @@ namespace TSSArt.StateMachine
 		public IFinalize                          Finalize         => _invoke.Finalize;
 		public IContent                           Content          => _invoke.Content;
 
-		public virtual async ValueTask<string> Start(string stateId, IExecutionContext executionContext, CancellationToken token)
+		public virtual async ValueTask<(string InvokeId, string InvokeUniqueId)> Start(string stateId, IExecutionContext executionContext, CancellationToken token)
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
 			if (string.IsNullOrEmpty(stateId)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(stateId));
 
 			var invokeId = _invoke.Id ?? IdGenerator.NewInvokeId(stateId);
+			var invokeUniqueId = _invoke.Id != null ? IdGenerator.NewInvokeUniqueId() : invokeId;
 
 			var type = TypeExpressionEvaluator != null ? ToUri(await TypeExpressionEvaluator.EvaluateString(executionContext, token).ConfigureAwait(false)) : _invoke.Type;
 			var source = SourceExpressionEvaluator != null ? ToUri(await SourceExpressionEvaluator.EvaluateString(executionContext, token).ConfigureAwait(false)) : _invoke.Source;
@@ -63,11 +64,11 @@ namespace TSSArt.StateMachine
 			var content = await Converter.GetContent(_invoke.Content?.Value, ContentExpressionEvaluator, executionContext, token).ConfigureAwait(false);
 			var parameters = await Converter.GetParameters(NameEvaluatorList, ParameterList, executionContext, token).ConfigureAwait(false);
 
-			await executionContext.StartInvoke(invokeId, type, source, content, parameters, token).ConfigureAwait(false);
+			await executionContext.StartInvoke(invokeId, invokeUniqueId, type, source, content, parameters, token).ConfigureAwait(false);
 
 			IdLocationEvaluator?.SetValue(new DefaultObject(invokeId), executionContext);
 
-			return invokeId;
+			return (invokeId, invokeUniqueId);
 		}
 
 		private static Uri ToUri(string uri) => new Uri(uri, UriKind.RelativeOrAbsolute);

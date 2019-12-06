@@ -9,10 +9,12 @@ namespace TSSArt.StateMachine
 	{
 		IReadOnlyList<IEventProcessor> GetIoProcessors();
 		ValueTask<SendStatus>          DispatchEvent(string sessionId, IOutgoingEvent @event, CancellationToken token);
-		ValueTask                      DispatchServiceEvent(string sessionId, string invokeId, IOutgoingEvent @event, CancellationToken token);
-		ValueTask                      StartInvoke(string sessionId, string invokeId, Uri type, Uri source, DataModelValue content, DataModelValue parameters, CancellationToken token);
-		ValueTask                      CancelInvoke(string sessionId, string invokeId, CancellationToken token);
-		bool                           IsInvokeActive(string sessionId, string invokeId);
-		ValueTask                      ForwardEvent(string sessionId, IEvent @event, string invokeId, CancellationToken token);
+
+		ValueTask StartInvoke(string sessionId, string invokeId, string invokeUniqueId, Uri type, Uri source, DataModelValue content, DataModelValue parameters,
+												   CancellationToken token);
+
+		ValueTask CancelInvoke(string sessionId, string invokeId, CancellationToken token);
+		bool      IsInvokeActive(string sessionId, string invokeId, string invokeUniqueId);
+		ValueTask ForwardEvent(string sessionId, IEvent @event, string invokeId, CancellationToken token);
 	}
 }

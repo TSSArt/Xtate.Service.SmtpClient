@@ -13,6 +13,8 @@ namespace TSSArt.StateMachine
 
 		public static string NewInvokeId(string stateId) => stateId + "." + NewGuidString();
 
+		public static string NewInvokeUniqueId() => NewGuidString();
+
 		public static string NewUniqueStateId() => NewGuidString();
 	}
 }

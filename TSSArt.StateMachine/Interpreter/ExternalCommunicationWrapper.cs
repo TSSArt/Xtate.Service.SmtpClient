@@ -51,13 +51,13 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public async ValueTask StartInvoke(string invokeId, Uri type, Uri source, DataModelValue content, DataModelValue parameters, CancellationToken token)
+		public async ValueTask StartInvoke(string invokeId, string invokeUniqueId, Uri type, Uri source, DataModelValue content, DataModelValue parameters, CancellationToken token)
 		{
 			try
 			{
 				ThrowIfNoExternalCommunication();
 
-				await _externalCommunication.StartInvoke(invokeId, type, source, content, parameters, token).ConfigureAwait(false);
+				await _externalCommunication.StartInvoke(invokeId, invokeUniqueId, type, source, content, parameters, token).ConfigureAwait(false);
 			}
 			catch (Exception ex)
 			{
@@ -81,7 +81,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public bool IsInvokeActive(string invokeId) => _externalCommunication?.IsInvokeActive(invokeId) == true;
+		public bool IsInvokeActive(string invokeId, string invokeUniqueId) => _externalCommunication?.IsInvokeActive(invokeId, invokeUniqueId) == true;
 
 		public async ValueTask<SendStatus> SendEvent(IOutgoingEvent @event, CancellationToken token)
 		{

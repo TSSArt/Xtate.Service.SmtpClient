@@ -90,28 +90,10 @@ namespace TSSArt.StateMachine
 			return service.Send(serviceEvent, token);
 		}
 
-		ValueTask IIoProcessor.DispatchServiceEvent(string sessionId, string invokeId, IOutgoingEvent @event, CancellationToken token)
-		{
-			_context.ValidateSessionId(sessionId, out var controller);
-
-			if (@event.Type != null || @event.SendId != null || @event.DelayMs != 0)
-			{
-				throw new InvalidOperationException("Type, SendId, DelayMs can't be specified for this event");
-			}
-
-			if (@event.Target != Event.ParentTarget && @event.Target != null)
-			{
-				throw new InvalidOperationException("Target should be equal to '_parent' or null");
-			}
-
-			var eventObject = new EventObject(EventType.External, @event, invokeId: invokeId);
-
-			return controller.Send(eventObject, token);
-		}
-
 		IReadOnlyList<IEventProcessor> IIoProcessor.GetIoProcessors() => _ioProcessors;
 
-		async ValueTask IIoProcessor.StartInvoke(string sessionId, string invokeId, Uri type, Uri source, DataModelValue content, DataModelValue parameters, CancellationToken token)
+		async ValueTask IIoProcessor.StartInvoke(string sessionId, string invokeId, string invokeUniqueId, Uri type, Uri source, DataModelValue content, DataModelValue parameters,
+												 CancellationToken token)
 		{
 			_context.ValidateSessionId(sessionId, out var service);
 
@@ -120,10 +102,10 @@ namespace TSSArt.StateMachine
 				throw new ApplicationException("Invalid type");
 			}
 
-			var serviceCommunication = new ServiceCommunication(this, sessionId, invokeId);
+			var serviceCommunication = new ServiceCommunication(service, EventProcessorId, invokeId, invokeUniqueId);
 			var invokedService = await factory.StartService(source, content, parameters, serviceCommunication, token).ConfigureAwait(false);
 
-			await _context.AddService(sessionId, invokeId, invokedService).ConfigureAwait(false);
+			await _context.AddService(sessionId, invokeId, invokeUniqueId, invokedService).ConfigureAwait(false);
 
 			CompleteAsync();
 
@@ -134,14 +116,14 @@ namespace TSSArt.StateMachine
 					var nameParts = EventName.GetDoneInvokeNameParts((Identifier) invokeId);
 					var resultData = await invokedService.Result.ConfigureAwait(false);
 
-					await service.Send(new EventObject(EventType.External, nameParts, resultData, sendId: null, invokeId), token: default).ConfigureAwait(false);
+					await service.Send(new EventObject(EventType.External, nameParts, resultData, sendId: null, invokeId, invokeUniqueId), token: default).ConfigureAwait(false);
 				}
 				catch (Exception ex)
 				{
 					var nameParts = EventName.GetErrorInvokeNameParts((Identifier) invokeId);
 					var exceptionData = DataModelValue.FromException(ex, isReadOnly: true);
 
-					await service.Send(new EventObject(EventType.External, nameParts, exceptionData, sendId: null, invokeId), token: default).ConfigureAwait(false);
+					await service.Send(new EventObject(EventType.External, nameParts, exceptionData, sendId: null, invokeId, invokeUniqueId), token: default).ConfigureAwait(false);
 				}
 				finally
 				{
@@ -169,7 +151,8 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		bool IIoProcessor.IsInvokeActive(string sessionId, string invokeId) => _context.TryGetService(sessionId, invokeId, out _);
+		bool IIoProcessor.IsInvokeActive(string sessionId, string invokeId, string invokeUniqueId) =>
+				_context.TryGetService(sessionId, invokeId, out var pair) && pair.InvokeUniqueId == invokeUniqueId;
 
 		async ValueTask<SendStatus> IIoProcessor.DispatchEvent(string sessionId, IOutgoingEvent @event, CancellationToken token)
 		{
@@ -206,12 +189,12 @@ namespace TSSArt.StateMachine
 		{
 			_context.ValidateSessionId(sessionId, out _);
 
-			if (!_context.TryGetService(sessionId, invokeId, out var service))
+			if (!_context.TryGetService(sessionId, invokeId, out var pair))
 			{
 				throw new ApplicationException("Invalid InvokeId");
 			}
 
-			return service?.Send(@event, token) ?? default;
+			return pair.Service?.Send(@event, token) ?? default;
 		}
 
 		Uri IServiceFactory.TypeId => ServiceFactoryTypeId;
