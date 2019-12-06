@@ -15,7 +15,7 @@ namespace TSSArt.StateMachine.Services
 	[SimpleService("http://tssart.com/scxml/service/#HTTPClient", Alias = "http")]
 	public class HttpClientService : SimpleServiceBase
 	{
-		private const string MediaTypeApplicationJson = " application/json";
+		private const string MediaTypeApplicationJson = "application/json";
 
 		public static readonly IServiceFactory Factory = SimpleServiceFactory<HttpClientService>.Instance;
 
