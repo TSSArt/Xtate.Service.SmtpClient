@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Net.Mime;
 using System.Reflection;
 using System.Text.Json;
@@ -77,6 +78,8 @@ namespace TSSArt.StateMachine.Services
 				request.Accept = accept;
 			}
 
+			await WriteContent(request).ConfigureAwait(false);
+
 			var cookieContainer = CreateCookieContainer(GetArray(Parameters, key: "cookies"));
 			request.CookieContainer = cookieContainer;
 
@@ -97,20 +100,24 @@ namespace TSSArt.StateMachine.Services
 			result["statusCode"] = new DataModelValue((int) response.StatusCode);
 			result["statusDescription"] = new DataModelValue(response.StatusDescription);
 
+#if NETSTANDARD2_1
+			await using var stream = response.GetResponseStream();
+#else
+			using var stream = response.GetResponseStream();
+#endif
 			var contentType = new ContentType(response.ContentType);
 			if (contentType.MediaType == MediaTypeApplicationJson)
 			{
-				using var jsonDocument = JsonDocument.Parse(response.GetResponseStream());
+				using var jsonDocument = await JsonDocument.ParseAsync(stream, options: default, StopToken).ConfigureAwait(false);
 
 				result["content"] = GetDataModelValue(jsonDocument.RootElement);
 			}
 			else
 			{
-				var responseStream = response.GetResponseStream();
-				if (responseStream != null)
+				if (stream != null)
 				{
 					var htmlDocument = new HtmlDocument();
-					htmlDocument.Load(responseStream);
+					htmlDocument.Load(stream);
 
 					result["capture"] = CaptureData(htmlDocument);
 				}
@@ -120,6 +127,43 @@ namespace TSSArt.StateMachine.Services
 			result["cookies"] = new DataModelValue(GetCookies(cookieContainer));
 
 			return new DataModelValue(result);
+		}
+
+		private async ValueTask WriteContent(HttpWebRequest request)
+		{
+			const string mediaTypeApplicationFormUrlEncoded = "application/x-www-form-urlencoded";
+
+			var contentType = GetString(Parameters, key: "contentType");
+			if (contentType != null)
+			{
+				request.ContentType = contentType;
+			}
+			else
+			{
+				return;
+			}
+
+#if NETSTANDARD2_1
+			await using var stream = request.GetRequestStream();
+#else
+			using var stream = request.GetRequestStream();
+#endif
+
+			if (contentType == mediaTypeApplicationFormUrlEncoded)
+			{
+				using var content = new FormUrlEncodedContent(GetParameters());
+				await content.CopyToAsync(stream).ConfigureAwait(false);
+
+				IEnumerable<KeyValuePair<string, string>> GetParameters()
+				{
+					var form = GetArray(Parameters, key: "form");
+
+					foreach (var prm in form)
+					{
+						yield return new KeyValuePair<string, string>(GetString(prm, key: "name"), GetString(prm, key: "value"));
+					}
+				}
+			}
 		}
 
 		private DataModelValue GetDataModelValue(in JsonElement element)
