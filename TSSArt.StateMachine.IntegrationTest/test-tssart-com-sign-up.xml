@@ -2,6 +2,8 @@
   <datamodel>
     <data id="email" />
     <data id="g_recaptcha_response" />
+    <data id="emailContent" />
+    <data id="setPasswordUrl" />
   </datamodel>
   <state id='RegisterEmail'>
     <onentry>
@@ -43,7 +45,7 @@
         <param name="content" expr="content" />
       </send>
     </onentry>
-    <transition event='captcha.submitted' target='RegisterCaptcha'>
+    <transition event='captcha.submitted' target='RegisterAccount'>
       <assign location='g_recaptcha_response' expr="_event.data.form['g-recaptcha-response']" />
       <log label="g_recaptcha_response" expr='g_recaptcha_response' />
     </transition>
@@ -54,13 +56,32 @@
     </onentry>
     <invoke src='https://test.tssart.com/wp-login.php?action=register' type='http'>
       <param name='method' expr="'post'" />
-      <param name='accept' expr="'application/x-www-form-urlencoded'" />
+      <param name='contentType' expr="'application/x-www-form-urlencoded'" />
+      <param name='form' expr="[
+             { name: 'user_login', value: 'tadex12' }, 
+             { name: 'user_email', value: email }, 
+             { name: 'g-recaptcha-response', value: g_recaptcha_response }, 
+             { name: 'redirect_to', value: '' }, 
+             { name: 'wp-submit', value: 'Register' }
+             ]" />
       <finalize>
-        <assign location='email' expr='_event.data.content.Email' />
-        <log label="Email CREATED:" expr="email" />
+        <log label="Email REGISTERED" />
       </finalize>
     </invoke>
-    <transition event='done.invoke' target='ConfirmEmail' />
+    <transition event='done.invoke' target='WaitForEmail' />
+    <transition event='error' target='finErr' />
+  </state>
+  <state id='WaitForEmail'>
+    <invoke srcexpr='&quot;http://mid.dev.tssart.com/MailServer/Web2/api/Mail?lastReceivedOnUtc=2019-01-01&amp;email=&quot; + email' type='http'>
+      <param name='accept' expr="'application/json'"/>
+      <finalize xmlns:basic='http://tssart.com/scxml/customaction/basic' xmlns:mime='http://tssart.com/scxml/customaction/mime'>
+        <assign location='emailContent' expr='_event.data.content.EmailEntries[0].ContentRaw' />
+        <basic:base64decode source='emailContent' destination='emailContent'/>
+        <mime:parseEmail source='emailContent' destination='setPasswordUrl' regex='https?\:\/\/[A-Za-z0-9-._@\/]+\?[A-Za-z0-9-._~:?#[\]@!$&amp;&#039;()*+,;=\/]+'/>
+        <log label="setPasswordUrl" expr="setPasswordUrl" />
+      </finalize>
+    </invoke>
+    <transition event='done.invoke' target='fin'/>
     <transition event='error' target='finErr' />
   </state>
   <state id='ConfirmEmail'>
@@ -68,13 +89,6 @@
       <log label="ConfirmEmail ENTERED" />
     </onentry>
 
-    <invoke src='https://test.tssart.com/wp-login.php?action=register' type='http'>
-      <param name='method' expr="'post'" />
-      <!-- user_login=tadex4&user_email=xtadexsdfsfdsdf4565456%40gmail.com&g-recaptcha-response=03AOLTBLRqNT20wr0InQo56Kp9Q-Sqx1d-reVVx0eD3YN&redirect_to=&wp-submit=Register-->
-      <finalize>
-        <log label="Email REGISTERED" />
-      </finalize>
-    </invoke>
 
     <transition event='error' target='finErr' />
   </state>
