@@ -54,7 +54,7 @@ namespace TSSArt.StateMachine
 			_storageProvider = options.StorageProvider ?? NullStorageProvider.Instance;
 			_persistenceLevel = options.PersistenceLevel;
 			_notifyStateChanged = options.NotifyStateChanged;
-			_arguments = options.Arguments;
+			_arguments = options.Arguments.DeepClone(true);
 		}
 
 		private bool IsPersistingEnabled => _persistenceLevel != PersistenceLevel.None;
@@ -462,7 +462,7 @@ namespace TSSArt.StateMachine
 
 			_logger.ProcessingEvent(internalEvent);
 
-			_context.DataModel.SetInternal(property: "_event", DataModelValue.FromEvent(internalEvent, isReadOnly: true));
+			_context.DataModel.SetInternal(property: "_event", new DataModelDescriptor(DataModelValue.FromEvent(internalEvent), isReadOnly: true));
 
 			return SelectTransitions(internalEvent);
 		}
@@ -540,7 +540,7 @@ namespace TSSArt.StateMachine
 
 					_logger.ProcessingEvent(externalEvent);
 
-					_context.DataModel.SetInternal(property: "_event", DataModelValue.FromEvent(externalEvent, isReadOnly: true));
+					_context.DataModel.SetInternal(property: "_event", new DataModelDescriptor(DataModelValue.FromEvent(externalEvent), isReadOnly: true));
 
 					foreach (var state in _context.Configuration.ToList())
 					{
@@ -1196,7 +1196,7 @@ namespace TSSArt.StateMachine
 					_ => throw new ArgumentOutOfRangeException(nameof(errorType), errorType, message: null)
 			};
 
-			var eventObject = new EventObject(EventType.Platform, nameParts, DataModelValue.FromException(exception, isReadOnly: true), sendId);
+			var eventObject = new EventObject(EventType.Platform, nameParts, DataModelValue.FromException(exception), sendId);
 
 			_context.InternalQueue.Enqueue(eventObject);
 
@@ -1306,32 +1306,39 @@ namespace TSSArt.StateMachine
 		{
 			try
 			{
-				if (overrideValue.Type != DataModelValueType.Undefined)
-				{
-					_context.DataModel[data.Id] = overrideValue;
-				}
-				else if (data.Source != null)
-				{
-					var resource = await _resourceLoader.Request(data.Source.Uri, _stopToken).ConfigureAwait(false);
-					_context.DataModel[data.Id] = DataModelValue.FromContent(resource.Content, resource.ContentType);
-				}
-				else if (data.ExpressionEvaluator != null)
-				{
-					var obj = (await data.ExpressionEvaluator.EvaluateObject(_context.ExecutionContext, _stopToken).ConfigureAwait(false)).ToObject();
-					_context.DataModel[data.Id] = DataModelValue.FromObject(obj);
-				}
-				else if (data.InlineContent != null)
-				{
-					_context.DataModel[data.Id] = DataModelValue.FromInlineContent(data.InlineContent);
-				}
-				else
-				{
-					_context.DataModel[data.Id] = DataModelValue.Undefined();
-				}
+				_context.DataModel[data.Id] = await GetValue().ConfigureAwait(false);
 			}
 			catch (Exception ex) when (IsError(ex))
 			{
 				await Error(data, ex).ConfigureAwait(false);
+			}
+
+			async ValueTask<DataModelValue> GetValue()
+			{
+				if (overrideValue.Type != DataModelValueType.Undefined)
+				{
+					return overrideValue;
+				}
+
+				if (data.Source != null)
+				{
+					var resource = await _resourceLoader.Request(data.Source.Uri, _stopToken).ConfigureAwait(false);
+					
+					return DataModelValue.FromContent(resource.Content, resource.ContentType);
+				}
+				if (data.ExpressionEvaluator != null)
+				{
+					var obj = await data.ExpressionEvaluator.EvaluateObject(_context.ExecutionContext, _stopToken).ConfigureAwait(false);
+					
+					return DataModelValue.FromObject(obj.ToObject());
+				}
+
+				if (data.InlineContent != null)
+				{
+					return DataModelValue.FromInlineContent(data.InlineContent);
+				}
+
+				return DataModelValue.Undefined;
 			}
 		}
 
@@ -1363,8 +1370,8 @@ namespace TSSArt.StateMachine
 			var type = GetType();
 			var version = type.Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 
-			interpreterObject.SetInternal(property: "name", new DataModelValue(type.FullName, isReadOnly: true));
-			interpreterObject.SetInternal(property: "version", new DataModelValue(version, isReadOnly: true));
+			interpreterObject.SetInternal(property: "name", new DataModelDescriptor(new DataModelValue(type.FullName)));
+			interpreterObject.SetInternal(property: "version", new DataModelDescriptor(new DataModelValue(version)));
 		}
 
 		private void PopulateDataModelHandlerObject(DataModelObject dataModelHandlerObject, Dictionary<string, string> dataModelVars)
@@ -1372,17 +1379,17 @@ namespace TSSArt.StateMachine
 			var type = _dataModelHandler.GetType();
 			var version = type.Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 
-			dataModelHandlerObject.SetInternal(property: "name", new DataModelValue(type.FullName, isReadOnly: true));
-			dataModelHandlerObject.SetInternal(property: "assembly", new DataModelValue(type.Assembly.GetName().Name, isReadOnly: true));
-			dataModelHandlerObject.SetInternal(property: "version", new DataModelValue(version, isReadOnly: true));
+			dataModelHandlerObject.SetInternal(property: "name", new DataModelDescriptor(new DataModelValue(type.FullName)));
+			dataModelHandlerObject.SetInternal(property: "assembly", new DataModelDescriptor(new DataModelValue(type.Assembly.GetName().Name)));
+			dataModelHandlerObject.SetInternal(property: "version", new DataModelDescriptor(new DataModelValue(version)));
 
 			var vars = new DataModelObject(isReadOnly: true);
 			foreach (var pair in dataModelVars)
 			{
-				vars.SetInternal(pair.Key, new DataModelValue(pair.Value, isReadOnly: true));
+				vars.SetInternal(pair.Key, new DataModelDescriptor(new DataModelValue(pair.Value)));
 			}
 
-			dataModelHandlerObject.SetInternal(property: "vars", new DataModelValue(vars, isReadOnly: true));
+			dataModelHandlerObject.SetInternal(property: "vars", new DataModelDescriptor(new DataModelValue(vars)));
 		}
 
 		private enum StateBagKey

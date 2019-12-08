@@ -82,8 +82,8 @@ namespace TSSArt.StateMachine
 		{
 			var platform = new DataModelObject
 						   {
-								   ["interpreter"] = new DataModelValue(InterpreterObject, isReadOnly: true),
-								   ["datamodel"] = new DataModelValue(DataModelHandlerObject, isReadOnly: true),
+								   ["interpreter"] = new DataModelValue(InterpreterObject),
+								   ["datamodel"] = new DataModelValue(DataModelHandlerObject),
 								   ["args"] = arguments
 						   };
 			platform.Freeze();
@@ -91,21 +91,22 @@ namespace TSSArt.StateMachine
 			var ioProcessors = new DataModelObject();
 			foreach (var ioProcessor in _externalCommunication.GetIoProcessors())
 			{
-				var ioProcessorObject = new DataModelObject { ["location"] = new DataModelValue(ioProcessor.GetTarget(sessionId).ToString(), isReadOnly: true) };
+				var ioProcessorObject = new DataModelObject { ["location"] = new DataModelValue(ioProcessor.GetTarget(sessionId).ToString()) };
 				ioProcessorObject.Freeze();
-				ioProcessors[ioProcessor.Id.ToString()] = new DataModelValue(ioProcessorObject, isReadOnly: true);
+				ioProcessors[ioProcessor.Id.ToString()] = new DataModelValue(ioProcessorObject);
 			}
 
 			ioProcessors.Freeze();
 
-			return new DataModelObject
-				   {
-						   ["_name"] = new DataModelValue(stateMachineName, isReadOnly: true),
-						   ["_sessionid"] = new DataModelValue(sessionId, isReadOnly: true),
-						   ["_event"] = DataModelValue.Undefined(true),
-						   ["_ioprocessors"] = new DataModelValue(ioProcessors, isReadOnly: true),
-						   ["_x"] = new DataModelValue(platform, isReadOnly: true)
-				   };
+			var dataModel = new DataModelObject();
+
+			dataModel.SetInternal(property: "_name", new DataModelDescriptor(new DataModelValue(stateMachineName), isReadOnly: true));
+			dataModel.SetInternal(property: "_sessionid", new DataModelDescriptor(new DataModelValue(sessionId), isReadOnly: true));
+			dataModel.SetInternal(property: "_event", new DataModelDescriptor(value: default, isReadOnly: true));
+			dataModel.SetInternal(property: "_ioprocessors", new DataModelDescriptor(new DataModelValue(ioProcessors), isReadOnly: true));
+			dataModel.SetInternal(property: "_x", new DataModelDescriptor(new DataModelValue(platform), isReadOnly: true));
+
+			return dataModel;
 		}
 
 		private class ContextItems : IContextItems

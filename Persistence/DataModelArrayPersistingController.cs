@@ -30,15 +30,17 @@ namespace TSSArt.StateMachine
 					case Key.Set when recordBucket.TryGet(Key.Index, out int index):
 					{
 						var dataModelValue = recordBucket.GetDataModelValue(referenceTracker, dataModelArray[index]);
-						dataModelArray.SetInternal(index, dataModelValue);
+						recordBucket.TryGet(Key.ReadOnly, out bool isReadOnly);
+						dataModelArray.SetInternal(index, new DataModelDescriptor(dataModelValue, isReadOnly));
 						referenceTracker.AddReference(dataModelValue);
 						break;
 					}
 
 					case Key.Insert when recordBucket.TryGet(Key.Index, out int index):
 					{
-						var dataModelValue = recordBucket.GetDataModelValue(referenceTracker, dataModelArray[index]);
-						dataModelArray.InsertInternal(index, dataModelValue);
+						var dataModelValue = recordBucket.GetDataModelValue(referenceTracker, baseValue: default);
+						recordBucket.TryGet(Key.ReadOnly, out bool isReadOnly);
+						dataModelArray.InsertInternal(index, new DataModelDescriptor(dataModelValue, isReadOnly));
 						referenceTracker.AddReference(dataModelValue);
 						break;
 					}
@@ -80,13 +82,19 @@ namespace TSSArt.StateMachine
 				_record = 0;
 				for (var i = 0; i < dataModelArray.Length; i ++)
 				{
-					var value = dataModelArray[i];
-					if (value.Type != DataModelValueType.Undefined)
+					var descriptor = dataModelArray.GetDescriptor(i);
+					if (descriptor.Value.Type != DataModelValueType.Undefined || descriptor.IsReadOnly)
 					{
 						var recordBucket = bucket.Nested(_record ++);
 						recordBucket.Add(Key.Operation, Key.Set);
 						recordBucket.Add(Key.Index, i);
-						recordBucket.SetDataModelValue(referenceTracker, value);
+
+						if (descriptor.IsReadOnly)
+						{
+							recordBucket.Add(Key.ReadOnly, value: true);
+						}
+
+						recordBucket.SetDataModelValue(referenceTracker, descriptor.Value);
 					}
 				}
 			}
@@ -94,7 +102,7 @@ namespace TSSArt.StateMachine
 			dataModelArray.Changed += OnChanged;
 		}
 
-		private void OnChanged(DataModelArray.ChangedAction action, int index, DataModelValue value)
+		private void OnChanged(DataModelArray.ChangedAction action, int index, DataModelDescriptor descriptor)
 		{
 			switch (action)
 			{
@@ -103,13 +111,19 @@ namespace TSSArt.StateMachine
 					var recordBucket = _bucket.Nested(_record ++);
 					recordBucket.Add(Key.Operation, Key.Set);
 					recordBucket.Add(Key.Index, index);
-					_referenceTracker.AddReference(value);
-					recordBucket.SetDataModelValue(_referenceTracker, value);
+
+					if (descriptor.IsReadOnly)
+					{
+						recordBucket.Add(Key.ReadOnly, value: true);
+					}
+
+					_referenceTracker.AddReference(descriptor.Value);
+					recordBucket.SetDataModelValue(_referenceTracker, descriptor.Value);
 					break;
 				}
 				case DataModelArray.ChangedAction.Remove:
 				{
-					_referenceTracker.RemoveReference(value);
+					_referenceTracker.RemoveReference(descriptor.Value);
 					if (_dataModelArray.Length > 1)
 					{
 						var recordBucket = _bucket.Nested(_record ++);
@@ -129,8 +143,14 @@ namespace TSSArt.StateMachine
 					var recordBucket = _bucket.Nested(_record ++);
 					recordBucket.Add(Key.Operation, Key.Insert);
 					recordBucket.Add(Key.Index, index);
-					_referenceTracker.AddReference(value);
-					recordBucket.SetDataModelValue(_referenceTracker, value);
+
+					if (descriptor.IsReadOnly)
+					{
+						recordBucket.Add(Key.ReadOnly, value: true);
+					}
+
+					_referenceTracker.AddReference(descriptor.Value);
+					recordBucket.SetDataModelValue(_referenceTracker, descriptor.Value);
 					break;
 				}
 				case DataModelArray.ChangedAction.Clear:

@@ -29,19 +29,18 @@ namespace TSSArt.StateMachine
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
 
+			IObject value = DataModelValue.Undefined;
+
 			if (ExpressionEvaluator != null)
 			{
-				var obj = await ExpressionEvaluator.EvaluateObject(executionContext, token).ConfigureAwait(false);
-				LocationEvaluator.SetValue(obj, executionContext);
+				value = await ExpressionEvaluator.EvaluateObject(executionContext, token).ConfigureAwait(false);
 			}
 			else if (InlineContent != null)
 			{
-				LocationEvaluator.SetValue(DataModelValue.FromInlineContent(InlineContent), executionContext);
+				value = DataModelValue.FromInlineContent(InlineContent);
 			}
-			else
-			{
-				LocationEvaluator.SetValue(DataModelValue.Undefined(), executionContext);
-			}
+
+			LocationEvaluator.SetValue(value, executionContext);
 		}
 	}
 }

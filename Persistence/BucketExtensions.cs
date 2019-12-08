@@ -77,23 +77,23 @@ namespace TSSArt.StateMachine
 			if (tracker == null) throw new ArgumentNullException(nameof(tracker));
 
 			var type = bucket.Get<DataModelValueType>(Key.Type);
-			bucket.TryGet(Key.ReadOnly, out bool isReadOnly);
 
 			switch (type)
 			{
-				case DataModelValueType.Undefined: return DataModelValue.Undefined(isReadOnly);
-				case DataModelValueType.Null: return DataModelValue.Null(isReadOnly);
-				case DataModelValueType.String when bucket.TryGet(Key.Item, out string value): return new DataModelValue(value, isReadOnly);
-				case DataModelValueType.Number when bucket.TryGet(Key.Item, out double value): return new DataModelValue(value, isReadOnly);
-				case DataModelValueType.DateTime when bucket.TryGet(Key.Item, out DateTime value): return new DataModelValue(value, isReadOnly);
-				case DataModelValueType.Boolean when bucket.TryGet(Key.Item, out bool value): return new DataModelValue(value, isReadOnly);
+				case DataModelValueType.Undefined: return default;
+				case DataModelValueType.Null: return DataModelValue.Null;
+				case DataModelValueType.String when bucket.TryGet(Key.Item, out string value): return new DataModelValue(value);
+				case DataModelValueType.Number when bucket.TryGet(Key.Item, out double value): return new DataModelValue(value);
+				case DataModelValueType.DateTime when bucket.TryGet(Key.Item, out DateTime value): return new DataModelValue(value);
+				case DataModelValueType.Boolean when bucket.TryGet(Key.Item, out bool value): return new DataModelValue(value);
+
 				case DataModelValueType.Object when bucket.TryGet(Key.RefId, out int refId):
 					var dataModelObject = baseValue.Type == DataModelValueType.Object ? baseValue.AsObject() : null;
-					return DataModelValue.FromObject(tracker.GetValue(refId, type, dataModelObject), isReadOnly);
+					return DataModelValue.FromObject(tracker.GetValue(refId, type, dataModelObject));
 
 				case DataModelValueType.Array when bucket.TryGet(Key.RefId, out int refId):
 					var dataModelArray = baseValue.Type == DataModelValueType.Array ? baseValue.AsArray() : null;
-					return DataModelValue.FromObject(tracker.GetValue(refId, type, dataModelArray), isReadOnly);
+					return DataModelValue.FromObject(tracker.GetValue(refId, type, dataModelArray));
 
 				default: throw new ArgumentOutOfRangeException();
 			}
@@ -104,10 +104,6 @@ namespace TSSArt.StateMachine
 			if (tracker == null) throw new ArgumentNullException(nameof(tracker));
 
 			bucket.Add(Key.Type, item.Type);
-			if (item.IsReadOnly)
-			{
-				bucket.Add(Key.ReadOnly, value: true);
-			}
 
 			switch (item.Type)
 			{

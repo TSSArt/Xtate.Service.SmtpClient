@@ -13,7 +13,7 @@ namespace TSSArt.StateMachine
 {
 	public sealed class DataModelArray : IDynamicMetaObjectProvider, IList<DataModelValue>, IFormattable
 	{
-		public delegate void ChangedHandler(ChangedAction action, int index, DataModelValue value);
+		public delegate void ChangedHandler(ChangedAction action, int index, DataModelDescriptor descriptor);
 
 		public enum ChangedAction
 		{
@@ -24,19 +24,29 @@ namespace TSSArt.StateMachine
 			SetLength
 		}
 
-		private readonly List<DataModelValue> _list;
+		private readonly List<DataModelDescriptor> _list;
 
 		public DataModelArray() : this(false) { }
 
 		public DataModelArray(bool isReadOnly)
 		{
 			IsReadOnly = isReadOnly;
-			_list = new List<DataModelValue>();
+			_list = new List<DataModelDescriptor>();
 		}
 
-		public DataModelArray(int capacity) => _list = new List<DataModelValue>(capacity);
+		public DataModelArray(int capacity) => _list = new List<DataModelDescriptor>(capacity);
 
-		public DataModelArray(IEnumerable<DataModelValue> items) => _list = new List<DataModelValue>(items);
+		public DataModelArray(IEnumerable<DataModelValue> items)
+		{
+			if (items == null) throw new ArgumentNullException(nameof(items));
+
+			_list = new List<DataModelDescriptor>(items is ICollection<DataModelValue> collection ? collection.Count : 0);
+
+			foreach (var value in items)
+			{
+				_list.Add(new DataModelDescriptor(value));
+			}
+		}
 
 		public int Length => _list.Count;
 
@@ -82,7 +92,13 @@ namespace TSSArt.StateMachine
 
 		public bool IsReadOnly { get; private set; }
 
-		public IEnumerator<DataModelValue> GetEnumerator() => _list.GetEnumerator();
+		public IEnumerator<DataModelValue> GetEnumerator()
+		{
+			foreach (var descriptor in _list)
+			{
+				yield return descriptor.Value;
+			}
+		}
 
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
@@ -93,7 +109,7 @@ namespace TSSArt.StateMachine
 				throw ObjectCantBeModifiedException();
 			}
 
-			AddInternal(item);
+			AddInternal(new DataModelDescriptor(item));
 		}
 
 		public void Clear()
@@ -106,9 +122,15 @@ namespace TSSArt.StateMachine
 			ClearInternal();
 		}
 
-		public bool Contains(DataModelValue item) => _list.Contains(item);
+		public bool Contains(DataModelValue item) => _list.Contains(new DataModelDescriptor(item));
 
-		public void CopyTo(DataModelValue[] array, int arrayIndex) => _list.CopyTo(array, arrayIndex);
+		public void CopyTo(DataModelValue[] array, int arrayIndex)
+		{
+			foreach (var descriptor in _list)
+			{
+				array[arrayIndex ++] = descriptor.Value;
+			}
+		}
 
 		public bool Remove(DataModelValue item)
 		{
@@ -117,12 +139,12 @@ namespace TSSArt.StateMachine
 				throw ObjectCantBeModifiedException();
 			}
 
-			return RemoveInternal(item);
+			return RemoveInternal(new DataModelDescriptor(item));
 		}
 
 		int ICollection<DataModelValue>.Count => _list.Count;
 
-		public int IndexOf(DataModelValue item) => _list.IndexOf(item);
+		public int IndexOf(DataModelValue item) => _list.IndexOf(new DataModelDescriptor(item));
 
 		public void Insert(int index, DataModelValue item)
 		{
@@ -133,7 +155,7 @@ namespace TSSArt.StateMachine
 				throw ObjectCantBeModifiedException();
 			}
 
-			InsertInternal(index, item);
+			InsertInternal(index, new DataModelDescriptor(item));
 		}
 
 		public void RemoveAt(int index)
@@ -154,7 +176,7 @@ namespace TSSArt.StateMachine
 			{
 				if (index < 0) throw new ArgumentOutOfRangeException(nameof(index));
 
-				return index < _list.Count ? _list[index] : DataModelValue.Undefined(IsReadOnly);
+				return GetDescriptor(index).Value;
 			}
 			set
 			{
@@ -165,35 +187,37 @@ namespace TSSArt.StateMachine
 					throw ObjectCantBeModifiedException();
 				}
 
-				SetInternal(index, value);
+				SetInternal(index, new DataModelDescriptor(value));
 			}
 		}
+
+		internal DataModelDescriptor GetDescriptor(int index) => index < _list.Count ? _list[index] : new DataModelDescriptor(DataModelValue.Undefined);
 
 		public event ChangedHandler Changed;
 
 		public void Freeze() => IsReadOnly = true;
 
-		internal void AddInternal(DataModelValue item)
+		internal void AddInternal(DataModelDescriptor descriptor)
 		{
-			_list.Add(item);
+			_list.Add(descriptor);
 
-			Changed?.Invoke(ChangedAction.Set, _list.Count - 1, item);
+			Changed?.Invoke(ChangedAction.Set, _list.Count - 1, descriptor);
 		}
 
 		internal void ClearInternal()
 		{
-			Changed?.Invoke(ChangedAction.Clear, index: default, value: default);
+			Changed?.Invoke(ChangedAction.Clear, index: default, descriptor: default);
 
 			_list.Clear();
 		}
 
-		internal bool RemoveInternal(DataModelValue item)
+		internal bool RemoveInternal(DataModelDescriptor descriptor)
 		{
-			var index = _list.IndexOf(item);
+			var index = _list.IndexOf(descriptor);
 
 			if (index >= 0)
 			{
-				Changed?.Invoke(ChangedAction.Remove, index, item);
+				Changed?.Invoke(ChangedAction.Remove, index, descriptor);
 
 				_list.RemoveAt(index);
 
@@ -203,16 +227,16 @@ namespace TSSArt.StateMachine
 			return false;
 		}
 
-		internal void InsertInternal(int index, DataModelValue item)
+		internal void InsertInternal(int index, DataModelDescriptor descriptor)
 		{
 			if (index > Length)
 			{
 				SetLength(index);
 			}
 
-			_list.Insert(index, item);
+			_list.Insert(index, descriptor);
 
-			Changed?.Invoke(ChangedAction.Insert, index, item);
+			Changed?.Invoke(ChangedAction.Insert, index, descriptor);
 		}
 
 		internal void RemoveAtInternal(int index)
@@ -225,15 +249,15 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		internal void SetInternal(int index, DataModelValue value)
+		internal void SetInternal(int index, DataModelDescriptor descriptor)
 		{
 			if (index < _list.Count)
 			{
 				Changed?.Invoke(ChangedAction.Remove, index, _list[index]);
 
-				_list[index] = value;
+				_list[index] = descriptor;
 
-				Changed?.Invoke(ChangedAction.Set, index, value);
+				Changed?.Invoke(ChangedAction.Set, index, descriptor);
 
 				return;
 			}
@@ -241,12 +265,12 @@ namespace TSSArt.StateMachine
 			if (index > _list.Count)
 			{
 				_list.Capacity = index + 1;
-				_list.AddRange(Enumerable.Repeat(DataModelValue.Undefined(), index - Length));
+				_list.AddRange(Enumerable.Repeat(default(DataModelDescriptor), index - Length));
 			}
 
-			_list.Add(value);
+			_list.Add(descriptor);
 
-			Changed?.Invoke(ChangedAction.Set, index, value);
+			Changed?.Invoke(ChangedAction.Set, index, descriptor);
 		}
 
 		private static Exception ObjectCantBeModifiedException() => new SecurityException("Object can not be modified");
@@ -262,7 +286,7 @@ namespace TSSArt.StateMachine
 				return false;
 			}
 
-			var index = _list.IndexOf(item);
+			var index = _list.IndexOf(new DataModelDescriptor(item));
 
 			return index < 0 || _list.Skip(index).All(i => !i.IsReadOnly);
 		}
@@ -295,17 +319,17 @@ namespace TSSArt.StateMachine
 		{
 			if (value < Length)
 			{
-				Changed?.Invoke(ChangedAction.SetLength, value, value: default);
+				Changed?.Invoke(ChangedAction.SetLength, value, descriptor: default);
 
 				_list.RemoveRange(value, Length - value);
 				_list.Capacity = value;
 			}
 			else if (value > Length)
 			{
-				Changed?.Invoke(ChangedAction.SetLength, value, value: default);
+				Changed?.Invoke(ChangedAction.SetLength, value, descriptor: default);
 
 				_list.Capacity = value;
-				_list.AddRange(Enumerable.Repeat(DataModelValue.Undefined(), value - Length));
+				_list.AddRange(Enumerable.Repeat(new DataModelDescriptor(DataModelValue.Undefined), value - Length));
 			}
 		}
 
@@ -348,7 +372,7 @@ namespace TSSArt.StateMachine
 
 			foreach (var val in _list)
 			{
-				clone._list.Add(val.DeepClone(isReadOnly));
+				clone._list.Add(new DataModelDescriptor(val.Value.DeepClone(isReadOnly), isReadOnly));
 			}
 
 			return clone;

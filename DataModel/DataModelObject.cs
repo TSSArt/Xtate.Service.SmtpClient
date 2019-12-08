@@ -10,7 +10,7 @@ namespace TSSArt.StateMachine
 {
 	public sealed class DataModelObject : IDynamicMetaObjectProvider, IFormattable
 	{
-		public delegate void ChangedHandler(ChangedAction action, string property, DataModelValue value);
+		public delegate void ChangedHandler(ChangedAction action, string property, DataModelDescriptor descriptor);
 
 		public enum ChangedAction
 		{
@@ -18,7 +18,7 @@ namespace TSSArt.StateMachine
 			Remove
 		}
 
-		private readonly Dictionary<string, DataModelValue> _properties = new Dictionary<string, DataModelValue>();
+		private readonly Dictionary<string, DataModelDescriptor> _properties = new Dictionary<string, DataModelDescriptor>();
 
 		public DataModelObject() : this(false) { }
 
@@ -34,7 +34,7 @@ namespace TSSArt.StateMachine
 			{
 				if (property == null) throw new ArgumentNullException(nameof(property));
 
-				return _properties.TryGetValue(property, out var value) ? value : DataModelValue.Undefined(IsReadOnly);
+				return GetDescriptor(property).Value;
 			}
 			set
 			{
@@ -45,7 +45,7 @@ namespace TSSArt.StateMachine
 					throw ObjectCantBeModifiedException();
 				}
 
-				SetInternal(property, value);
+				SetInternal(property, new DataModelDescriptor(value));
 			}
 		}
 
@@ -61,11 +61,11 @@ namespace TSSArt.StateMachine
 				{
 					foreach (var pair in _properties)
 					{
-						if (pair.Value.Type != DataModelValueType.Undefined && pair.Value.Type != DataModelValueType.Null)
+						if (pair.Value.Value.Type != DataModelValueType.Undefined && pair.Value.Value.Type != DataModelValueType.Null)
 						{
 							sb.Append(sb.Length == 0 ? "{\r\n  " : ",\r\n  ");
 
-							var value = pair.Value.ToString(format: "JSON", formatProvider).Replace(oldValue: "\r\n", newValue: "\r\n  ");
+							var value = pair.Value.Value.ToString(format: "JSON", formatProvider).Replace(oldValue: "\r\n", newValue: "\r\n  ");
 							sb.Append("\"").Append(pair.Key).Append("\": ").Append(value);
 						}
 					}
@@ -89,27 +89,29 @@ namespace TSSArt.StateMachine
 
 		private static Exception ObjectCantBeModifiedException() => new SecurityException("Object can not be modified");
 
-		internal void SetInternal(string property, DataModelValue value)
+		internal DataModelDescriptor GetDescriptor(string property) => _properties.TryGetValue(property, out var descriptor) ? descriptor : new DataModelDescriptor(DataModelValue.Undefined);
+
+		internal void SetInternal(string property, DataModelDescriptor descriptor)
 		{
 			if (property == null) throw new ArgumentNullException(nameof(property));
 
-			if (_properties.TryGetValue(property, out var oldValue))
+			if (_properties.TryGetValue(property, out var oldDescriptor))
 			{
-				Changed?.Invoke(ChangedAction.Remove, property, oldValue);
+				Changed?.Invoke(ChangedAction.Remove, property, oldDescriptor);
 			}
 
-			_properties[property] = value;
+			_properties[property] = descriptor;
 
-			Changed?.Invoke(ChangedAction.Set, property, value);
+			Changed?.Invoke(ChangedAction.Set, property, descriptor);
 		}
 
 		internal void RemoveInternal(string property)
 		{
 			if (property == null) throw new ArgumentNullException(nameof(property));
 
-			if (_properties.TryGetValue(property, out var oldValue))
+			if (_properties.TryGetValue(property, out var oldDescriptor))
 			{
-				Changed?.Invoke(ChangedAction.Remove, property, oldValue);
+				Changed?.Invoke(ChangedAction.Remove, property, oldDescriptor);
 			}
 
 			_properties.Remove(property);
@@ -122,9 +124,9 @@ namespace TSSArt.StateMachine
 			return _properties.ContainsKey(property);
 		}
 
-		public bool CanSet(string property) => !IsReadOnly && !this[property].IsReadOnly;
+		public bool CanSet(string property) => !IsReadOnly && !(_properties.TryGetValue(property, out var descriptor) && descriptor.IsReadOnly);
 
-		public bool CanRemove(string property) => !IsReadOnly && !this[property].IsReadOnly;
+		public bool CanRemove(string property) => !IsReadOnly && !(_properties.TryGetValue(property, out var descriptor) && descriptor.IsReadOnly);
 
 		public void Remove(string property)
 		{
@@ -144,7 +146,7 @@ namespace TSSArt.StateMachine
 
 			foreach (var pair in _properties)
 			{
-				clone._properties[pair.Key] = pair.Value.DeepClone(isReadOnly);
+				clone._properties[pair.Key] = new DataModelDescriptor(pair.Value.Value.DeepClone(isReadOnly), isReadOnly);
 			}
 
 			return clone;

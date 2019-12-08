@@ -28,12 +28,7 @@ namespace TSSArt.StateMachine
 
 			if (contentExpressionEvaluator == null)
 			{
-				if (content == null)
-				{
-					return DataModelValue.Undefined(true);
-				}
-
-				return new DataModelValue(content, isReadOnly: true);
+				return content != null ? new DataModelValue(content) : DataModelValue.Undefined;
 			}
 
 			var obj = await contentExpressionEvaluator.EvaluateObject(executionContext, token).ConfigureAwait(false);
@@ -50,7 +45,7 @@ namespace TSSArt.StateMachine
 
 			if (attrCount == 0)
 			{
-				return DataModelValue.Undefined(true);
+				return DataModelValue.Undefined;
 			}
 
 			var attributes = new DataModelObject();
@@ -62,7 +57,7 @@ namespace TSSArt.StateMachine
 					var name = locationEvaluator.GetName(executionContext);
 					var value = locationEvaluator.GetValue(executionContext).ToObject();
 
-					attributes[name] = DataModelValue.FromObject(value);
+					attributes[name] = DataModelValue.FromObject(value).DeepClone(true);
 				}
 			}
 
@@ -82,11 +77,13 @@ namespace TSSArt.StateMachine
 						value = param.LocationEvaluator.GetValue(executionContext).ToObject();
 					}
 
-					attributes[name] = DataModelValue.FromObject(value);
+					attributes[name] = DataModelValue.FromObject(value).DeepClone(true);
 				}
 			}
 
-			return new DataModelValue(attributes).DeepClone(true);
+			attributes.Freeze();
+
+			return new DataModelValue(attributes);
 		}
 	}
 }
