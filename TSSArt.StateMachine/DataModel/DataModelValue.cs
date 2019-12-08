@@ -24,72 +24,50 @@ namespace TSSArt.StateMachine
 
 	public readonly struct DataModelValue : IObject, IEquatable<DataModelValue>, IFormattable, IDynamicMetaObjectProvider
 	{
-		private static readonly DataModelValue UndefinedWritable = new DataModelValue();
-		private static readonly DataModelValue UndefinedReadonly = new DataModelValue(true);
-
-		private static readonly DataModelValue NullWritable = new DataModelValue((string) null);
-		private static readonly DataModelValue NullReadonly = new DataModelValue((string) null, isReadOnly: true);
-
 		private readonly object _value;
 		private readonly long   _int64;
 
-		private DataModelValue(bool isReadOnly = false)
-		{
-			Type = DataModelValueType.Undefined;
-			_value = null;
-			_int64 = 0;
-			IsReadOnly = isReadOnly;
-		}
-
-		public DataModelValue(DataModelObject value, bool isReadOnly = false)
+		public DataModelValue(DataModelObject value)
 		{
 			Type = value != null ? DataModelValueType.Object : DataModelValueType.Null;
 			_value = value;
 			_int64 = 0;
-			IsReadOnly = isReadOnly;
 		}
 
-		public DataModelValue(DataModelArray value, bool isReadOnly = false)
+		public DataModelValue(DataModelArray value)
 		{
 			Type = value != null ? DataModelValueType.Array : DataModelValueType.Null;
 			_value = value;
 			_int64 = 0;
-			IsReadOnly = isReadOnly;
 		}
 
-		public DataModelValue(string value, bool isReadOnly = false)
+		public DataModelValue(string value)
 		{
 			Type = value != null ? DataModelValueType.String : DataModelValueType.Null;
 			_value = value;
 			_int64 = 0;
-			IsReadOnly = isReadOnly;
 		}
 
-		public DataModelValue(double value, bool isReadOnly = false)
+		public DataModelValue(double value)
 		{
 			Type = DataModelValueType.Number;
 			_value = null;
 			_int64 = BitConverter.DoubleToInt64Bits(value);
-			IsReadOnly = isReadOnly;
 		}
 
-		public DataModelValue(DateTime value, bool isReadOnly = false)
+		public DataModelValue(DateTime value)
 		{
 			Type = DataModelValueType.DateTime;
 			_value = null;
 			_int64 = value.Ticks + ((long) value.Kind << 62);
-			IsReadOnly = isReadOnly;
 		}
 
-		public DataModelValue(bool value, bool isReadOnly = false)
+		public DataModelValue(bool value)
 		{
 			Type = DataModelValueType.Boolean;
 			_value = null;
 			_int64 = value ? 1 : 0;
-			IsReadOnly = isReadOnly;
 		}
-
-		public bool IsReadOnly { get; }
 
 		public DataModelValueType Type { get; }
 
@@ -111,8 +89,9 @@ namespace TSSArt.StateMachine
 			};
 		}
 
-		public static DataModelValue Undefined(bool isReadOnly = false) => isReadOnly ? UndefinedReadonly : UndefinedWritable;
-		public static DataModelValue Null(bool isReadOnly = false)      => isReadOnly ? NullReadonly : NullWritable;
+		public static readonly DataModelValue Undefined = default;
+
+		public static readonly DataModelValue Null = new DataModelValue((string) null);
 
 		public DataModelObject AsObject()
 		{
@@ -186,27 +165,29 @@ namespace TSSArt.StateMachine
 		{
 			switch (Type)
 			{
-				case DataModelValueType.Undefined: return new DataModelValue(isReadOnly);
-				case DataModelValueType.Null: return new DataModelValue((string) null, isReadOnly);
-				case DataModelValueType.String: return new DataModelValue(AsString(), isReadOnly);
-				case DataModelValueType.Number: return new DataModelValue(AsNumber(), isReadOnly);
-				case DataModelValueType.DateTime: return new DataModelValue(AsDateTime(), isReadOnly);
-				case DataModelValueType.Boolean: return new DataModelValue(AsBoolean(), isReadOnly);
-				case DataModelValueType.Object: return new DataModelValue(AsObject().DeepClone(isReadOnly), isReadOnly);
-				case DataModelValueType.Array: return new DataModelValue(AsArray().DeepClone(isReadOnly), isReadOnly);
+				case DataModelValueType.Undefined:
+				case DataModelValueType.Null:
+				case DataModelValueType.String:
+				case DataModelValueType.Number:
+				case DataModelValueType.DateTime:
+				case DataModelValueType.Boolean:
+					return this;
+
+				case DataModelValueType.Object: return new DataModelValue(AsObject().DeepClone(isReadOnly));
+				case DataModelValueType.Array: return new DataModelValue(AsArray().DeepClone(isReadOnly));
 				default: throw new ArgumentOutOfRangeException();
 			}
 		}
 
-		public static DataModelValue FromContent(string content, ContentType contentType, bool isReadOnly = false) => new DataModelValue(content, isReadOnly);
+		public static DataModelValue FromContent(string content, ContentType contentType) => new DataModelValue(content);
 
-		public static DataModelValue FromInlineContent(string content, bool isReadOnly = false) => new DataModelValue(content, isReadOnly);
+		public static DataModelValue FromInlineContent(string content) => new DataModelValue(content);
 
-		public static DataModelValue FromObject(object value, bool isReadOnly = false)
+		public static DataModelValue FromObject(object value)
 		{
 			if (value == null)
 			{
-				return Null(isReadOnly);
+				return Null;
 			}
 
 			switch (System.Type.GetTypeCode(value.GetType()))
@@ -222,79 +203,66 @@ namespace TSSArt.StateMachine
 				case TypeCode.Single:
 				case TypeCode.Double:
 				case TypeCode.Decimal:
-					return new DataModelValue(Convert.ToDouble(value, NumberFormatInfo.InvariantInfo), isReadOnly);
-				case TypeCode.Boolean: return new DataModelValue((bool) value, isReadOnly);
-				case TypeCode.DateTime: return new DataModelValue((DateTime) value, isReadOnly);
-				case TypeCode.String: return new DataModelValue((string) value, isReadOnly);
+					return new DataModelValue(Convert.ToDouble(value, NumberFormatInfo.InvariantInfo));
+				case TypeCode.Boolean: return new DataModelValue((bool) value);
+				case TypeCode.DateTime: return new DataModelValue((DateTime) value);
+				case TypeCode.String: return new DataModelValue((string) value);
 				case TypeCode.Object when value is DataModelValue dataModelValue:
 					return dataModelValue;
 				case TypeCode.Object when value is DataModelObject dataModelObject:
-					return new DataModelValue(dataModelObject, isReadOnly);
+					return new DataModelValue(dataModelObject);
 				case TypeCode.Object when value is DataModelArray dataModelArray:
-					return new DataModelValue(dataModelArray, isReadOnly);
+					return new DataModelValue(dataModelArray);
 				case TypeCode.Object when value is IDictionary<string, object> dictionary:
-					return CreateDataModelObject(dictionary, isReadOnly);
+					return CreateDataModelObject(dictionary);
 				case TypeCode.Object when value is IEnumerable array:
-					return CreateDataModelArray(array, isReadOnly);
+					return CreateDataModelArray(array);
 				default: throw new ArgumentException(message: "Unsupported object type", nameof(value));
 			}
 		}
 
-		private static DataModelValue CreateDataModelObject(IDictionary<string, object> dictionary, bool isReadOnly)
+		private static DataModelValue CreateDataModelObject(IDictionary<string, object> dictionary)
 		{
 			var obj = new DataModelObject();
 
 			foreach (var pair in dictionary)
 			{
-				obj.SetInternal(pair.Key, FromObject(pair.Value, isReadOnly));
+				obj[pair.Key] = FromObject(pair.Value);
 			}
 
-			if (isReadOnly)
-			{
-				obj.Freeze();
-			}
-
-			return new DataModelValue(obj, isReadOnly);
+			return new DataModelValue(obj);
 		}
 
-		private static DataModelValue CreateDataModelArray(IEnumerable array, bool isReadOnly)
+		private static DataModelValue CreateDataModelArray(IEnumerable array)
 		{
 			var arr = new DataModelArray();
 
 			foreach (var val in array)
 			{
-				arr.Add(FromObject(val, isReadOnly));
+				arr.Add(FromObject(val));
 			}
 
-			if (isReadOnly)
-			{
-				arr.Freeze();
-			}
-
-			return new DataModelValue(arr, isReadOnly);
+			return new DataModelValue(arr);
 		}
 
-		public static DataModelValue FromEvent(IEvent @event, bool isReadOnly = false)
+		public static DataModelValue FromEvent(IEvent @event)
 		{
 			if (@event == null) throw new ArgumentNullException(nameof(@event));
 
 			var eventObject = new DataModelObject
 							  {
-									  ["name"] = new DataModelValue(EventName.ToName(@event.NameParts), isReadOnly),
-									  ["type"] = new DataModelValue(GetTypeString(@event.Type), isReadOnly),
-									  ["sendid"] = new DataModelValue(@event.SendId, isReadOnly),
-									  ["origin"] = new DataModelValue(@event.Origin?.ToString(), isReadOnly),
-									  ["origintype"] = new DataModelValue(@event.OriginType?.ToString(), isReadOnly),
-									  ["invokeid"] = new DataModelValue(@event.InvokeId, isReadOnly),
-									  ["data"] = @event.Data.DeepClone(isReadOnly)
+									  ["name"] = new DataModelValue(EventName.ToName(@event.NameParts)),
+									  ["type"] = new DataModelValue(GetTypeString(@event.Type)),
+									  ["sendid"] = new DataModelValue(@event.SendId),
+									  ["origin"] = new DataModelValue(@event.Origin?.ToString()),
+									  ["origintype"] = new DataModelValue(@event.OriginType?.ToString()),
+									  ["invokeid"] = new DataModelValue(@event.InvokeId),
+									  ["data"] = @event.Data.DeepClone(true)
 							  };
 
-			if (isReadOnly)
-			{
-				eventObject.Freeze();
-			}
+			eventObject.Freeze();
 
-			return new DataModelValue(eventObject, isReadOnly);
+			return new DataModelValue(eventObject);
 
 			static string GetTypeString(EventType eventType)
 			{
@@ -308,26 +276,23 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public static DataModelValue FromException(Exception exception, bool isReadOnly = false)
+		public static DataModelValue FromException(Exception exception)
 		{
 			if (exception == null) throw new ArgumentNullException(nameof(exception));
 
 			var exceptionData = new DataModelObject
 								{
-										["message"] = new DataModelValue(exception.Message, isReadOnly),
-										["typeName"] = new DataModelValue(exception.GetType().Name, isReadOnly),
-										["source"] = new DataModelValue(exception.Source, isReadOnly),
-										["typeFullName"] = new DataModelValue(exception.GetType().FullName, isReadOnly),
-										["stackTrace"] = new DataModelValue(exception.StackTrace, isReadOnly),
-										["text"] = new DataModelValue(exception.ToString(), isReadOnly)
+										["message"] = new DataModelValue(exception.Message),
+										["typeName"] = new DataModelValue(exception.GetType().Name),
+										["source"] = new DataModelValue(exception.Source),
+										["typeFullName"] = new DataModelValue(exception.GetType().FullName),
+										["stackTrace"] = new DataModelValue(exception.StackTrace),
+										["text"] = new DataModelValue(exception.ToString())
 								};
 
-			if (isReadOnly)
-			{
-				exceptionData.Freeze();
-			}
+			exceptionData.Freeze();
 
-			return new DataModelValue(exceptionData, isReadOnly);
+			return new DataModelValue(exceptionData);
 		}
 
 		public override string ToString() => (ToObject() ?? string.Empty).ToString();

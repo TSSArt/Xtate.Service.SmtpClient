@@ -275,15 +275,15 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public void ArrayReadonlyStringPropTest()
 		{
-			var obj = new DataModelObject
-					  {
-							  ["t"] = new DataModelValue(value: "test", isReadOnly: true)
-					  };
+			var obj = new DataModelObject();
+
+			obj.SetInternal(property: "t", new DataModelDescriptor(new DataModelValue(value: "test"), isReadOnly: true));
+
 			_dataModelObject["a"] = new DataModelValue(obj);
 
 			using var controller = new DataModelObjectPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
 
-			Assert.AreEqual(expected: true, _restoredDataModelObject["a"].AsObject()["t"].IsReadOnly);
+			Assert.AreEqual(expected: true, _restoredDataModelObject["a"].AsObject().GetDescriptor("t").IsReadOnly);
 			Assert.AreEqual(expected: false, _restoredDataModelObject["a"].AsObject().CanSet("t"));
 			Assert.AreEqual(expected: true, _restoredDataModelObject.CanSet("a"));
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
@@ -302,7 +302,7 @@ namespace TSSArt.StateMachine.Test
 
 			using var controller = new DataModelObjectPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
 
-			Assert.AreEqual(expected: false, _restoredDataModelObject["a"].AsObject()["t"].IsReadOnly);
+			Assert.AreEqual(expected: false, _restoredDataModelObject["a"].AsObject().GetDescriptor("t").IsReadOnly);
 			Assert.AreEqual(expected: false, _restoredDataModelObject["a"].AsObject().CanSet("t"));
 			Assert.AreEqual(expected: true, _restoredDataModelObject.CanSet("a"));
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
@@ -321,8 +321,8 @@ namespace TSSArt.StateMachine.Test
 
 			using var controller = new DataModelObjectPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
 
-			Assert.AreEqual(expected: false, _restoredDataModelObject["a"].AsArray()[0].IsReadOnly);
-			Assert.AreEqual(expected: false, _restoredDataModelObject["a"].AsArray().CanSet(index: 0, DataModelValue.Null()));
+			Assert.AreEqual(expected: false, _restoredDataModelObject["a"].AsArray().GetDescriptor(0).IsReadOnly);
+			Assert.AreEqual(expected: false, _restoredDataModelObject["a"].AsArray().CanSet(index: 0, DataModelValue.Null));
 			Assert.AreEqual(expected: true, _restoredDataModelObject.CanSet("a"));
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
 			Assert.AreEqual(expected: 11, StorageTest.GetEntriesCount(_storage));
@@ -335,11 +335,11 @@ namespace TSSArt.StateMachine.Test
 					  {
 							  ["t"] = new DataModelValue("test")
 					  };
-			_dataModelObject["a"] = new DataModelValue(obj, isReadOnly: true);
+			_dataModelObject.SetInternal(property: "a", new DataModelDescriptor(new DataModelValue(obj), isReadOnly: true));
 
 			using var controller = new DataModelObjectPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
 
-			Assert.AreEqual(expected: false, _restoredDataModelObject["a"].AsObject()["t"].IsReadOnly);
+			Assert.AreEqual(expected: false, _restoredDataModelObject["a"].AsObject().GetDescriptor("t").IsReadOnly);
 			Assert.AreEqual(expected: true, _restoredDataModelObject["a"].AsObject().CanSet("t"));
 			Assert.AreEqual(expected: false, _restoredDataModelObject.CanSet("a"));
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
@@ -359,25 +359,26 @@ namespace TSSArt.StateMachine.Test
 		{
 			var obj1 = new DataModelObject
 					   {
-							   ["prop1-ro"] = new DataModelValue(value: "val1", isReadOnly: true),
 							   ["prop1-rw"] = new DataModelValue("val1")
 					   };
+			obj1.SetInternal(property: "prop1-ro", new DataModelDescriptor(new DataModelValue("val1"), isReadOnly: true));
 
 			var obj2 = new DataModelObject
 					   {
-							   ["prop2-ro"] = new DataModelValue(value: "val1", isReadOnly: true),
 							   ["prop2-rw"] = new DataModelValue("val1")
 					   };
+			obj1.SetInternal(property: "prop2-ro", new DataModelDescriptor(new DataModelValue("val1"), isReadOnly: true));
 
 			_dataModelObject["numeric-rw"] = new DataModelValue(11);
-			_dataModelObject["numeric-ro"] = new DataModelValue(value: 22, isReadOnly: true);
+			obj1.SetInternal(property: "numeric-ro", new DataModelDescriptor(new DataModelValue(22), isReadOnly: true));
+
 			_dataModelObject["obj1a"] = new DataModelValue(obj1);
 			_dataModelObject["obj1b"] = new DataModelValue(obj1);
 			_dataModelObject["obj2a"] = new DataModelValue(obj2);
 			_dataModelObject["obj2b"] = new DataModelValue(obj2);
 
 			_dataModelObject["obj1c"] = new DataModelValue(obj1);
-			_dataModelObject["obj1c"] = DataModelValue.Null();
+			_dataModelObject["obj1c"] = DataModelValue.Null;
 
 			obj1["extra1"] = new DataModelValue("val-extra1");
 			obj2["extra2"] = new DataModelValue("val-extra2");
@@ -406,18 +407,18 @@ namespace TSSArt.StateMachine.Test
 		{
 			var obj1 = new DataModelArray
 					   {
-							   [0] = new DataModelValue(value: "val1", isReadOnly: true),
 							   [1] = new DataModelValue("val1")
 					   };
+			obj1.SetInternal(index: 0, new DataModelDescriptor(new DataModelValue("val1"), isReadOnly: true));
 
 			var obj2 = new DataModelArray
 					   {
-							   [0] = new DataModelValue(value: "val1", isReadOnly: true),
 							   [1] = new DataModelValue("val1")
 					   };
+			obj1.SetInternal(index: 0, new DataModelDescriptor(new DataModelValue("val1"), isReadOnly: true));
 
 			_dataModelArray[0] = new DataModelValue(11);
-			_dataModelArray[1] = new DataModelValue(value: 22, isReadOnly: true);
+			obj1.SetInternal(index: 1, new DataModelDescriptor(new DataModelValue(22), isReadOnly: true));
 			_dataModelArray[2] = new DataModelValue(obj1);
 			_dataModelArray[3] = new DataModelValue(obj1);
 			_dataModelArray[4] = new DataModelValue(obj2);
@@ -427,7 +428,7 @@ namespace TSSArt.StateMachine.Test
 			obj2[3] = new DataModelValue("val-extra2");
 
 			_dataModelArray[6] = new DataModelValue(obj1);
-			_dataModelArray[6] = DataModelValue.Null();
+			_dataModelArray[6] = DataModelValue.Null;
 
 			Assert.AreSame(obj1, _dataModelArray[2].AsArray());
 			Assert.AreSame(obj1, _dataModelArray[3].AsArray());
@@ -457,7 +458,7 @@ namespace TSSArt.StateMachine.Test
 
 			Assert.AreEqual(expected: "prop1-rw", new Bucket(_storage).Nested("refs").Nested(0).Nested(0).GetString(Key.Property));
 			Assert.IsTrue(new Bucket(_storage).Nested("refs").Nested(0).Nested(0).TryGet(Key.Property, out string val1));
-			_dataModelObject["obj1a"] = DataModelValue.Undefined();
+			_dataModelObject["obj1a"] = DataModelValue.Undefined;
 			Assert.IsFalse(new Bucket(_storage).Nested("refs").Nested(0).Nested(0).TryGet(Key.Property, out string val3));
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
 		}

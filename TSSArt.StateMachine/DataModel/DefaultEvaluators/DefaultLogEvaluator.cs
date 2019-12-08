@@ -22,15 +22,12 @@ namespace TSSArt.StateMachine
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
 
-			DataModelValue data;
+			var data = DataModelValue.Undefined;
+
 			if (ExpressionEvaluator != null)
 			{
 				var obj = await ExpressionEvaluator.EvaluateObject(executionContext, token).ConfigureAwait(false);
 				data = DataModelValue.FromObject(obj.ToObject()).DeepClone(true);
-			}
-			else
-			{
-				data = DataModelValue.Undefined(true);
 			}
 
 			await executionContext.Log(_log.Label, data, token).ConfigureAwait(false);

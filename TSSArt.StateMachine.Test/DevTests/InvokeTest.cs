@@ -90,7 +90,7 @@ namespace TSSArt.StateMachine.Test
 
 
 			_externalCommunicationMock.Verify(l => l.GetIoProcessors());
-			_externalCommunicationMock.Verify(l => l.StartInvoke("invoke_id", It.IsAny<string>(), new Uri("proto://type"), new Uri("proto://src"), DataModelValue.FromObject("content", false), default,
+			_externalCommunicationMock.Verify(l => l.StartInvoke("invoke_id", It.IsAny<string>(), new Uri("proto://type"), new Uri("proto://src"), DataModelValue.FromObject("content"), default,
 																 default));
 			_externalCommunicationMock.Verify(l => l.CancelInvoke("invoke_id", default));
 			_externalCommunicationMock.Verify(l => l.IsInvokeActive("invoke_id", invokeUniqueId));

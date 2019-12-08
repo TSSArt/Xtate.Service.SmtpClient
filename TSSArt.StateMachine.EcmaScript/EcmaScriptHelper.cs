@@ -58,6 +58,7 @@ namespace TSSArt.StateMachine.EcmaScript
 			{
 					DataModelValueType.Null => JsValue.Null,
 					DataModelValueType.Undefined => JsValue.Undefined,
+					DataModelValueType.Boolean => new JsValue(value.AsBoolean()),
 					DataModelValueType.String => new JsValue(value.AsString()),
 					DataModelValueType.Number => new JsValue(value.AsNumber()),
 					DataModelValueType.Object => new JsValue(new DataModelObjectWrapper(engine, value.AsObject())),
@@ -70,8 +71,9 @@ namespace TSSArt.StateMachine.EcmaScript
 		{
 			return value.Type switch
 			{
-					Types.Null => new DataModelValue((string) null),
-					Types.Undefined => DataModelValue.Undefined(),
+					Types.Null => DataModelValue.Null,
+					Types.Undefined => DataModelValue.Undefined,
+					Types.Boolean => new DataModelValue(value.AsBoolean()),
 					Types.String => new DataModelValue(value.AsString()),
 					Types.Number => new DataModelValue(value.AsNumber()),
 					Types.Object => CreateDataModelValue(value.AsObject()),

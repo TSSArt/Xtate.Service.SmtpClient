@@ -30,7 +30,8 @@ namespace TSSArt.StateMachine
 					case Key.Set when recordBucket.TryGet(Key.Property, out string property):
 					{
 						var dataModelValue = recordBucket.GetDataModelValue(referenceTracker, dataModelObject[property]);
-						dataModelObject.SetInternal(property, dataModelValue);
+						recordBucket.TryGet(Key.ReadOnly, out bool isReadOnly);
+						dataModelObject.SetInternal(property, new DataModelDescriptor(dataModelValue, isReadOnly));
 						referenceTracker.AddReference(dataModelValue);
 						break;
 					}
@@ -63,14 +64,21 @@ namespace TSSArt.StateMachine
 					var recordBucket = bucket.Nested(_record ++);
 					recordBucket.Add(Key.Operation, Key.Set);
 					recordBucket.Add(Key.Property, property);
-					recordBucket.SetDataModelValue(referenceTracker, dataModelObject[property]);
+
+					var descriptor = dataModelObject.GetDescriptor(property);
+					if (descriptor.IsReadOnly)
+					{
+						recordBucket.Add(Key.ReadOnly, value: true);
+					}
+
+					recordBucket.SetDataModelValue(referenceTracker, descriptor.Value);
 				}
 			}
 
 			dataModelObject.Changed += OnChanged;
 		}
 
-		private void OnChanged(DataModelObject.ChangedAction action, string property, DataModelValue value)
+		private void OnChanged(DataModelObject.ChangedAction action, string property, DataModelDescriptor descriptor)
 		{
 			switch (action)
 			{
@@ -79,13 +87,19 @@ namespace TSSArt.StateMachine
 					var recordBucket = _bucket.Nested(_record ++);
 					recordBucket.Add(Key.Operation, Key.Set);
 					recordBucket.Add(Key.Property, property);
-					_referenceTracker.AddReference(value);
-					recordBucket.SetDataModelValue(_referenceTracker, value);
+
+					if (descriptor.IsReadOnly)
+					{
+						recordBucket.Add(Key.ReadOnly, value: true);
+					}
+
+					_referenceTracker.AddReference(descriptor.Value);
+					recordBucket.SetDataModelValue(_referenceTracker, descriptor.Value);
 					break;
 				}
 				case DataModelObject.ChangedAction.Remove:
 				{
-					_referenceTracker.RemoveReference(value);
+					_referenceTracker.RemoveReference(descriptor.Value);
 					if (_dataModelObject.Properties.Count > 1)
 					{
 						var recordBucket = _bucket.Nested(_record ++);

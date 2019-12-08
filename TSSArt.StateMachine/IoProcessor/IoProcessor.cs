@@ -121,7 +121,7 @@ namespace TSSArt.StateMachine
 				catch (Exception ex)
 				{
 					var nameParts = EventName.GetErrorInvokeNameParts((Identifier) invokeId);
-					var exceptionData = DataModelValue.FromException(ex, isReadOnly: true);
+					var exceptionData = DataModelValue.FromException(ex);
 
 					await service.Send(new EventObject(EventType.External, nameParts, exceptionData, sendId: null, invokeId, invokeUniqueId), token: default).ConfigureAwait(false);
 				}
