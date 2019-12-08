@@ -43,7 +43,7 @@ namespace TSSArt.StateMachine.EcmaScript
 
 			descriptor = EcmaScriptHelper.CreatePropertyAccessor(Engine, _obj, property);
 
-			FastSetProperty(property, descriptor);
+			base.SetOwnProperty(property, descriptor);
 
 			return descriptor;
 		}

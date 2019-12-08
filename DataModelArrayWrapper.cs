@@ -17,7 +17,7 @@ namespace TSSArt.StateMachine.EcmaScript
 
 			Extensible = !array.IsReadOnly;
 
-			FastSetProperty(name: "length", new PropertyDescriptor((uint) _array.Length, !array.IsReadOnly, enumerable: false, configurable: false));
+			base.SetOwnProperty(propertyName: "length", new PropertyDescriptor((uint) _array.Length, !array.IsReadOnly, enumerable: false, configurable: false));
 		}
 
 		public object Target => _array;
@@ -26,7 +26,7 @@ namespace TSSArt.StateMachine.EcmaScript
 		{
 			if (IsArrayIndex(property, out var index))
 			{
-				_array[(int) index] = DataModelValue.Undefined();
+				_array[(int) index] = DataModelValue.Undefined;
 			}
 
 			base.RemoveOwnProperty(property);
