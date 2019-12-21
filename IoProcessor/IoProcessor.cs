@@ -113,14 +113,14 @@ namespace TSSArt.StateMachine
 			{
 				try
 				{
-					var nameParts = EventName.GetDoneInvokeNameParts((Identifier) invokeId);
+					var nameParts = EventName.GetDoneInvokeNameParts(invokeId);
 					var resultData = await invokedService.Result.ConfigureAwait(false);
 
 					await service.Send(new EventObject(EventType.External, nameParts, resultData, sendId: null, invokeId, invokeUniqueId), token: default).ConfigureAwait(false);
 				}
 				catch (Exception ex)
 				{
-					var nameParts = EventName.GetErrorInvokeNameParts((Identifier) invokeId);
+					var nameParts = EventName.GetErrorInvokeNameParts(invokeId);
 					var exceptionData = DataModelValue.FromException(ex);
 
 					await service.Send(new EventObject(EventType.External, nameParts, exceptionData, sendId: null, invokeId, invokeUniqueId), token: default).ConfigureAwait(false);
@@ -154,7 +154,7 @@ namespace TSSArt.StateMachine
 		bool IIoProcessor.IsInvokeActive(string sessionId, string invokeId, string invokeUniqueId) =>
 				_context.TryGetService(sessionId, invokeId, out var pair) && pair.InvokeUniqueId == invokeUniqueId;
 
-		async ValueTask<SendStatus> IIoProcessor.DispatchEvent(string sessionId, IOutgoingEvent @event, CancellationToken token)
+		async ValueTask<SendStatus> IIoProcessor.DispatchEvent(string sessionId, IOutgoingEvent @event, bool skipDelay, CancellationToken token)
 		{
 			if (@event == null) throw new ArgumentNullException(nameof(@event));
 
@@ -168,14 +168,14 @@ namespace TSSArt.StateMachine
 				{
 					if (@event.DelayMs != 0)
 					{
-						throw new ApplicationException("Internal events can be delayed");
+						throw new ApplicationException("Internal events can't be delayed");
 					}
 
 					return SendStatus.ToInternalQueue;
 				}
 			}
 
-			if (@event.DelayMs != 0)
+			if (!skipDelay && @event.DelayMs != 0)
 			{
 				return SendStatus.ToSchedule;
 			}

@@ -18,13 +18,19 @@ namespace TSSArt.StateMachine
 			Remove
 		}
 
+		public static readonly DataModelObject Empty = new DataModelObject(State.Empty);
+
 		private readonly Dictionary<string, DataModelDescriptor> _properties = new Dictionary<string, DataModelDescriptor>();
 
-		public DataModelObject() : this(false) { }
+		private State _state;
 
-		public DataModelObject(bool isReadOnly) => IsReadOnly = isReadOnly;
+		public DataModelObject() : this(State.Writable) { }
 
-		public bool IsReadOnly { get; private set; }
+		public DataModelObject(bool isReadOnly) : this(isReadOnly ? State.Readonly : State.Writable) { }
+
+		private DataModelObject(State state) => _state = state;
+
+		public bool IsReadOnly => _state != State.Writable;
 
 		public ICollection<string> Properties => _properties.Keys;
 
@@ -85,7 +91,7 @@ namespace TSSArt.StateMachine
 
 		public event ChangedHandler Changed;
 
-		public void Freeze() => IsReadOnly = true;
+		public void Freeze() => _state = State.Readonly;
 
 		private static Exception ObjectCantBeModifiedException() => new SecurityException("Object can not be modified");
 
@@ -94,6 +100,11 @@ namespace TSSArt.StateMachine
 		internal void SetInternal(string property, DataModelDescriptor descriptor)
 		{
 			if (property == null) throw new ArgumentNullException(nameof(property));
+
+			if (_state == State.Empty)
+			{
+				throw ObjectCantBeModifiedException();
+			}
 
 			if (_properties.TryGetValue(property, out var oldDescriptor))
 			{
@@ -108,6 +119,11 @@ namespace TSSArt.StateMachine
 		internal void RemoveInternal(string property)
 		{
 			if (property == null) throw new ArgumentNullException(nameof(property));
+
+			if (_state == State.Empty)
+			{
+				throw ObjectCantBeModifiedException();
+			}
 
 			if (_properties.TryGetValue(property, out var oldDescriptor))
 			{
@@ -124,9 +140,9 @@ namespace TSSArt.StateMachine
 			return _properties.ContainsKey(property);
 		}
 
-		public bool CanSet(string property) => !IsReadOnly && !(_properties.TryGetValue(property, out var descriptor) && descriptor.IsReadOnly);
+		public bool CanSet(string property) => _state == State.Writable && !(_properties.TryGetValue(property, out var descriptor) && descriptor.IsReadOnly);
 
-		public bool CanRemove(string property) => !IsReadOnly && !(_properties.TryGetValue(property, out var descriptor) && descriptor.IsReadOnly);
+		public bool CanRemove(string property) => _state == State.Writable && !(_properties.TryGetValue(property, out var descriptor) && descriptor.IsReadOnly);
 
 		public void Remove(string property)
 		{
@@ -150,6 +166,13 @@ namespace TSSArt.StateMachine
 			}
 
 			return clone;
+		}
+
+		private enum State
+		{
+			Writable,
+			Readonly,
+			Empty
 		}
 
 		private class Dynamic : DynamicObject

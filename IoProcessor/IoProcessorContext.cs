@@ -10,8 +10,9 @@ namespace TSSArt.StateMachine
 	{
 		private static readonly Uri ParentTarget = new Uri(uriString: "#_parent", UriKind.Relative);
 
-		private readonly IIoProcessor                           _ioProcessor;
-		private readonly IoProcessorOptions                     _options;
+		private readonly IIoProcessor       _ioProcessor;
+		private readonly IoProcessorOptions _options;
+
 		private readonly ConcurrentDictionary<string, IService> _parentServiceBySessionId = new ConcurrentDictionary<string, IService>();
 
 		private readonly ConcurrentDictionary<(string SessionId, string InvokeId), (string InvokeUniqueId, IService Service)> _serviceByInvokeId =
@@ -88,7 +89,7 @@ namespace TSSArt.StateMachine
 
 			var stateMachineController = CreateStateMachineController(sessionId, stateMachine, options);
 			ValidateTrue(_stateMachinesBySessionId.TryAdd(sessionId, stateMachineController));
-			ValidateTrue(_parentServiceBySessionId.TryAdd(sessionId, stateMachineController));
+			ValidateTrue(_serviceByTarget.TryAdd(new Uri("#_scxml_" + stateMachineController.SessionId, UriKind.Relative), stateMachineController));
 
 			return stateMachineController;
 		}
@@ -96,7 +97,7 @@ namespace TSSArt.StateMachine
 		public virtual ValueTask DestroyStateMachine(string sessionId)
 		{
 			ValidateTrue(_stateMachinesBySessionId.TryRemove(sessionId, out var stateMachineController));
-			ValidateTrue(_parentServiceBySessionId.TryRemove(sessionId, out _));
+			ValidateTrue(_serviceByTarget.TryRemove(new Uri("#_scxml_" + stateMachineController.SessionId, UriKind.Relative), out _));
 
 			return stateMachineController.DisposeAsync();
 		}
@@ -114,6 +115,11 @@ namespace TSSArt.StateMachine
 
 			if (service is StateMachineController stateMachineController)
 			{
+				if (_stateMachinesBySessionId.TryGetValue(sessionId, out var controller))
+				{
+					ValidateTrue(_parentServiceBySessionId.TryAdd(stateMachineController.SessionId, controller));
+				}
+
 				ValidateTrue(_serviceByTarget.TryAdd(new Uri("#_scxml_" + stateMachineController.SessionId, UriKind.Relative), service));
 			}
 
@@ -136,6 +142,7 @@ namespace TSSArt.StateMachine
 
 			if (pair.Service is StateMachineController stateMachineController)
 			{
+				_parentServiceBySessionId.TryRemove(stateMachineController.SessionId, out _);
 				_serviceByTarget.TryRemove(new Uri("#_scxml_" + stateMachineController.SessionId, UriKind.Relative), out _);
 			}
 
@@ -153,6 +160,7 @@ namespace TSSArt.StateMachine
 
 			if (pair.Service is StateMachineController stateMachineController)
 			{
+				_parentServiceBySessionId.TryRemove(stateMachineController.SessionId, out _);
 				_serviceByTarget.TryRemove(new Uri("#_scxml_" + stateMachineController.SessionId, UriKind.Relative), out _);
 			}
 

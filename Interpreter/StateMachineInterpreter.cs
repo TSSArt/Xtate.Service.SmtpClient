@@ -1323,13 +1323,14 @@ namespace TSSArt.StateMachine
 				if (data.Source != null)
 				{
 					var resource = await _resourceLoader.Request(data.Source.Uri, _stopToken).ConfigureAwait(false);
-					
+
 					return DataModelValue.FromContent(resource.Content, resource.ContentType);
 				}
+
 				if (data.ExpressionEvaluator != null)
 				{
 					var obj = await data.ExpressionEvaluator.EvaluateObject(_context.ExecutionContext, _stopToken).ConfigureAwait(false);
-					
+
 					return DataModelValue.FromObject(obj.ToObject());
 				}
 

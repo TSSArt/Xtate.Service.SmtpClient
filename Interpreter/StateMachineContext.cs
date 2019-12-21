@@ -76,7 +76,20 @@ namespace TSSArt.StateMachine
 
 		public virtual IPersistenceContext PersistenceContext => throw new NotSupportedException();
 
-		private static bool IsInternalEvent(IOutgoingEvent @event) => @event.Target == InternalTarget && @event.Type == null;
+		private static bool IsInternalEvent(IOutgoingEvent @event)
+		{
+			if (@event.Target != InternalTarget || @event.Type != null)
+			{
+				return false;
+			}
+
+			if (@event.DelayMs != 0)
+			{
+				throw new ApplicationException("Internal events can't be delayed");
+			}
+
+			return true;
+		}
 
 		private DataModelObject CreateDataModel(string stateMachineName, string sessionId, DataModelValue arguments)
 		{

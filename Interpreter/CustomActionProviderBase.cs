@@ -35,7 +35,7 @@ namespace TSSArt.StateMachine
 
 			xmlReader.MoveToContent();
 
-			return _actions[xmlReader.Name](xmlReader).Action;
+			return _actions[xmlReader.LocalName](xmlReader).Action;
 		}
 
 		protected void Register(string name, Func<XmlReader, CustomActionBase> actionFactory)
