@@ -103,6 +103,16 @@ namespace TSSArt.StateMachine
 			throw new InvalidOperationException("DataModelValue is not DataModelObject");
 		}
 
+		public DataModelObject AsObjectOrEmpty()
+		{
+			if (Type == DataModelValueType.Object)
+			{
+				return (DataModelObject) _value;
+			}
+
+			return DataModelObject.Empty;
+		}
+
 		public DataModelArray AsArray()
 		{
 			if (Type == DataModelValueType.Array)
@@ -111,6 +121,16 @@ namespace TSSArt.StateMachine
 			}
 
 			throw new InvalidOperationException("DataModelValue is not DataModelArray");
+		}
+
+		public DataModelArray AsArrayOrEmpty()
+		{
+			if (Type == DataModelValueType.Array)
+			{
+				return (DataModelArray) _value;
+			}
+
+			return DataModelArray.Empty;
 		}
 
 		public string AsString()
@@ -123,6 +143,16 @@ namespace TSSArt.StateMachine
 			throw new InvalidOperationException("DataModelValue is not String");
 		}
 
+		public string AsStringOrDefault()
+		{
+			if (Type == DataModelValueType.String)
+			{
+				return (string) _value;
+			}
+
+			return null;
+		}
+
 		public double AsNumber()
 		{
 			if (Type == DataModelValueType.Number)
@@ -131,6 +161,16 @@ namespace TSSArt.StateMachine
 			}
 
 			throw new InvalidOperationException("DataModelValue is not Number");
+		}
+
+		public double? AsNumberOrDefault()
+		{
+			if (Type == DataModelValueType.Number)
+			{
+				return BitConverter.Int64BitsToDouble(_int64);
+			}
+
+			return null;
 		}
 
 		public bool AsBoolean()
@@ -143,6 +183,16 @@ namespace TSSArt.StateMachine
 			throw new InvalidOperationException("DataModelValue is not Boolean");
 		}
 
+		public bool? AsBooleanOrDefault()
+		{
+			if (Type == DataModelValueType.Boolean)
+			{
+				return _int64 != 0;
+			}
+
+			return null;
+		}
+
 		public DateTime AsDateTime()
 		{
 			if (Type == DataModelValueType.DateTime)
@@ -151,6 +201,16 @@ namespace TSSArt.StateMachine
 			}
 
 			throw new InvalidOperationException("DataModelValue is not DateTime");
+		}
+
+		public DateTime? AsDateTimeOrDefault()
+		{
+			if (Type == DataModelValueType.DateTime)
+			{
+				return new DateTime(_int64 & 0x3FFFFFFFFFFFFFFF, (DateTimeKind) ((_int64 >> 62) & 3));
+			}
+
+			return null;
 		}
 
 		public override bool Equals(object obj) => obj is DataModelValue other && Equals(other);
@@ -359,7 +419,7 @@ namespace TSSArt.StateMachine
 						case '\r':
 							sb.Append("\\r");
 							break;
-						case var ctrl when char.IsControl(ctrl):
+						case var ctrl when ctrl < 32 || ctrl >= 128:
 							sb.Append("\\u").Append(((int) c).ToString(format: "X4", CultureInfo.InvariantCulture));
 							break;
 						default:

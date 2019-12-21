@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Buffers;
+using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -40,7 +43,26 @@ namespace TSSArt.StateMachine.Services
 
 		private DataModelValue Parse(string content)
 		{
-			var message = MimeMessage.Load(content);
+			MimeMessage message;
+
+#if NETSTANDARD2_1
+			var bytes = ArrayPool<byte>.Shared.Rent(Encoding.ASCII.GetMaxByteCount(content.Length));
+			try
+			{
+				var length = Encoding.ASCII.GetBytes(content, bytes);
+				using var stream = new MemoryStream(bytes, index: 0, length);
+				message = MimeMessage.Load(stream);
+			}
+			finally
+			{
+				ArrayPool<byte>.Shared.Return(bytes);
+			}
+#else
+			using (var stream = new MemoryStream(Encoding.ASCII.GetBytes(content)))
+			{
+				message = MimeMessage.Load(stream);
+			}
+#endif
 
 			var text = message.TextBody;
 			var html = message.HtmlBody;
@@ -54,7 +76,7 @@ namespace TSSArt.StateMachine.Services
 
 				if (node == null)
 				{
-					return DataModelValue.Undefined();
+					return DataModelValue.Undefined;
 				}
 
 				text = _attr != null ? node.GetAttributeValue(_attr, def: null) : node.InnerHtml;
@@ -62,7 +84,7 @@ namespace TSSArt.StateMachine.Services
 
 			if (text == null)
 			{
-				return DataModelValue.Undefined();
+				return DataModelValue.Undefined;
 			}
 
 			if (_pattern == null)
@@ -75,7 +97,7 @@ namespace TSSArt.StateMachine.Services
 
 			if (!match.Success)
 			{
-				return DataModelValue.Undefined();
+				return DataModelValue.Undefined;
 			}
 
 			if (match.Groups.Count == 1)
@@ -90,17 +112,6 @@ namespace TSSArt.StateMachine.Services
 			}
 
 			return new DataModelValue(obj);
-		}
-	}
-
-	[CustomActionProvider("http://tssart.com/scxml/customaction/mime")]
-	public class MimeCustomActionProvider : CustomActionProviderBase
-	{
-		public static readonly ICustomActionProvider Instance = new MimeCustomActionProvider();
-
-		private MimeCustomActionProvider()
-		{
-			Register(name: "parseEmail", xmlReader => new ParseEmail(xmlReader));
 		}
 	}
 }

@@ -373,7 +373,7 @@ namespace TSSArt.StateMachine
 				xmlReader.MoveToContent();
 
 				var namespaceUri = xmlReader.NamespaceURI;
-				var name = xmlReader.Name;
+				var name = xmlReader.LocalName;
 
 				foreach (var handler in _customActionProviders)
 				{

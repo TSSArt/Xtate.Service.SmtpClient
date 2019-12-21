@@ -43,8 +43,8 @@ namespace TSSArt.StateMachine.Services
 	public class CustomRequestHandler : RequestHandler
 	{
 		private static readonly IResourceRequestHandler EmptyHtmlHandler = new InMemoryResourceRequestHandler(Encoding.ASCII.GetBytes("<html/>"), mimeType: null);
-		private readonly        string                  _content;
 
+		private readonly string      _content;
 		private readonly BrowserForm _form;
 		private readonly string      _url;
 
@@ -72,9 +72,10 @@ namespace TSSArt.StateMachine.Services
 					var postData = Encoding.ASCII.GetString(request.PostData.Elements[0].Bytes);
 
 					var result = new DataModelObject();
-					foreach (var pair in QueryHelpers.ParseQuery(postData))
+					var parameters = QueryHelpers.ParseNullableQuery(postData);
+					foreach (var pair in parameters)
 					{
-						result[pair.Key] = new DataModelValue(pair.Value.ToString());
+						result[pair.Key] = new DataModelValue(pair.Value[0]);
 					}
 
 					_form.Close(DialogResult.OK, new DataModelValue(result));

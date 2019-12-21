@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -25,7 +24,7 @@ namespace TSSArt.StateMachine.IntegrationTest
 								  EventProcessors = new[] { httpEventProcessor },
 								  ServiceFactories = new[] { HttpClientService.Factory, SmtpClientService.Factory },
 								  DataModelHandlerFactories = new[] { EcmaScriptDataModelHandler.Factory },
-								  CustomActionProviders = new [] { BasicCustomActionProvider.Instance, MimeCustomActionProvider.Instance }
+								  CustomActionProviders = new[] { BasicCustomActionProvider.Instance, MimeCustomActionProvider.Instance, MidCustomActionProvider.Instance }
 						  };
 
 			await using var ioProcessor = new IoProcessor(options);

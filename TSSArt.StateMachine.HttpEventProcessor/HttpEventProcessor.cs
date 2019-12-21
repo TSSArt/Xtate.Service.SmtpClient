@@ -231,14 +231,14 @@ namespace TSSArt.StateMachine
 		{
 			return element.ValueKind switch
 			{
-					JsonValueKind.Undefined => DataModelValue.Undefined(),
+					JsonValueKind.Undefined => DataModelValue.Undefined,
 					JsonValueKind.Object => new DataModelValue(MapObject(element)),
 					JsonValueKind.Array => new DataModelValue(MapArray(element)),
 					JsonValueKind.String => new DataModelValue(element.GetString()),
 					JsonValueKind.Number => new DataModelValue(element.GetDouble()),
 					JsonValueKind.True => new DataModelValue(true),
 					JsonValueKind.False => new DataModelValue(false),
-					JsonValueKind.Null => DataModelValue.Null(),
+					JsonValueKind.Null => DataModelValue.Null,
 					_ => throw new ArgumentOutOfRangeException()
 			};
 		}

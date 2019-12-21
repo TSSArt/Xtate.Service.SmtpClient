@@ -1,152 +1,256 @@
-﻿<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" datamodel="ecmascript" initial="RegisterEmail">
+﻿<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" datamodel="ecmascript">
   <datamodel>
+    <data id="username" />
+    <data id="password" />
     <data id="email" />
-    <data id="g_recaptcha_response" />
-    <data id="emailContent" />
-    <data id="setPasswordUrl" />
+    <data id="mailKey" />
+    <data id="captchaHtml">
+      <html xmlns="">
+        <head>
+          <script src="https://www.google.com/recaptcha/api.js" async="" defer=""></script>
+          <script type="text/javascript">
+            function ok(){document.getElementById("frm").submit();}
+          </script>
+        </head>
+        <body>
+          <form id="frm" action="" method="POST">
+            <div class="g-recaptcha" data-sitekey="6Lcr4RYTAAAAAN_gTioJ2RIkdiHu6IfDq870-2bO" data-callback="ok"></div>
+          </form>
+        </body>
+      </html>
+    </data>
   </datamodel>
-  <state id='RegisterEmail'>
-    <onentry>
-      <log label="RegisterEmail ENTERED" />
-    </onentry>
-    <invoke src='http://mid.dev.tssart.com/MailServer/Web2/api/Mail' type='http'>
-      <param name='method' expr="'post'" />
-      <param name='accept' expr="'application/json'" />
-      <finalize>
-        <assign location='email' expr='_event.data.content.Email' />
-        <log label="Email CREATED:" expr="email" />
-      </finalize>
-    </invoke>
-    <transition event='done.invoke' target='RegisterCaptcha' />
-    <transition event='error' target='finErr' />
-  </state>
-  <state id="RegisterCaptcha">
-    <datamodel>
-      <data id="content" />
-    </datamodel>
-    <onentry>
-      <assign location="content">
-        <html xmlns="">
-          <head>
-            <script src="https://www.google.com/recaptcha/api.js" async=" defer="></script>
-            <script type="text/javascript">
-              function ok(){document.getElementById("frm").submit();}
-            </script>
-          </head>
-          <body>
-            <form id="frm" action="" method="POST">
-              <div class="g-recaptcha" data-sitekey="6Lcr4RYTAAAAAN_gTioJ2RIkdiHu6IfDq870-2bO" data-callback="ok"></div>
-            </form>
-          </body>
-        </html>
-      </assign>
-      <send type="http" target="http://localhost:5000/captcha" event="show">
-        <param name="url" expr="'https://test.tssart.com/wp-login.php?action=register'" />
-        <param name="content" expr="content" />
-      </send>
-    </onentry>
-    <transition event='captcha.submitted' target='RegisterAccount'>
-      <assign location='g_recaptcha_response' expr="_event.data.form['g-recaptcha-response']" />
-      <log label="g_recaptcha_response" expr='g_recaptcha_response' />
+
+  <initial>
+    <transition target="Idle" xmlns:mid="http://tssart.com/scxml/customaction/mid">
+      <mid:storage location="username" operation="get" variable="username" />
+      <mid:storage location="password" operation="get" variable="password" />
+      <mid:storage location="email" operation="get" variable="email" />
+      <mid:storage location="mailKey" operation="get" variable="mailKey" />
     </transition>
+  </initial>
+
+  <state id="Idle">
+    <transition event="authenticate" target="Authenticate" />
+    <transition event="emergency" />
+    <transition event="maintenance" />
   </state>
-  <state id='RegisterAccount'>
+
+  <state id="Authenticate" initial="Authenticate.Login">
+    <datamodel>
+      <data id="origin" />
+      <data id="originType" />
+    </datamodel>
+
     <onentry>
-      <log label="RegisterAccount ENTERED" />
-    </onentry>
-    <invoke src='https://test.tssart.com/wp-login.php?action=register' type='http'>
-      <param name='method' expr="'post'" />
-      <param name='contentType' expr="'application/x-www-form-urlencoded'" />
-      <param name='form' expr="[
-             { name: 'user_login', value: 'tadex12' }, 
-             { name: 'user_email', value: email }, 
-             { name: 'g-recaptcha-response', value: g_recaptcha_response }, 
-             { name: 'redirect_to', value: '' }, 
-             { name: 'wp-submit', value: 'Register' }
-             ]" />
-      <finalize>
-        <log label="Email REGISTERED" />
-      </finalize>
-    </invoke>
-    <transition event='done.invoke' target='WaitForEmail' />
-    <transition event='error' target='finErr' />
-  </state>
-  <state id='WaitForEmail'>
-    <invoke srcexpr='&quot;http://mid.dev.tssart.com/MailServer/Web2/api/Mail?lastReceivedOnUtc=2019-01-01&amp;email=&quot; + email' type='http'>
-      <param name='accept' expr="'application/json'"/>
-      <finalize xmlns:basic='http://tssart.com/scxml/customaction/basic' xmlns:mime='http://tssart.com/scxml/customaction/mime'>
-        <assign location='emailContent' expr='_event.data.content.EmailEntries[0].ContentRaw' />
-        <basic:base64decode source='emailContent' destination='emailContent'/>
-        <mime:parseEmail source='emailContent' destination='setPasswordUrl' regex='https?\:\/\/[A-Za-z0-9-._@\/]+\?[A-Za-z0-9-._~:?#[\]@!$&amp;&#039;()*+,;=\/]+'/>
-        <log label="setPasswordUrl" expr="setPasswordUrl" />
-      </finalize>
-    </invoke>
-    <transition event='done.invoke' target='fin'/>
-    <transition event='error' target='finErr' />
-  </state>
-  <state id='ConfirmEmail'>
-    <onentry>
-      <log label="ConfirmEmail ENTERED" />
+      <assign location="origin" expr="_event.origin" />
+      <assign location="origintype" expr="_event.origintype" />
     </onentry>
 
+    <state id="Authenticate.Login">
+      <transition target="Authenticate.NoCredentials" cond="!username" />
 
-    <transition event='error' target='finErr' />
-  </state>
-  <!-- <datamodel>https://test.tssart.com/wp-login.php?action=register
-    <data id="email" />
-  </datamodel>
-  <state id='RegisterEmail'>
-    <invoke src='http://mid.dev.tssart.com/MailServer/Web2/api/Mail' type='http'>
-      <param name='method' expr="'post'"/>
-      <param name='accept' expr="'application/json'"/>
-      <finalize>
-        <assign location='email' expr='_event.data.content.Email' />
-      </finalize>
-    </invoke>
-    <transition event='done.invoke' target='SendEmail'/>
-    <transition event='error' target='finErr' />
-  </state>
-  <state id='SendEmail'>
-    <invoke type='smtp'>
-      <param name='server' expr="'hare.tssart.com'"/>
-      <param name='from' expr="'ser@tssart.com'"/>
-      <param name='to' expr='email'/>
-      <param name='subject' expr="'This is Subject'"/>
-      <param name='body' expr="'This is BODY'"/>
-    </invoke>
-    <transition event='done.invoke' target='ReCaptcha'/>
-    <transition event='error' target='finErr'/>
-  </state>
-  <state id='ReCaptcha'>
-    <invoke src='https://www.tssart.com/wp-login.php' type='browser'>
-      <param name='type' expr='GoogleRecaptchaV2'/>
-      <param name='sitekey' expr='6LdI3RYTAAAAAMkmqOQSdno04oej6pDHGFpU3TRG'/>
-    </invoke>
-    <transition event='done.invoke' target='WaitForEmail'/>
-    <transition event='error' target='finErr'/>
-  </state>
-  <state id='WaitForEmail'>
-    <invoke srcexpr='&quot;http://mid.dev.tssart.com/MailServer/Web2/api/Mail?lastReceivedOnUtc=2019-01-01&amp;email=&quot; + email' type='http'>
-      <param name='accept' expr="'application/json'"/>
-      <finalize xmlns:basic='http://tssart.com/scxml/customaction/basic' xmlns:mime='http://tssart.com/scxml/customaction/mime'>
-        <assign location='emailContent' expr='_event.data.content.EmailEntries[0].ContentRaw' />
-        <basic:base64decode source='emailContent' destination='emailContent'/>
-        <mime:parseEmail source='emailContent' destination='confirmationUrl' xpath='' attr='' regex=''/>
-		  </finalize>
-    </invoke>
-    <transition event='done.invoke' target='fin'/>
-    <transition event='error' target='finErr' />
-  </state>
-   -->
-  <final id='fin'>
-    <donedata>
-      <content expr='_event.data' />
-    </donedata>
-  </final>
-  <final id='finErr'>
-    <donedata>
-      <content expr='_event.data' />
-    </donedata>
-  </final>
+      <invoke src="https://test.tssart.com/wp-login.php" type="http">
+        <param name="method" expr="'post'" />
+        <param name="autoRedirect" expr="false" />
+        <param name="contentType" expr="'application/x-www-form-urlencoded'" />
+        <content
+          expr="[
+                   { name: 'log', value: username }, 
+                   { name: 'pwd', value: password }, 
+                   { name: 'g-recaptcha-response', value: recaptchaResponse }, 
+                   { name: 'redirect_to', value: '/wp-admin/' }, 
+                   { name: 'wp-submit', value: 'Log In' },
+                   { name: 'testcookie', value: '1' }
+                ]" />
+      </invoke>
 
+      <transition event="done.invoke.LogIn" target="Idle" cond="_event.data.statusCode != 302" />
+      <transition event="done.invoke.LogIn" target="Authenticate.OK" cond="_event.data.statusCode == 302" />
+    </state>
+
+    <state id="Authenticate.NoCredentials">
+      <invoke type="input">
+        <content
+          expr="[
+                   { name: 'username', location: 'username' }, 
+                   { name: 'password', location: 'password' } 
+                ]" />
+      </invoke>
+
+    </state>
+
+    <final id="Authenticate.OK">
+      <onentry>
+        <send typeexpr="origintype" targetexpr="origin" event="authenticate.ok">
+          <param name="cookies" expr="_event.data.cookies" />
+        </send>
+      </onentry>
+
+      <transition target="Idle" />
+    </final>
+
+    <final id="Authenticate.Cancel">
+      <transition target="Idle" />
+    </final>
+  </state>
+
+  <state id="SignUp" initial="CreateEmail">
+    <datamodel>
+      <data id="recaptchaResponse" />
+      <data id="emailContent" />
+      <data id="setPasswordUrl" />
+      <data id="resetPasswordKey" />
+      <data id="cookies" />
+    </datamodel>
+
+    <state id="CreateEmail">
+      <invoke src="http://mid.dev.tssart.com/MailServer/Web2/api/Mail" type="http">
+        <param name="method" expr="'post'" />
+        <param name="accept" expr="'application/json'" />
+        <finalize>
+          <assign location="email" expr="_event.data.content.Email" />
+        </finalize>
+      </invoke>
+
+      <transition event="done.invoke.CreateEmail" target="RegisterCaptcha" />
+    </state>
+
+    <state id="RegisterCaptcha">
+      <datamodel>
+        <data id="id" expr="'cap111'" />
+      </datamodel>
+
+      <onentry>
+        <send type="http" target="http://localhost:5000/captcha" event="show" namelist="id">
+          <param name="url" expr="'https://test.tssart.com/wp-login.php?action=register'" />
+          <param name="content" expr="captchaHtml" />
+        </send>
+        <send id="CancelCaptcha" event="captcha.cancelled" type="scxml" targetexpr="'#_scxml_' + _sessionid"
+              delay="30s" />
+      </onentry>
+
+      <onexit>
+        <send type="http" target="http://localhost:5000/captcha" event="cancel" namelist="id" />
+        <cancel sendid="CancelCaptcha" />
+      </onexit>
+
+      <transition event="captcha.cancelled" target="RegisterCaptcha" />
+
+      <transition event="captcha.submitted" target="RegisterAccount">
+        <assign location="recaptchaResponse" expr="_event.data.form['g-recaptcha-response']" />
+      </transition>
+    </state>
+
+    <state id="RegisterAccount">
+      <onentry>
+        <storage xmlns="http://tssart.com/scxml/customaction/mid" location="username" operation="create"
+                 template="userid" rule="[a-z0-9]{1,20}" />
+      </onentry>
+
+      <invoke src="https://test.tssart.com/wp-login.php?action=register" type="http">
+        <param name="method" expr="'post'" />
+        <param name="autoRedirect" expr="false" />
+        <param name="contentType" expr="'application/x-www-form-urlencoded'" />
+        <param name="form"
+               expr="[
+                       { name: 'user_login', value: username }, 
+                       { name: 'user_email', value: email }, 
+                       { name: 'g-recaptcha-response', value: recaptchaResponse }, 
+                       { name: 'redirect_to', value: '' }, 
+                       { name: 'wp-submit', value: 'Register' }
+                     ]" />
+      </invoke>
+
+      <transition event="done.invoke.RegisterAccount" target="RegisterCaptcha" cond="_event.data.statusCode != 302" />
+      <transition event="done.invoke.RegisterAccount" target="WaitForEmail" cond="_event.data.statusCode == 302" />
+    </state>
+
+    <state id="WaitForEmail">
+      <invoke
+        srcexpr="'http://mid.dev.tssart.com/MailServer/Web2/api/Mail?lastReceivedOnUtc=2019-01-01&amp;email=' + email"
+        type="http">
+        <param name="accept" expr="'application/json'" />
+        <finalize xmlns:basic="http://tssart.com/scxml/customaction/basic"
+                  xmlns:mime="http://tssart.com/scxml/customaction/mime">
+          <assign location="emailContent" expr="_event.data.content.EmailEntries[0].ContentRaw" />
+          <basic:base64decode source="emailContent" destination="emailContent" />
+          <mime:parseEmail source="emailContent" destination="setPasswordUrl"
+                           regex="https?\:\/\/[A-Za-z0-9-._@\/]+\?[A-Za-z0-9-._~:?#[\]@!$&amp;&#039;()*+,;=\/]+" />
+          <basic:parseUrl source="setPasswordUrl" destination="resetPasswordKey" parameter="key" />
+        </finalize>
+      </invoke>
+
+      <transition event="done.invoke.WaitForEmail" target="SetPasswordCaptcha" />
+    </state>
+
+    <state id="SetPasswordCaptcha">
+      <datamodel>
+        <data id="id" expr="'cap111'" />
+      </datamodel>
+
+      <onentry>
+        <send type="http" target="http://localhost:5000/captcha" event="show" namelist="id">
+          <param name="url" expr="'https://test.tssart.com/wp-login.php?action=register'" />
+          <param name="content" expr="captchaHtml" />
+        </send>
+        <send id="CancelCaptcha" event="captcha.cancelled" delay="30s" />
+      </onentry>
+
+      <onexit>
+        <send type="http" target="http://localhost:5000/captcha" event="cancel" namelist="id" />
+        <cancel sendid="CancelCaptcha" />
+      </onexit>
+
+      <transition event="captcha.cancelled" target="SetPasswordCaptcha" />
+
+      <transition event="captcha.submitted" target="GetCookies">
+        <assign location="recaptchaResponse" expr="_event.data.form['g-recaptcha-response']" />
+      </transition>
+    </state>
+
+    <state id="GetCookies">
+      <invoke srcexpr="setPasswordUrl" type="http">
+        <param name="method" expr="'get'" />
+        <finalize>
+          <assign location="cookies" expr="_event.data.cookies" />
+        </finalize>
+      </invoke>
+
+      <transition event="done.invoke.GetCookies" target="SetPassword" />
+    </state>
+
+    <state id="SetPassword">
+      <onentry>
+        <storage xmlns="http://tssart.com/scxml/customaction/mid" location="password" operation="create"
+                 template="password" rule="[a-zA-Z0-9]{16}" />
+      </onentry>
+
+      <invoke src="https://test.tssart.com/wp-login.php?action=resetpass" type="http">
+        <param name="method" expr="'post'" />
+        <param name="autoRedirect" expr="false" />
+        <param name="contentType" expr="'application/x-www-form-urlencoded'" />
+        <param name="cookies" expr="cookies" />
+        <param name="form"
+               expr="[
+                       { name: 'pass1', value: password }, 
+                       { name: 'pass2', value: password }, 
+                       { name: 'pw_weak', value: 'on' }, 
+                       { name: 'g-recaptcha-response', value: recaptchaResponse }, 
+                       { name: 'rp_key', value: resetPasswordKey }, 
+                       { name: 'wp-submit', value: 'Reset Password' }
+                     ]" />
+      </invoke>
+
+      <transition event="done.invoke.SetPassword" target="SetPasswordCaptcha" cond="_event.data.statusCode != 302" />
+      <transition event="done.invoke.SetPassword" target="Final" cond="_event.data.statusCode == 302" />
+    </state>
+
+    <final id="Final">
+      <onentry>
+        <log label="username" expr="username" />
+        <log label="password" expr="password" />
+      </onentry>
+    </final>
+  </state>
 </scxml>

@@ -55,7 +55,7 @@ namespace TSSArt.StateMachine
 
 		async ValueTask<SendStatus> IExternalCommunication.TrySendEvent(IOutgoingEvent @event, CancellationToken token)
 		{
-			var sendStatus = await _ioProcessor.DispatchEvent(SessionId, @event, token).ConfigureAwait(false);
+			var sendStatus = await _ioProcessor.DispatchEvent(SessionId, @event, skipDelay: false, token).ConfigureAwait(false);
 
 			if (sendStatus == SendStatus.ToSchedule)
 			{
@@ -278,7 +278,7 @@ namespace TSSArt.StateMachine
 
 			try
 			{
-				await _ioProcessor.DispatchEvent(SessionId, scheduledEvent.Event, CancellationToken.None).ConfigureAwait(false);
+				await _ioProcessor.DispatchEvent(SessionId, scheduledEvent.Event, skipDelay: true, CancellationToken.None).ConfigureAwait(false);
 			}
 			catch (Exception ex)
 			{

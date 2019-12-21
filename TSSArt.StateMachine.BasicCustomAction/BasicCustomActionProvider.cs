@@ -8,6 +8,7 @@
 		private BasicCustomActionProvider()
 		{
 			Register(name: "base64decode", xmlReader => new Base64DecodeAction(xmlReader));
+			Register(name: "parseUrl", xmlReader => new ParseUrlAction(xmlReader));
 		}
 	}
 }

@@ -24,17 +24,23 @@ namespace TSSArt.StateMachine
 			SetLength
 		}
 
+		public static readonly DataModelArray Empty = new DataModelArray(State.Empty);
+
 		private readonly List<DataModelDescriptor> _list;
 
-		public DataModelArray() : this(false) { }
+		private State _state;
 
-		public DataModelArray(bool isReadOnly)
-		{
-			IsReadOnly = isReadOnly;
-			_list = new List<DataModelDescriptor>();
-		}
+		public DataModelArray() : this(State.Writable) { }
+
+		public DataModelArray(bool isReadOnly) : this(isReadOnly ? State.Readonly : State.Writable) { }
 
 		public DataModelArray(int capacity) => _list = new List<DataModelDescriptor>(capacity);
+
+		private DataModelArray(State state)
+		{
+			_state = state;
+			_list = new List<DataModelDescriptor>();
+		}
 
 		public DataModelArray(IEnumerable<DataModelValue> items)
 		{
@@ -90,7 +96,7 @@ namespace TSSArt.StateMachine
 			return base.ToString();
 		}
 
-		public bool IsReadOnly { get; private set; }
+		public bool IsReadOnly => _state != State.Writable;
 
 		public IEnumerator<DataModelValue> GetEnumerator()
 		{
@@ -195,10 +201,15 @@ namespace TSSArt.StateMachine
 
 		public event ChangedHandler Changed;
 
-		public void Freeze() => IsReadOnly = true;
+		public void Freeze() => _state = State.Readonly;
 
 		internal void AddInternal(DataModelDescriptor descriptor)
 		{
+			if (_state == State.Empty)
+			{
+				throw ObjectCantBeModifiedException();
+			}
+
 			_list.Add(descriptor);
 
 			Changed?.Invoke(ChangedAction.Set, _list.Count - 1, descriptor);
@@ -206,6 +217,11 @@ namespace TSSArt.StateMachine
 
 		internal void ClearInternal()
 		{
+			if (_state == State.Empty)
+			{
+				throw ObjectCantBeModifiedException();
+			}
+
 			Changed?.Invoke(ChangedAction.Clear, index: default, descriptor: default);
 
 			_list.Clear();
@@ -213,6 +229,11 @@ namespace TSSArt.StateMachine
 
 		internal bool RemoveInternal(DataModelDescriptor descriptor)
 		{
+			if (_state == State.Empty)
+			{
+				throw ObjectCantBeModifiedException();
+			}
+
 			var index = _list.IndexOf(descriptor);
 
 			if (index >= 0)
@@ -229,6 +250,11 @@ namespace TSSArt.StateMachine
 
 		internal void InsertInternal(int index, DataModelDescriptor descriptor)
 		{
+			if (_state == State.Empty)
+			{
+				throw ObjectCantBeModifiedException();
+			}
+
 			if (index > Length)
 			{
 				SetLength(index);
@@ -241,6 +267,11 @@ namespace TSSArt.StateMachine
 
 		internal void RemoveAtInternal(int index)
 		{
+			if (_state == State.Empty)
+			{
+				throw ObjectCantBeModifiedException();
+			}
+
 			if (index < _list.Count)
 			{
 				Changed?.Invoke(ChangedAction.Remove, index, _list[index]);
@@ -251,6 +282,11 @@ namespace TSSArt.StateMachine
 
 		internal void SetInternal(int index, DataModelDescriptor descriptor)
 		{
+			if (_state == State.Empty)
+			{
+				throw ObjectCantBeModifiedException();
+			}
+
 			if (index < _list.Count)
 			{
 				Changed?.Invoke(ChangedAction.Remove, index, _list[index]);
@@ -317,6 +353,11 @@ namespace TSSArt.StateMachine
 
 		internal void SetLengthInternal(int value)
 		{
+			if (_state == State.Empty)
+			{
+				throw ObjectCantBeModifiedException();
+			}
+
 			if (value < Length)
 			{
 				Changed?.Invoke(ChangedAction.SetLength, value, descriptor: default);
@@ -376,6 +417,13 @@ namespace TSSArt.StateMachine
 			}
 
 			return clone;
+		}
+
+		private enum State
+		{
+			Writable,
+			Readonly,
+			Empty
 		}
 
 		private class Dynamic : DynamicObject

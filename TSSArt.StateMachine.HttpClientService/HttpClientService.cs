@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Mime;
 using System.Reflection;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
 
@@ -16,74 +20,167 @@ namespace TSSArt.StateMachine.Services
 	[SimpleService("http://tssart.com/scxml/service/#HTTPClient", Alias = "http")]
 	public class HttpClientService : SimpleServiceBase
 	{
-		private const string MediaTypeApplicationJson = "application/json";
+		private const string MediaTypeApplicationFormUrlEncoded = "application/x-www-form-urlencoded";
+		private const string MediaTypeApplicationJson           = "application/json";
+		private const string MediaTypeTextHtml                  = "text/html";
 
 		public static readonly IServiceFactory Factory = SimpleServiceFactory<HttpClientService>.Instance;
 
 		private static readonly FieldInfo DomainTableField = typeof(CookieContainer).GetField(name: "m_domainTable", BindingFlags.Instance | BindingFlags.NonPublic);
 		private static readonly FieldInfo ListField        = typeof(CookieContainer).Assembly.GetType("System.Net.PathList").GetField(name: "m_list", BindingFlags.Instance | BindingFlags.NonPublic);
 
-		private static string GetString(DataModelValue val, string key, string defaultValue = null)
-		{
-			var dataModelValue = val.AsObject()[key];
-
-			return dataModelValue.Type != DataModelValueType.Undefined ? dataModelValue.AsString() : defaultValue;
-		}
-
-		private static bool GetBoolean(DataModelValue val, string key, bool defaultValue = false)
-		{
-			var dataModelValue = val.AsObject()[key];
-
-			return dataModelValue.Type != DataModelValueType.Undefined ? dataModelValue.AsBoolean() : defaultValue;
-		}
-
-		private static DateTime GetDateTime(DataModelValue val, string key, DateTime defaultValue = default)
-		{
-			var dataModelValue = val.AsObject()[key];
-
-			return dataModelValue.Type != DataModelValueType.Undefined ? dataModelValue.AsDateTime() : defaultValue;
-		}
-
-		private static IList<DataModelValue> GetArray(DataModelValue val, string key)
-		{
-			var dataModelValue = val.AsObject()[key];
-
-			return dataModelValue.Type != DataModelValueType.Undefined ? (IList<DataModelValue>) dataModelValue.AsArray() : Array.Empty<DataModelValue>();
-		}
-
-		private static DataModelObject GetObject(DataModelValue val, string key)
-		{
-			var dataModelValue = val.AsObject()[key];
-
-			return dataModelValue.Type != DataModelValueType.Undefined ? dataModelValue.AsObject() : null;
-		}
-
 		protected override async ValueTask<DataModelValue> Execute()
 		{
-			var request = WebRequest.CreateHttp(Source);
+			var parameters = Parameters.AsObjectOrEmpty();
 
-			request.AllowAutoRedirect = GetBoolean(Parameters, key: "autoRedirect", defaultValue: true);
-			request.Method = GetString(Parameters, key: "method", defaultValue: "get");
+			var method = parameters["method"].AsStringOrDefault() ?? "get";
+			var autoRedirect = parameters["autoRedirect"].AsBooleanOrDefault() ?? true;
+			var accept = parameters["accept"].AsStringOrDefault();
+			var contentType = parameters["contentType"].AsStringOrDefault();
 
-			var headers = GetArray(Parameters, key: "headers");
+			var headers = from obj in parameters["headers"].AsArrayOrEmpty()
+						  let name = obj.AsObjectOrEmpty()["name"].AsStringOrDefault()
+						  let value = obj.AsObjectOrEmpty()["value"].AsStringOrDefault()
+						  where !string.IsNullOrEmpty(name) && value != null
+						  select new KeyValuePair<string, string>(name, value);
 
-			foreach (var header in headers)
+			var cookies = from obj in parameters["cookies"].AsArrayOrEmpty()
+						  let cookie = obj.AsObjectOrEmpty()
+						  select new Cookie
+								 {
+										 Name = cookie["name"].AsStringOrDefault(),
+										 Value = cookie["value"].AsStringOrDefault(),
+										 Path = cookie["path"].AsStringOrDefault(),
+										 Domain = cookie["domain"].AsStringOrDefault(),
+										 Expires = cookie["expires"].AsDateTimeOrDefault() ?? DateTime.MinValue,
+										 HttpOnly = cookie["httpOnly"].AsBooleanOrDefault() ?? false,
+										 Port = cookie["port"].AsStringOrDefault(),
+										 Secure = cookie["secure"].AsBooleanOrDefault() ?? false
+								 };
+
+			var capturesObj = parameters["capture"].AsObjectOrEmpty();
+			var captures = from name in capturesObj.Properties
+						   let capture = capturesObj[name].AsObjectOrEmpty()
+						   select new Capture
+								  {
+										  Name = name,
+										  Attribute = capture["attr"].AsStringOrDefault(),
+										  XPath = capture["xpath"].AsStringOrDefault(),
+										  Regex = capture["regex"].AsStringOrDefault()
+								  };
+
+			var response = await DoRequest(Source, method, accept, autoRedirect, contentType, headers, cookies, captures, Content, StopToken).ConfigureAwait(false);
+
+			var responseHeaders = new DataModelArray();
+			foreach (var header in response.Headers)
 			{
-				request.Headers.Add(GetString(header, key: "name"), GetString(header, key: "value"));
+				var pair = new DataModelObject { ["name"] = new DataModelValue(header.Key), ["value"] = new DataModelValue(header.Value) };
+				pair.Freeze();
+				responseHeaders.Add(new DataModelValue(pair));
 			}
 
-			var accept = GetString(Parameters, key: "accept");
+			responseHeaders.Freeze();
+
+			var responseCookies = new DataModelArray();
+			foreach (var cookie in response.Cookies)
+			{
+				var cookieObj = new DataModelObject
+								{
+										["name"] = new DataModelValue(cookie.Name),
+										["value"] = new DataModelValue(cookie.Value),
+										["path"] = new DataModelValue(cookie.Path),
+										["domain"] = new DataModelValue(cookie.Domain),
+										["httpOnly"] = new DataModelValue(cookie.HttpOnly),
+										["port"] = new DataModelValue(cookie.Port),
+										["secure"] = new DataModelValue(cookie.Secure)
+								};
+
+				if (cookie.Expires != default)
+				{
+					cookieObj["expires"] = new DataModelValue(cookie.Expires);
+				}
+
+				cookieObj.Freeze();
+				responseCookies.Add(new DataModelValue(cookieObj));
+			}
+
+			responseCookies.Freeze();
+
+			var result = new DataModelObject
+						 {
+								 ["statusCode"] = new DataModelValue(response.StatusCode),
+								 ["statusDescription"] = new DataModelValue(response.StatusDescription),
+								 ["webExceptionStatus"] = new DataModelValue(response.WebExceptionStatus),
+								 ["headers"] = new DataModelValue(responseHeaders),
+								 ["cookies"] = new DataModelValue(responseCookies),
+								 ["content"] = response.Content
+						 };
+			result.Freeze();
+
+			return new DataModelValue(result);
+		}
+
+		private static HttpContent CreateFormUrlEncodedContent(DataModelValue content)
+		{
+			var forms = from p in content.AsArrayOrEmpty()
+						let name = p.AsObjectOrEmpty()["name"].AsStringOrDefault()
+						let value = p.AsObjectOrEmpty()["value"].AsStringOrDefault()
+						where !string.IsNullOrEmpty(name) && value != null
+						select new KeyValuePair<string, string>(name, value);
+
+			return new FormUrlEncodedContent(forms);
+		}
+
+		private static HttpContent CreateJsonContent(DataModelValue content) => new StringContent(content.ToString(format: "JSON", CultureInfo.InvariantCulture), Encoding.ASCII);
+
+		private static HttpContent CreateDefaultContent(DataModelValue content) => new StringContent(content.ToObject()?.ToString() ?? string.Empty, Encoding.UTF8);
+
+		private static async ValueTask<DataModelValue> FromJsonContent(Stream stream, CancellationToken token)
+		{
+			using var jsonDocument = await JsonDocument.ParseAsync(stream, options: default, token).ConfigureAwait(false);
+
+			return GetDataModelValue(jsonDocument.RootElement);
+		}
+
+		private static ValueTask<DataModelValue> FromTextHtmlContent(Stream stream, IEnumerable<Capture> captures)
+		{
+			var htmlDocument = new HtmlDocument();
+			htmlDocument.Load(stream);
+
+			return new ValueTask<DataModelValue>(CaptureData(htmlDocument, captures));
+		}
+
+		private static async ValueTask<Response> DoRequest(Uri requestUri, string method, string accept, bool autoRedirect, string contentType,
+														   IEnumerable<KeyValuePair<string, string>> headers, IEnumerable<Cookie> cookies,
+														   IEnumerable<Capture> captures, DataModelValue content, CancellationToken token)
+		{
+			var request = WebRequest.CreateHttp(requestUri);
+
+			request.Method = method;
+			request.AllowAutoRedirect = autoRedirect;
+
 			if (accept != null)
 			{
 				request.Accept = accept;
 			}
 
-			await WriteContent(request).ConfigureAwait(false);
+			foreach (var header in headers)
+			{
+				request.Headers.Add(header.Key, header.Value);
+			}
 
-			var cookieContainer = CreateCookieContainer(GetArray(Parameters, key: "cookies"));
+			var cookieContainer = new CookieContainer();
+
+			foreach (var cookie in cookies)
+			{
+				cookieContainer.Add(cookie);
+			}
+
 			request.CookieContainer = cookieContainer;
 
-			var result = new DataModelObject();
+			await WriteContent(request, contentType, content).ConfigureAwait(false);
+
+			var result = new Response();
 
 			HttpWebResponse response;
 			try
@@ -94,54 +191,46 @@ namespace TSSArt.StateMachine.Services
 			{
 				response = (HttpWebResponse) ex.Response;
 
-				result["webExceptionStatus"] = new DataModelValue(ex.Status.ToString());
+				result.WebExceptionStatus = ex.Status.ToString();
 			}
 
-			result["statusCode"] = new DataModelValue((int) response.StatusCode);
-			result["statusDescription"] = new DataModelValue(response.StatusDescription);
+			result.StatusCode = (int) response.StatusCode;
+			result.StatusDescription = response.StatusDescription;
 
 #if NETSTANDARD2_1
 			await using var stream = response.GetResponseStream();
 #else
 			using var stream = response.GetResponseStream();
 #endif
-			var contentType = new ContentType(response.ContentType);
-			if (contentType.MediaType == MediaTypeApplicationJson)
-			{
-				using var jsonDocument = await JsonDocument.ParseAsync(stream, options: default, StopToken).ConfigureAwait(false);
+			var responseContentType = new ContentType(response.ContentType);
 
-				result["content"] = GetDataModelValue(jsonDocument.RootElement);
+			if (responseContentType.MediaType == MediaTypeApplicationJson)
+			{
+				result.Content = await FromJsonContent(stream, token).ConfigureAwait(false);
 			}
-			else
+			else if (responseContentType.MediaType == MediaTypeTextHtml)
 			{
-				if (stream != null)
-				{
-					var htmlDocument = new HtmlDocument();
-					htmlDocument.Load(stream);
-
-					result["capture"] = CaptureData(htmlDocument);
-				}
+				result.Content = await FromTextHtmlContent(stream, captures).ConfigureAwait(false);
 			}
 
-			result["headers"] = new DataModelValue(GetHeaders(response.Headers));
-			result["cookies"] = new DataModelValue(GetCookies(cookieContainer));
+			result.Headers = from key in response.Headers.AllKeys select new KeyValuePair<string, string>(key, response.Headers[key]);
 
-			return new DataModelValue(result);
+			result.Cookies = from object pathList in ((Hashtable) DomainTableField.GetValue(cookieContainer)).Values
+							 from IEnumerable cookieList in ((SortedList) ListField.GetValue(pathList)).Values
+							 from Cookie cookie in cookieList
+							 select cookie;
+
+			return result;
 		}
 
-		private async ValueTask WriteContent(HttpWebRequest request)
+		private static async ValueTask WriteContent(WebRequest request, string contentType, DataModelValue content)
 		{
-			const string mediaTypeApplicationFormUrlEncoded = "application/x-www-form-urlencoded";
-
-			var contentType = GetString(Parameters, key: "contentType");
-			if (contentType != null)
-			{
-				request.ContentType = contentType;
-			}
-			else
+			if (contentType == null)
 			{
 				return;
 			}
+
+			request.ContentType = contentType;
 
 #if NETSTANDARD2_1
 			await using var stream = request.GetRequestStream();
@@ -149,40 +238,40 @@ namespace TSSArt.StateMachine.Services
 			using var stream = request.GetRequestStream();
 #endif
 
-			if (contentType == mediaTypeApplicationFormUrlEncoded)
+			if (contentType == MediaTypeApplicationFormUrlEncoded)
 			{
-				using var content = new FormUrlEncodedContent(GetParameters());
-				await content.CopyToAsync(stream).ConfigureAwait(false);
-
-				IEnumerable<KeyValuePair<string, string>> GetParameters()
-				{
-					var form = GetArray(Parameters, key: "form");
-
-					foreach (var prm in form)
-					{
-						yield return new KeyValuePair<string, string>(GetString(prm, key: "name"), GetString(prm, key: "value"));
-					}
-				}
+				using var httpContent = CreateFormUrlEncodedContent(content);
+				await httpContent.CopyToAsync(stream).ConfigureAwait(false);
+			}
+			else if (contentType == MediaTypeApplicationJson)
+			{
+				using var httpContent = CreateJsonContent(content);
+				await httpContent.CopyToAsync(stream).ConfigureAwait(false);
+			}
+			else
+			{
+				using var httpContent = CreateDefaultContent(content);
+				await httpContent.CopyToAsync(stream).ConfigureAwait(false);
 			}
 		}
 
-		private DataModelValue GetDataModelValue(in JsonElement element)
+		private static DataModelValue GetDataModelValue(in JsonElement element)
 		{
 			return element.ValueKind switch
 			{
-					JsonValueKind.Undefined => DataModelValue.Undefined(),
+					JsonValueKind.Undefined => DataModelValue.Undefined,
 					JsonValueKind.Object => new DataModelValue(GetDataModelObject(element.EnumerateObject())),
 					JsonValueKind.Array => new DataModelValue(GetDataModeArray(element.EnumerateArray())),
 					JsonValueKind.String => new DataModelValue(element.GetString()),
 					JsonValueKind.Number => new DataModelValue(element.GetDouble()),
 					JsonValueKind.True => new DataModelValue(true),
 					JsonValueKind.False => new DataModelValue(false),
-					JsonValueKind.Null => DataModelValue.Null(),
+					JsonValueKind.Null => DataModelValue.Null,
 					_ => throw new ArgumentOutOfRangeException()
 			};
 		}
 
-		private DataModelObject GetDataModelObject(JsonElement.ObjectEnumerator enumerateObject)
+		private static DataModelObject GetDataModelObject(JsonElement.ObjectEnumerator enumerateObject)
 		{
 			var obj = new DataModelObject();
 
@@ -191,10 +280,12 @@ namespace TSSArt.StateMachine.Services
 				obj[prop.Name] = GetDataModelValue(prop.Value);
 			}
 
+			obj.Freeze();
+
 			return obj;
 		}
 
-		private DataModelArray GetDataModeArray(JsonElement.ArrayEnumerator enumerateArray)
+		private static DataModelArray GetDataModeArray(JsonElement.ArrayEnumerator enumerateArray)
 		{
 			var arr = new DataModelArray();
 
@@ -203,30 +294,26 @@ namespace TSSArt.StateMachine.Services
 				arr.Add(GetDataModelValue(prop));
 			}
 
+			arr.Freeze();
+
 			return arr;
 		}
 
-		private DataModelValue CaptureData(HtmlDocument htmlDocument)
+		private static DataModelValue CaptureData(HtmlDocument htmlDocument, IEnumerable<Capture> captures)
 		{
 			var obj = new DataModelObject();
 
-			var capture = GetObject(Parameters, key: "capture");
-			if (capture != null)
+			foreach (var capture in captures)
 			{
-				foreach (var name in capture.Properties)
-				{
-					var val = capture[name];
-					var xpath = GetString(val, key: "xpath");
-					var attr = GetString(val, key: "attr");
-					var regex = GetString(val, key: "regex");
-					var result = CaptureEntry(htmlDocument, xpath, attr, regex);
+				var result = CaptureEntry(htmlDocument, capture.XPath, capture.Attribute, capture.Regex);
 
-					if (result.Type != DataModelValueType.Undefined)
-					{
-						obj[name] = result;
-					}
+				if (result.Type != DataModelValueType.Undefined)
+				{
+					obj[capture.Name] = result;
 				}
 			}
+
+			obj.Freeze();
 
 			return new DataModelValue(obj);
 		}
@@ -242,14 +329,14 @@ namespace TSSArt.StateMachine.Services
 
 			if (node == null)
 			{
-				return DataModelValue.Undefined();
+				return DataModelValue.Undefined;
 			}
 
 			var text = attr != null ? node.GetAttributeValue(attr, def: null) : node.InnerHtml;
 
 			if (text == null)
 			{
-				return DataModelValue.Undefined();
+				return DataModelValue.Undefined;
 			}
 
 			if (pattern == null)
@@ -262,7 +349,7 @@ namespace TSSArt.StateMachine.Services
 
 			if (!match.Success)
 			{
-				return DataModelValue.Undefined();
+				return DataModelValue.Undefined;
 			}
 
 			if (match.Groups.Count == 1)
@@ -276,72 +363,27 @@ namespace TSSArt.StateMachine.Services
 				obj[name] = new DataModelValue(match.Groups[name].Value);
 			}
 
+			obj.Freeze();
+
 			return new DataModelValue(obj);
 		}
 
-		private static DataModelArray GetHeaders(WebHeaderCollection headers)
+		private struct Response
 		{
-			var arr = new DataModelArray();
-
-			foreach (var name in headers.AllKeys)
-			{
-				arr.Add(new DataModelValue(new DataModelObject
-										   {
-												   ["name"] = new DataModelValue(name),
-												   ["value"] = new DataModelValue(headers[name])
-										   }));
-			}
-
-			return arr;
+			public int                                       StatusCode         { get; set; }
+			public string                                    StatusDescription  { get; set; }
+			public string                                    WebExceptionStatus { get; set; }
+			public DataModelValue                            Content            { get; set; }
+			public IEnumerable<KeyValuePair<string, string>> Headers            { get; set; }
+			public IEnumerable<Cookie>                       Cookies            { get; set; }
 		}
 
-		private static CookieContainer CreateCookieContainer(IEnumerable<DataModelValue> cookies)
+		private struct Capture
 		{
-			var container = new CookieContainer();
-
-			foreach (var cookie in cookies)
-			{
-				container.Add(new Cookie
-							  {
-									  Name = GetString(cookie, key: "name"),
-									  Value = GetString(cookie, key: "value"),
-									  Path = GetString(cookie, key: "path", defaultValue: "/"),
-									  Domain = GetString(cookie, key: "domain"),
-									  Expires = GetDateTime(cookie, key: "expires"),
-									  HttpOnly = GetBoolean(cookie, key: "httpOnly"),
-									  Port = GetString(cookie, key: "port"),
-									  Secure = GetBoolean(cookie, key: "secure")
-							  });
-			}
-
-			return container;
-		}
-
-		private static DataModelArray GetCookies(CookieContainer container)
-		{
-			var allCookies = from object pathList in ((Hashtable) DomainTableField.GetValue(container)).Values
-							 from IEnumerable cookies in ((SortedList) ListField.GetValue(pathList)).Values
-							 from Cookie cookie in cookies
-							 select cookie;
-
-			var arr = new DataModelArray();
-
-			foreach (var cookie in allCookies)
-			{
-				arr.Add(new DataModelValue(new DataModelObject
-										   {
-												   ["name"] = new DataModelValue(cookie.Name),
-												   ["value"] = new DataModelValue(cookie.Value),
-												   ["path"] = new DataModelValue(cookie.Path),
-												   ["domain"] = new DataModelValue(cookie.Domain),
-												   ["expires"] = new DataModelValue(cookie.Expires),
-												   ["httpOnly"] = new DataModelValue(cookie.HttpOnly),
-												   ["port"] = new DataModelValue(cookie.Port),
-												   ["secure"] = new DataModelValue(cookie.Secure)
-										   }));
-			}
-
-			return arr;
+			public string Name      { get; set; }
+			public string XPath     { get; set; }
+			public string Attribute { get; set; }
+			public string Regex     { get; set; }
 		}
 	}
 }

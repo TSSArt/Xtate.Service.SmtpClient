@@ -311,7 +311,7 @@ namespace TSSArt.StateMachine
 						}
 						else if (_stateMachines.TryGetValue(invokedService.ParentSessionId, out var invokingStateMachine))
 						{
-							var nameParts = EventName.GetDoneInvokeNameParts((Identifier) invokedService.InvokeId);
+							var nameParts = EventName.GetErrorInvokeNameParts(invokedService.InvokeId);
 							var controller = invokingStateMachine.Controller;
 							await controller.Send(new EventObject(EventType.External, nameParts, data: default, sendId: null, invokedService.InvokeId, invokedService.InvokeUniqueId), token: default)
 											.ConfigureAwait(false);
