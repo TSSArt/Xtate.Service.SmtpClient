@@ -7,6 +7,7 @@ namespace TSSArt.StateMachine
 	public class DoneDataNode : IDoneData, IStoreSupport, IAncestorProvider
 	{
 		private readonly IObjectEvaluator            _contentExpressionEvaluator;
+		private readonly IObjectEvaluator            _contentBodyEvaluator;
 		private readonly DoneData                    _doneData;
 		private readonly IReadOnlyList<DefaultParam> _parameterList;
 
@@ -14,6 +15,7 @@ namespace TSSArt.StateMachine
 		{
 			_doneData = doneData;
 			_contentExpressionEvaluator = doneData.Content?.Expression.As<IObjectEvaluator>();
+			_contentBodyEvaluator = doneData.Content?.Body.As<IObjectEvaluator>();
 			_parameterList = doneData.Parameters.AsListOf<DefaultParam>();
 		}
 
@@ -31,6 +33,6 @@ namespace TSSArt.StateMachine
 		}
 
 		public ValueTask<DataModelValue> Evaluate(IExecutionContext executionContext, CancellationToken token) =>
-				Converter.GetData(_doneData.Content?.Value, _contentExpressionEvaluator, nameEvaluatorList: null, _parameterList, executionContext, token);
+				Converter.GetData(_contentBodyEvaluator, _contentExpressionEvaluator, nameEvaluatorList: null, _parameterList, executionContext, token);
 	}
 }

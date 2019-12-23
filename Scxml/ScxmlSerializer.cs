@@ -523,9 +523,9 @@ namespace TSSArt.StateMachine
 				_writer.WriteAttributeString(localName: "expr", entity.Expression.Expression);
 			}
 
-			if (entity.Value != null)
+			if (entity.Body != null)
 			{
-				_writer.WriteRaw(entity.Value);
+				_writer.WriteRaw(entity.Body.Value);
 			}
 
 			_writer.WriteEndElement();
