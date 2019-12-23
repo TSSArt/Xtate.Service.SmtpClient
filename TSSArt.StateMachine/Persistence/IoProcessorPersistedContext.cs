@@ -136,22 +136,23 @@ namespace TSSArt.StateMachine
 		protected override StateMachineController CreateStateMachineController(string sessionId, IStateMachine stateMachine, in InterpreterOptions options) =>
 				new StateMachinePersistedController(sessionId, stateMachine, _ioProcessor, _storageProvider, _idlePeriod, options);
 
-		public override async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, IStateMachine stateMachine, Uri source, DataModelValue content, DataModelValue parameters)
+		public override async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, IStateMachine stateMachine, Uri source, string rawContent, DataModelValue content,
+																						 DataModelValue parameters)
 		{
 			if (stateMachine != null)
 			{
-				return await base.CreateAndAddStateMachine(sessionId, stateMachine, source, content, parameters).ConfigureAwait(false);
+				return await base.CreateAndAddStateMachine(sessionId, stateMachine, source, rawContent, content, parameters).ConfigureAwait(false);
 			}
 
 			await _lockStateMachines.WaitAsync(_stopToken).ConfigureAwait(false);
 			try
 			{
-				var stateMachineController = await base.CreateAndAddStateMachine(sessionId, stateMachine: null, source, content, parameters).ConfigureAwait(false);
+				var stateMachineController = await base.CreateAndAddStateMachine(sessionId, stateMachine: null, source, rawContent, content, parameters).ConfigureAwait(false);
 
 				var bucket = new Bucket(_storage).Nested(StateMachinesKey);
 				var recordId = _stateMachineRecordId ++;
 
-				var stateMachineMeta = new StateMachineMeta(sessionId, source, content, parameters) { RecordId = recordId, Controller = stateMachineController };
+				var stateMachineMeta = new StateMachineMeta(sessionId, source, rawContent, content, parameters) { RecordId = recordId, Controller = stateMachineController };
 				_stateMachines.Add(sessionId, stateMachineMeta);
 
 				bucket.Add(Bucket.RootKey, _stateMachineRecordId);
@@ -241,8 +242,8 @@ namespace TSSArt.StateMachine
 					if (eventBucket.TryGet(Key.TypeInfo, out TypeInfo typeInfo) && typeInfo == TypeInfo.StateMachine)
 					{
 						var stateMachine = new StateMachineMeta(bucket) { RecordId = i };
-						var stateMachineController = await base.CreateAndAddStateMachine(stateMachine.SessionId, stateMachine: null, stateMachine.Source, stateMachine.Content, stateMachine.Parameters)
-															   .ConfigureAwait(false);
+						var stateMachineController = await base.CreateAndAddStateMachine(stateMachine.SessionId, stateMachine: null, stateMachine.Source,
+																						 stateMachine.RawContent, stateMachine.Content, stateMachine.Parameters).ConfigureAwait(false);
 						stateMachine.Controller = stateMachineController;
 
 						_stateMachines.Add(stateMachine.SessionId, stateMachine);
@@ -327,7 +328,7 @@ namespace TSSArt.StateMachine
 
 		private class StateMachineMeta : IStoreSupport
 		{
-			public StateMachineMeta(string sessionId, Uri source, DataModelValue content, DataModelValue parameters)
+			public StateMachineMeta(string sessionId, Uri source, string rawContent, DataModelValue content, DataModelValue parameters)
 			{
 				SessionId = sessionId;
 				Source = source;
@@ -340,17 +341,25 @@ namespace TSSArt.StateMachine
 				SessionId = bucket.GetString(Key.SessionId);
 				Source = bucket.GetUri(Key.Source);
 
+				bucket.TryGet(Key.RawContent, out string rawContent);
+
 				var contentBucket = bucket.Nested(Key.Content);
 				using var contentTracker = new DataModelReferenceTracker(contentBucket.Nested(Key.DataReferences));
-				contentBucket.GetDataModelValue(contentTracker, Content);
+				Content = contentBucket.GetDataModelValue(contentTracker, default);
+
+				if (rawContent != null && Content.Type == DataModelValueType.Undefined)
+				{
+					Content = new DataModelValue(rawContent);
+				}
 
 				var parametersBucket = bucket.Nested(Key.Parameters);
 				using var parametersTracker = new DataModelReferenceTracker(parametersBucket.Nested(Key.DataReferences));
-				parametersBucket.GetDataModelValue(parametersTracker, Content);
+				Parameters = parametersBucket.GetDataModelValue(parametersTracker, default);
 			}
 
 			public string                 SessionId  { get; }
 			public Uri                    Source     { get; }
+			public string                 RawContent { get; }
 			public DataModelValue         Content    { get; }
 			public DataModelValue         Parameters { get; }
 			public int                    RecordId   { get; set; }
@@ -362,14 +371,19 @@ namespace TSSArt.StateMachine
 				bucket.Add(Key.SessionId, SessionId);
 				bucket.Add(Key.Source, Source);
 
-				if (Content.Type != DataModelValueType.Undefined)
+				if (RawContent != null)
+				{
+					bucket.Add(Key.RawContent, RawContent);
+				}
+
+				if (!Content.IsUndefinedOrNull() && Content.AsStringOrDefault() != RawContent)
 				{
 					var argBucket = bucket.Nested(Key.Content);
 					using var tracker = new DataModelReferenceTracker(argBucket.Nested(Key.DataReferences));
 					argBucket.SetDataModelValue(tracker, Content);
 				}
 
-				if (Parameters.Type != DataModelValueType.Undefined)
+				if (!Parameters.IsUndefinedOrNull())
 				{
 					var argBucket = bucket.Nested(Key.Parameters);
 					using var tracker = new DataModelReferenceTracker(argBucket.Nested(Key.DataReferences));

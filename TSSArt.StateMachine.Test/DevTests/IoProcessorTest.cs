@@ -110,7 +110,7 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 
 			var result = await ioProcessor.Execute(new Uri("scxml://a"));
 
-			Console.WriteLine(result.AsObject().ToString("JSON"));
+			Console.WriteLine(DataModelConverter.ToJson(result));
 			Assert.IsTrue(result.Type != DataModelValueType.Undefined);
 		}
 
@@ -190,7 +190,7 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 
 			var result = await ioProcessor.Execute(stateMachine);
 
-			Console.WriteLine(result.AsObject().ToString("JSON"));
+			Console.WriteLine(DataModelConverter.ToJson(result));
 			Assert.IsTrue(result.Type != DataModelValueType.Undefined);
 		}
 	}

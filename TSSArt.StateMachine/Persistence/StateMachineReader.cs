@@ -165,7 +165,7 @@ namespace TSSArt.StateMachine
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Expression = RestoreValueExpression(bucket.Nested(Key.Expression)),
-								  Body = new ContentBody { Value = bucket.GetString(Key.Body) }
+								  Body = bucket.TryGet(Key.Body, out string body) ? new ContentBody { Value = body } : (IContentBody) null
 						  }
 						: (IContent) null;
 

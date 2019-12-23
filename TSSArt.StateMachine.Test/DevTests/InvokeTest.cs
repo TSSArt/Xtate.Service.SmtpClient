@@ -77,10 +77,8 @@ namespace TSSArt.StateMachine.Test
 		public async Task SimpleTest()
 		{
 			var invokeUniqueId = "";
-			_externalCommunicationMock.Setup(l => l.StartInvoke(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<Uri>(), It.IsAny<Uri>(),
-																It.IsAny<DataModelValue>(), default, default))
-									  .Callback((string a, string b, Uri c, Uri d, DataModelValue e,
-												 DataModelValue f, CancellationToken g) => invokeUniqueId = b);
+			_externalCommunicationMock.Setup(l => l.StartInvoke(It.IsAny<InvokeData>(), default))
+									  .Callback((InvokeData data, CancellationToken token) =>  invokeUniqueId = data.InvokeUniqueId);
 
 			var channel = Channel.CreateUnbounded<IEvent>();
 			var task = StateMachineInterpreter.RunAsync(sessionId: "session1", _stateMachine, channel, _options);
@@ -90,8 +88,16 @@ namespace TSSArt.StateMachine.Test
 
 
 			_externalCommunicationMock.Verify(l => l.GetIoProcessors());
-			_externalCommunicationMock.Verify(l => l.StartInvoke("invoke_id", It.IsAny<string>(), new Uri("proto://type"), new Uri("proto://src"), DataModelValue.FromObject("content"), default,
-																 default));
+			_externalCommunicationMock.Verify(l => l.StartInvoke(new InvokeData
+																 {
+																		 InvokeId = "invoke_id",
+																		 InvokeUniqueId = invokeUniqueId,
+																		 Type = new Uri("proto://type"),
+																		 Source = new Uri("proto://src"),
+																		 RawContent = "content",
+																		 Content = DataModelValue.FromObject("content"),
+																		 Parameters = default,
+																 }, default));
 			_externalCommunicationMock.Verify(l => l.CancelInvoke("invoke_id", default));
 			_externalCommunicationMock.Verify(l => l.IsInvokeActive("invoke_id", invokeUniqueId));
 			_externalCommunicationMock.VerifyNoOtherCalls();

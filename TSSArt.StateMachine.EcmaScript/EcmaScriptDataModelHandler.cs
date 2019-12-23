@@ -10,10 +10,12 @@ namespace TSSArt.StateMachine.EcmaScript
 		private const string DataModelType      = "http://tssart.com/scxml/datamodel/#ECMAScript";
 		private const string DataModelTypeAlias = "ecmascript";
 
-		public static readonly IDataModelHandlerFactory Factory = new DataModelHandlerFactory();
+		public static readonly  IDataModelHandlerFactory Factory       = new DataModelHandlerFactory();
+		private static readonly ParserOptions            ParserOptions = new ParserOptions { Tolerant = true };
 
-		private static readonly ParserOptions    ParserOptions = new ParserOptions { Tolerant = true };
-		private readonly        JavaScriptParser _parser       = new JavaScriptParser();
+		private readonly JavaScriptParser _parser = new JavaScriptParser();
+
+		private bool _inDoneData;
 
 		private EcmaScriptDataModelHandler(StateMachineVisitor masterVisitor) : base(masterVisitor) { }
 
@@ -32,6 +34,15 @@ namespace TSSArt.StateMachine.EcmaScript
 		private Program Parse(string source) => _parser.Parse(source, ParserOptions);
 
 		private string GetErrorMessage(ParserException ex) => $"{ex.Message} ({ex.Description}). Line: {ex.LineNumber}. Column: {ex.Column}.";
+
+		protected override void Visit(ref IDoneData entity)
+		{
+			_inDoneData = true;
+
+			base.Visit(ref entity);
+
+			_inDoneData = false;
+		}
 
 		protected override void Build(ref IForEach forEach, ref ForEach forEachProperties)
 		{
@@ -134,7 +145,10 @@ namespace TSSArt.StateMachine.EcmaScript
 		{
 			if (!ValidationOnly)
 			{
-				contentBody = new EcmaScriptContentBodyEvaluator(contentBodyProperties);
+				if (_inDoneData)
+				{
+					contentBody = new EcmaScriptContentBodyEvaluator(contentBodyProperties);
+				}
 			}
 
 			base.Build(ref contentBody, ref contentBodyProperties);

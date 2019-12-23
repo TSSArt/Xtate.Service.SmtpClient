@@ -85,13 +85,13 @@ namespace TSSArt.StateMachine
 				}
 
 				eventNameInContent = false;
-				return new StringContent(dataModelObject.ToString(format: "JSON", CultureInfo.InvariantCulture), Encoding.UTF8, MediaTypeApplicationJson);
+				return new StringContent(DataModelConverter.ToJson(data), Encoding.UTF8, MediaTypeApplicationJson);
 			}
 
 			if (data.Type == DataModelValueType.Array)
 			{
 				eventNameInContent = false;
-				return new StringContent(data.AsArray().ToString(format: "JSON", CultureInfo.InvariantCulture), Encoding.UTF8, MediaTypeApplicationJson);
+				return new StringContent(DataModelConverter.ToJson(data), Encoding.UTF8, MediaTypeApplicationJson);
 			}
 
 			throw new NotSupportedException("Data format not supported");
