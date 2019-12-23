@@ -4,7 +4,7 @@ namespace TSSArt.StateMachine
 {
 	public class ContentBuilder : IContentBuilder
 	{
-		private string           _body;
+		private IContentBody     _body;
 		private IValueExpression _expression;
 
 		public IContent Build()
@@ -14,11 +14,16 @@ namespace TSSArt.StateMachine
 				throw new InvalidOperationException(message: "Expression and Body can't be used at the same time in Content element");
 			}
 
-			return new Content { Expression = _expression, Value = _body };
+			return new Content { Expression = _expression, Body = _body };
 		}
 
 		public void SetExpression(IValueExpression expression) => _expression = expression ?? throw new ArgumentNullException(nameof(expression));
 
-		public void SetBody(string body) => _body = body ?? throw new ArgumentNullException(nameof(body));
+		public void SetBody(string body)
+		{
+			if (body == null) throw new ArgumentNullException(nameof(body));
+
+			_body = new ContentBody { Value = body };
+		}
 	}
 }

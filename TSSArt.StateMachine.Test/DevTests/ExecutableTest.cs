@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Xml;
@@ -17,6 +18,7 @@ namespace TSSArt.StateMachine.Test
 		private ChannelReader<IEvent>       _eventChannel;
 		private Mock<ILogger>               _logger;
 		private InterpreterOptions          _options;
+		private Mock<IExternalCommunication> _externalCommunication;
 
 		private IStateMachine GetStateMachine(string scxml)
 		{
@@ -28,6 +30,7 @@ namespace TSSArt.StateMachine.Test
 		}
 
 		private IStateMachine NoneDataModel(string xml) => GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' datamodel='none'>" + xml + "</scxml>");
+		private IStateMachine EcmaDataModel(string xml) => GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' datamodel='ecmascript'>" + xml + "</scxml>");
 
 		private async Task RunStateMachine(Func<string, IStateMachine> getter, string innerXml)
 		{
@@ -57,6 +60,8 @@ namespace TSSArt.StateMachine.Test
 			_options.DataModelHandlerFactories.Add(EcmaScriptDataModelHandler.Factory);
 			_options.Logger = _logger.Object;
 			_options.CustomActionProviders.Add(_customActionProvider.Object);
+			_externalCommunication = new Mock<IExternalCommunication>();
+			_options.ExternalCommunication = _externalCommunication.Object;
 		}
 
 		[TestMethod]
@@ -107,6 +112,16 @@ namespace TSSArt.StateMachine.Test
 								  "<state id='s1'><onentry><custom my='name'/></onentry></state>");
 
 			_logger.Verify(l => l.Log(It.IsAny<string>(), It.IsAny<string>(), "Custom", default, default), Times.Once);
+		}
+
+		[TestMethod]
+		public async Task ContentJsonTest()
+		{
+			await RunStateMachine(EcmaDataModel,
+								  innerXml:
+								  "<state id='s1'><onentry><send><content>{ 'key':'value' }</content></send></onentry></state>");
+
+			_externalCommunication.Verify(a => a.TrySendEvent(It.IsAny<IOutgoingEvent>(), It.IsAny<CancellationToken>()));
 		}
 	}
 }

@@ -15,7 +15,13 @@ namespace TSSArt.StateMachine
 		public Uri                        Target    { get; set; }
 		public Uri                        Type      { get; set; }
 
-		public Event(string val) : this() => NameParts = EventName.ToParts(val);
+		public Event(string val) : this()
+		{
+			if (!string.IsNullOrEmpty(val))
+			{
+				NameParts = EventName.ToParts(val);
+			}
+		}
 
 		internal object Ancestor;
 

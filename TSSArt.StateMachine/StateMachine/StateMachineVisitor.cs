@@ -432,6 +432,13 @@ namespace TSSArt.StateMachine
 			data.Update(ref entity);
 		}
 
+		protected virtual void Visit(ref IContentBody entity)
+		{
+			var data = new VisitData<ContentBody, IContentBody>(entity);
+			Build(ref entity, ref data.Properties);
+			data.Update(ref entity);
+		}
+
 		protected virtual void Visit(ref IParam entity)
 		{
 			var data = new VisitData<Param, IParam>(entity);
@@ -1033,7 +1040,12 @@ namespace TSSArt.StateMachine
 			var expression = properties.Expression;
 			VisitWrapper(ref expression);
 			properties.Expression = expression;
+
+			var body = properties.Body;
+			VisitWrapper(ref body);
+			properties.Body = body;
 		}
+
 
 		protected virtual void Build(ref IParam entity, ref Param properties)
 		{
@@ -1068,7 +1080,9 @@ namespace TSSArt.StateMachine
 		protected virtual void Build(ref IExternalScriptExpression entity, ref ExternalScriptExpression properties) { }
 
 		protected virtual void Build(ref IExternalDataExpression entity, ref ExternalDataExpression properties) { }
-
+		
+		protected virtual void Build(ref IContentBody entity, ref ContentBody properties) { }
+		
 		#endregion
 
 		#region Build(ref IReadOnlyList<IT> list, ref TrackList<IT> trackList)
@@ -1366,6 +1380,14 @@ namespace TSSArt.StateMachine
 		}
 
 		private void VisitWrapper(ref IContent entity)
+		{
+			if (entity == null) return;
+			Enter(entity);
+			Visit(ref entity);
+			Exit();
+		}
+
+		private void VisitWrapper(ref IContentBody entity)
 		{
 			if (entity == null) return;
 			Enter(entity);

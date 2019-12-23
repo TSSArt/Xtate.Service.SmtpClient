@@ -130,6 +130,16 @@ namespace TSSArt.StateMachine.EcmaScript
 			base.Build(ref externalScriptExpression, ref externalScriptExpressionProperties);
 		}
 
+		protected override void Build(ref IContentBody contentBody, ref ContentBody contentBodyProperties)
+		{
+			if (!ValidationOnly)
+			{
+				contentBody = new EcmaScriptContentBodyEvaluator(contentBodyProperties);
+			}
+
+			base.Build(ref contentBody, ref contentBodyProperties);
+		}
+
 		private class DataModelHandlerFactory : IDataModelHandlerFactory
 		{
 			public bool CanHandle(string dataModelType) => dataModelType == DataModelType || dataModelType == DataModelTypeAlias;

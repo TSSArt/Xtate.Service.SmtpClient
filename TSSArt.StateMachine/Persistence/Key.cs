@@ -6,6 +6,7 @@
 		Array,
 		AutoForward,
 		Binding,
+		Body,
 		Condition,
 		Content,
 		Data,

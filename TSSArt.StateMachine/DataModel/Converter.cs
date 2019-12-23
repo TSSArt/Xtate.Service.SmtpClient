@@ -7,7 +7,7 @@ namespace TSSArt.StateMachine
 {
 	public static class Converter
 	{
-		public static ValueTask<DataModelValue> GetData(string content, IObjectEvaluator contentExpressionEvaluator, IReadOnlyList<ILocationEvaluator> nameEvaluatorList,
+		public static ValueTask<DataModelValue> GetData(IObjectEvaluator contentBodyEvaluator, IObjectEvaluator contentExpressionEvaluator, IReadOnlyList<ILocationEvaluator> nameEvaluatorList,
 														IReadOnlyList<DefaultParam> parameterList, IExecutionContext executionContext, CancellationToken token)
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
@@ -16,24 +16,31 @@ namespace TSSArt.StateMachine
 
 			if (attrCount == 0)
 			{
-				return GetContent(content, contentExpressionEvaluator, executionContext, token);
+				return GetContent(contentBodyEvaluator, contentExpressionEvaluator, executionContext, token);
 			}
 
 			return GetParameters(nameEvaluatorList, parameterList, executionContext, token);
 		}
 
-		public static async ValueTask<DataModelValue> GetContent(string content, IObjectEvaluator contentExpressionEvaluator, IExecutionContext executionContext, CancellationToken token)
+		public static async ValueTask<DataModelValue> GetContent(IObjectEvaluator contentBodyEvaluator, IObjectEvaluator contentExpressionEvaluator, IExecutionContext executionContext, CancellationToken token)
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
 
-			if (contentExpressionEvaluator == null)
+			if (contentExpressionEvaluator != null)
 			{
-				return content != null ? new DataModelValue(content) : DataModelValue.Undefined;
+				var obj = await contentExpressionEvaluator.EvaluateObject(executionContext, token).ConfigureAwait(false);
+
+				return DataModelValue.FromObject(obj.ToObject()).DeepClone(true);
 			}
 
-			var obj = await contentExpressionEvaluator.EvaluateObject(executionContext, token).ConfigureAwait(false);
+			if (contentBodyEvaluator != null)
+			{
+				var obj = await contentBodyEvaluator.EvaluateObject(executionContext, token).ConfigureAwait(false);
 
-			return DataModelValue.FromObject(obj.ToObject()).DeepClone(true);
+				return DataModelValue.FromObject(obj.ToObject()).DeepClone(true);
+			}
+
+			return DataModelValue.Undefined;
 		}
 
 		public static async ValueTask<DataModelValue> GetParameters(IReadOnlyList<ILocationEvaluator> nameEvaluatorList, IReadOnlyList<DefaultParam> parameterList,

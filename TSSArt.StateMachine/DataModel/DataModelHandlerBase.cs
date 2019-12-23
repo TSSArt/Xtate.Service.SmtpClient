@@ -208,5 +208,17 @@ namespace TSSArt.StateMachine
 
 			invoke = new DefaultInvokeEvaluator(invokeProperties);
 		}
+
+		protected override void Build(ref IContentBody contentBody, ref ContentBody contentBodyProperties)
+		{
+			base.Build(ref contentBody, ref contentBodyProperties);
+
+			if (ValidationOnly)
+			{
+				return;
+			}
+
+			contentBody = new DefaultContentBodyEvaluator(contentBodyProperties);
+		}
 	}
 }

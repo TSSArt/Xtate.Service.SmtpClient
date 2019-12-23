@@ -32,7 +32,7 @@ namespace TSSArt.StateMachine.Test
 																					  Id = "invoke_id",
 																					  Source = new Uri("proto://src"),
 																					  Type = new Uri("proto://type"),
-																					  Content = new Content { Value = "content" },
+																					  Content = new Content { Body = new ContentBody { Value = "content" } },
 																					  Finalize = new Finalize
 																								 {
 																										 Action = new IExecutableEntity[]
