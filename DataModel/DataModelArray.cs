@@ -7,11 +7,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Security;
-using System.Text;
 
 namespace TSSArt.StateMachine
 {
-	public sealed class DataModelArray : IDynamicMetaObjectProvider, IList<DataModelValue>, IFormattable
+	public sealed class DataModelArray : IDynamicMetaObjectProvider, IList<DataModelValue>
 	{
 		public delegate void ChangedHandler(ChangedAction action, int index, DataModelDescriptor descriptor);
 
@@ -57,44 +56,6 @@ namespace TSSArt.StateMachine
 		public int Length => _list.Count;
 
 		DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter) => new MetaObject(parameter, this, Dynamic.CreateMetaObject);
-
-		public string ToString(string format, IFormatProvider formatProvider)
-		{
-			if (format == "JSON")
-			{
-				var sb = new StringBuilder();
-
-				if (Length > 0)
-				{
-					var vertical = this.Any(i => i.Type == DataModelValueType.Object || i.Type == DataModelValueType.Array);
-
-					for (var i = 0; i < Length; i ++)
-					{
-						if (vertical)
-						{
-							sb.Append(sb.Length == 0 ? "[\r\n  " : ",\r\n  ");
-						}
-						else
-						{
-							sb.Append(sb.Length == 0 ? "[" : ", ");
-						}
-
-						var value = this[i].ToString(format: "JSON", formatProvider).Replace(oldValue: "\r\n", newValue: "\r\n  ");
-						sb.Append(value);
-					}
-
-					sb.Append(vertical ? "\r\n]" : "]");
-				}
-				else
-				{
-					sb.Append("[]");
-				}
-
-				return sb.ToString();
-			}
-
-			return base.ToString();
-		}
 
 		public bool IsReadOnly => _state != State.Writable;
 
@@ -404,8 +365,6 @@ namespace TSSArt.StateMachine
 
 			return index >= _list.Count || !_list[index].IsReadOnly;
 		}
-
-		public string ToString(string format) => ToString(format, formatProvider: null);
 
 		public DataModelArray DeepClone(bool isReadOnly)
 		{

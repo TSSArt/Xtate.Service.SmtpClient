@@ -4,11 +4,10 @@ using System.Dynamic;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Security;
-using System.Text;
 
 namespace TSSArt.StateMachine
 {
-	public sealed class DataModelObject : IDynamicMetaObjectProvider, IFormattable
+	public sealed class DataModelObject : IDynamicMetaObjectProvider
 	{
 		public delegate void ChangedHandler(ChangedAction action, string property, DataModelDescriptor descriptor);
 
@@ -57,37 +56,7 @@ namespace TSSArt.StateMachine
 
 		DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter) => new MetaObject(parameter, this, Dynamic.CreateMetaObject);
 
-		public string ToString(string format, IFormatProvider formatProvider)
-		{
-			if (format == "JSON")
-			{
-				var sb = new StringBuilder();
-
-				if (_properties.Count > 0)
-				{
-					foreach (var pair in _properties)
-					{
-						if (pair.Value.Value.Type != DataModelValueType.Undefined && pair.Value.Value.Type != DataModelValueType.Null)
-						{
-							sb.Append(sb.Length == 0 ? "{\r\n  " : ",\r\n  ");
-
-							var value = pair.Value.Value.ToString(format: "JSON", formatProvider).Replace(oldValue: "\r\n", newValue: "\r\n  ");
-							sb.Append("\"").Append(pair.Key).Append("\": ").Append(value);
-						}
-					}
-
-					sb.Append("\r\n}");
-				}
-				else
-				{
-					sb.Append("{}");
-				}
-
-				return sb.ToString();
-			}
-
-			return base.ToString();
-		}
+		public string ToString(string format, IFormatProvider formatProvider) => ToString();
 
 		public event ChangedHandler Changed;
 
@@ -153,8 +122,6 @@ namespace TSSArt.StateMachine
 
 			RemoveInternal(property);
 		}
-
-		public string ToString(string format) => ToString(format, formatProvider: null);
 
 		public DataModelObject DeepClone(bool isReadOnly)
 		{

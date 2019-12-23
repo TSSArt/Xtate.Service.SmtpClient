@@ -47,6 +47,7 @@
 		Parameters,
 		ParentSessionId,
 		Property,
+		RawContent,
 		ReadOnly,
 		RefId,
 		Remove,

@@ -5,9 +5,9 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public static class Converter
+	public static class DataConverter
 	{
-		public static ValueTask<DataModelValue> GetData(IObjectEvaluator contentBodyEvaluator, IObjectEvaluator contentExpressionEvaluator, IReadOnlyList<ILocationEvaluator> nameEvaluatorList,
+		public static ValueTask<DataModelValue> GetData(IValueEvaluator contentBodyEvaluator, IObjectEvaluator contentExpressionEvaluator, IReadOnlyList<ILocationEvaluator> nameEvaluatorList,
 														IReadOnlyList<DefaultParam> parameterList, IExecutionContext executionContext, CancellationToken token)
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
@@ -22,7 +22,7 @@ namespace TSSArt.StateMachine
 			return GetParameters(nameEvaluatorList, parameterList, executionContext, token);
 		}
 
-		public static async ValueTask<DataModelValue> GetContent(IObjectEvaluator contentBodyEvaluator, IObjectEvaluator contentExpressionEvaluator, IExecutionContext executionContext, CancellationToken token)
+		public static async ValueTask<DataModelValue> GetContent(IValueEvaluator contentBodyEvaluator, IObjectEvaluator contentExpressionEvaluator, IExecutionContext executionContext, CancellationToken token)
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
 
@@ -33,11 +33,18 @@ namespace TSSArt.StateMachine
 				return DataModelValue.FromObject(obj.ToObject()).DeepClone(true);
 			}
 
-			if (contentBodyEvaluator != null)
+			if (contentBodyEvaluator is IObjectEvaluator objectEvaluator)
 			{
-				var obj = await contentBodyEvaluator.EvaluateObject(executionContext, token).ConfigureAwait(false);
+				var obj = await objectEvaluator.EvaluateObject(executionContext, token).ConfigureAwait(false);
 
 				return DataModelValue.FromObject(obj.ToObject()).DeepClone(true);
+			}
+			
+			if (contentBodyEvaluator is IStringEvaluator stringEvaluator)
+			{
+				var str = await stringEvaluator.EvaluateString(executionContext, token).ConfigureAwait(false);
+
+				return new DataModelValue(str);
 			}
 
 			return DataModelValue.Undefined;

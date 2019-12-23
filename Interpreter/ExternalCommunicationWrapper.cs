@@ -51,13 +51,13 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public async ValueTask StartInvoke(string invokeId, string invokeUniqueId, Uri type, Uri source, DataModelValue content, DataModelValue parameters, CancellationToken token)
+		public async ValueTask StartInvoke(InvokeData invokeData, CancellationToken token)
 		{
 			try
 			{
 				ThrowIfNoExternalCommunication();
 
-				await _externalCommunication.StartInvoke(invokeId, invokeUniqueId, type, source, content, parameters, token).ConfigureAwait(false);
+				await _externalCommunication.StartInvoke(invokeData, token).ConfigureAwait(false);
 			}
 			catch (Exception ex)
 			{
