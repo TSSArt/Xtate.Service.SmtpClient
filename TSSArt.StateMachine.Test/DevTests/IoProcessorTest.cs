@@ -140,14 +140,14 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 		<param name='to' expr='email'/>
 		<param name='subject' expr=""'This is Subject'""/>
 		<param name='body' expr=""'This is BODY'""/>
-    </invoke>
+  	</invoke>
     <transition event='done.invoke' target='ReCaptcha'/>
     <transition event='error' target='finErr'/>
 </state>
 <state id='ReCaptcha'>
     <invoke src='https://www.tssart.com/wp-login.php' type='browser'>
-		<param name='type' expr='GoogleRecaptchaV2'/>
-		<param name='sitekey' expr='6LdI3RYTAAAAAMkmqOQSdno04oej6pDHGFpU3TRG'/>
+		<param name='type' expr=""'GoogleRecaptchaV2'""/>
+		<param name='sitekey' expr=""'6LdI3RYTAAAAAMkmqOQSdno04oej6pDHGFpU3TRG'""/>
     </invoke>
     <transition event='done.invoke' target='WaitForEmail'/>
     <transition event='error' target='finErr'/>
@@ -157,8 +157,8 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 		<param name='accept' expr=""'application/json'""/>
 		<finalize xmlns:basic='http://tssart.com/scxml/customaction/basic' xmlns:mime='http://tssart.com/scxml/customaction/mime'>
 			<assign location='emailContent' expr='_event.data.content.EmailEntries[0].ContentRaw' />
-			<basic:base64decode source='emailContent' destination='emailContent'>
-			<mime:parseEmail source='emailContent' destination='confirmationUrl' xpath='' attr='' regex=''>
+			<basic:base64decode source='emailContent' destination='emailContent' />
+			<mime:parseEmail source='emailContent' destination='confirmationUrl' xpath='' attr='' regex='' />
 		</finalize>
     </invoke>
     <transition event='done.invoke' target='fin'/>

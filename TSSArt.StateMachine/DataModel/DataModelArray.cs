@@ -381,23 +381,20 @@ namespace TSSArt.StateMachine
 			return clone;
 		}
 
-		[DebuggerDisplay(value: "{Value}", Name = "[{_index}]")]
-		private class NameValue
+		[DebuggerDisplay(value: "{" + nameof(_value) + "}", Name = "[{" + nameof(_index) + "}]")]
+		private struct IndexValue
 		{
 			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-			private readonly DataModelDescriptor _descriptor;
+			private readonly DataModelValue _value;
 
 			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 			private readonly int _index;
 
-			public NameValue(int index, DataModelDescriptor descriptor)
+			public IndexValue(int index, DataModelDescriptor descriptor)
 			{
 				_index = index;
-				_descriptor = descriptor;
+				_value = descriptor.Value;
 			}
-
-			[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-			public DataModelValue Value => _descriptor.Value;
 		}
 
 		private class DebugView
@@ -407,7 +404,7 @@ namespace TSSArt.StateMachine
 			public DebugView(DataModelArray dataModelArray) => _dataModelArray = dataModelArray;
 
 			[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-			public NameValue[] Items => _dataModelArray._list.Select((d, i) => new NameValue(i, d)).ToArray();
+			public IndexValue[] Items => _dataModelArray._list.Select((d, i) => new IndexValue(i, d)).ToArray();
 		}
 
 		private enum State

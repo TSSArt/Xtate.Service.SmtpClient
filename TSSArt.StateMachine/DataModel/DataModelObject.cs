@@ -137,16 +137,20 @@ namespace TSSArt.StateMachine
 			return clone;
 		}
 
-		[DebuggerDisplay(value: "{Value}", Name = "{_pair.Key,nq}")]
-		private class NameValue
+		[DebuggerDisplay(value: "{" + nameof(_value) + "}", Name = "{" + nameof(_name) + ",nq}")]
+		private struct NameValue
 		{
 			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-			private readonly KeyValuePair<string, DataModelDescriptor> _pair;
+			private readonly string _name;
 
-			public NameValue(KeyValuePair<string, DataModelDescriptor> pair) => _pair = pair;
+			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+			private readonly DataModelValue _value;
 
-			[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-			public DataModelValue Value => _pair.Value.Value;
+			public NameValue(string name, DataModelValue value)
+			{
+				_name = name;
+				_value = value;
+			}
 		}
 
 		private class DebugView
@@ -156,7 +160,11 @@ namespace TSSArt.StateMachine
 			public DebugView(DataModelObject dataModelObject) => _dataModelObject = dataModelObject;
 
 			[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-			public NameValue[] Items => _dataModelObject._properties.Select(p => new NameValue(p)).ToArray();
+			public NameValue[] Items =>
+					_dataModelObject
+							._properties.OrderBy(p => p.Key)
+							.Select(p => new NameValue(p.Key, p.Value.Value))
+							.ToArray();
 		}
 
 		private enum State
