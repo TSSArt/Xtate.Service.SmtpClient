@@ -1,157 +1,173 @@
 ﻿using System;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace TSSArt.StateMachine
 {
 	public static class DataModelConverter
 	{
-		public static string ToJson(DataModelValue value)
+		private class JsonValueConverter : JsonConverter<DataModelValue>
 		{
-			throw new NotImplementedException();
+			public override bool CanConvert(Type typeToConvert) => typeToConvert == typeof(DataModelValue);
 
-		}
-
-		public static string ToJson(DataModelObject obj)
-		{
-			throw new NotImplementedException();
-
-		}
-
-		public static string ToJson(DataModelArray array)
-		{
-			throw new NotImplementedException();
-
-		}
-
-		public static DataModelValue FromJson(string str)
-		{
-			throw new NotImplementedException();
-		}
-	}
-	/*
-	private class JsonValueConverter : JsonConverter<DataModelValue>
-	{
-		public override bool CanConvert(Type typeToConvert) => typeToConvert == typeof(DataModelValue);
-
-		public override DataModelValue Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => new DataModelValue(ref reader, options);
-
-		public override void Write(Utf8JsonWriter writer, DataModelValue value, JsonSerializerOptions options) => value.WriteTo(writer, options);
-	}
-	*/
-}
-
-/*
-internal DataModelValue(ref Utf8JsonReader reader, JsonSerializerOptions options) : this()
-{
-	switch (reader.TokenType)
-	{
-		case JsonTokenType.String:
-			if (reader.TryGetDateTime(out var datetime))
+			public override DataModelValue Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 			{
-				Type = DataModelValueType.DateTime;
-				_int64 = datetime.Ticks + ((long)datetime.Kind << 62);
-			}
-			else
-			{
-				Type = DataModelValueType.String;
-				_value = reader.GetString();
+				switch (reader.TokenType)
+				{
+					case JsonTokenType.True: return new DataModelValue(true);
+					case JsonTokenType.False: return new DataModelValue(false);
+					case JsonTokenType.Null: return DataModelValue.Null;
+
+					case JsonTokenType.String:
+						if (reader.TryGetDateTime(out var datetime))
+						{
+							return new DataModelValue(datetime);
+						}
+
+						return new DataModelValue(reader.GetString());
+
+					case JsonTokenType.Number:
+						return new DataModelValue(reader.GetDouble());
+
+					case JsonTokenType.StartObject:
+						return new DataModelValue(JsonSerializer.Deserialize<DataModelObject>(ref reader, options));
+
+					case JsonTokenType.StartArray:
+						return new DataModelValue(JsonSerializer.Deserialize<DataModelArray>(ref reader, options));
+
+					default: throw new ArgumentOutOfRangeException();
+				}
 			}
 
-			break;
-
-		case JsonTokenType.Number:
-			Type = DataModelValueType.Number;
-			_int64 = BitConverter.Int64BitsToDouble(_int64);
-
-			break;
-		case JsonTokenType.True: return new DataModelValue(true);
-		case JsonTokenType.False: return new DataModelValue(false);
-		case JsonTokenType.Null: return Null;
-
-		case JsonTokenType.StartObject:
-			var obj = new DataModelObject();
-			obj.ReadFrom(reader, options);
-			obj.Freeze();
-			return new DataModelValue(obj);
-
-		case JsonTokenType.StartArray:
-			var arr = new DataModelArray();
-			arr.ReadFrom(reader, options);
-			arr.Freeze();
-			return new DataModelValue(arr);
-
-		default: throw new ArgumentOutOfRangeException();
-	}
-}
-
-internal void WriteTo(Utf8JsonWriter writer, JsonSerializerOptions options)
-{
-	switch (Type)
-	{
-		case DataModelValueType.Undefined:
-			writer.WriteNullValue();
-			break;
-		case DataModelValueType.Null:
-			writer.WriteNullValue();
-			break;
-		case DataModelValueType.String:
-			writer.WriteStringValue(AsString());
-			break;
-		case DataModelValueType.Number:
-			writer.WriteNumberValue(AsNumber());
-			break;
-		case DataModelValueType.DateTime:
-			writer.WriteStringValue(AsDateTime());
-			break;
-		case DataModelValueType.Boolean:
-			writer.WriteBooleanValue(AsBoolean());
-			break;
-		case DataModelValueType.Object:
-			AsObject().WriteTo(writer, options);
-			break;
-		case DataModelValueType.Array:
-			AsArray().WriteTo(writer, options);
-			break;
-		default: throw new ArgumentOutOfRangeException();
-	}
-}
-
-internal void WriteTo(Utf8JsonWriter writer, JsonSerializerOptions options)
-{
-writer.WriteStartObject();
-
-foreach (var pair in _properties)
-{
-	if (!pair.Value.Value.IsUndefinedOrNull())
-	{
-		writer.WritePropertyName(pair.Key);
-		pair.Value.Value.WriteTo(writer, options);
-	}
-}
-
-writer.WriteEndObject();
-}
-
-private class JsonValueConverter : JsonConverter<DataModelObject>
-{
-	public override bool CanConvert(Type typeToConvert) => typeToConvert == typeof(DataModelObject);
-
-	public override DataModelObject Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-	{
-		if (reader.TokenType)
-
-			switch (reader.TokenType)
+			public override void Write(Utf8JsonWriter writer, DataModelValue value, JsonSerializerOptions options)
 			{
-					reader.
-
-				case JsonTokenType.String: return reader.TryGetDateTime(out DateTime datetime) ? new DataModelValue(datetime) : new DataModelValue(reader.GetString());
-				case JsonTokenType.Number: return reader.TryGetInt64(out long l) ? new DataModelValue(l) : new DataModelValue(reader.GetDouble());
-				case JsonTokenType.True: return new DataModelValue(true);
-				case JsonTokenType.False: return new DataModelValue(false);
-				case JsonTokenType.Null: return Null;
-				default: throw new ArgumentOutOfRangeException();
+				switch (value.Type)
+				{
+					case DataModelValueType.Undefined:
+						writer.WriteNullValue();
+						break;
+					case DataModelValueType.Null:
+						writer.WriteNullValue();
+						break;
+					case DataModelValueType.String:
+						writer.WriteStringValue(value.AsString());
+						break;
+					case DataModelValueType.Number:
+						writer.WriteNumberValue(value.AsNumber());
+						break;
+					case DataModelValueType.DateTime:
+						writer.WriteStringValue(value.AsDateTime());
+						break;
+					case DataModelValueType.Boolean:
+						writer.WriteBooleanValue(value.AsBoolean());
+						break;
+					case DataModelValueType.Object:
+						JsonSerializer.Serialize(value.AsObject(), options);
+						break;
+					case DataModelValueType.Array:
+						JsonSerializer.Serialize(value.AsArray(), options);
+						break;
+					default: throw new ArgumentOutOfRangeException();
+				}
 			}
-	}
+		}
 
-	public override void Write(Utf8JsonWriter writer, DataModelObject value, JsonSerializerOptions options) => value.WriteTo(writer, options);
+		private class JsonObjectConverter : JsonConverter<DataModelObject>
+		{
+			public override bool CanConvert(Type typeToConvert) => typeToConvert == typeof(DataModelObject);
+
+			public override DataModelObject Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+			{
+				var obj = new DataModelObject();
+
+				if (reader.TokenType != JsonTokenType.StartObject)
+				{
+					throw new JsonException("Start object token expected");
+				}
+
+				reader.Read();
+
+				while (reader.TokenType != JsonTokenType.EndObject)
+				{
+					var name = reader.GetString();
+					var value = JsonSerializer.Deserialize<DataModelValue>(ref reader, options);
+
+					obj[name] = value;
+				}
+
+				reader.Read();
+
+				obj.Freeze();
+				return obj;
+			}
+
+			public override void Write(Utf8JsonWriter writer, DataModelObject obj, JsonSerializerOptions options)
+			{
+				writer.WriteStartObject();
+
+				foreach (var name in obj.Properties)
+				{
+					writer.WritePropertyName(name);
+					JsonSerializer.Serialize(writer, obj[name], options);
+				}
+
+				writer.WriteEndObject();
+			}
+		}
+
+		private class JsonArrayConverter : JsonConverter<DataModelArray>
+		{
+			public override bool CanConvert(Type typeToConvert) => typeToConvert == typeof(DataModelArray);
+
+			public override DataModelArray Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+			{
+				var array = new DataModelArray();
+
+				if (reader.TokenType != JsonTokenType.StartArray)
+				{
+					throw new JsonException("Start array token expected");
+				}
+
+				reader.Read();
+
+				while (reader.TokenType != JsonTokenType.EndArray)
+				{
+					var value = JsonSerializer.Deserialize<DataModelValue>(ref reader, options);
+
+					array.Add(value);
+				}
+
+				reader.Read();
+
+				array.Freeze();
+				return array;
+			}
+
+			public override void Write(Utf8JsonWriter writer, DataModelArray array, JsonSerializerOptions options)
+			{
+				writer.WriteStartArray();
+
+				foreach (var value in array)
+				{
+					JsonSerializer.Serialize(writer, value, options);
+				}
+
+				writer.WriteEndArray();
+			}
+		}
+
+		private static readonly JsonSerializerOptions Options = new JsonSerializerOptions
+																{
+																		Converters =
+																		{
+																				new JsonValueConverter(),
+																				new JsonObjectConverter(),
+																				new JsonArrayConverter()
+																		}
+																};
+
+		public static string ToJson(DataModelValue value) => JsonSerializer.Serialize(value, Options);
+
+		public static DataModelValue FromJson(string json) => JsonSerializer.Deserialize<DataModelValue>(json, Options);
+	}
 }
-*/
