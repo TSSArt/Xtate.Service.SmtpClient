@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -9,7 +8,6 @@ using System.Net.Http;
 using System.Net.Mime;
 using System.Reflection;
 using System.Text;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -131,16 +129,11 @@ namespace TSSArt.StateMachine.Services
 			return new FormUrlEncodedContent(forms);
 		}
 
-		private static HttpContent CreateJsonContent(DataModelValue content) => new StringContent(content.ToString(format: "JSON", CultureInfo.InvariantCulture), Encoding.ASCII);
+		private static HttpContent CreateJsonContent(DataModelValue content) => new ByteArrayContent(DataModelConverter.ToJsonUtf8Bytes(content));
 
 		private static HttpContent CreateDefaultContent(DataModelValue content) => new StringContent(content.ToObject()?.ToString() ?? string.Empty, Encoding.UTF8);
 
-		private static async ValueTask<DataModelValue> FromJsonContent(Stream stream, CancellationToken token)
-		{
-			using var jsonDocument = await JsonDocument.ParseAsync(stream, options: default, token).ConfigureAwait(false);
-
-			return GetDataModelValue(jsonDocument.RootElement);
-		}
+		private static ValueTask<DataModelValue> FromJsonContent(Stream stream, CancellationToken token) => DataModelConverter.FromJsonAsync(stream, token);
 
 		private static ValueTask<DataModelValue> FromTextHtmlContent(Stream stream, IEnumerable<Capture> captures)
 		{
@@ -254,51 +247,7 @@ namespace TSSArt.StateMachine.Services
 				await httpContent.CopyToAsync(stream).ConfigureAwait(false);
 			}
 		}
-
-		private static DataModelValue GetDataModelValue(in JsonElement element)
-		{
-			return element.ValueKind switch
-			{
-					JsonValueKind.Undefined => DataModelValue.Undefined,
-					JsonValueKind.Object => new DataModelValue(GetDataModelObject(element.EnumerateObject())),
-					JsonValueKind.Array => new DataModelValue(GetDataModeArray(element.EnumerateArray())),
-					JsonValueKind.String => new DataModelValue(element.GetString()),
-					JsonValueKind.Number => new DataModelValue(element.GetDouble()),
-					JsonValueKind.True => new DataModelValue(true),
-					JsonValueKind.False => new DataModelValue(false),
-					JsonValueKind.Null => DataModelValue.Null,
-					_ => throw new ArgumentOutOfRangeException()
-			};
-		}
-
-		private static DataModelObject GetDataModelObject(JsonElement.ObjectEnumerator enumerateObject)
-		{
-			var obj = new DataModelObject();
-
-			foreach (var prop in enumerateObject)
-			{
-				obj[prop.Name] = GetDataModelValue(prop.Value);
-			}
-
-			obj.Freeze();
-
-			return obj;
-		}
-
-		private static DataModelArray GetDataModeArray(JsonElement.ArrayEnumerator enumerateArray)
-		{
-			var arr = new DataModelArray();
-
-			foreach (var prop in enumerateArray)
-			{
-				arr.Add(GetDataModelValue(prop));
-			}
-
-			arr.Freeze();
-
-			return arr;
-		}
-
+		
 		private static DataModelValue CaptureData(HtmlDocument htmlDocument, IEnumerable<Capture> captures)
 		{
 			var obj = new DataModelObject();

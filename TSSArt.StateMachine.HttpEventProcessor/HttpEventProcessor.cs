@@ -5,7 +5,6 @@ using System.IO;
 using System.Net.Http;
 using System.Net.Mime;
 using System.Text;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -219,52 +218,10 @@ namespace TSSArt.StateMachine
 
 			if (mediaType == MediaTypeApplicationJson)
 			{
-				var jsonDocument = JsonDocument.Parse(body);
-
-				return Map(jsonDocument.RootElement);
+				return DataModelConverter.FromJson(body);
 			}
 
 			return default;
-		}
-
-		private DataModelValue Map(JsonElement element)
-		{
-			return element.ValueKind switch
-			{
-					JsonValueKind.Undefined => DataModelValue.Undefined,
-					JsonValueKind.Object => new DataModelValue(MapObject(element)),
-					JsonValueKind.Array => new DataModelValue(MapArray(element)),
-					JsonValueKind.String => new DataModelValue(element.GetString()),
-					JsonValueKind.Number => new DataModelValue(element.GetDouble()),
-					JsonValueKind.True => new DataModelValue(true),
-					JsonValueKind.False => new DataModelValue(false),
-					JsonValueKind.Null => DataModelValue.Null,
-					_ => throw new ArgumentOutOfRangeException()
-			};
-		}
-
-		private DataModelObject MapObject(JsonElement element)
-		{
-			var dataModelObject = new DataModelObject();
-
-			foreach (var jsonProperty in element.EnumerateObject())
-			{
-				dataModelObject[jsonProperty.Name] = Map(jsonProperty.Value);
-			}
-
-			return dataModelObject;
-		}
-
-		private DataModelArray MapArray(JsonElement element)
-		{
-			var dataModelArray = new DataModelArray();
-
-			foreach (var jsonElement in element.EnumerateArray())
-			{
-				dataModelArray.Add(Map(jsonElement));
-			}
-
-			return dataModelArray;
 		}
 	}
 }
