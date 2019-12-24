@@ -22,7 +22,8 @@ namespace TSSArt.StateMachine
 		Boolean
 	}
 
-	[DebuggerDisplay("{ToObject()}", Name = "{Type}")]
+	[DebuggerTypeProxy(typeof(DebugView))]
+	[DebuggerDisplay(value: "{ToObject()} ({Type})")]
 	public readonly struct DataModelValue : IObject, IEquatable<DataModelValue>, IFormattable, IDynamicMetaObjectProvider
 	{
 		private readonly object _value;
@@ -103,7 +104,7 @@ namespace TSSArt.StateMachine
 				return (DataModelObject) _value;
 			}
 
-			throw new InvalidOperationException("DataModelValue is not DataModelObject");
+			throw new InvalidOperationException(message: "DataModelValue is not DataModelObject");
 		}
 
 		public DataModelObject AsObjectOrEmpty()
@@ -123,7 +124,7 @@ namespace TSSArt.StateMachine
 				return (DataModelArray) _value;
 			}
 
-			throw new InvalidOperationException("DataModelValue is not DataModelArray");
+			throw new InvalidOperationException(message: "DataModelValue is not DataModelArray");
 		}
 
 		public DataModelArray AsArrayOrEmpty()
@@ -143,7 +144,7 @@ namespace TSSArt.StateMachine
 				return (string) _value;
 			}
 
-			throw new InvalidOperationException("DataModelValue is not String");
+			throw new InvalidOperationException(message: "DataModelValue is not String");
 		}
 
 		public string AsStringOrDefault()
@@ -163,7 +164,7 @@ namespace TSSArt.StateMachine
 				return BitConverter.Int64BitsToDouble(_int64);
 			}
 
-			throw new InvalidOperationException("DataModelValue is not Number");
+			throw new InvalidOperationException(message: "DataModelValue is not Number");
 		}
 
 		public double? AsNumberOrDefault()
@@ -183,7 +184,7 @@ namespace TSSArt.StateMachine
 				return _int64 != 0;
 			}
 
-			throw new InvalidOperationException("DataModelValue is not Boolean");
+			throw new InvalidOperationException(message: "DataModelValue is not Boolean");
 		}
 
 		public bool? AsBooleanOrDefault()
@@ -203,7 +204,7 @@ namespace TSSArt.StateMachine
 				return new DateTime(_int64 & 0x3FFFFFFFFFFFFFFF, (DateTimeKind) ((_int64 >> 62) & 3));
 			}
 
-			throw new InvalidOperationException("DataModelValue is not DateTime");
+			throw new InvalidOperationException(message: "DataModelValue is not DateTime");
 		}
 
 		public DateTime? AsDateTimeOrDefault()
@@ -314,13 +315,13 @@ namespace TSSArt.StateMachine
 
 			var eventObject = new DataModelObject
 							  {
-									  ["name"] = new DataModelValue(EventName.ToName(@event.NameParts)),
-									  ["type"] = new DataModelValue(GetTypeString(@event.Type)),
-									  ["sendid"] = new DataModelValue(@event.SendId),
-									  ["origin"] = new DataModelValue(@event.Origin?.ToString()),
-									  ["origintype"] = new DataModelValue(@event.OriginType?.ToString()),
-									  ["invokeid"] = new DataModelValue(@event.InvokeId),
-									  ["data"] = @event.Data.DeepClone(true)
+									  [property: "name"] = new DataModelValue(EventName.ToName(@event.NameParts)),
+									  [property: "type"] = new DataModelValue(GetTypeString(@event.Type)),
+									  [property: "sendid"] = new DataModelValue(@event.SendId),
+									  [property: "origin"] = new DataModelValue(@event.Origin?.ToString()),
+									  [property: "origintype"] = new DataModelValue(@event.OriginType?.ToString()),
+									  [property: "invokeid"] = new DataModelValue(@event.InvokeId),
+									  [property: "data"] = @event.Data.DeepClone(isReadOnly: true)
 							  };
 
 			eventObject.Freeze();
@@ -345,12 +346,12 @@ namespace TSSArt.StateMachine
 
 			var exceptionData = new DataModelObject
 								{
-										["message"] = new DataModelValue(exception.Message),
-										["typeName"] = new DataModelValue(exception.GetType().Name),
-										["source"] = new DataModelValue(exception.Source),
-										["typeFullName"] = new DataModelValue(exception.GetType().FullName),
-										["stackTrace"] = new DataModelValue(exception.StackTrace),
-										["text"] = new DataModelValue(exception.ToString())
+										[property: "message"] = new DataModelValue(exception.Message),
+										[property: "typeName"] = new DataModelValue(exception.GetType().Name),
+										[property: "source"] = new DataModelValue(exception.Source),
+										[property: "typeFullName"] = new DataModelValue(exception.GetType().FullName),
+										[property: "stackTrace"] = new DataModelValue(exception.StackTrace),
+										[property: "text"] = new DataModelValue(exception.ToString())
 								};
 
 			exceptionData.Freeze();
@@ -374,9 +375,20 @@ namespace TSSArt.StateMachine
 
 		DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter) => new MetaObject(parameter, this, Dynamic.CreateMetaObject);
 
+		private class DebugView
+		{
+			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+			private readonly DataModelValue _dataModelValue;
+
+			public DebugView(DataModelValue dataModelValue) => _dataModelValue = dataModelValue;
+
+			[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+			public object Value => _dataModelValue.ToObject();
+		}
+
 		private class Dynamic : DynamicObject
 		{
-			private static readonly IDynamicMetaObjectProvider Instance = new Dynamic(default);
+			private static readonly IDynamicMetaObjectProvider Instance = new Dynamic(value: default);
 
 			private static readonly ConstructorInfo ConstructorInfo = typeof(Dynamic).GetConstructor(new[] { typeof(DataModelValue) });
 
