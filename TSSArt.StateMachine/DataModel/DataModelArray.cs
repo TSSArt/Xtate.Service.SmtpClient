@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq;
@@ -10,6 +11,8 @@ using System.Security;
 
 namespace TSSArt.StateMachine
 {
+	[DebuggerTypeProxy(typeof(DebugView))]
+	[DebuggerDisplay(value: "Count = {_list.Count}")]
 	public sealed class DataModelArray : IDynamicMetaObjectProvider, IList<DataModelValue>
 	{
 		public delegate void ChangedHandler(ChangedAction action, int index, DataModelDescriptor descriptor);
@@ -378,6 +381,35 @@ namespace TSSArt.StateMachine
 			return clone;
 		}
 
+		[DebuggerDisplay(value: "{Value}", Name = "[{_index}]")]
+		private class NameValue
+		{
+			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+			private readonly DataModelDescriptor _descriptor;
+
+			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+			private readonly int _index;
+
+			public NameValue(int index, DataModelDescriptor descriptor)
+			{
+				_index = index;
+				_descriptor = descriptor;
+			}
+
+			[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+			public DataModelValue Value => _descriptor.Value;
+		}
+
+		private class DebugView
+		{
+			private readonly DataModelArray _dataModelArray;
+
+			public DebugView(DataModelArray dataModelArray) => _dataModelArray = dataModelArray;
+
+			[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+			public NameValue[] Items => _dataModelArray._list.Select((d, i) => new NameValue(i, d)).ToArray();
+		}
+
 		private enum State
 		{
 			Writable,
@@ -387,7 +419,7 @@ namespace TSSArt.StateMachine
 
 		private class Dynamic : DynamicObject
 		{
-			private static readonly IDynamicMetaObjectProvider Instance = new Dynamic(default);
+			private static readonly IDynamicMetaObjectProvider Instance = new Dynamic(arr: default);
 
 			private static readonly ConstructorInfo ConstructorInfo = typeof(Dynamic).GetConstructor(new[] { typeof(DataModelArray) });
 

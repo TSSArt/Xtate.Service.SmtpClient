@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Dynamic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Security;
 
 namespace TSSArt.StateMachine
 {
+	[DebuggerTypeProxy(typeof(DebugView))]
+	[DebuggerDisplay(value: "Count = {_properties.Count}")]
 	public sealed class DataModelObject : IDynamicMetaObjectProvider
 	{
 		public delegate void ChangedHandler(ChangedAction action, string property, DataModelDescriptor descriptor);
@@ -56,13 +60,11 @@ namespace TSSArt.StateMachine
 
 		DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter) => new MetaObject(parameter, this, Dynamic.CreateMetaObject);
 
-		public string ToString(string format, IFormatProvider formatProvider) => ToString();
-
 		public event ChangedHandler Changed;
 
 		public void Freeze() => _state = State.Readonly;
 
-		private static Exception ObjectCantBeModifiedException() => new SecurityException("Object can not be modified");
+		private static Exception ObjectCantBeModifiedException() => new SecurityException(message: "Object can not be modified");
 
 		internal DataModelDescriptor GetDescriptor(string property) => _properties.TryGetValue(property, out var descriptor) ? descriptor : new DataModelDescriptor(DataModelValue.Undefined);
 
@@ -135,6 +137,28 @@ namespace TSSArt.StateMachine
 			return clone;
 		}
 
+		[DebuggerDisplay(value: "{Value}", Name = "{_pair.Key,nq}")]
+		private class NameValue
+		{
+			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+			private readonly KeyValuePair<string, DataModelDescriptor> _pair;
+
+			public NameValue(KeyValuePair<string, DataModelDescriptor> pair) => _pair = pair;
+
+			[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+			public DataModelValue Value => _pair.Value.Value;
+		}
+
+		private class DebugView
+		{
+			private readonly DataModelObject _dataModelObject;
+
+			public DebugView(DataModelObject dataModelObject) => _dataModelObject = dataModelObject;
+
+			[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+			public NameValue[] Items => _dataModelObject._properties.Select(p => new NameValue(p)).ToArray();
+		}
+
 		private enum State
 		{
 			Writable,
@@ -144,7 +168,7 @@ namespace TSSArt.StateMachine
 
 		private class Dynamic : DynamicObject
 		{
-			private static readonly IDynamicMetaObjectProvider Instance = new Dynamic(default);
+			private static readonly IDynamicMetaObjectProvider Instance = new Dynamic(obj: default);
 
 			private static readonly ConstructorInfo ConstructorInfo = typeof(Dynamic).GetConstructor(new[] { typeof(DataModelObject) });
 
