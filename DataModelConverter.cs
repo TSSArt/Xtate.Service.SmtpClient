@@ -1,6 +1,9 @@
 ﻿using System;
+using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
@@ -169,7 +172,15 @@ namespace TSSArt.StateMachine
 																};
 
 		public static string ToJson(DataModelValue value) => JsonSerializer.Serialize(value, Options);
+	
+		public static byte[] ToJsonUtf8Bytes(DataModelValue value) => JsonSerializer.SerializeToUtf8Bytes(value, Options);
+		
+		public static Task ToJsonAsync(Stream stream, DataModelValue value, CancellationToken token = default) => JsonSerializer.SerializeAsync(stream, value, Options, token);
 
 		public static DataModelValue FromJson(string json) => JsonSerializer.Deserialize<DataModelValue>(json, Options);
+		
+		public static DataModelValue FromJson(ReadOnlySpan<byte> utf8Json) => JsonSerializer.Deserialize<DataModelValue>(utf8Json, Options);
+
+		public static ValueTask<DataModelValue> FromJsonAsync(Stream stream, CancellationToken token = default) => JsonSerializer.DeserializeAsync<DataModelValue>(stream, Options, token);
 	}
 }
