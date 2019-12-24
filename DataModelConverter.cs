@@ -8,8 +8,6 @@ namespace TSSArt.StateMachine
 	{
 		private class JsonValueConverter : JsonConverter<DataModelValue>
 		{
-			public override bool CanConvert(Type typeToConvert) => typeToConvert == typeof(DataModelValue);
-
 			public override DataModelValue Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 			{
 				switch (reader.TokenType)
@@ -62,10 +60,10 @@ namespace TSSArt.StateMachine
 						writer.WriteBooleanValue(value.AsBoolean());
 						break;
 					case DataModelValueType.Object:
-						JsonSerializer.Serialize(value.AsObject(), options);
+						JsonSerializer.Serialize(writer, value.AsObject(), options);
 						break;
 					case DataModelValueType.Array:
-						JsonSerializer.Serialize(value.AsArray(), options);
+						JsonSerializer.Serialize(writer, value.AsArray(), options);
 						break;
 					default: throw new ArgumentOutOfRangeException();
 				}
@@ -74,8 +72,6 @@ namespace TSSArt.StateMachine
 
 		private class JsonObjectConverter : JsonConverter<DataModelObject>
 		{
-			public override bool CanConvert(Type typeToConvert) => typeToConvert == typeof(DataModelObject);
-
 			public override DataModelObject Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 			{
 				var obj = new DataModelObject();
@@ -107,8 +103,12 @@ namespace TSSArt.StateMachine
 
 				foreach (var name in obj.Properties)
 				{
-					writer.WritePropertyName(name);
-					JsonSerializer.Serialize(writer, obj[name], options);
+					var value = obj[name];
+					if (value.Type != DataModelValueType.Undefined)
+					{
+						writer.WritePropertyName(name);
+						JsonSerializer.Serialize(writer, value, options);
+					}
 				}
 
 				writer.WriteEndObject();
@@ -117,8 +117,6 @@ namespace TSSArt.StateMachine
 
 		private class JsonArrayConverter : JsonConverter<DataModelArray>
 		{
-			public override bool CanConvert(Type typeToConvert) => typeToConvert == typeof(DataModelArray);
-
 			public override DataModelArray Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 			{
 				var array = new DataModelArray();
@@ -149,7 +147,10 @@ namespace TSSArt.StateMachine
 
 				foreach (var value in array)
 				{
-					JsonSerializer.Serialize(writer, value, options);
+					if (value.Type != DataModelValueType.Undefined)
+					{
+						JsonSerializer.Serialize(writer, value, options);
+					}
 				}
 
 				writer.WriteEndArray();
@@ -163,7 +164,8 @@ namespace TSSArt.StateMachine
 																				new JsonValueConverter(),
 																				new JsonObjectConverter(),
 																				new JsonArrayConverter()
-																		}
+																		},
+																		WriteIndented = true
 																};
 
 		public static string ToJson(DataModelValue value) => JsonSerializer.Serialize(value, Options);
