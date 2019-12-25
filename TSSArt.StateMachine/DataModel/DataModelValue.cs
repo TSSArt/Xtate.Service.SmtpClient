@@ -315,13 +315,13 @@ namespace TSSArt.StateMachine
 
 			var eventObject = new DataModelObject
 							  {
-									  [property: "name"] = new DataModelValue(EventName.ToName(@event.NameParts)),
-									  [property: "type"] = new DataModelValue(GetTypeString(@event.Type)),
-									  [property: "sendid"] = new DataModelValue(@event.SendId),
-									  [property: "origin"] = new DataModelValue(@event.Origin?.ToString()),
-									  [property: "origintype"] = new DataModelValue(@event.OriginType?.ToString()),
-									  [property: "invokeid"] = new DataModelValue(@event.InvokeId),
-									  [property: "data"] = @event.Data.DeepClone(isReadOnly: true)
+									  ["name"] = new DataModelValue(EventName.ToName(@event.NameParts)),
+									  ["type"] = new DataModelValue(GetTypeString(@event.Type)),
+									  ["sendid"] = new DataModelValue(@event.SendId),
+									  ["origin"] = new DataModelValue(@event.Origin?.ToString()),
+									  ["origintype"] = new DataModelValue(@event.OriginType?.ToString()),
+									  ["invokeid"] = new DataModelValue(@event.InvokeId),
+									  ["data"] = @event.Data.DeepClone(isReadOnly: true)
 							  };
 
 			eventObject.Freeze();
@@ -346,12 +346,12 @@ namespace TSSArt.StateMachine
 
 			var exceptionData = new DataModelObject
 								{
-										[property: "message"] = new DataModelValue(exception.Message),
-										[property: "typeName"] = new DataModelValue(exception.GetType().Name),
-										[property: "source"] = new DataModelValue(exception.Source),
-										[property: "typeFullName"] = new DataModelValue(exception.GetType().FullName),
-										[property: "stackTrace"] = new DataModelValue(exception.StackTrace),
-										[property: "text"] = new DataModelValue(exception.ToString())
+										["message"] = new DataModelValue(exception.Message),
+										["typeName"] = new DataModelValue(exception.GetType().Name),
+										["source"] = new DataModelValue(exception.Source),
+										["typeFullName"] = new DataModelValue(exception.GetType().FullName),
+										["stackTrace"] = new DataModelValue(exception.StackTrace),
+										["text"] = new DataModelValue(exception.ToString())
 								};
 
 			exceptionData.Freeze();
@@ -388,7 +388,7 @@ namespace TSSArt.StateMachine
 
 		private class Dynamic : DynamicObject
 		{
-			private static readonly IDynamicMetaObjectProvider Instance = new Dynamic(value: default);
+			private static readonly IDynamicMetaObjectProvider Instance = new Dynamic(default);
 
 			private static readonly ConstructorInfo ConstructorInfo = typeof(Dynamic).GetConstructor(new[] { typeof(DataModelValue) });
 
