@@ -64,7 +64,7 @@ namespace TSSArt.StateMachine
 
 		public void Freeze() => _state = State.Readonly;
 
-		private static Exception ObjectCantBeModifiedException() => new SecurityException(message: "Object can not be modified");
+		private static Exception ObjectCantBeModifiedException() => new SecurityException("Object can not be modified");
 
 		internal DataModelDescriptor GetDescriptor(string property) => _properties.TryGetValue(property, out var descriptor) ? descriptor : new DataModelDescriptor(DataModelValue.Undefined);
 
@@ -176,7 +176,7 @@ namespace TSSArt.StateMachine
 
 		private class Dynamic : DynamicObject
 		{
-			private static readonly IDynamicMetaObjectProvider Instance = new Dynamic(obj: default);
+			private static readonly IDynamicMetaObjectProvider Instance = new Dynamic(default);
 
 			private static readonly ConstructorInfo ConstructorInfo = typeof(Dynamic).GetConstructor(new[] { typeof(DataModelObject) });
 

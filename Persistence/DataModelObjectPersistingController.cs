@@ -61,17 +61,20 @@ namespace TSSArt.StateMachine
 				_record = 0;
 				foreach (var property in dataModelObject.Properties)
 				{
-					var recordBucket = bucket.Nested(_record ++);
-					recordBucket.Add(Key.Operation, Key.Set);
-					recordBucket.Add(Key.Property, property);
-
 					var descriptor = dataModelObject.GetDescriptor(property);
-					if (descriptor.IsReadOnly)
+					if (descriptor.Value != DataModelValue.Undefined || descriptor.IsReadOnly)
 					{
-						recordBucket.Add(Key.ReadOnly, value: true);
-					}
+						var recordBucket = bucket.Nested(_record ++);
+						recordBucket.Add(Key.Operation, Key.Set);
+						recordBucket.Add(Key.Property, property);
 
-					recordBucket.SetDataModelValue(referenceTracker, descriptor.Value);
+						if (descriptor.IsReadOnly)
+						{
+							recordBucket.Add(Key.ReadOnly, value: true);
+						}
+
+						recordBucket.SetDataModelValue(referenceTracker, descriptor.Value);
+					}
 				}
 			}
 

@@ -220,7 +220,7 @@ namespace TSSArt.StateMachine
 				bucket.Add(Key.DelayMs, Event.DelayMs);
 				bucket.Add(Key.FireOn, _fireOnUtcTicks);
 
-				if (!Event.Data.IsUndefinedOrNull())
+				if (Event.Data.Type != DataModelValueType.Undefined)
 				{
 					var dataBucket = bucket.Nested(Key.Data);
 					using var tracker = new DataModelReferenceTracker(dataBucket.Nested(Key.DataReferences));
