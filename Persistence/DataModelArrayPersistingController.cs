@@ -83,7 +83,7 @@ namespace TSSArt.StateMachine
 				for (var i = 0; i < dataModelArray.Length; i ++)
 				{
 					var descriptor = dataModelArray.GetDescriptor(i);
-					if (descriptor.Value != DataModelValue.Undefined || descriptor.IsReadOnly)
+					if (descriptor.Value.Type != DataModelValueType.Undefined || descriptor.IsReadOnly)
 					{
 						var recordBucket = bucket.Nested(_record ++);
 						recordBucket.Add(Key.Operation, Key.Set);
