@@ -34,7 +34,7 @@ namespace TSSArt.StateMachine
 
 		ValueTask<DataModelValue> IService.Result => new ValueTask<DataModelValue>(_completedTcs.Task);
 
-		internal void Start(Uri source, DataModelValue content, DataModelValue parameters, IServiceCommunication serviceCommunication)
+		internal void Start(Uri source, string rawContent, DataModelValue content, DataModelValue parameters, IServiceCommunication serviceCommunication)
 		{
 			Source = source;
 			Content = content;

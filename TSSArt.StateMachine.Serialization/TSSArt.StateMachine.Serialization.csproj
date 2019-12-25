@@ -3,11 +3,11 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.1;netstandard2.0;net461</TargetFrameworks>
     <LangVersion>latest</LangVersion>
-    <RootNamespace>TSSArt.StateMachine.Services</RootNamespace>
+    <RootNamespace>TSSArt.StateMachine</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="HtmlAgilityPack" Version="1.11.17" />
+    <PackageReference Include="System.Text.Json" Version="4.7.0" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(Configuration)'=='Debug'">
@@ -30,7 +30,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TSSArt.StateMachine.Serialization\TSSArt.StateMachine.Serialization.csproj" />
     <ProjectReference Include="..\TSSArt.StateMachine\TSSArt.StateMachine.csproj" />
   </ItemGroup>
 

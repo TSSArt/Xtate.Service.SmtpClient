@@ -73,11 +73,10 @@
       <invoke type="input">
         <content
           expr="[
-                   { name: 'username', location: 'username' }, 
-                   { name: 'password', location: 'password' } 
+                   { name: 'username', location: 'username', type: 'input' }, 
+                   { name: 'password', location: 'password' , type: 'password' } 
                 ]" />
       </invoke>
-
     </state>
 
     <final id="Authenticate.OK">

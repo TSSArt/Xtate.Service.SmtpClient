@@ -10,10 +10,10 @@ namespace TSSArt.StateMachine.EcmaScript
 		private const string DataModelType      = "http://tssart.com/scxml/datamodel/#ECMAScript";
 		private const string DataModelTypeAlias = "ecmascript";
 
-		public static readonly IDataModelHandlerFactory Factory = new DataModelHandlerFactory();
+		public static readonly  IDataModelHandlerFactory Factory       = new DataModelHandlerFactory();
+		private static readonly ParserOptions            ParserOptions = new ParserOptions { Tolerant = true };
 
-		private static readonly ParserOptions    ParserOptions = new ParserOptions { Tolerant = true };
-		private readonly        JavaScriptParser _parser       = new JavaScriptParser();
+		private readonly JavaScriptParser _parser = new JavaScriptParser();
 
 		private EcmaScriptDataModelHandler(StateMachineVisitor masterVisitor) : base(masterVisitor) { }
 
@@ -128,6 +128,16 @@ namespace TSSArt.StateMachine.EcmaScript
 			}
 
 			base.Build(ref externalScriptExpression, ref externalScriptExpressionProperties);
+		}
+
+		protected override void Build(ref IContentBody contentBody, ref ContentBody contentBodyProperties)
+		{
+			if (!ValidationOnly)
+			{
+				contentBody = new EcmaScriptContentBodyEvaluator(contentBodyProperties);
+			}
+
+			base.Build(ref contentBody, ref contentBodyProperties);
 		}
 
 		private class DataModelHandlerFactory : IDataModelHandlerFactory

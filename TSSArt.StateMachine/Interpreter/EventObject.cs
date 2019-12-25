@@ -74,7 +74,7 @@ namespace TSSArt.StateMachine
 			bucket.Add(Key.OriginType, OriginType);
 			bucket.Add(Key.InvokeId, InvokeId);
 
-			if (Data.Type != DataModelValueType.Undefined)
+			if (!Data.IsUndefinedOrNull())
 			{
 				bucket.Add(Key.Data, value: true);
 				using var tracker = new DataModelReferenceTracker(bucket.Nested(Key.DataReferences));

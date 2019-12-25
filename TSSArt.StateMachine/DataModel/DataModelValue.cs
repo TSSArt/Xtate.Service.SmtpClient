@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Net.Mime;
 using System.Reflection;
-using System.Text;
 
 namespace TSSArt.StateMachine
 {
@@ -22,6 +22,8 @@ namespace TSSArt.StateMachine
 		Boolean
 	}
 
+	[DebuggerTypeProxy(typeof(DebugView))]
+	[DebuggerDisplay(value: "{ToObject()} ({Type})")]
 	public readonly struct DataModelValue : IObject, IEquatable<DataModelValue>, IFormattable, IDynamicMetaObjectProvider
 	{
 		private readonly object _value;
@@ -73,6 +75,8 @@ namespace TSSArt.StateMachine
 
 		public bool Equals(DataModelValue other) => Equals(_value, other._value) && _int64 == other._int64 && Type == other.Type;
 
+		public bool IsUndefinedOrNull() => Type == DataModelValueType.Undefined || Type == DataModelValueType.Null;
+
 		public object ToObject()
 		{
 			return Type switch
@@ -100,7 +104,7 @@ namespace TSSArt.StateMachine
 				return (DataModelObject) _value;
 			}
 
-			throw new InvalidOperationException("DataModelValue is not DataModelObject");
+			throw new InvalidOperationException(message: "DataModelValue is not DataModelObject");
 		}
 
 		public DataModelObject AsObjectOrEmpty()
@@ -120,7 +124,7 @@ namespace TSSArt.StateMachine
 				return (DataModelArray) _value;
 			}
 
-			throw new InvalidOperationException("DataModelValue is not DataModelArray");
+			throw new InvalidOperationException(message: "DataModelValue is not DataModelArray");
 		}
 
 		public DataModelArray AsArrayOrEmpty()
@@ -140,7 +144,7 @@ namespace TSSArt.StateMachine
 				return (string) _value;
 			}
 
-			throw new InvalidOperationException("DataModelValue is not String");
+			throw new InvalidOperationException(message: "DataModelValue is not String");
 		}
 
 		public string AsStringOrDefault()
@@ -160,7 +164,7 @@ namespace TSSArt.StateMachine
 				return BitConverter.Int64BitsToDouble(_int64);
 			}
 
-			throw new InvalidOperationException("DataModelValue is not Number");
+			throw new InvalidOperationException(message: "DataModelValue is not Number");
 		}
 
 		public double? AsNumberOrDefault()
@@ -180,7 +184,7 @@ namespace TSSArt.StateMachine
 				return _int64 != 0;
 			}
 
-			throw new InvalidOperationException("DataModelValue is not Boolean");
+			throw new InvalidOperationException(message: "DataModelValue is not Boolean");
 		}
 
 		public bool? AsBooleanOrDefault()
@@ -200,7 +204,7 @@ namespace TSSArt.StateMachine
 				return new DateTime(_int64 & 0x3FFFFFFFFFFFFFFF, (DateTimeKind) ((_int64 >> 62) & 3));
 			}
 
-			throw new InvalidOperationException("DataModelValue is not DateTime");
+			throw new InvalidOperationException(message: "DataModelValue is not DateTime");
 		}
 
 		public DateTime? AsDateTimeOrDefault()
@@ -317,7 +321,7 @@ namespace TSSArt.StateMachine
 									  ["origin"] = new DataModelValue(@event.Origin?.ToString()),
 									  ["origintype"] = new DataModelValue(@event.OriginType?.ToString()),
 									  ["invokeid"] = new DataModelValue(@event.InvokeId),
-									  ["data"] = @event.Data.DeepClone(true)
+									  ["data"] = @event.Data.DeepClone(isReadOnly: true)
 							  };
 
 			eventObject.Freeze();
@@ -355,86 +359,32 @@ namespace TSSArt.StateMachine
 			return new DataModelValue(exceptionData);
 		}
 
-		public override string ToString() => (ToObject() ?? string.Empty).ToString();
-
-		public string ToString(string format) => ToString(format, formatProvider: null);
+		public override string ToString() => ToString(format: null, formatProvider: null);
 
 		public string ToString(string format, IFormatProvider formatProvider)
 		{
-			if (format == "JSON")
-			{
-				return Type switch
-				{
-						DataModelValueType.Undefined => "null",
-						DataModelValueType.Null => "null",
-						DataModelValueType.String => ToJsonString(AsString()),
-						DataModelValueType.Object => AsObject().ToString(format: "JSON", CultureInfo.InvariantCulture),
-						DataModelValueType.Array => AsArray().ToString(format: "JSON", CultureInfo.InvariantCulture),
-						DataModelValueType.Number => AsNumber().ToString(format: "G17", NumberFormatInfo.InvariantInfo),
-						DataModelValueType.DateTime => AsDateTime().ToString(format: "O", DateTimeFormatInfo.InvariantInfo),
-						DataModelValueType.Boolean => (AsBoolean() ? "true" : "false"),
-						_ => throw new ArgumentOutOfRangeException()
-				};
-			}
-
 			var obj = ToObject();
+
 			if (obj is IFormattable formattable)
 			{
 				return formattable.ToString(format, formatProvider);
 			}
 
-			return (obj ?? string.Empty).ToString();
-
-			static string ToJsonString(string str)
-			{
-				if (str == null) throw new ArgumentNullException(nameof(str));
-
-				var sb = new StringBuilder(str.Length + 2);
-				sb.Append('\"');
-				foreach (var c in str)
-				{
-					switch (c)
-					{
-						case '\\':
-							sb.Append("\\\\");
-							break;
-						case '"':
-							sb.Append("\\\"");
-							break;
-						case '/':
-							sb.Append("\\/");
-							break;
-						case '\b':
-							sb.Append("\\b");
-							break;
-						case '\t':
-							sb.Append("\\t");
-							break;
-						case '\n':
-							sb.Append("\\n");
-							break;
-						case '\f':
-							sb.Append("\\f");
-							break;
-						case '\r':
-							sb.Append("\\r");
-							break;
-						case var ctrl when ctrl < 32 || ctrl >= 128:
-							sb.Append("\\u").Append(((int) c).ToString(format: "X4", CultureInfo.InvariantCulture));
-							break;
-						default:
-							sb.Append(c);
-							break;
-					}
-				}
-
-				sb.Append('\"');
-
-				return sb.ToString();
-			}
+			return Convert.ToString(obj, formatProvider) ?? string.Empty;
 		}
 
 		DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter) => new MetaObject(parameter, this, Dynamic.CreateMetaObject);
+
+		private class DebugView
+		{
+			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+			private readonly DataModelValue _dataModelValue;
+
+			public DebugView(DataModelValue dataModelValue) => _dataModelValue = dataModelValue;
+
+			[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+			public object Value => _dataModelValue.ToObject();
+		}
 
 		private class Dynamic : DynamicObject
 		{

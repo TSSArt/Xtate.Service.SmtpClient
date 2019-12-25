@@ -4,18 +4,18 @@
 	{
 		public IValueExpression Expression { get; set; }
 
-		public string Value { get; set; }
+		public IContentBody Body { get; set; }
 
 		void IEntity<Content, IContent>.Init(IContent source)
 		{
 			Ancestor = source;
 			Expression = source.Expression;
-			Value = source.Value;
+			Body = source.Body;
 		}
 
 		bool IEntity<Content, IContent>.RefEquals(in Content other) =>
 				ReferenceEquals(Expression, other.Expression) &&
-				ReferenceEquals(Value, other.Value);
+				ReferenceEquals(Body, other.Body);
 
 		internal object Ancestor;
 

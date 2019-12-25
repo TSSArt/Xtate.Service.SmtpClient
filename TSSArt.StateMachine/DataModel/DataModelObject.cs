@@ -1,14 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Dynamic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Security;
-using System.Text;
 
 namespace TSSArt.StateMachine
 {
-	public sealed class DataModelObject : IDynamicMetaObjectProvider, IFormattable
+	[DebuggerTypeProxy(typeof(DebugView))]
+	[DebuggerDisplay(value: "Count = {_properties.Count}")]
+	public sealed class DataModelObject : IDynamicMetaObjectProvider
 	{
 		public delegate void ChangedHandler(ChangedAction action, string property, DataModelDescriptor descriptor);
 
@@ -56,38 +59,6 @@ namespace TSSArt.StateMachine
 		}
 
 		DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter) => new MetaObject(parameter, this, Dynamic.CreateMetaObject);
-
-		public string ToString(string format, IFormatProvider formatProvider)
-		{
-			if (format == "JSON")
-			{
-				var sb = new StringBuilder();
-
-				if (_properties.Count > 0)
-				{
-					foreach (var pair in _properties)
-					{
-						if (pair.Value.Value.Type != DataModelValueType.Undefined && pair.Value.Value.Type != DataModelValueType.Null)
-						{
-							sb.Append(sb.Length == 0 ? "{\r\n  " : ",\r\n  ");
-
-							var value = pair.Value.Value.ToString(format: "JSON", formatProvider).Replace(oldValue: "\r\n", newValue: "\r\n  ");
-							sb.Append("\"").Append(pair.Key).Append("\": ").Append(value);
-						}
-					}
-
-					sb.Append("\r\n}");
-				}
-				else
-				{
-					sb.Append("{}");
-				}
-
-				return sb.ToString();
-			}
-
-			return base.ToString();
-		}
 
 		public event ChangedHandler Changed;
 
@@ -154,8 +125,6 @@ namespace TSSArt.StateMachine
 			RemoveInternal(property);
 		}
 
-		public string ToString(string format) => ToString(format, formatProvider: null);
-
 		public DataModelObject DeepClone(bool isReadOnly)
 		{
 			var clone = new DataModelObject(isReadOnly);
@@ -166,6 +135,36 @@ namespace TSSArt.StateMachine
 			}
 
 			return clone;
+		}
+
+		[DebuggerDisplay(value: "{" + nameof(_value) + "}", Name = "{" + nameof(_name) + ",nq}")]
+		private struct NameValue
+		{
+			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+			private readonly string _name;
+
+			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+			private readonly DataModelValue _value;
+
+			public NameValue(string name, DataModelValue value)
+			{
+				_name = name;
+				_value = value;
+			}
+		}
+
+		private class DebugView
+		{
+			private readonly DataModelObject _dataModelObject;
+
+			public DebugView(DataModelObject dataModelObject) => _dataModelObject = dataModelObject;
+
+			[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+			public NameValue[] Items =>
+					_dataModelObject
+							._properties.OrderBy(p => p.Key)
+							.Select(p => new NameValue(p.Key, p.Value.Value))
+							.ToArray();
 		}
 
 		private enum State

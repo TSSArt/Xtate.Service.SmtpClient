@@ -16,12 +16,14 @@ namespace TSSArt.StateMachine
 			TypeExpressionEvaluator = invoke.TypeExpression.As<IStringEvaluator>();
 			SourceExpressionEvaluator = invoke.SourceExpression.As<IStringEvaluator>();
 			ContentExpressionEvaluator = invoke.Content?.Expression.As<IObjectEvaluator>();
+			ContentBodyEvaluator = invoke.Content?.Body.As<IValueEvaluator>();
 			IdLocationEvaluator = invoke.IdLocation.As<ILocationEvaluator>();
 			NameEvaluatorList = invoke.NameList.AsListOf<ILocationEvaluator>();
 			ParameterList = invoke.Parameters.AsListOf<DefaultParam>();
 		}
 
 		public IObjectEvaluator                  ContentExpressionEvaluator { get; }
+		public IValueEvaluator                   ContentBodyEvaluator       { get; }
 		public ILocationEvaluator                IdLocationEvaluator        { get; }
 		public IReadOnlyList<ILocationEvaluator> NameEvaluatorList          { get; }
 		public IReadOnlyList<DefaultParam>       ParameterList              { get; }
@@ -61,10 +63,22 @@ namespace TSSArt.StateMachine
 			var type = TypeExpressionEvaluator != null ? ToUri(await TypeExpressionEvaluator.EvaluateString(executionContext, token).ConfigureAwait(false)) : _invoke.Type;
 			var source = SourceExpressionEvaluator != null ? ToUri(await SourceExpressionEvaluator.EvaluateString(executionContext, token).ConfigureAwait(false)) : _invoke.Source;
 
-			var content = await Converter.GetContent(_invoke.Content?.Value, ContentExpressionEvaluator, executionContext, token).ConfigureAwait(false);
-			var parameters = await Converter.GetParameters(NameEvaluatorList, ParameterList, executionContext, token).ConfigureAwait(false);
+			var rawContent = ContentBodyEvaluator is IStringEvaluator rawContentEvaluator ? await rawContentEvaluator.EvaluateString(executionContext, token).ConfigureAwait(false) : null;
+			var content = await DataConverter.GetContent(ContentBodyEvaluator, ContentExpressionEvaluator, executionContext, token).ConfigureAwait(false);
+			var parameters = await DataConverter.GetParameters(NameEvaluatorList, ParameterList, executionContext, token).ConfigureAwait(false);
 
-			await executionContext.StartInvoke(invokeId, invokeUniqueId, type, source, content, parameters, token).ConfigureAwait(false);
+			var invokeData = new InvokeData
+							 {
+									 InvokeId = invokeId,
+									 InvokeUniqueId = invokeUniqueId,
+									 Type = type,
+									 Source = source,
+									 RawContent = rawContent,
+									 Content = content,
+									 Parameters = parameters
+							 };
+
+			await executionContext.StartInvoke(invokeData, token).ConfigureAwait(false);
 
 			IdLocationEvaluator?.SetValue(new DefaultObject(invokeId), executionContext);
 

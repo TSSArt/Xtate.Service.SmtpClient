@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
@@ -18,8 +17,7 @@ namespace TSSArt.StateMachine
 
 		ValueTask Send(IOutgoingEvent @event, CancellationToken token = default);
 
-		ValueTask StartInvoke(string invokeId, string invokeUniqueId, Uri type, Uri source = null, DataModelValue content = default, DataModelValue parameters = default,
-							  CancellationToken token = default);
+		ValueTask StartInvoke(InvokeData invokeData, CancellationToken token = default);
 
 		ValueTask CancelInvoke(string invokeId, CancellationToken token = default);
 	}

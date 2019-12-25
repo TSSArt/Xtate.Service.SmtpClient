@@ -10,13 +10,13 @@
 
 		public IValueExpression Expression => _content.Expression;
 
-		public string Value => _content.Value;
+		public IContentBody Body => _content.Body;
 
 		void IStoreSupport.Store(Bucket bucket)
 		{
 			bucket.Add(Key.TypeInfo, TypeInfo.ContentNode);
 			bucket.AddEntity(Key.Expression, Expression);
-			bucket.Add(Key.Value, Value);
+			bucket.Add(Key.Body, Body?.Value);
 		}
 	}
 }

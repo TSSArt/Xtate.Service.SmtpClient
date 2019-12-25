@@ -92,20 +92,21 @@ namespace TSSArt.StateMachine
 
 		IReadOnlyList<IEventProcessor> IIoProcessor.GetIoProcessors() => _ioProcessors;
 
-		async ValueTask IIoProcessor.StartInvoke(string sessionId, string invokeId, string invokeUniqueId, Uri type, Uri source, DataModelValue content, DataModelValue parameters,
-												 CancellationToken token)
+		ValueTask IIoProcessor.StartInvoke(string sessionId, InvokeData invokeData, CancellationToken token) => StartInvokeAsync(sessionId, invokeData, token);
+
+		private async ValueTask StartInvokeAsync(string sessionId, InvokeData data, CancellationToken token)
 		{
 			_context.ValidateSessionId(sessionId, out var service);
 
-			if (!_serviceFactories.TryGetValue(type, out var factory))
+			if (!_serviceFactories.TryGetValue(data.Type, out var factory))
 			{
 				throw new ApplicationException("Invalid type");
 			}
 
-			var serviceCommunication = new ServiceCommunication(service, EventProcessorId, invokeId, invokeUniqueId);
-			var invokedService = await factory.StartService(source, content, parameters, serviceCommunication, token).ConfigureAwait(false);
+			var serviceCommunication = new ServiceCommunication(service, EventProcessorId, data.InvokeId, data.InvokeUniqueId);
+			var invokedService = await factory.StartService(data.Source, data.RawContent, data.Content, data.Parameters, serviceCommunication, token).ConfigureAwait(false);
 
-			await _context.AddService(sessionId, invokeId, invokeUniqueId, invokedService).ConfigureAwait(false);
+			await _context.AddService(sessionId, data.InvokeId, data.InvokeUniqueId, invokedService).ConfigureAwait(false);
 
 			CompleteAsync();
 
@@ -113,21 +114,21 @@ namespace TSSArt.StateMachine
 			{
 				try
 				{
-					var nameParts = EventName.GetDoneInvokeNameParts(invokeId);
+					var nameParts = EventName.GetDoneInvokeNameParts(data.InvokeId);
 					var resultData = await invokedService.Result.ConfigureAwait(false);
 
-					await service.Send(new EventObject(EventType.External, nameParts, resultData, sendId: null, invokeId, invokeUniqueId), token: default).ConfigureAwait(false);
+					await service.Send(new EventObject(EventType.External, nameParts, resultData, sendId: null, data.InvokeId, data.InvokeUniqueId), token: default).ConfigureAwait(false);
 				}
 				catch (Exception ex)
 				{
-					var nameParts = EventName.GetErrorInvokeNameParts(invokeId);
+					var nameParts = EventName.GetErrorInvokeNameParts(data.InvokeId);
 					var exceptionData = DataModelValue.FromException(ex);
 
-					await service.Send(new EventObject(EventType.External, nameParts, exceptionData, sendId: null, invokeId, invokeUniqueId), token: default).ConfigureAwait(false);
+					await service.Send(new EventObject(EventType.External, nameParts, exceptionData, sendId: null, data.InvokeId, data.InvokeUniqueId), token: default).ConfigureAwait(false);
 				}
 				finally
 				{
-					invokedService = await _context.TryCompleteService(sessionId, invokeId).ConfigureAwait(false);
+					invokedService = await _context.TryCompleteService(sessionId, data.InvokeId).ConfigureAwait(false);
 
 					if (invokedService != null)
 					{
@@ -201,10 +202,11 @@ namespace TSSArt.StateMachine
 
 		Uri IServiceFactory.AliasTypeId => ServiceFactoryAliasTypeId;
 
-		async ValueTask<IService> IServiceFactory.StartService(Uri source, DataModelValue content, DataModelValue parameters, IServiceCommunication serviceCommunication, CancellationToken token)
+		async ValueTask<IService> IServiceFactory.StartService(Uri source, string rawContent, DataModelValue content, DataModelValue parameters, IServiceCommunication serviceCommunication,
+															   CancellationToken token)
 		{
 			var sessionId = IdGenerator.NewSessionId();
-			var service = await _context.CreateAndAddStateMachine(sessionId, stateMachine: null, source, content, parameters).ConfigureAwait(false);
+			var service = await _context.CreateAndAddStateMachine(sessionId, stateMachine: null, source, rawContent, content, parameters).ConfigureAwait(false);
 
 			await service.StartAsync(token).ConfigureAwait(false);
 
@@ -224,26 +226,28 @@ namespace TSSArt.StateMachine
 		public ValueTask Initialize() => _context.Initialize();
 
 		public ValueTask<DataModelValue> Execute(IStateMachine stateMachine, DataModelValue parameters = default) =>
-				Execute(stateMachine, source: null, content: default, IdGenerator.NewSessionId(), parameters);
+				Execute(stateMachine, source: null, rawContent: default, content: default, IdGenerator.NewSessionId(), parameters);
 
-		public ValueTask<DataModelValue> Execute(Uri source, DataModelValue parameters = default) => Execute(stateMachine: null, source, content: default, IdGenerator.NewSessionId(), parameters);
+		public ValueTask<DataModelValue> Execute(Uri source, DataModelValue parameters = default) =>
+				Execute(stateMachine: null, source, rawContent: default, content: default, IdGenerator.NewSessionId(), parameters);
 
 		public ValueTask<DataModelValue> Execute(string scxml, DataModelValue parameters = default) =>
-				Execute(stateMachine: null, source: null, new DataModelValue(scxml), IdGenerator.NewSessionId(), parameters);
+				Execute(stateMachine: null, source: null, scxml, new DataModelValue(scxml), IdGenerator.NewSessionId(), parameters);
 
 		public ValueTask<DataModelValue> Execute(string sessionId, IStateMachine stateMachine, DataModelValue parameters = default) =>
-				Execute(stateMachine, source: null, content: default, sessionId, parameters);
+				Execute(stateMachine, source: null, rawContent: default, content: default, sessionId, parameters);
 
-		public ValueTask<DataModelValue> Execute(string sessionId, Uri source, DataModelValue parameters = default) => Execute(stateMachine: null, source, content: default, sessionId, parameters);
+		public ValueTask<DataModelValue> Execute(string sessionId, Uri source, DataModelValue parameters = default) =>
+				Execute(stateMachine: null, source, rawContent: default, content: default, sessionId, parameters);
 
 		public ValueTask<DataModelValue> Execute(string sessionId, string scxml, DataModelValue parameters = default) =>
-				Execute(stateMachine: null, source: null, new DataModelValue(scxml), sessionId, parameters);
+				Execute(stateMachine: null, source: null, scxml, new DataModelValue(scxml), sessionId, parameters);
 
-		private async ValueTask<DataModelValue> Execute(IStateMachine stateMachine, Uri source, DataModelValue content, string sessionId, DataModelValue parameters)
+		private async ValueTask<DataModelValue> Execute(IStateMachine stateMachine, Uri source, string rawContent, DataModelValue content, string sessionId, DataModelValue parameters)
 		{
 			if (sessionId == null) throw new ArgumentNullException(nameof(sessionId));
 
-			var service = await _context.CreateAndAddStateMachine(sessionId, stateMachine, source, content, parameters).ConfigureAwait(false);
+			var service = await _context.CreateAndAddStateMachine(sessionId, stateMachine, source, rawContent, content, parameters).ConfigureAwait(false);
 
 			try
 			{

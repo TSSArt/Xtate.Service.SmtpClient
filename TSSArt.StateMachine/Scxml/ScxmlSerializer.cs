@@ -523,12 +523,19 @@ namespace TSSArt.StateMachine
 				_writer.WriteAttributeString(localName: "expr", entity.Expression.Expression);
 			}
 
+			base.Visit(ref entity);
+
+			_writer.WriteEndElement();
+		}
+
+		protected override void Visit(ref IContentBody entity)
+		{
+			if (entity == null) throw new ArgumentNullException(nameof(entity));
+
 			if (entity.Value != null)
 			{
 				_writer.WriteRaw(entity.Value);
 			}
-
-			_writer.WriteEndElement();
 		}
 
 		protected override void Visit(ref IDoneData entity)
