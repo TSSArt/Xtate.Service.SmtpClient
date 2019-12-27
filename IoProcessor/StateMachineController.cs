@@ -28,7 +28,7 @@ namespace TSSArt.StateMachine
 			_ioProcessor = ioProcessor;
 			_defaultOptions = defaultOptions;
 			_idlePeriod = idlePeriod;
-			_channel = Channel.CreateUnbounded<IEvent>();
+			_channel = Channel.CreateUnbounded<IEvent>(new UnboundedChannelOptions { SingleReader = true, });
 
 			if (_defaultOptions.Logger == null)
 			{
