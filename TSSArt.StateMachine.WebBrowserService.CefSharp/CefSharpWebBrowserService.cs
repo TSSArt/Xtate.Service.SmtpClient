@@ -12,8 +12,8 @@ namespace TSSArt.StateMachine.Services
 
 		protected override ValueTask<DataModelValue> Execute()
 		{
-			_url = Convert.ToString(Source, CultureInfo.InvariantCulture);
-			_content = Convert.ToString(Content.ToObject(), CultureInfo.InvariantCulture);
+			_url = Source?.ToString();
+			_content = RawContent ?? Content.AsStringOrDefault();
 
 			var task = Task.Factory.StartNew(Show, StopToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
 

@@ -10,6 +10,7 @@ namespace TSSArt.StateMachine
 		private readonly CancellationTokenSource              _tokenSource  = new CancellationTokenSource();
 
 		protected Uri                   Source               { get; private set; }
+		protected string                RawContent           { get; private set; }
 		protected DataModelValue        Content              { get; private set; }
 		protected DataModelValue        Parameters           { get; private set; }
 		protected IServiceCommunication ServiceCommunication { get; private set; }
@@ -37,6 +38,7 @@ namespace TSSArt.StateMachine
 		internal void Start(Uri source, string rawContent, DataModelValue content, DataModelValue parameters, IServiceCommunication serviceCommunication)
 		{
 			Source = source;
+			RawContent = rawContent;
 			Content = content;
 			Parameters = parameters;
 			ServiceCommunication = serviceCommunication;

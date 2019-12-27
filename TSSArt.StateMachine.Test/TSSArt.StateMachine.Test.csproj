@@ -41,7 +41,6 @@
     <ProjectReference Include="..\TSSArt.StateMachine.MimeCustomAction\TSSArt.StateMachine.MimeCustomAction.csproj" />
     <ProjectReference Include="..\TSSArt.StateMachine.Serialization\TSSArt.StateMachine.Serialization.csproj" />
     <ProjectReference Include="..\TSSArt.StateMachine.SmtpClientService\TSSArt.StateMachine.SmtpClientService.csproj" />
-    <ProjectReference Include="..\TSSArt.StateMachine.WebBrowserService.CefSharp\TSSArt.StateMachine.WebBrowserService.CefSharp.csproj" />
     <ProjectReference Include="..\TSSArt.StateMachine.WebBrowserService\TSSArt.StateMachine.WebBrowserService.csproj" />
     <ProjectReference Include="..\TSSArt.StateMachine\TSSArt.StateMachine.csproj" />
   </ItemGroup>

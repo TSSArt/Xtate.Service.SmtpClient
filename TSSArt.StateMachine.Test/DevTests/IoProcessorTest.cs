@@ -180,7 +180,7 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 
 			options.ServiceFactories.Add(HttpClientService.Factory);
 			options.ServiceFactories.Add(SmtpClientService.Factory);
-			options.ServiceFactories.Add(WebBrowserService.GetFactory<CefSharpWebBrowserService>());
+		//	options.ServiceFactories.Add(WebBrowserService.GetFactory<CefSharpWebBrowserService>());
 			options.DataModelHandlerFactories.Add(EcmaScriptDataModelHandler.Factory);
 
 			options.CustomActionProviders.Add(BasicCustomActionProvider.Instance);

@@ -71,12 +71,22 @@
 
     <state id="Authenticate.NoCredentials">
       <invoke type="input">
-        <content
-          expr="[
-                   { name: 'username', location: 'username', type: 'input' }, 
-                   { name: 'password', location: 'password' , type: 'password' } 
-                ]" />
+        <content>
+          {
+            "fields": [
+              { name: 'username', location: 'username', type: 'input' },
+              { name: 'password', location: 'password' , type: 'password' } ]
+          }
+        </content>
+        <finalize>
+          <if cond="_event.data.result">
+            <assign location="username" expr="_event.data.username" />
+            <assign location="password" expr="_event.data.password" />
+          </if>
+        </finalize>
       </invoke>
+
+      <transition event="done.invoke.Authenticate.NoCredentials" target="Authenticate.ValidateCredentials"/>
     </state>
 
     <final id="Authenticate.OK">
