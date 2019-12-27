@@ -4,6 +4,7 @@
     <TargetFrameworks>netstandard2.1;netstandard2.0;net461</TargetFrameworks>
     <LangVersion>latest</LangVersion>
     <RootNamespace>TSSArt.StateMachine.Services</RootNamespace>
+    <RunAnalyzersDuringLiveAnalysis>false</RunAnalyzersDuringLiveAnalysis>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(Configuration)'=='Debug'">

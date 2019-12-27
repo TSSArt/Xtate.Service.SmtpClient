@@ -6,6 +6,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <Platforms>x86;x64</Platforms>
     <RootNamespace>TSSArt.StateMachine.Services</RootNamespace>
+    <RunAnalyzersDuringLiveAnalysis>false</RunAnalyzersDuringLiveAnalysis>
   </PropertyGroup>
 
   <ItemGroup>
