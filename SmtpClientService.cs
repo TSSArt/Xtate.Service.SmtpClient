@@ -9,7 +9,7 @@ namespace TSSArt.StateMachine.Services
 	{
 		public static readonly IServiceFactory Factory = SimpleServiceFactory<SmtpClientService>.Instance;
 
-		protected override async ValueTask<DataModelValue> Execute()
+		protected override async ValueTask<ServiceResult> Execute()
 		{
             var parameters = Parameters.AsObjectOrEmpty();
             var host = parameters["server"].AsString();
@@ -38,7 +38,7 @@ namespace TSSArt.StateMachine.Services
 
 			await client.SendMailAsync(message).ConfigureAwait(false);
 
-			return new DataModelValue("OK");
+			return default;
 		}
 	}
 }
