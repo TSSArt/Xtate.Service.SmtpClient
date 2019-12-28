@@ -27,7 +27,7 @@ namespace TSSArt.StateMachine.Services
 		private static readonly FieldInfo DomainTableField = typeof(CookieContainer).GetField(name: "m_domainTable", BindingFlags.Instance | BindingFlags.NonPublic);
 		private static readonly FieldInfo ListField        = typeof(CookieContainer).Assembly.GetType("System.Net.PathList").GetField(name: "m_list", BindingFlags.Instance | BindingFlags.NonPublic);
 
-		protected override async ValueTask<DataModelValue> Execute()
+		protected override async ValueTask<ServiceResult> Execute()
 		{
 			var parameters = Parameters.AsObjectOrEmpty();
 
@@ -115,7 +115,7 @@ namespace TSSArt.StateMachine.Services
 						 };
 			result.Freeze();
 
-			return new DataModelValue(result);
+			return new ServiceResult { DoneEventData = new DataModelValue(result) };
 		}
 
 		private static HttpContent CreateFormUrlEncodedContent(DataModelValue content)

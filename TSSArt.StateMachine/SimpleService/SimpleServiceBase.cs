@@ -6,8 +6,8 @@ namespace TSSArt.StateMachine
 {
 	public abstract class SimpleServiceBase : IService, IDisposable
 	{
-		private readonly TaskCompletionSource<DataModelValue> _completedTcs = new TaskCompletionSource<DataModelValue>();
-		private readonly CancellationTokenSource              _tokenSource  = new CancellationTokenSource();
+		private readonly TaskCompletionSource<ServiceResult> _completedTcs = new TaskCompletionSource<ServiceResult>();
+		private readonly CancellationTokenSource             _tokenSource  = new CancellationTokenSource();
 
 		protected Uri                   Source               { get; private set; }
 		protected string                RawContent           { get; private set; }
@@ -33,7 +33,7 @@ namespace TSSArt.StateMachine
 			return default;
 		}
 
-		ValueTask<DataModelValue> IService.Result => new ValueTask<DataModelValue>(_completedTcs.Task);
+		ValueTask<ServiceResult> IService.GetResult() => new ValueTask<ServiceResult>(_completedTcs.Task);
 
 		internal void Start(Uri source, string rawContent, DataModelValue content, DataModelValue parameters, IServiceCommunication serviceCommunication)
 		{
@@ -62,7 +62,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected abstract ValueTask<DataModelValue> Execute();
+		protected abstract ValueTask<ServiceResult> Execute();
 
 		protected virtual void Dispose(bool disposing)
 		{

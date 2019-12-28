@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -10,17 +9,17 @@ namespace TSSArt.StateMachine.Services
 		private string _content;
 		private string _url;
 
-		protected override ValueTask<DataModelValue> Execute()
+		protected override ValueTask<ServiceResult> Execute()
 		{
 			_url = Source?.ToString();
 			_content = RawContent ?? Content.AsStringOrDefault();
 
 			var task = Task.Factory.StartNew(Show, StopToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
 
-			return new ValueTask<DataModelValue>(task);
+			return new ValueTask<ServiceResult>(task);
 		}
 
-		private DataModelValue Show()
+		private ServiceResult Show()
 		{
 			using var form = new BrowserForm(_url, _content);
 			using var registration = StopToken.Register(() => form.Close(DialogResult.Abort, DataModelValue.Undefined));
@@ -31,10 +30,10 @@ namespace TSSArt.StateMachine.Services
 
 			if (form.DialogResult == DialogResult.OK)
 			{
-				return form.Result;
+				return new ServiceResult { DoneEventData = form.Result, DoneEventSuffix = "ok" };
 			}
 
-			throw new OperationCanceledException();
+			return new ServiceResult { DoneEventSuffix = "cancel" };
 		}
 	}
 }

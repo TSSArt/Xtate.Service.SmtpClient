@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace TSSArt.StateMachine.Services
@@ -10,17 +9,17 @@ namespace TSSArt.StateMachine.Services
         public static readonly IServiceFactory Factory = SimpleServiceFactory<InputService>.Instance;
 		private DataModelArray _fields;
 
-		protected override ValueTask<DataModelValue> Execute()
+		protected override ValueTask<ServiceResult> Execute()
         {
 			var parameters = Content.AsObjectOrEmpty();
 			_fields = parameters["fields"].AsArrayOrEmpty();
 
 			var task = Task.Factory.StartNew(Show, StopToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
 
-			return new ValueTask<DataModelValue>(task);
+			return new ValueTask<ServiceResult>(task);
         }
 
-		private DataModelValue Show()
+		private ServiceResult Show()
 		{
 			using var form = new InputForm();
 
@@ -51,10 +50,11 @@ namespace TSSArt.StateMachine.Services
 
 				result.Freeze();
 
-				return new DataModelValue(result);
+				return new ServiceResult { DoneEventData = new DataModelValue(result), DoneEventSuffix = "ok" };
 			}
 
-			throw new OperationCanceledException();
+			return new ServiceResult { DoneEventSuffix = "cancel" };
+
 		}
 	}
 }
