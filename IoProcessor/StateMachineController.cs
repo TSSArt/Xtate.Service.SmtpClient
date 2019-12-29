@@ -28,7 +28,7 @@ namespace TSSArt.StateMachine
 			_ioProcessor = ioProcessor;
 			_defaultOptions = defaultOptions;
 			_idlePeriod = idlePeriod;
-			_channel = Channel.CreateUnbounded<IEvent>(new UnboundedChannelOptions { SingleReader = true, });
+			_channel = Channel.CreateUnbounded<IEvent>(new UnboundedChannelOptions { SingleReader = true });
 
 			if (_defaultOptions.Logger == null)
 			{
@@ -80,7 +80,7 @@ namespace TSSArt.StateMachine
 			CleanScheduledEvents();
 		}
 
-		ValueTask IExternalCommunication.StartInvoke(InvokeData invokeData, CancellationToken token) =>  _ioProcessor.StartInvoke(SessionId, invokeData, token);
+		ValueTask IExternalCommunication.StartInvoke(InvokeData invokeData, CancellationToken token) => _ioProcessor.StartInvoke(SessionId, invokeData, token);
 
 		ValueTask IExternalCommunication.CancelInvoke(string invokeId, CancellationToken token) => _ioProcessor.CancelInvoke(SessionId, invokeId, token);
 
