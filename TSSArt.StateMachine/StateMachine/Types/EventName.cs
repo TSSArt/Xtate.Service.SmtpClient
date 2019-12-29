@@ -21,62 +21,35 @@ namespace TSSArt.StateMachine
 
 		private static IReadOnlyList<IIdentifier> GetErrorNameParts(IIdentifier type) => new ReadOnlyCollection<IIdentifier>(new[] { ErrorIdentifier, type });
 
-		internal static IReadOnlyList<IIdentifier> GetDoneStateNameParts(IIdentifier id) => new ReadOnlyCollection<IIdentifier>(new[] { DoneIdentifier, StateIdentifier, id });
+		internal static IReadOnlyList<IIdentifier> GetDoneStateNameParts(IIdentifier id)    => new ReadOnlyCollection<IIdentifier>(new[] { DoneIdentifier, StateIdentifier, id });
+		internal static IReadOnlyList<IIdentifier> GetDoneInvokeNameParts(string invokeId)  => GetInvokeNameParts(DoneIdentifier, invokeId);
+		internal static IReadOnlyList<IIdentifier> GetErrorInvokeNameParts(string invokeId) => GetInvokeNameParts(ErrorIdentifier, invokeId);
 
-		internal static IReadOnlyList<IIdentifier> GetDoneInvokeNameParts(string invokeId, string suffix)
+		private static IReadOnlyList<IIdentifier> GetInvokeNameParts(IIdentifier identifier, string invokeId)
 		{
 			if (invokeId == null) throw new ArgumentNullException(nameof(invokeId));
 
-			var invokeIdPartCount = GetCount(invokeId);
-			var suffixPartCount = GetCount(suffix);
-			var parts = new IIdentifier[2 + invokeIdPartCount + suffixPartCount];
+			IIdentifier[] parts;
 
-			parts[0] = DoneIdentifier;
+			if (invokeId.IndexOf(Dot) < 0)
+			{
+				parts = new IIdentifier[3];
+				parts[2] = (Identifier) invokeId;
+			}
+			else
+			{
+				var invokeIdParts = invokeId.Split(DotArray, StringSplitOptions.None);
+				parts = new IIdentifier[invokeIdParts.Length + 2];
+				for (var i = 0; i < invokeIdParts.Length; i ++)
+				{
+					parts[i + 2] = (Identifier) invokeIdParts[i];
+				}
+			}
+
+			parts[0] = identifier;
 			parts[1] = InvokeIdentifier;
 
-			SetParts(parts.AsSpan(start: 2, invokeIdPartCount), invokeId);
-			SetParts(parts.AsSpan(2 + invokeIdPartCount, suffixPartCount), suffix);
-
 			return new ReadOnlyCollection<IIdentifier>(parts);
-
-			static void SetParts(Span<IIdentifier> span, string id)
-			{
-				if (id == null)
-				{
-					return;
-				}
-
-				var pos = 0;
-				int pos2;
-				var index = 0;
-
-				while ((pos2 = id.IndexOf(Dot, pos)) >= 0)
-				{
-					span[index ++] = (Identifier) id.Substring(pos, pos2 - pos);
-
-					pos = pos2 + 1;
-				}
-
-				span[index] = (Identifier)id.Substring(pos);
-			}
-
-			static int GetCount(string id)
-			{
-				if (id == null)
-				{
-					return 0;
-				}
-
-				var count = 1;
-				var pos = 0;
-
-				while ((pos = id.IndexOf(Dot, pos) + 1) > 0)
-				{
-					count++;
-				}
-
-				return count;
-			}
 		}
 
 		public static string ToName(IReadOnlyList<IIdentifier> nameParts)
@@ -90,7 +63,7 @@ namespace TSSArt.StateMachine
 		{
 			if (string.IsNullOrEmpty(name)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(name));
 
-			return IdentifierList.Create(name.Split(DotArray, StringSplitOptions.RemoveEmptyEntries), Identifier.FromString);
+			return IdentifierList.Create(name.Split(DotArray, StringSplitOptions.None), Identifier.FromString);
 		}
 	}
 }

@@ -7,7 +7,7 @@ namespace TSSArt.StateMachine.Test
 	[SimpleService("passthrough")]
 	public class PassthroughService : SimpleServiceBase
 	{
-		protected override ValueTask<ServiceResult> Execute() => new ValueTask<ServiceResult>(new ServiceResult { DoneEventData = Parameters });
+		protected override ValueTask<DataModelValue> Execute() => new ValueTask<DataModelValue>(Parameters);
 	}
 
 	[TestClass]

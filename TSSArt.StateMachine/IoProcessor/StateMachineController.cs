@@ -80,7 +80,7 @@ namespace TSSArt.StateMachine
 			CleanScheduledEvents();
 		}
 
-		ValueTask IExternalCommunication.StartInvoke(InvokeData invokeData, CancellationToken token) => _ioProcessor.StartInvoke(SessionId, invokeData, token);
+		ValueTask IExternalCommunication.StartInvoke(InvokeData invokeData, CancellationToken token) =>  _ioProcessor.StartInvoke(SessionId, invokeData, token);
 
 		ValueTask IExternalCommunication.CancelInvoke(string invokeId, CancellationToken token) => _ioProcessor.CancelInvoke(SessionId, invokeId, token);
 
@@ -111,7 +111,7 @@ namespace TSSArt.StateMachine
 			return default;
 		}
 
-		public async ValueTask<ServiceResult> GetResult() => new ServiceResult { DoneEventData = await _completedTcs.Task };
+		public ValueTask<DataModelValue> Result => new ValueTask<DataModelValue>(_completedTcs.Task);
 
 		protected virtual void Dispose(bool dispose)
 		{
