@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace TSSArt.StateMachine.Services
@@ -8,12 +7,12 @@ namespace TSSArt.StateMachine.Services
 	public class InputService : SimpleServiceBase
 	{
         public static readonly IServiceFactory Factory = SimpleServiceFactory<InputService>.Instance;
-		private DataModelArray _fields;
+		private DataModelArray _controls;
 
 		protected override ValueTask<DataModelValue> Execute()
         {
 			var parameters = Content.AsObjectOrEmpty();
-			_fields = parameters["fields"].AsArrayOrEmpty();
+			_controls = parameters["controls"].AsArrayOrEmpty();
 
 			var task = Task.Factory.StartNew(Show, StopToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
 
@@ -24,9 +23,9 @@ namespace TSSArt.StateMachine.Services
 		{
 			using var form = new InputForm();
 
-			foreach (var field in _fields)
+			foreach (var control in _controls)
 			{
-				var fieldObj = field.AsObjectOrEmpty();
+				var fieldObj = control.AsObjectOrEmpty();
 				var name = fieldObj["name"].AsStringOrDefault();
 				var location = fieldObj["location"].AsStringOrDefault();
 				var type = fieldObj["type"].AsStringOrDefault();
@@ -40,21 +39,31 @@ namespace TSSArt.StateMachine.Services
 
 			Application.Run(form);
 
+			var result = new DataModelObject();
+
 			if (form.DialogResult == DialogResult.OK)
 			{
-				var result = new DataModelObject();
+				result["status"] = new DataModelValue("ok");
 
+				var parameters = new DataModelObject();
 				foreach (var pair in form.Result)
 				{
-					result[pair.Key] = new DataModelValue(pair.Value);
+					parameters[pair.Key] = new DataModelValue(pair.Value);
 				}
-
+				
+				parameters.Freeze();
+				
+				result["parameters"] = new DataModelValue(parameters);
 				result.Freeze();
-
-				return new DataModelValue(result);
+			}
+			else
+			{
+				result["status"] = new DataModelValue("cancel");
 			}
 
-			throw new OperationCanceledException();
+			result.Freeze();
+
+			return new DataModelValue(result);
 		}
 	}
 }

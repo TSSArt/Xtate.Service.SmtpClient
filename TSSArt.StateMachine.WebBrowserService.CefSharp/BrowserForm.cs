@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using System.Windows.Forms;
 using CefSharp;
@@ -22,9 +23,9 @@ namespace TSSArt.StateMachine.Services
 						 });
 		}
 
-		public DataModelValue Result { get; private set; }
+		public IDictionary<string, string> Result { get; private set; }
 
-		public void Close(DialogResult dialogResult, DataModelValue result)
+		public void Close(DialogResult dialogResult, IDictionary<string, string> result)
 		{
 			Result = result;
 			DialogResult = dialogResult;
@@ -71,14 +72,14 @@ namespace TSSArt.StateMachine.Services
 				{
 					var postData = Encoding.ASCII.GetString(request.PostData.Elements[0].Bytes);
 
-					var result = new DataModelObject();
+					var result = new Dictionary<string, string>();
 					var parameters = QueryHelpers.ParseNullableQuery(postData);
 					foreach (var pair in parameters)
 					{
-						result[pair.Key] = new DataModelValue(pair.Value[0]);
+						result[pair.Key] = pair.Value[0];
 					}
 
-					_form.Close(DialogResult.OK, new DataModelValue(result));
+					_form.Close(DialogResult.OK, result);
 
 					return EmptyHtmlHandler;
 				}

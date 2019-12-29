@@ -1,5 +1,3 @@
-using System;
-using System.Globalization;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -23,18 +21,37 @@ namespace TSSArt.StateMachine.Services
 		private DataModelValue Show()
 		{
 			using var form = new BrowserForm(_url, _content);
-			using var registration = StopToken.Register(() => form.Close(DialogResult.Abort, DataModelValue.Undefined));
+			using var registration = StopToken.Register(() => form.Close(DialogResult.Abort, default));
 
 			form.Closed += (sender, args) => Application.ExitThread();
 
 			Application.Run(form);
 
+			var result = new DataModelObject();
+
 			if (form.DialogResult == DialogResult.OK)
 			{
-				return form.Result;
+				result["status"] = new DataModelValue("ok");
+
+				var parameters = new DataModelObject();
+				foreach (var pair in form.Result)
+				{
+					parameters[pair.Key] = new DataModelValue(pair.Value);
+				}
+
+				parameters.Freeze();
+
+				result["parameters"] = new DataModelValue(parameters);
+				result.Freeze();
+			}
+			else
+			{
+				result["status"] = new DataModelValue("cancel");
 			}
 
-			throw new OperationCanceledException();
+			result.Freeze();
+
+			return new DataModelValue(result);
 		}
 	}
 }

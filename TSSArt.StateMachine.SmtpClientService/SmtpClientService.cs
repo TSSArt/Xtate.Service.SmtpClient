@@ -38,7 +38,7 @@ namespace TSSArt.StateMachine.Services
 
 			await client.SendMailAsync(message).ConfigureAwait(false);
 
-			return new DataModelValue("OK");
+			return default;
 		}
 	}
 }
