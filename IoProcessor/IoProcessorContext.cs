@@ -75,7 +75,7 @@ namespace TSSArt.StateMachine
 		protected virtual StateMachineController CreateStateMachineController(string sessionId, IStateMachine stateMachine, in InterpreterOptions options) =>
 				new StateMachineController(sessionId, stateMachine, _ioProcessor, _options.SuspendIdlePeriod, options);
 
-		public virtual async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, IStateMachine stateMachine, Uri source, string scxml, DataModelValue parameters)
+		public virtual async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, IStateMachine stateMachine, Uri source, string rawContent, DataModelValue content, DataModelValue parameters)
 		{
 			FillInterpreterOptions(out var options);
 			options.Arguments = parameters;
@@ -84,7 +84,7 @@ namespace TSSArt.StateMachine
 			{
 				stateMachine = source != null
 						? await _options.StateMachineProvider.GetStateMachine(source).ConfigureAwait(false)
-						: await _options.StateMachineProvider.GetStateMachine(scxml).ConfigureAwait(false);
+						: await _options.StateMachineProvider.GetStateMachine(rawContent ?? content.AsString()).ConfigureAwait(false);
 			}
 
 			var stateMachineController = CreateStateMachineController(sessionId, stateMachine, options);
