@@ -27,6 +27,8 @@ namespace TSSArt.StateMachine
 
 			//<storage xmlns="http://tssart.com/scxml/customaction/mid" location="username"
 			//operation="create" template="userid" rule="[a-z]{1,20}" />
+			//<mid:storage location="username" operation="get" variable="username" />
+			//<mid:storage location="password" operation="set" variable="password" />
 		}
 
 		public override ValueTask Action(IExecutionContext context, CancellationToken token)

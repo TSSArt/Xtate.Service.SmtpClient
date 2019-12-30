@@ -36,13 +36,14 @@
   <ItemGroup>
     <ProjectReference Include="..\TSSArt.StateMachine.EcmaScript\TSSArt.StateMachine.EcmaScript.csproj" />
     <ProjectReference Include="..\TSSArt.StateMachine.HttpEventProcessor\TSSArt.StateMachine.HttpEventProcessor.csproj" />
+    <ProjectReference Include="..\TSSArt.StateMachine.UserInteractionService\TSSArt.StateMachine.UserInteractionService.csproj" />
     <ProjectReference Include="..\TSSArt.StateMachine.WebBrowserService.CefSharp\TSSArt.StateMachine.WebBrowserService.CefSharp.csproj" />
     <ProjectReference Include="..\TSSArt.StateMachine.WebBrowserService\TSSArt.StateMachine.WebBrowserService.csproj" />
     <ProjectReference Include="..\TSSArt.StateMachine\TSSArt.StateMachine.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Autorun\captcha.xml" />
+    <EmbeddedResource Include="Autorun\dialog.xml" />
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">

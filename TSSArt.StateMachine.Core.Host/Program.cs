@@ -27,7 +27,7 @@ namespace TSSArt.StateMachine.Core.Host
 			var options = new IoProcessorOptions
 						  {
 								  EventProcessors = new[] { httpEventProcessor },
-								  ServiceFactories = new[] { WebBrowserService.GetFactory<CefSharpWebBrowserService>() },
+								  ServiceFactories = new[] { WebBrowserService.GetFactory<CefSharpWebBrowserService>(), InputService.Factory },
 								  DataModelHandlerFactories = new[] { EcmaScriptDataModelHandler.Factory }
 						  };
 

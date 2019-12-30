@@ -1,4 +1,4 @@
-﻿<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" datamodel="ecmascript">
+﻿<scxml xmlns="http://www.w3.org/2005/07/scxml" xmlns:mid="http://tssart.com/scxml/customaction/mid" version="1.0" datamodel="ecmascript">
   <datamodel>
     <data id="username" />
     <data id="password" />
@@ -22,7 +22,7 @@
   </datamodel>
 
   <initial>
-    <transition target="Idle" xmlns:mid="http://tssart.com/scxml/customaction/mid">
+    <transition target="Idle">
       <mid:storage location="username" operation="get" variable="username" />
       <mid:storage location="password" operation="get" variable="password" />
       <mid:storage location="email" operation="get" variable="email" />
@@ -36,10 +36,11 @@
     <transition event="maintenance" />
   </state>
 
-  <state id="Authenticate" initial="Authenticate.Login">
+  <state id="Authenticate" initial="Auth-Login">
     <datamodel>
       <data id="origin" />
       <data id="originType" />
+      <data id="captureEmail" />
     </datamodel>
 
     <onentry>
@@ -47,10 +48,10 @@
       <assign location="origintype" expr="_event.origintype" />
     </onentry>
 
-    <state id="Authenticate.Login">
-      <transition target="Authenticate.NoCredentials" cond="!username" />
+    <state id="Auth-Login">
+      <transition cond="!username" target="Auth-AskCredentials" />
 
-      <invoke src="https://test.tssart.com/wp-login.php" type="http">
+      <invoke id="AuthLogin" src="https://test.tssart.com/wp-login.php" type="http">
         <param name="method" expr="'post'" />
         <param name="autoRedirect" expr="false" />
         <param name="contentType" expr="'application/x-www-form-urlencoded'" />
@@ -65,32 +66,56 @@
                 ]" />
       </invoke>
 
-      <transition event="done.invoke.LogIn" target="Idle" cond="_event.data.statusCode != 302" />
-      <transition event="done.invoke.LogIn" target="Authenticate.OK" cond="_event.data.statusCode == 302" />
+      <transition event="done.invoke.AuthLogin" cond="_event.data.statusCode == 302" target="Auth-LoggedIn" />
+      <transition event="done.invoke.AuthLogin" target="Auth-AskCredentials" />
     </state>
 
-    <state id="Authenticate.NoCredentials">
-      <invoke type="input">
-        <content>
-          {
-            "fields": [
-              { name: 'username', location: 'username', type: 'input' },
-              { name: 'password', location: 'password' , type: 'password' } ]
-          }
-        </content>
-        <finalize>
-          <if cond="_event.data.result">
-            <assign location="username" expr="_event.data.username" />
-            <assign location="password" expr="_event.data.password" />
-          </if>
-        </finalize>
-      </invoke>
-
-      <transition event="done.invoke.Authenticate.NoCredentials" target="Authenticate.ValidateCredentials"/>
-    </state>
-
-    <final id="Authenticate.OK">
+    <state id="Auth-AskCredentials">
+      <datamodel>
+        <data id="askCredentialsSendId" />
+      </datamodel>
+      
       <onentry>
+        <send idlocation="askCredentialsSendId" type="http" target="http://localhost:5000/dialog" event="show">
+          <param name="id" location="askCredentialsSendId" />
+          <param name="event" expr="'AskCredentialsDone'"/>
+          <param name="type" expr="'input'"/>
+          <param name="content" expr="({
+            'controls': [
+              { name: 'Username', location: 'username', type: 'input' },
+              { name: 'Password', location: 'password' , type: 'password' },
+              { name: 'Capture Email', location: 'captureEmail' , type: 'checkbox' },
+              { name: 'Submit', event: 'submit' , type: 'button' },
+              { name: 'Register New', event: 'signup' , type: 'button' }]
+          })" />
+        </send>
+      </onentry>
+
+      <onexit>
+        <send type="http" target="http://localhost:5000/dialog" event="cancel"><param name="id" location="askCredentialsSendId" /></send>
+      </onexit>
+
+      <transition event="AskCredentialsDone.submit" target="Auth-Login">
+        <assign location="username" expr="_event.data.parameters.username" />
+        <assign location="password" expr="_event.data.parameters.password" />
+        <assign location="captureEmail" expr="_event.data.parameters.captureEmail" />
+      </transition>
+
+      <transition event="AskCredentialsDone" target="Auth-Cancel" />
+    </state>
+
+    <state id="Auth-CaptureEmail">
+      <transition cond="!captureEmail" target="Auth-OK" />
+
+      <transition target="Auth-OK">
+        <assign location="captureEmail" expr="false" />
+      </transition>
+    </state>
+
+    <final id="Auth-LoggedIn">
+      <onentry xmlns:mid="http://tssart.com/scxml/customaction/mid">
+        <mid:storage location="username" operation="set" variable="username" />
+        <mid:storage location="password" operation="set" variable="password" />
         <send typeexpr="origintype" targetexpr="origin" event="authenticate.ok">
           <param name="cookies" expr="_event.data.cookies" />
         </send>
@@ -99,7 +124,7 @@
       <transition target="Idle" />
     </final>
 
-    <final id="Authenticate.Cancel">
+    <final id="Auth-Cancel">
       <transition target="Idle" />
     </final>
   </state>
@@ -127,24 +152,27 @@
 
     <state id="RegisterCaptcha">
       <datamodel>
-        <data id="id" expr="'cap111'" />
+        <data id="registerCaptchaSendId" />
       </datamodel>
 
       <onentry>
-        <send type="http" target="http://localhost:5000/captcha" event="show" namelist="id">
-          <param name="url" expr="'https://test.tssart.com/wp-login.php?action=register'" />
+        <mid:random location="registerCaptchaSendId" generate="guid" />
+        <send type="http" target="http://localhost:5000/captcha" event="show">
+          <param name="id" expr="registerCaptchaSendId" />
+          <param name="type" expr="'browser'" />
+          <param name="event" expr="'RegisterCaptchaSubmitted'" />
+          <param name="source" expr="'https://test.tssart.com/wp-login.php?action=register'" />
           <param name="content" expr="captchaHtml" />
         </send>
-        <send id="CancelCaptcha" event="captcha.cancelled" type="scxml" targetexpr="'#_scxml_' + _sessionid"
-              delay="30s" />
+        <send id="CancelRegisterCaptcha" event="CancelRegisterCaptcha" type="scxml" targetexpr="'#_scxml_' + _sessionid" delay="30s" />
       </onentry>
 
       <onexit>
-        <send type="http" target="http://localhost:5000/captcha" event="cancel" namelist="id" />
-        <cancel sendid="CancelCaptcha" />
+        <send type="http" target="http://localhost:5000/captcha" event="cancel"></send>
+        <cancel sendid="CancelRegisterCaptcha" />
       </onexit>
 
-      <transition event="captcha.cancelled" target="RegisterCaptcha" />
+      <transition event="CancelRegisterCaptcha" target="RegisterCaptcha" />
 
       <transition event="captcha.submitted" target="RegisterAccount">
         <assign location="recaptchaResponse" expr="_event.data.form['g-recaptcha-response']" />
@@ -153,8 +181,7 @@
 
     <state id="RegisterAccount">
       <onentry>
-        <storage xmlns="http://tssart.com/scxml/customaction/mid" location="username" operation="create"
-                 template="userid" rule="[a-z0-9]{1,20}" />
+        <storage xmlns="http://tssart.com/scxml/customaction/mid" location="username" operation="create" template="userid" rule="[a-z0-9]{1,20}" />
       </onentry>
 
       <invoke src="https://test.tssart.com/wp-login.php?action=register" type="http">
