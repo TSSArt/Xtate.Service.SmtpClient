@@ -42,6 +42,9 @@ namespace TSSArt.StateMachine
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
 
 			var sendId = _send.Id ?? IdGenerator.NewSendId();
+
+			IdLocationEvaluator?.SetValue(new DefaultObject(sendId), executionContext);
+			
 			var name = EventExpressionEvaluator != null ? await EventExpressionEvaluator.EvaluateString(executionContext, token).ConfigureAwait(false) : _send.Event;
 			var data = await DataConverter.GetData(ContentBodyEvaluator, ContentExpressionEvaluator, NameEvaluatorList, ParameterList, executionContext, token).ConfigureAwait(false);
 			var type = TypeExpressionEvaluator != null ? ToUri(await TypeExpressionEvaluator.EvaluateString(executionContext, token).ConfigureAwait(false)) : _send.Type;
@@ -63,8 +66,6 @@ namespace TSSArt.StateMachine
 			}
 
 			await executionContext.Send(eventObject, token).ConfigureAwait(false);
-
-			IdLocationEvaluator?.SetValue(new DefaultObject(sendId), executionContext);
 		}
 
 		public IContent                           Content          => _send.Content;
