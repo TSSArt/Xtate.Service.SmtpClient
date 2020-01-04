@@ -61,6 +61,8 @@ namespace TSSArt.StateMachine
 		public EntityQueue<IEvent> InternalQueue { get; } = new EntityQueue<IEvent>();
 
 		public DataModelObject InterpreterObject { get; } = new DataModelObject(true);
+		
+		public DataModelObject ConfigurationObject { get; } = new DataModelObject(true);
 
 		public OrderedSet<StateEntityNode> StatesToInvoke { get; } = new OrderedSet<StateEntityNode>();
 
@@ -96,6 +98,7 @@ namespace TSSArt.StateMachine
 						   {
 								   ["interpreter"] = new DataModelValue(InterpreterObject),
 								   ["datamodel"] = new DataModelValue(DataModelHandlerObject),
+								   ["configuration"] = new DataModelValue(ConfigurationObject),
 								   ["args"] = arguments
 						   };
 			platform.Freeze();

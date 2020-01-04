@@ -77,7 +77,10 @@ namespace TSSArt.StateMachine
 			InvokeId = null;
 			InvokeUniqueId = null;
 
-			await _cancelInvokeEvaluator.Cancel(tmpInvokeId, executionContext, token).ConfigureAwait(false);
+			if (tmpInvokeId != null)
+			{
+				await _cancelInvokeEvaluator.Cancel(tmpInvokeId, executionContext, token).ConfigureAwait(false);
+			}
 		}
 	}
 }

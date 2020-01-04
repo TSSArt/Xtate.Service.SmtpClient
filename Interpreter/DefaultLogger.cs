@@ -13,7 +13,7 @@ namespace TSSArt.StateMachine
 
 		public ValueTask Log(string sessionId, string stateMachineName, string label, DataModelValue data, CancellationToken token)
 		{
-			FormattableString formattableString = $"Name: [{stateMachineName}]. SessionId: [{sessionId}]. Label: \"{label}\". Data: {data:JSON}";
+			FormattableString formattableString = $"Name: [{stateMachineName}]. SessionId: [{sessionId}]. Label: \"{label}\". Data: {data}";
 
 			Trace.TraceInformation(formattableString.Format, formattableString.GetArguments());
 
@@ -59,7 +59,7 @@ namespace TSSArt.StateMachine
 		public void TraceProcessingEvent(string sessionId, EventType eventType, string name, string sendId, string invokeId, DataModelValue data, string originType, string origin)
 		{
 			FormattableString formattableString =
-					$"Processing {eventType} event [{name}]. SendId: [{sendId}]. InvokeId: [{invokeId}]. Data: [{data:JSON}]. OriginType: [{originType}]. Origin: [{origin}]. SessionId: [{sessionId}].";
+					$"Processing {eventType} event [{name}]. SendId: [{sendId}]. InvokeId: [{invokeId}]. Data: [{data}]. OriginType: [{originType}]. Origin: [{origin}]. SessionId: [{sessionId}].";
 
 			Trace.TraceInformation(formattableString.Format, formattableString.GetArguments());
 		}

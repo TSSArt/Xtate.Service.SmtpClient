@@ -32,6 +32,7 @@ namespace TSSArt.StateMachine
 		private readonly CancellationToken                     _stopToken;
 		private readonly IStorageProvider                      _storageProvider;
 		private readonly CancellationToken                     _suspendToken;
+		private readonly IDictionary<string, string>           _configuration;
 		private          IStateMachineContext                  _context;
 		private          IDataModelHandler                     _dataModelHandler;
 		private          DataModelValue                        _doneData;
@@ -52,6 +53,7 @@ namespace TSSArt.StateMachine
 			_logger = new LoggerWrapper(options.Logger ?? DefaultLogger.Instance, sessionId);
 			_externalCommunication = new ExternalCommunicationWrapper(options.ExternalCommunication, sessionId);
 			_storageProvider = options.StorageProvider ?? NullStorageProvider.Instance;
+			_configuration = options.Configuration;
 			_persistenceLevel = options.PersistenceLevel;
 			_notifyStateChanged = options.NotifyStateChanged;
 			_arguments = options.Arguments.DeepClone(true);
@@ -1358,6 +1360,11 @@ namespace TSSArt.StateMachine
 
 			PopulateInterpreterObject(context.InterpreterObject);
 
+			if (_configuration != null)
+			{
+				PopulateConfigurationObject(_configuration, context.ConfigurationObject);
+			}
+
 			var dataModelVars = new Dictionary<string, string>();
 			_dataModelHandler.ExecutionContextCreated(context.ExecutionContext, dataModelVars);
 
@@ -1373,6 +1380,16 @@ namespace TSSArt.StateMachine
 
 			interpreterObject.SetInternal(property: "name", new DataModelDescriptor(new DataModelValue(type.FullName)));
 			interpreterObject.SetInternal(property: "version", new DataModelDescriptor(new DataModelValue(version)));
+		}
+
+		private static void PopulateConfigurationObject(IDictionary<string, string> configuration, DataModelObject configurationObject)
+		{
+			if (configuration == null) throw new ArgumentNullException(nameof(configuration));
+
+			foreach (var pair in configuration)
+			{
+				configurationObject.SetInternal(pair.Key, new DataModelDescriptor(new DataModelValue(pair.Value)));
+			}
 		}
 
 		private void PopulateDataModelHandlerObject(DataModelObject dataModelHandlerObject, Dictionary<string, string> dataModelVars)

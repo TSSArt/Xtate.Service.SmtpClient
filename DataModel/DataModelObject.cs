@@ -2,16 +2,18 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Security;
+using System.Text;
 
 namespace TSSArt.StateMachine
 {
 	[DebuggerTypeProxy(typeof(DebugView))]
 	[DebuggerDisplay(value: "Count = {_properties.Count}")]
-	public sealed class DataModelObject : IDynamicMetaObjectProvider
+	public sealed class DataModelObject : IDynamicMetaObjectProvider, IFormattable
 	{
 		public delegate void ChangedHandler(ChangedAction action, string property, DataModelDescriptor descriptor);
 
@@ -137,13 +139,34 @@ namespace TSSArt.StateMachine
 			return clone;
 		}
 
+		public string ToString(string format, IFormatProvider formatProvider)
+		{
+			var sb = new StringBuilder();
+
+			sb.Append('(');
+			foreach (var pair in _properties)
+			{
+				if (sb.Length > 1)
+				{
+					sb.Append(',');
+				}
+
+				sb.Append(pair.Key).Append('=').Append(pair.Value.Value.ToString(format: null, formatProvider));
+			}
+			sb.Append(')');
+
+			return sb.ToString();
+		}
+
+		public override string ToString() => ToString(format: null, formatProvider: null);
+
 		[DebuggerDisplay(value: "{" + nameof(_value) + "}", Name = "{" + nameof(_name) + ",nq}")]
 		private struct NameValue
 		{
 			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 			private readonly string _name;
 
-			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+			[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
 			private readonly DataModelValue _value;
 
 			public NameValue(string name, DataModelValue value)
