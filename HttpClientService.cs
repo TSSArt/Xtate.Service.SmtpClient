@@ -62,10 +62,22 @@ namespace TSSArt.StateMachine.Services
 						   select new Capture
 								  {
 										  Name = name,
+										  XPath = GetArray(capture["xpath"]),
 										  Attribute = capture["attr"].AsStringOrDefault(),
-										  XPath = capture["xpath"].AsStringOrDefault(),
 										  Regex = capture["regex"].AsStringOrDefault()
 								  };
+
+			static string[] GetArray(DataModelValue val)
+			{
+				if (val.Type == DataModelValueType.Array)
+				{
+					return val.AsArray().Select(p => p.AsStringOrDefault()).Where(p => p != null).ToArray();
+				}
+
+				var str = val.AsStringOrDefault();
+
+				return !string.IsNullOrWhiteSpace(str) ? new[] { str } : Array.Empty<string>();
+			}
 
 			var response = await DoRequest(Source, method, accept, autoRedirect, contentType, headers, cookies, captures, Content, StopToken).ConfigureAwait(false);
 
@@ -247,7 +259,7 @@ namespace TSSArt.StateMachine.Services
 				await httpContent.CopyToAsync(stream).ConfigureAwait(false);
 			}
 		}
-		
+
 		private static DataModelValue CaptureData(HtmlDocument htmlDocument, IEnumerable<Capture> captures)
 		{
 			var obj = new DataModelObject();
@@ -267,54 +279,71 @@ namespace TSSArt.StateMachine.Services
 			return new DataModelValue(obj);
 		}
 
-		private static DataModelValue CaptureEntry(HtmlDocument htmlDocument, string xpath, string attr, string pattern)
+		private static DataModelValue CaptureEntry(HtmlDocument htmlDocument, string[] xpath, string attr, string pattern)
 		{
-			var node = htmlDocument.DocumentNode;
+			var nodes = xpath != null 
+					? xpath.SelectMany(s => (IEnumerable<HtmlNode>)htmlDocument.DocumentNode.SelectNodes(s) ?? Array.Empty<HtmlNode>()) 
+					: Enumerable.Repeat(htmlDocument.DocumentNode, count: 1);
 
-			if (xpath != null)
+			if (attr == "*")
 			{
-				node = htmlDocument.DocumentNode.SelectSingleNode(xpath);
+				var array = new DataModelArray();
+				foreach (var node in nodes)
+				{
+					var obj = new DataModelObject();
+					foreach (var attribute in node.Attributes)
+					{
+						obj[attribute.Name] = new DataModelValue(attribute.Value);
+					}
+
+					obj.Freeze();
+					array.Add(new DataModelValue(obj));
+				}
+
+				array.Freeze();
+
+				return new DataModelValue(array);
 			}
 
-			if (node == null)
+			foreach (var node in nodes)
 			{
-				return DataModelValue.Undefined;
+				var text = attr != null ? node.GetAttributeValue(attr, def: null) : node.InnerHtml;
+
+				if (string.IsNullOrWhiteSpace(text))
+				{
+					continue;
+				}
+
+				if (pattern == null)
+				{
+					return new DataModelValue(text);
+				}
+
+				var regex = new Regex(pattern);
+				var match = regex.Match(text);
+
+				if (!match.Success)
+				{
+					continue;
+				}
+
+				if (match.Groups.Count == 1)
+				{
+					return new DataModelValue(match.Groups[0].Value);
+				}
+
+				var obj = new DataModelObject();
+				foreach (var name in regex.GetGroupNames())
+				{
+					obj[name] = new DataModelValue(match.Groups[name].Value);
+				}
+
+				obj.Freeze();
+
+				return new DataModelValue(obj);
 			}
 
-			var text = attr != null ? node.GetAttributeValue(attr, def: null) : node.InnerHtml;
-
-			if (text == null)
-			{
-				return DataModelValue.Undefined;
-			}
-
-			if (pattern == null)
-			{
-				return new DataModelValue(text);
-			}
-
-			var regex = new Regex(pattern);
-			var match = regex.Match(text);
-
-			if (!match.Success)
-			{
-				return DataModelValue.Undefined;
-			}
-
-			if (match.Groups.Count == 1)
-			{
-				return new DataModelValue(match.Groups[0].Value);
-			}
-
-			var obj = new DataModelObject();
-			foreach (var name in regex.GetGroupNames())
-			{
-				obj[name] = new DataModelValue(match.Groups[name].Value);
-			}
-
-			obj.Freeze();
-
-			return new DataModelValue(obj);
+			return DataModelValue.Undefined;
 		}
 
 		private struct Response
@@ -329,10 +358,10 @@ namespace TSSArt.StateMachine.Services
 
 		private struct Capture
 		{
-			public string Name      { get; set; }
-			public string XPath     { get; set; }
-			public string Attribute { get; set; }
-			public string Regex     { get; set; }
+			public string   Name      { get; set; }
+			public string[] XPath     { get; set; }
+			public string   Attribute { get; set; }
+			public string   Regex     { get; set; }
 		}
 	}
 }
