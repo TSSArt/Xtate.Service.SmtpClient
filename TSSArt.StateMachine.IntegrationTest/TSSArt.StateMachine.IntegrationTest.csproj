@@ -7,6 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="captureEmail.xml" />
+    <None Remove="login.xml" />
+    <None Remove="recaptcha.xml" />
+    <None Remove="signup.xml" />
+    <None Remove="validateEmail.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
   </ItemGroup>
 
@@ -22,6 +30,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="validateEmail.xml" />
+    <EmbeddedResource Include="recaptcha.xml" />
+    <EmbeddedResource Include="login.xml" />
+    <EmbeddedResource Include="signup.xml" />
+    <EmbeddedResource Include="captureEmail.xml" />
     <EmbeddedResource Include="test-tssart-com-sign-up.xml" />
   </ItemGroup>
 

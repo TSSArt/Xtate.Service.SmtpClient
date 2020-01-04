@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Xml;
@@ -24,12 +26,25 @@ namespace TSSArt.StateMachine.IntegrationTest
 								  EventProcessors = new[] { httpEventProcessor },
 								  ServiceFactories = new[] { HttpClientService.Factory, SmtpClientService.Factory },
 								  DataModelHandlerFactories = new[] { EcmaScriptDataModelHandler.Factory },
-								  CustomActionProviders = new[] { BasicCustomActionProvider.Instance, MimeCustomActionProvider.Instance, MidCustomActionProvider.Instance }
+								  CustomActionProviders = new[] { BasicCustomActionProvider.Instance, MimeCustomActionProvider.Instance, MidCustomActionProvider.Instance },
+								  StateMachineProvider = new ResourceProvider(),
+								  Configuration = new Dictionary<string, string>
+												  {
+														  { "uiEndpoint", "http://localhost:5000/dialog" },
+														  { "mailEndpoint", "http://mid.dev.tssart.com/MailServer/Web2/api/Mail/" }
+												  }
 						  };
 
 			await using var ioProcessor = new IoProcessor(options);
 
-			var task = ioProcessor.Execute(sessionId: "test-tssart-com-sign-up", GetStateMachine("TSSArt.StateMachine.IntegrationTest.test-tssart-com-sign-up.xml"));
+			var prms = new DataModelObject
+					   {
+							   ["loginUrl"] = new DataModelValue("https://test.tssart.com/wp-login.php"),
+							   ["username"] = new DataModelValue("tadex1"),
+							   ["password"] = new DataModelValue("123456")
+					   };
+
+			var task = ioProcessor.Execute(new Uri(uriString: "login", UriKind.Relative), new DataModelValue(prms));
 
 			var webHost = new WebHostBuilder()
 						  .Configure(builder => builder.Run(handler.ProcessRequest))
@@ -38,16 +53,39 @@ namespace TSSArt.StateMachine.IntegrationTest
 
 			await webHost.StartAsync().ConfigureAwait(false);
 
-			await task.ConfigureAwait(false);
+			dynamic result = await task.ConfigureAwait(false);
+
+			var prms2 = new DataModelObject
+					   {
+							   ["profileUrl"] = new DataModelValue("https://test.tssart.com/wp-admin/profile.php"),
+							   ["cookies"] = new DataModelValue(result.data.cookies)
+					   };
+			var task2 = ioProcessor.Execute(new Uri(uriString: "captureEmail", UriKind.Relative), new DataModelValue(prms2));
+
+			dynamic result2 = await task2.ConfigureAwait(false);
+
+			Console.WriteLine(DataModelConverter.ToJson(result));
 
 			await webHost.StopAsync().ConfigureAwait(false);
 		}
+	}
 
-		private static IStateMachine GetStateMachine(string name)
+	internal class ResourceProvider : IStateMachineProvider
+	{
+		public ValueTask<IStateMachine> GetStateMachine(Uri source)
 		{
-			using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name);
+			using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("TSSArt.StateMachine.IntegrationTest." + source + ".xml");
 			using var xmlReader = XmlReader.Create(stream);
-			return new ScxmlDirector(xmlReader, new BuilderFactory()).ConstructStateMachine();
+			var stateMachine = new ScxmlDirector(xmlReader, new BuilderFactory()).ConstructStateMachine();
+			return new ValueTask<IStateMachine>(stateMachine);
+		}
+
+		public ValueTask<IStateMachine> GetStateMachine(string scxml)
+		{
+			using var reader = new StringReader(scxml);
+			using var xmlReader = XmlReader.Create(reader);
+			var stateMachine = new ScxmlDirector(xmlReader, new BuilderFactory()).ConstructStateMachine();
+			return new ValueTask<IStateMachine>(stateMachine);
 		}
 	}
 }

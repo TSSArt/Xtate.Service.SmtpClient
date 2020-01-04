@@ -203,7 +203,7 @@ namespace TSSArt.StateMachine
 															   CancellationToken token)
 		{
 			var sessionId = IdGenerator.NewSessionId();
-			var scxml = rawContent ?? content.AsString();
+			var scxml = rawContent ?? content.AsStringOrDefault();
 			var service = await _context.CreateAndAddStateMachine(sessionId, stateMachine: null, source, scxml, parameters).ConfigureAwait(false);
 
 			await service.StartAsync(token).ConfigureAwait(false);

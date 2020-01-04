@@ -9,6 +9,7 @@ namespace TSSArt.StateMachine
 		EntityQueue<IEvent>         InternalQueue          { get; }
 		EntityQueue<IEvent>         ExternalBufferedQueue  { get; }
 		DataModelObject             DataModel              { get; }
+		DataModelObject             ConfigurationObject    { get; }
 		DataModelObject             InterpreterObject      { get; }
 		DataModelObject             DataModelHandlerObject { get; }
 		OrderedSet<StateEntityNode> Configuration          { get; }

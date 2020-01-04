@@ -10,6 +10,7 @@ namespace TSSArt.StateMachine
 		public ICollection<IServiceFactory>          ServiceFactories          { get; set; }
 		public ICollection<IDataModelHandlerFactory> DataModelHandlerFactories { get; set; }
 		public ICollection<ICustomActionProvider>    CustomActionProviders     { get; set; }
+		public IDictionary<string, string>           Configuration             { get; set; }
 		public IStateMachineProvider                 StateMachineProvider      { get; set; }
 		public ILogger                               Logger                    { get; set; }
 		public PersistenceLevel                      PersistenceLevel          { get; set; }

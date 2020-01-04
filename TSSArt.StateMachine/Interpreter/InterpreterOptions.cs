@@ -7,6 +7,7 @@ namespace TSSArt.StateMachine
 	{
 		public ICollection<IDataModelHandlerFactory> DataModelHandlerFactories { get; set; }
 		public ICollection<ICustomActionProvider>    CustomActionProviders     { get; set; }
+		public IDictionary<string, string>           Configuration             { get; set; }
 		public DataModelValue                        Arguments                 { get; set; }
 		public IExternalCommunication                ExternalCommunication     { get; set; }
 		public INotifyStateChanged                   NotifyStateChanged        { get; set; }

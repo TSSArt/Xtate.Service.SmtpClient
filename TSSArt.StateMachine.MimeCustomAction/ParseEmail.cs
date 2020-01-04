@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -72,14 +73,7 @@ namespace TSSArt.StateMachine.Services
 
 				htmlDocument.Load(html);
 
-				var node = _xpath != null ? htmlDocument.DocumentNode.SelectSingleNode(_xpath) : htmlDocument.DocumentNode;
-
-				if (node == null)
-				{
-					return DataModelValue.Undefined;
-				}
-
-				text = _attr != null ? node.GetAttributeValue(_attr, def: null) : node.InnerHtml;
+				return CaptureEntry(htmlDocument, _xpath, _attr, _pattern);
 			}
 
 			if (text == null)
@@ -112,6 +106,51 @@ namespace TSSArt.StateMachine.Services
 			}
 
 			return new DataModelValue(obj);
+		}
+
+		private static DataModelValue CaptureEntry(HtmlDocument htmlDocument, string xpath, string attr, string pattern)
+		{
+			var nodes = xpath != null ? htmlDocument.DocumentNode.SelectNodes(xpath) : Enumerable.Repeat(htmlDocument.DocumentNode, count: 1);
+
+			foreach (var node in nodes)
+			{
+				var text = attr != null ? node.GetAttributeValue(attr, def: null) : node.InnerHtml;
+
+				if (string.IsNullOrWhiteSpace(text))
+				{
+					continue;
+				}
+
+				if (pattern == null)
+				{
+					return new DataModelValue(text);
+				}
+
+				var regex = new Regex(pattern);
+				var match = regex.Match(text);
+
+				if (!match.Success)
+				{
+					continue;
+				}
+
+				if (match.Groups.Count == 1)
+				{
+					return new DataModelValue(match.Groups[0].Value);
+				}
+
+				var obj = new DataModelObject();
+				foreach (var name in regex.GetGroupNames())
+				{
+					obj[name] = new DataModelValue(match.Groups[name].Value);
+				}
+
+				obj.Freeze();
+
+				return new DataModelValue(obj);
+			}
+
+			return DataModelValue.Undefined;
 		}
 	}
 }

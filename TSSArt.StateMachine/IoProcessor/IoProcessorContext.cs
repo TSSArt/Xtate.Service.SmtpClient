@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -48,18 +47,15 @@ namespace TSSArt.StateMachine
 		{
 			options = new InterpreterOptions
 					  {
+							  Configuration = _options.Configuration,
 							  PersistenceLevel = _options.PersistenceLevel,
 							  ResourceLoader = _options.ResourceLoader,
 							  CustomActionProviders = _options.CustomActionProviders,
 							  StopToken = _options.StopToken,
 							  SuspendToken = _options.SuspendToken,
-							  Logger = _options.Logger
+							  Logger = _options.Logger,
+							  DataModelHandlerFactories = _options.DataModelHandlerFactories
 					  };
-
-			if (_options.DataModelHandlerFactories != null)
-			{
-				options.DataModelHandlerFactories = new List<IDataModelHandlerFactory>(_options.DataModelHandlerFactories);
-			}
 		}
 
 		private static void ValidateTrue(bool result)
@@ -119,8 +115,6 @@ namespace TSSArt.StateMachine
 				{
 					ValidateTrue(_parentServiceBySessionId.TryAdd(stateMachineController.SessionId, controller));
 				}
-
-				ValidateTrue(_serviceByTarget.TryAdd(new Uri("#_scxml_" + stateMachineController.SessionId, UriKind.Relative), service));
 			}
 
 			ValidateTrue(_serviceByTarget.TryAdd(new Uri("#_" + invokeId, UriKind.Relative), service));
@@ -143,7 +137,6 @@ namespace TSSArt.StateMachine
 			if (pair.Service is StateMachineController stateMachineController)
 			{
 				_parentServiceBySessionId.TryRemove(stateMachineController.SessionId, out _);
-				_serviceByTarget.TryRemove(new Uri("#_scxml_" + stateMachineController.SessionId, UriKind.Relative), out _);
 			}
 
 			_serviceByTarget.TryRemove(new Uri("#_" + invokeId, UriKind.Relative), out _);
@@ -161,7 +154,6 @@ namespace TSSArt.StateMachine
 			if (pair.Service is StateMachineController stateMachineController)
 			{
 				_parentServiceBySessionId.TryRemove(stateMachineController.SessionId, out _);
-				_serviceByTarget.TryRemove(new Uri("#_scxml_" + stateMachineController.SessionId, UriKind.Relative), out _);
 			}
 
 			_serviceByTarget.TryRemove(new Uri("#_" + invokeId, UriKind.Relative), out _);

@@ -1,0 +1,72 @@
+﻿<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" datamodel="ecmascript" initial="capture">
+  <datamodel>
+    <data id="profileUrl" />
+    <data id="cookies" />
+    <data id="currentEmail" />
+    <data id="formData" />
+  </datamodel>
+
+  <state id="capture" initial="getCurrentEmail">
+    <state id="getCurrentEmail">
+      <invoke srcexpr="profileUrl" type="http">
+        <param name="cookies" expr="cookies" />
+        <param name="capture" expr="({
+               'email': { 'xpath': './/input[@name=\'email\']', 'attr': 'value' },
+               'form': { 'attr': '*', 'xpath': [
+                 './/form[@id=\'your-profile\']//input',
+                 ''
+                 ]}})" />
+        <finalize>
+          <assign location="cookies" expr="_event.data.cookies" />
+          <log expr="_event.data.content" />
+        </finalize>
+      </invoke>
+
+      <transition event="done.invoke" cond="!!_event.data.content.email" target="checkEmail">
+        <assign location="currentEmail" expr="_event.data.content.email" />
+        <assign location="formData" expr="_event.data.content.form" />
+      </transition>
+      <transition event="done.invoke" target="failure" />
+    </state>
+
+    <state id="checkEmail">
+      <datamodel>
+        <data id="currentEmailStatus" />
+      </datamodel>
+
+      <invoke type="scxml" src="validateEmail">
+        <param name="email" expr="currentEmail" />
+      </invoke>
+
+      <transition event="done.invoke" cond="_event.data.status == 'replace'" target="replaceEmailRequest" />
+      <transition event="done.invoke" target="ok" />
+    </state>
+
+    <state id="replaceEmailRequest">
+      <transition target="ok" />
+    </state>
+  
+    <transition event="error" target="error" />
+  </state>
+
+  <final id="ok">
+    <donedata>
+      <param name="status" expr="'ok'" />
+      <param name="data" expr="_event.data" />
+    </donedata>
+  </final>
+
+  <final id="failure">
+    <donedata>
+      <param name="status" expr="'failure'" />
+      <param name="data" expr="_event.data" />
+    </donedata>
+  </final>
+
+  <final id="error">
+    <donedata>
+      <param name="status" expr="'error'" />
+      <param name="error" expr="_event.data" />
+    </donedata>
+  </final>
+</scxml>

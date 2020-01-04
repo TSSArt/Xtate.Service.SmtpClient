@@ -1,0 +1,38 @@
+﻿<scxml xmlns="http://www.w3.org/2005/07/scxml"
+       xmlns:mid="http://tssart.com/scxml/customaction/mid"
+       xmlns:basic="http://tssart.com/scxml/customaction/basic"
+       version="1.0" datamodel="ecmascript" initial="validate">
+  <datamodel>
+    <data id="email" />
+  </datamodel>
+
+  <state id="validate" initial="loadPage">
+    <datamodel>
+      <data id="isControlledEmail" />
+      <data id="isUserEmail" />
+
+      <data id="controlledEmailList" expr="[*@mid.dev.tssart.com]" />
+      <data id="userEmailList" expr="['xtadex@gmail.com', 'ser@tssart.com']" />
+    </datamodel>
+
+    <onentry>
+      <basic:operation left="email" right="controlledEmailList" op="emailMatch" result="isControlledEmail" />
+      <basic:operation left="email" right="userEmailList" op="emailMatch" result="isUserEmail" />
+    </onentry>
+
+    <transition cond="isControlledEmail" target="skip" />
+    <transition cond="isUserEmail" target="replace" />
+  </state>
+
+  <final id="skip">
+    <donedata>
+      <param name="status" expr="'skip'" />
+    </donedata>
+  </final>
+
+  <final id="replace">
+    <donedata>
+      <param name="status" expr="'replace'" />
+    </donedata>
+  </final>
+</scxml>

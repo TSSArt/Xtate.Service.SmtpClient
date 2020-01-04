@@ -1,118 +1,126 @@
 ﻿<scxml xmlns="http://www.w3.org/2005/07/scxml" xmlns:mid="http://tssart.com/scxml/customaction/mid" version="1.0" datamodel="ecmascript">
   <datamodel>
-    <data id="username" />
-    <data id="password" />
-    <data id="email" />
-    <data id="mailKey" />
-    <data id="captchaHtml">
-      <html xmlns="">
-        <head>
-          <script src="https://www.google.com/recaptcha/api.js" async="" defer=""></script>
-          <script type="text/javascript">
-            function ok(){document.getElementById("frm").submit();}
-          </script>
-        </head>
-        <body>
-          <form id="frm" action="" method="POST">
-            <div class="g-recaptcha" data-sitekey="6Lcr4RYTAAAAAN_gTioJ2RIkdiHu6IfDq870-2bO" data-callback="ok"></div>
-          </form>
-        </body>
-      </html>
-    </data>
+    <data id="siteUrl" expr="'https://test.tssart.com/'" />
+    <data id="recaptchaSitekey" expr="'6Lcr4RYTAAAAAN_gTioJ2RIkdiHu6IfDq870-2bO'" />
   </datamodel>
-
-  <initial>
-    <transition target="Idle">
-      <mid:storage location="username" operation="get" variable="username" />
-      <mid:storage location="password" operation="get" variable="password" />
-      <mid:storage location="email" operation="get" variable="email" />
-      <mid:storage location="mailKey" operation="get" variable="mailKey" />
-    </transition>
-  </initial>
-
+ 
   <state id="Idle">
-    <transition event="authenticate" target="Authenticate" />
-    <transition event="emergency" />
-    <transition event="maintenance" />
+    <transition event="authenticate" target="authenticate" />
   </state>
 
-  <state id="Authenticate" initial="Auth-Login">
+  <state id="authenticate" initial="authenticateLogin">
     <datamodel>
-      <data id="origin" />
-      <data id="originType" />
-      <data id="captureEmail" />
+      <data id="local_authenticate" expr="{}" />
+      <data id="tmp" />
     </datamodel>
 
     <onentry>
-      <assign location="origin" expr="_event.origin" />
-      <assign location="origintype" expr="_event.origintype" />
+      <assign location="local_authenticate.origin" expr="_event.origin" />
+      <assign location="local_authenticate.origintype" expr="_event.origintype" />
     </onentry>
 
-    <state id="Auth-Login">
-      <transition cond="!username" target="Auth-AskCredentials" />
+    <state id="authenticateLogin">
+      <datamodel>
+        <data id="local_authenticateLogin" expr="{}"/>
+      </datamodel>
 
-      <invoke id="AuthLogin" src="https://test.tssart.com/wp-login.php" type="http">
-        <param name="method" expr="'post'" />
-        <param name="autoRedirect" expr="false" />
-        <param name="contentType" expr="'application/x-www-form-urlencoded'" />
-        <content
-          expr="[
-                   { name: 'log', value: username }, 
-                   { name: 'pwd', value: password }, 
-                   { name: 'g-recaptcha-response', value: recaptchaResponse }, 
-                   { name: 'redirect_to', value: '/wp-admin/' }, 
-                   { name: 'wp-submit', value: 'Log In' },
-                   { name: 'testcookie', value: '1' }
-                ]" />
-      </invoke>
+      <onentry>
+        <mid:storage property="tmp" operation="get" variable="username" />
+        <assign location="local_authenticate.username" expr="tmp" />
+      </onentry>
 
-      <transition event="done.invoke.AuthLogin" cond="_event.data.statusCode == 302" target="Auth-LoggedIn" />
-      <transition event="done.invoke.AuthLogin" target="Auth-AskCredentials" />
+      <transition cond="!local_authenticate.username" target="authenticateAskCredentials" />
+
+      <state id="authenticateLoginIsCaptchaRequired">
+        <invoke src="https://test.tssart.com/wp-login.php" type="http">
+          <param name="capture" expr="{'recaptcha': { 'xpath' : '/html/body/script[contains(@src, \'recaptcha\']' }}" />
+        </invoke>
+
+        <transition event="done.invoke.authenticateLoginIsCaptchaRequired" cond="!(!_event.data.content.recaptcha)" target="authenticateLoginCaptcha" />
+        <transition event="done.invoke.authenticateLoginIsCaptchaRequired" target="authenticateLoginRequest" />
+      </state>
+
+      <state id="authenticateLoginCaptcha">
+        <invoke type="scxml">
+          <param id="url" expr="siteUrl" />
+          <param id="sitekey" expr="recaptchaSitekey" />
+          <source expr="'google-recaptcha'" />
+        </invoke>
+        
+        <transition event="done.invoke.authenticateLoginCaptcha" cond="_event.data.status == 'ok'" target="authenticateLoginRequest">
+          <assign location="local_authenticateLogin.recaptchaResponse" expr="_event.data.response" />
+        </transition>
+        <transition event="done.invoke.authenticateLoginCaptcha" target="authenticateCancel" />
+      </state>
+
+      <state id="authenticateLoginRequest">
+        <invoke id="authenticateLoginRequest" src="https://test.tssart.com/wp-login.php" type="http">
+          <param name="method" expr="'post'" />
+          <param name="autoRedirect" expr="false" />
+          <param name="contentType" expr="'application/x-www-form-urlencoded'" />
+          <content
+            expr="[
+                     { name: 'log', value: username }, 
+                     { name: 'pwd', value: password }, 
+                     { name: 'g-recaptcha-response', value: local_authenticateLogin.recaptchaResponse }, 
+                     { name: 'redirect_to', value: '/wp-admin/' }, 
+                     { name: 'wp-submit', value: 'Log In' },
+                     { name: 'testcookie', value: '1' }
+                  ]" />
+        </invoke>
+
+        <transition event="done.invoke.authenticateLoginRequest" cond="_event.data.statusCode == 302" target="authenticateLoginPostProcess" />
+        <transition event="done.invoke.authenticateLoginRequest" target="authenticateAskCredentials" />
+      </state>
     </state>
 
-    <state id="Auth-AskCredentials">
+    <state id="authenticateAskCredentials">
       <datamodel>
-        <data id="askCredentialsSendId" />
+        <data id="local_authenticateAskCredentials" expr="{}"/>
       </datamodel>
-      
+
       <onentry>
-        <send idlocation="askCredentialsSendId" type="http" target="http://localhost:5000/dialog" event="show">
-          <param name="id" location="askCredentialsSendId" />
-          <param name="event" expr="'AskCredentialsDone'"/>
+        <send locationid="local_authenticateAskCredentials.inputSendId" type="http" target="http://localhost:5000/dialog" event="show">
+          <param name="id" location="local_authenticateAskCredentials.inputSendId" />
+          <param name="event" expr="'authenticateAskCredentials'"/>
           <param name="type" expr="'input'"/>
           <param name="content" expr="({
-            'controls': [
-              { name: 'Username', location: 'username', type: 'input' },
-              { name: 'Password', location: 'password' , type: 'password' },
-              { name: 'Capture Email', location: 'captureEmail' , type: 'checkbox' },
-              { name: 'Submit', event: 'submit' , type: 'button' },
-              { name: 'Register New', event: 'signup' , type: 'button' }]
-          })" />
+                  'controls': [
+                    { name: 'Username', location: 'username', type: 'input' },
+                    { name: 'Password', location: 'password' , type: 'password' },
+                    { name: 'Capture Email', location: 'captureEmail' , type: 'checkbox' },
+                    { name: 'Submit', event: 'submit' , type: 'button' },
+                    { name: 'Register New', event: 'signup' , type: 'button' },
+                    { name: 'Cancel', event: 'cancel' , type: 'button' }]
+                })" />
         </send>
       </onentry>
 
       <onexit>
-        <send type="http" target="http://localhost:5000/dialog" event="cancel"><param name="id" location="askCredentialsSendId" /></send>
+        <send type="http" target="http://localhost:5000/dialog" event="cancel">
+          <param name="id" expr="local_authenticateAskCredentials.inputSendId" />
+        </send>
       </onexit>
 
-      <transition event="AskCredentialsDone.submit" target="Auth-Login">
-        <assign location="username" expr="_event.data.parameters.username" />
-        <assign location="password" expr="_event.data.parameters.password" />
-        <assign location="captureEmail" expr="_event.data.parameters.captureEmail" />
+      <transition event="authenticateAskCredentials.submit" target="authenticateLogin">
+        <assign location="username" expr="_event.data.data.parameters.username" />
+        <assign location="password" expr="_event.data.data.parameters.password" />
+        <assign location="local_authenticate.captureEmail" expr="_event.data.data.parameters.captureEmail" />
       </transition>
 
-      <transition event="AskCredentialsDone" target="Auth-Cancel" />
+      <transition event="authenticateAskCredentials.signup" target="authenticateSignup" />
+      <transition event="authenticateAskCredentials.cancel" target="authenticateCancel" />
     </state>
 
-    <state id="Auth-CaptureEmail">
-      <transition cond="!captureEmail" target="Auth-OK" />
+    <state id="authenticateLoginPostProcess">
+      <transition cond="!local_authenticate.captureEmail" target="authenticateLoggedIn" />
 
-      <transition target="Auth-OK">
-        <assign location="captureEmail" expr="false" />
+      <transition target="authenticateLoggedIn">
+        <assign location="local_authenticate.captureEmail" expr="false" />
       </transition>
     </state>
 
-    <final id="Auth-LoggedIn">
+    <final id="authenticateLoggedIn">
       <onentry xmlns:mid="http://tssart.com/scxml/customaction/mid">
         <mid:storage location="username" operation="set" variable="username" />
         <mid:storage location="password" operation="set" variable="password" />
@@ -124,12 +132,12 @@
       <transition target="Idle" />
     </final>
 
-    <final id="Auth-Cancel">
+    <final id="authenticateCancel">
       <transition target="Idle" />
     </final>
   </state>
 
-  <state id="SignUp" initial="CreateEmail">
+  <state id="authenticateSignup" initial="CreateEmail">
     <datamodel>
       <data id="recaptchaResponse" />
       <data id="emailContent" />

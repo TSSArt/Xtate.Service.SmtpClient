@@ -8,12 +8,13 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Security;
+using System.Text;
 
 namespace TSSArt.StateMachine
 {
 	[DebuggerTypeProxy(typeof(DebugView))]
 	[DebuggerDisplay(value: "Count = {_list.Count}")]
-	public sealed class DataModelArray : IDynamicMetaObjectProvider, IList<DataModelValue>
+	public sealed class DataModelArray : IDynamicMetaObjectProvider, IList<DataModelValue>, IFormattable
 	{
 		public delegate void ChangedHandler(ChangedAction action, int index, DataModelDescriptor descriptor);
 
@@ -381,14 +382,35 @@ namespace TSSArt.StateMachine
 			return clone;
 		}
 
+		public string ToString(string format, IFormatProvider formatProvider)
+		{
+			var sb = new StringBuilder();
+
+			sb.Append('[');
+			foreach (var item in _list)
+			{
+				if (sb.Length > 1)
+				{
+					sb.Append(',');
+				}
+
+				sb.Append(item.Value.ToString(format: null, formatProvider));
+			}
+			sb.Append(']');
+
+			return sb.ToString();
+		}
+
+		public override string ToString() => ToString(format: null, formatProvider: null);
+
 		[DebuggerDisplay(value: "{" + nameof(_value) + "}", Name = "[{" + nameof(_index) + "}]")]
 		private struct IndexValue
 		{
 			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-			private readonly DataModelValue _value;
-
-			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 			private readonly int _index;
+
+			[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+			private readonly DataModelValue _value;
 
 			public IndexValue(int index, DataModelDescriptor descriptor)
 			{

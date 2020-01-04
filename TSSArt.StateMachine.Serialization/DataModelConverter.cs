@@ -92,6 +92,8 @@ namespace TSSArt.StateMachine
 					var value = JsonSerializer.Deserialize<DataModelValue>(ref reader, options);
 
 					obj[name] = value;
+
+					reader.Read();
 				}
 
 				reader.Read();
@@ -136,6 +138,8 @@ namespace TSSArt.StateMachine
 					var value = JsonSerializer.Deserialize<DataModelValue>(ref reader, options);
 
 					array.Add(value);
+
+					reader.Read();
 				}
 
 				reader.Read();

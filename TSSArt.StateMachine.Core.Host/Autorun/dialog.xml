@@ -8,7 +8,7 @@
     </datamodel>
 
     <onentry>
-      <if cond="_event">
+      <if cond="!(!_event)">
         <assign location="id" expr="_event.data.id" />
         <assign location="event" expr="_event.data.event" />
         <assign location="origin" expr="_event.origin" />
@@ -30,7 +30,7 @@
         <send typeexpr="origintype" targetexpr="origin" eventexpr="event"><param name="data" expr="_event.data" /></send>
       </transition>
 
-      <transition event="error.execution" target="idle" />
+      <transition event="error" target="idle" />
     </state>
   </state>
 </scxml>
