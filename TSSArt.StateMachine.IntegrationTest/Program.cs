@@ -64,7 +64,7 @@ namespace TSSArt.StateMachine.IntegrationTest
 
 			dynamic result2 = await task2.ConfigureAwait(false);
 
-			Console.WriteLine(DataModelConverter.ToJson(result));
+			//Console.WriteLine(DataModelConverter.ToJson(result));
 
 			await webHost.StopAsync().ConfigureAwait(false);
 		}

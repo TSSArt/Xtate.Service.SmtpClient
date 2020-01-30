@@ -52,8 +52,8 @@
         </finalize>
       </invoke>
 
-      <transition event="done.invoke" cond="!!_event.data.content.sitekey" target="registerCaptcha">
-        <assign location="sitekey" expr="_event.data.content.sitekey.value" />
+      <transition event="done.invoke" cond="_event.data.content.sitekey.length > 0" target="registerCaptcha">
+        <assign location="sitekey" expr="_event.data.content.sitekey[0].value" />
       </transition>
       <transition event="done.invoke" target="registerAccount" />
     </state>
@@ -130,8 +130,8 @@
         </finalize>
       </invoke>
 
-      <transition event="done.invoke" cond="!!_event.data.content.sitekey" target="resetPasswordCaptcha">
-        <assign location="sitekey" expr="_event.data.content.sitekey.value" />
+      <transition event="done.invoke" cond="_event.data.content.sitekey.length > 0" target="resetPasswordCaptcha">
+        <assign location="sitekey" expr="_event.data.content.sitekey[0].value" />
       </transition>
       <transition event="done.invoke" target="resetPassword" />
     </state>

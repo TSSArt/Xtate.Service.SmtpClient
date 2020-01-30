@@ -14,10 +14,10 @@ namespace TSSArt.StateMachine.Test
 	[TestClass]
 	public class ExecutableTest
 	{
-		private Mock<ICustomActionProvider> _customActionProvider;
-		private ChannelReader<IEvent>       _eventChannel;
-		private Mock<ILogger>               _logger;
-		private InterpreterOptions          _options;
+		private Mock<ICustomActionProvider>  _customActionProvider;
+		private ChannelReader<IEvent>        _eventChannel;
+		private Mock<ILogger>                _logger;
+		private InterpreterOptions           _options;
 		private Mock<IExternalCommunication> _externalCommunication;
 
 		private IStateMachine GetStateMachine(string scxml)
@@ -46,8 +46,6 @@ namespace TSSArt.StateMachine.Test
 			channel.Writer.Complete();
 			_eventChannel = channel.Reader;
 
-			_options = new InterpreterOptions { DataModelHandlerFactories = new List<IDataModelHandlerFactory>(), CustomActionProviders = new List<ICustomActionProvider>() };
-			_logger = new Mock<ILogger>();
 			_customActionProvider = new Mock<ICustomActionProvider>();
 			_customActionProvider.Setup(x => x.GetAction(It.IsAny<string>()))
 								 .Returns((context, token) =>
@@ -57,9 +55,14 @@ namespace TSSArt.StateMachine.Test
 										  });
 			_customActionProvider.Setup(x => x.CanHandle(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
 
-			_options.DataModelHandlerFactories.Add(EcmaScriptDataModelHandler.Factory);
+			_options = new InterpreterOptions
+					   {
+							   DataModelHandlerFactories = new List<IDataModelHandlerFactory> { EcmaScriptDataModelHandler.Factory },
+							   CustomActionProviders = new List<ICustomActionProvider> { _customActionProvider.Object }
+					   };
+			_logger = new Mock<ILogger>();
+			
 			_options.Logger = _logger.Object;
-			_options.CustomActionProviders.Add(_customActionProvider.Object);
 			_externalCommunication = new Mock<IExternalCommunication>();
 			_options.ExternalCommunication = _externalCommunication.Object;
 		}

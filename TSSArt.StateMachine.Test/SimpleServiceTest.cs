@@ -34,10 +34,10 @@ namespace TSSArt.StateMachine.Test
 
 			var stateMachine = StateMachineGenerator.FromInnerScxml_EcmaScript(scxml);
 
-			var options = IoProcessorOptionsBuilder.Create(o =>
+			var options = IoProcessorOptionsBuilder.Create((ref IoProcessorOptions o) =>
 														   {
-															   o.DataModelHandlerFactories.Add(EcmaScriptDataModelHandler.Factory);
-															   o.ServiceFactories.Add(SimpleServiceFactory<PassthroughService>.Instance);
+															   o.DataModelHandlerFactories = new[] { EcmaScriptDataModelHandler.Factory };
+															   o.ServiceFactories = new[] { SimpleServiceFactory<PassthroughService>.Instance };
 														   });
 
 			await using var ioProcessor = new IoProcessor(options);

@@ -19,9 +19,7 @@ namespace TSSArt.StateMachine.Test
     }
   }
 }";
-			var json = @"{""arr"": [{""name"":""val""}]}";
-
-			dynamic dataModelValue = DataModelConverter.FromJson(json);
+			dynamic dataModelValue = DataModelConverter.FromJson(json1);
 
 			Assert.AreEqual("ok", dataModelValue.data.status);
 			Assert.IsInstanceOfType(dataModelValue.data.parameters.response, typeof(string));

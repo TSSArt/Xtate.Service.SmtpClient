@@ -28,11 +28,9 @@ namespace TSSArt.StateMachine
 		{
 			if (context == null) throw new ArgumentNullException(nameof(context));
 
-			var op = context.DataModel[_op].AsString();
-
-			context.DataModel[_result] = op switch
+			context.DataModel[_result] = _op switch
 			{
-					"emailMatch" => new DataModelValue(EmailMatch(context.DataModel[_left].AsString(), context.DataModel[_right])),
+					"emailMatch" => new DataModelValue(EmailMatch(context.DataModel[_left].AsStringOrDefault(), context.DataModel[_right])),
 					_ => throw new ArgumentOutOfRangeException()
 			};
 

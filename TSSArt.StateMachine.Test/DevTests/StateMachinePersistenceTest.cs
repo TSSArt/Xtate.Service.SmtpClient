@@ -46,12 +46,11 @@ namespace TSSArt.StateMachine.Test
 
 			var options = new InterpreterOptions
 						  {
-								  DataModelHandlerFactories = new List<IDataModelHandlerFactory>(),
+								  DataModelHandlerFactories = new List<IDataModelHandlerFactory> { EcmaScriptDataModelHandler.Factory },
 								  ResourceLoader = _resourceLoaderMock.Object,
 								  PersistenceLevel = PersistenceLevel.ExecutableAction,
 								  StorageProvider = new TestStorage()
 						  };
-			options.DataModelHandlerFactories.Add(EcmaScriptDataModelHandler.Factory);
 
 			var newSessionId = IdGenerator.NewSessionId();
 			var stateMachineResult = await StateMachineInterpreter.RunAsync(newSessionId, _allStateMachine, channel.Reader, options);

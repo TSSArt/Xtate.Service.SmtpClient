@@ -25,8 +25,8 @@
         </finalize>
       </invoke>
 
-      <transition event="done.invoke" cond="!!_event.data.content.sitekey" target="captcha">
-        <assign location="sitekey" expr="_event.data.content.sitekey.value" />
+      <transition event="done.invoke" cond="_event.data.content.sitekey.length > 0" target="captcha">
+        <assign location="sitekey" expr="_event.data.content.sitekey[0].value" />
       </transition>
       <transition event="done.invoke" target="loginRequest" />
     </state>
@@ -68,6 +68,7 @@
   </state>
 
   <final id="ok">
+    <!--  -->
     <donedata>
       <param name="status" expr="'ok'" />
       <param name="data" expr="_event.data" />

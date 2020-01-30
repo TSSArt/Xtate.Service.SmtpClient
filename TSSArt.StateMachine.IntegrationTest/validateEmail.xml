@@ -1,17 +1,16 @@
 ﻿<scxml xmlns="http://www.w3.org/2005/07/scxml"
-       xmlns:mid="http://tssart.com/scxml/customaction/mid"
        xmlns:basic="http://tssart.com/scxml/customaction/basic"
        version="1.0" datamodel="ecmascript" initial="validate">
   <datamodel>
     <data id="email" />
   </datamodel>
 
-  <state id="validate" initial="loadPage">
+  <state id="validate">
     <datamodel>
       <data id="isControlledEmail" />
       <data id="isUserEmail" />
 
-      <data id="controlledEmailList" expr="[*@mid.dev.tssart.com]" />
+      <data id="controlledEmailList" expr="['*@mid.dev.tssart.com']" />
       <data id="userEmailList" expr="['xtadex@gmail.com', 'ser@tssart.com']" />
     </datamodel>
 
@@ -21,7 +20,8 @@
     </onentry>
 
     <transition cond="isControlledEmail" target="skip" />
-    <transition cond="isUserEmail" target="replace" />
+    <transition cond="isUserEmail" target="captureAllowed" />
+    <transition target="captureRequired" />
   </state>
 
   <final id="skip">
@@ -30,9 +30,15 @@
     </donedata>
   </final>
 
-  <final id="replace">
+  <final id="captureAllowed">
     <donedata>
-      <param name="status" expr="'replace'" />
+      <param name="status" expr="'captureAllowed'" />
+    </donedata>
+  </final>
+
+  <final id="captureRequired">
+    <donedata>
+      <param name="status" expr="'captureRequired'" />
     </donedata>
   </final>
 </scxml>

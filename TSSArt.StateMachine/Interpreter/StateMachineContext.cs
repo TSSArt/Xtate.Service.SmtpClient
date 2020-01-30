@@ -30,7 +30,7 @@ namespace TSSArt.StateMachine
 
 		public async ValueTask Send(IOutgoingEvent @event, CancellationToken token)
 		{
-			if (IsInternalEvent(@event) || await _externalCommunication.SendEvent(@event, token).ConfigureAwait(false) == SendStatus.ToInternalQueue)
+			if (IsInternalEvent(@event) || await _externalCommunication.TrySendEvent(@event, token).ConfigureAwait(false) == SendStatus.ToInternalQueue)
 			{
 				InternalQueue.Enqueue(new EventObject(EventType.Internal, @event));
 			}

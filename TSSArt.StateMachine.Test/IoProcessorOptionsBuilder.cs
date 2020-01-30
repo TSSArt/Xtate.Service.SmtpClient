@@ -5,7 +5,9 @@ namespace TSSArt.StateMachine.Test
 {
 	public static class IoProcessorOptionsBuilder
 	{
-		public static IoProcessorOptions Create(Action<IoProcessorOptions> build)
+		public delegate void IoProcessorOptionsSetup(ref IoProcessorOptions options);
+
+		public static IoProcessorOptions Create(IoProcessorOptionsSetup build)
 		{
 			var options = new IoProcessorOptions
 						  {
@@ -14,7 +16,7 @@ namespace TSSArt.StateMachine.Test
 								  ServiceFactories = new List<IServiceFactory>()
 						  };
 
-			build(options);
+			build(ref options);
 
 			return options;
 		}

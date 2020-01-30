@@ -55,12 +55,11 @@ namespace TSSArt.StateMachine.Test
 			channel.Writer.Complete();
 			_eventChannel = channel.Reader;
 
-			_options = new InterpreterOptions { DataModelHandlerFactories = new List<IDataModelHandlerFactory>() };
+			_options = new InterpreterOptions { DataModelHandlerFactories = new List<IDataModelHandlerFactory> { EcmaScriptDataModelHandler.Factory } };
 			_logger = new Mock<ILogger>();
 			_logger.Setup(e => e.Log(It.IsAny<string>(), "MyName", It.IsAny<string>(), It.IsAny<DataModelValue>(), It.IsAny<CancellationToken>()))
 				   .Callback((string sessionId, string name, string lbl, object prm, CancellationToken _) => Console.WriteLine(lbl + ":" + prm));
 			_logger.SetupGet(e => e.IsTracingEnabled).Returns(false);
-			_options.DataModelHandlerFactories.Add(EcmaScriptDataModelHandler.Factory);
 			_options.Logger = _logger.Object;
 		}
 

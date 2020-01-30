@@ -34,11 +34,10 @@ namespace TSSArt.StateMachine.Test
 
 			var options = new IoProcessorOptions
 						  {
-								  DataModelHandlerFactories = new List<IDataModelHandlerFactory>(),
+								  DataModelHandlerFactories = new List<IDataModelHandlerFactory> { EcmaScriptDataModelHandler.Factory },
 								  StateMachineProvider = new StateMachineProvider(),
 								  ResourceLoader = resourceLoaderMock.Object
 						  };
-			options.DataModelHandlerFactories.Add(EcmaScriptDataModelHandler.Factory);
 
 			var ioProcessor = new IoProcessor(options);
 			var _ = ioProcessor.Execute(new Uri(@"D:\Ser\Projects\T.S.S.Art\MID\PoC\TSSArt.StateMachine.Test\Resources\All.xml"));
@@ -54,10 +53,9 @@ namespace TSSArt.StateMachine.Test
 
 			var options = new IoProcessorOptions
 						  {
-								  DataModelHandlerFactories = new List<IDataModelHandlerFactory>(),
+								  DataModelHandlerFactories = new List<IDataModelHandlerFactory> { EcmaScriptDataModelHandler.Factory },
 								  StateMachineProvider = stateMachineProviderMock.Object
 						  };
-			options.DataModelHandlerFactories.Add(EcmaScriptDataModelHandler.Factory);
 
 			var ioProcessor = new IoProcessor(options);
 			var result = await ioProcessor.Execute(new Uri("scxml://a"));
@@ -98,13 +96,10 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 
 			var options = new IoProcessorOptions
 						  {
-								  DataModelHandlerFactories = new List<IDataModelHandlerFactory>(),
-								  ServiceFactories = new List<IServiceFactory>(),
+								  DataModelHandlerFactories = new List<IDataModelHandlerFactory> { EcmaScriptDataModelHandler.Factory },
+								  ServiceFactories = new List<IServiceFactory> { HttpClientService.Factory },
 								  StateMachineProvider = stateMachineProviderMock.Object
 						  };
-
-			options.ServiceFactories.Add(HttpClientService.Factory);
-			options.DataModelHandlerFactories.Add(EcmaScriptDataModelHandler.Factory);
 
 			var ioProcessor = new IoProcessor(options);
 
@@ -173,18 +168,10 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 
 			var options = new IoProcessorOptions
 						  {
-								  DataModelHandlerFactories = new List<IDataModelHandlerFactory>(),
-								  ServiceFactories = new List<IServiceFactory>(),
-								  CustomActionProviders = new List<ICustomActionProvider>()
+								  DataModelHandlerFactories = new List<IDataModelHandlerFactory>{ EcmaScriptDataModelHandler.Factory },
+								  ServiceFactories = new List<IServiceFactory>{ HttpClientService.Factory, SmtpClientService.Factory, /*WebBrowserService.GetFactory<CefSharpWebBrowserService>()*/ },
+								  CustomActionProviders = new List<ICustomActionProvider> { BasicCustomActionProvider.Instance, MimeCustomActionProvider.Instance }
 						  };
-
-			options.ServiceFactories.Add(HttpClientService.Factory);
-			options.ServiceFactories.Add(SmtpClientService.Factory);
-		//	options.ServiceFactories.Add(WebBrowserService.GetFactory<CefSharpWebBrowserService>());
-			options.DataModelHandlerFactories.Add(EcmaScriptDataModelHandler.Factory);
-
-			options.CustomActionProviders.Add(BasicCustomActionProvider.Instance);
-			options.CustomActionProviders.Add(MimeCustomActionProvider.Instance);
 
 			var ioProcessor = new IoProcessor(options);
 

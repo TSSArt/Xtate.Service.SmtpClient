@@ -83,7 +83,7 @@ namespace TSSArt.StateMachine
 
 		public bool IsInvokeActive(string invokeId, string invokeUniqueId) => _externalCommunication?.IsInvokeActive(invokeId, invokeUniqueId) == true;
 
-		public async ValueTask<SendStatus> SendEvent(IOutgoingEvent @event, CancellationToken token)
+		public async ValueTask<SendStatus> TrySendEvent(IOutgoingEvent @event, CancellationToken token)
 		{
 			if (@event == null) throw new ArgumentNullException(nameof(@event));
 

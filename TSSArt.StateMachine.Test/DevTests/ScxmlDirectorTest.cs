@@ -39,8 +39,7 @@ namespace TSSArt.StateMachine.Test
 			await channel.Writer.WriteAsync(new EventObject("Timer"));
 			channel.Writer.Complete(new ArgumentException("333"));
 
-			var options = new InterpreterOptions { DataModelHandlerFactories = new List<IDataModelHandlerFactory>() };
-			options.DataModelHandlerFactories.Add(EcmaScriptDataModelHandler.Factory);
+			var options = new InterpreterOptions { DataModelHandlerFactories = new List<IDataModelHandlerFactory> { EcmaScriptDataModelHandler.Factory } };
 
 			await StateMachineInterpreter.RunAsync(IdGenerator.NewSessionId(), _stateMachine, channel.Reader, options);
 		}
@@ -52,8 +51,7 @@ namespace TSSArt.StateMachine.Test
 
 			channel.Writer.Complete(new ArgumentException("333"));
 
-			var options = new InterpreterOptions { DataModelHandlerFactories = new List<IDataModelHandlerFactory>() };
-			options.DataModelHandlerFactories.Add(EcmaScriptDataModelHandler.Factory);
+			var options = new InterpreterOptions { DataModelHandlerFactories = new List<IDataModelHandlerFactory> { EcmaScriptDataModelHandler.Factory } };
 
 			await StateMachineInterpreter.RunAsync(IdGenerator.NewSessionId(), _stateMachine, channel.Reader, options);
 		}

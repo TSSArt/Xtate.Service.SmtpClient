@@ -69,7 +69,7 @@ namespace TSSArt.StateMachine
 		}
 
 		protected virtual StateMachineController CreateStateMachineController(string sessionId, IStateMachine stateMachine, in InterpreterOptions options) =>
-				new StateMachineController(sessionId, stateMachine, _ioProcessor, _options.SuspendIdlePeriod, options);
+				new StateMachineController(sessionId, stateMachine, _ioProcessor, _options.SuspendIdlePeriod, _options.SynchronousEventProcessing, options);
 
 		public virtual async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, IStateMachine stateMachine, Uri source, string scxml, DataModelValue parameters)
 		{

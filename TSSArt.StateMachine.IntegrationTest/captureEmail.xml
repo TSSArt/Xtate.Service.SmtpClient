@@ -1,44 +1,42 @@
-﻿<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" datamodel="ecmascript" initial="capture">
+﻿<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" datamodel="ecmascript" initial="captureEmail">
   <datamodel>
     <data id="profileUrl" />
     <data id="cookies" />
-    <data id="currentEmail" />
-    <data id="formData" />
   </datamodel>
 
-  <state id="capture" initial="getCurrentEmail">
+  <state id="captureEmail" initial="getCurrentEmail">
+    <datamodel>
+      <data id="currentEmail" />
+      <data id="formData" />
+    </datamodel>
+
     <state id="getCurrentEmail">
       <invoke srcexpr="profileUrl" type="http">
         <param name="cookies" expr="cookies" />
         <param name="capture" expr="({
                'email': { 'xpath': './/input[@name=\'email\']', 'attr': 'value' },
-               'form': { 'attr': '*', 'xpath': [
-                 './/form[@id=\'your-profile\']//input',
-                 ''
-                 ]}})" />
+               'form': { 'attr': ['name', '::value'], 'xpath': './/form[@id=\'your-profile\']//*[@name]'}})" />
         <finalize>
           <assign location="cookies" expr="_event.data.cookies" />
-          <log expr="_event.data.content" />
+          <assign location="formData" expr="[]" />
+          <foreach array="_event.data.content.form" item="item" index="i">
+            <assign location="formData[i]" expr="({'name': item.name, 'value': item['::value']})" />
+          </foreach>
         </finalize>
       </invoke>
 
-      <transition event="done.invoke" cond="!!_event.data.content.email" target="checkEmail">
-        <assign location="currentEmail" expr="_event.data.content.email" />
-        <assign location="formData" expr="_event.data.content.form" />
+      <transition event="done.invoke" cond="_event.data.content.email.length > 0" target="validateEmail">
+        <assign location="currentEmail" expr="_event.data.content.email[0].value" />
       </transition>
       <transition event="done.invoke" target="failure" />
     </state>
 
-    <state id="checkEmail">
-      <datamodel>
-        <data id="currentEmailStatus" />
-      </datamodel>
-
+    <state id="validateEmail">
       <invoke type="scxml" src="validateEmail">
         <param name="email" expr="currentEmail" />
       </invoke>
 
-      <transition event="done.invoke" cond="_event.data.status == 'replace'" target="replaceEmailRequest" />
+      <transition event="done.invoke" cond="_event.data.status == 'captureRequired'" target="replaceEmailRequest" />
       <transition event="done.invoke" target="ok" />
     </state>
 

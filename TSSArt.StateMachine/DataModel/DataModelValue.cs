@@ -242,6 +242,23 @@ namespace TSSArt.StateMachine
 				default: throw new ArgumentOutOfRangeException();
 			}
 		}
+		internal bool IsDeepReadOnly()
+		{
+			switch (Type)
+			{
+				case DataModelValueType.Undefined:
+				case DataModelValueType.Null:
+				case DataModelValueType.String:
+				case DataModelValueType.Number:
+				case DataModelValueType.DateTime:
+				case DataModelValueType.Boolean:
+					return true;
+
+				case DataModelValueType.Object: return AsObject().IsDeepReadOnly();
+				case DataModelValueType.Array: return AsArray().IsDeepReadOnly();
+				default: throw new ArgumentOutOfRangeException();
+			}
+		}
 
 		public static DataModelValue FromContent(string content, ContentType contentType) => new DataModelValue(content);
 

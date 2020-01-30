@@ -372,6 +372,11 @@ namespace TSSArt.StateMachine
 
 		public DataModelArray DeepClone(bool isReadOnly)
 		{
+			if (isReadOnly && IsDeepReadOnly())
+			{
+				return this;
+			}
+
 			var clone = new DataModelArray(isReadOnly);
 
 			foreach (var val in _list)
@@ -380,6 +385,29 @@ namespace TSSArt.StateMachine
 			}
 
 			return clone;
+		}
+
+		internal bool IsDeepReadOnly()
+		{
+			if (!IsReadOnly)
+			{
+				return false;
+			}
+
+			foreach (var val in _list)
+			{
+				if (!val.IsReadOnly)
+				{
+					return false;
+				}
+
+				if (!val.Value.IsDeepReadOnly())
+				{
+					return false;
+				}
+			}
+
+			return true;
 		}
 
 		public string ToString(string format, IFormatProvider formatProvider)

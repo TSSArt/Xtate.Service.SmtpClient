@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Reflection;
 using Jint;
 using Jint.Native;
@@ -61,6 +62,7 @@ namespace TSSArt.StateMachine.EcmaScript
 					DataModelValueType.Boolean => new JsValue(value.AsBoolean()),
 					DataModelValueType.String => new JsValue(value.AsString()),
 					DataModelValueType.Number => new JsValue(value.AsNumber()),
+					DataModelValueType.DateTime => new JsValue(value.AsDateTime().ToString(format: "o", DateTimeFormatInfo.InvariantInfo)),
 					DataModelValueType.Object => new JsValue(new DataModelObjectWrapper(engine, value.AsObject())),
 					DataModelValueType.Array => new JsValue(new DataModelArrayWrapper(engine, value.AsArray())),
 					_ => throw new ArgumentOutOfRangeException(nameof(value), value.Type, Resources.Exception_UnsupportedValueType)
@@ -74,11 +76,18 @@ namespace TSSArt.StateMachine.EcmaScript
 					Types.Null => DataModelValue.Null,
 					Types.Undefined => DataModelValue.Undefined,
 					Types.Boolean => new DataModelValue(value.AsBoolean()),
-					Types.String => new DataModelValue(value.AsString()),
+					Types.String => CreateDateTimeOrStringValue(value.AsString()),
 					Types.Number => new DataModelValue(value.AsNumber()),
 					Types.Object => CreateDataModelValue(value.AsObject()),
 					_ => throw new ArgumentOutOfRangeException(nameof(value), value.Type, Resources.Exception_UnsupportedValueType)
 			};
+		}
+
+		private static DataModelValue CreateDateTimeOrStringValue(string val)
+		{
+			return DateTime.TryParseExact(val, "o", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None, out var dttm)
+					? new DataModelValue(dttm)
+					: new DataModelValue(val);
 		}
 
 		private static DataModelValue CreateDataModelValue(ObjectInstance objectInstance)
