@@ -152,8 +152,10 @@ namespace TSSArt.StateMachine
 			{
 				writer.WriteStartArray();
 
-				foreach (var value in array)
+				var arrayLength = array.Length;
+				for (var i = 0; i < arrayLength; i ++)
 				{
+					var value = array[i];
 					if (value.Type != DataModelValueType.Undefined)
 					{
 						JsonSerializer.Serialize(writer, value, options);
