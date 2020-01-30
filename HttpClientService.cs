@@ -42,19 +42,7 @@ namespace TSSArt.StateMachine.Services
 						  where !string.IsNullOrEmpty(name) && value != null
 						  select new KeyValuePair<string, string>(name, value);
 
-			var cookies = from obj in parameters["cookies"].AsArrayOrEmpty()
-						  let cookie = obj.AsObjectOrEmpty()
-						  select new Cookie
-								 {
-										 Name = cookie["name"].AsStringOrDefault(),
-										 Value = cookie["value"].AsStringOrDefault(),
-										 Path = cookie["path"].AsStringOrDefault(),
-										 Domain = cookie["domain"].AsStringOrDefault(),
-										 Expires = cookie["expires"].AsDateTimeOrDefault() ?? DateTime.MinValue,
-										 HttpOnly = cookie["httpOnly"].AsBooleanOrDefault() ?? false,
-										 Port = cookie["port"].AsStringOrDefault(),
-										 Secure = cookie["secure"].AsBooleanOrDefault() ?? false
-								 };
+			var cookies = parameters["cookies"].AsArrayOrEmpty().Select(CreateCookie);
 
 			var capturesObj = parameters["capture"].AsObjectOrEmpty();
 			var captures = from name in capturesObj.Properties
@@ -62,8 +50,8 @@ namespace TSSArt.StateMachine.Services
 						   select new Capture
 								  {
 										  Name = name,
-										  XPath = GetArray(capture["xpath"]),
-										  Attribute = capture["attr"].AsStringOrDefault(),
+										  XPaths = GetArray(capture["xpath"]),
+										  Attributes = GetArray(capture["attr"]),
 										  Regex = capture["regex"].AsStringOrDefault()
 								  };
 
@@ -71,15 +59,15 @@ namespace TSSArt.StateMachine.Services
 			{
 				if (val.Type == DataModelValueType.Array)
 				{
-					return val.AsArray().Select(p => p.AsStringOrDefault()).Where(p => p != null).ToArray();
+					return val.AsArray().Select(p => p.AsStringOrDefault()).Where(s => !string.IsNullOrEmpty(s)).ToArray();
 				}
 
 				var str = val.AsStringOrDefault();
 
-				return !string.IsNullOrWhiteSpace(str) ? new[] { str } : Array.Empty<string>();
+				return !string.IsNullOrEmpty(str) ? new[] { str } : null;
 			}
 
-			var response = await DoRequest(Source, method, accept, autoRedirect, contentType, headers, cookies, captures, Content, StopToken).ConfigureAwait(false);
+			var response = await DoRequest(Source, method, accept, autoRedirect, contentType, headers, cookies, captures.ToArray(), Content, StopToken).ConfigureAwait(false);
 
 			var responseHeaders = new DataModelArray();
 			foreach (var header in response.Headers)
@@ -130,6 +118,30 @@ namespace TSSArt.StateMachine.Services
 			return new DataModelValue(result);
 		}
 
+		private static Cookie CreateCookie(DataModelValue val)
+		{
+			var cookieObj = val.AsObjectOrEmpty();
+			var cookie = new Cookie
+						 {
+								 Name = cookieObj["name"].AsStringOrDefault(),
+								 Value = cookieObj["value"].AsStringOrDefault(),
+								 Path = cookieObj["path"].AsStringOrDefault(),
+								 Domain = cookieObj["domain"].AsStringOrDefault(),
+								 Expires = cookieObj["expires"].AsDateTimeOrDefault() ?? DateTime.MinValue,
+								 HttpOnly = cookieObj["httpOnly"].AsBooleanOrDefault() ?? false,
+								 Secure = cookieObj["secure"].AsBooleanOrDefault() ?? false
+						 };
+
+			var port = cookieObj["port"].AsStringOrDefault();
+
+			if (!string.IsNullOrEmpty(port))
+			{
+				cookie.Port = port;
+			}
+
+			return cookie;
+		}
+
 		private static HttpContent CreateFormUrlEncodedContent(DataModelValue content)
 		{
 			var forms = from p in content.AsArrayOrEmpty()
@@ -147,7 +159,7 @@ namespace TSSArt.StateMachine.Services
 
 		private static ValueTask<DataModelValue> FromJsonContent(Stream stream, CancellationToken token) => DataModelConverter.FromJsonAsync(stream, token);
 
-		private static ValueTask<DataModelValue> FromTextHtmlContent(Stream stream, IEnumerable<Capture> captures)
+		private static ValueTask<DataModelValue> FromHtmlContent(Stream stream, IEnumerable<Capture> captures)
 		{
 			var htmlDocument = new HtmlDocument();
 			htmlDocument.Load(stream);
@@ -157,7 +169,7 @@ namespace TSSArt.StateMachine.Services
 
 		private static async ValueTask<Response> DoRequest(Uri requestUri, string method, string accept, bool autoRedirect, string contentType,
 														   IEnumerable<KeyValuePair<string, string>> headers, IEnumerable<Cookie> cookies,
-														   IEnumerable<Capture> captures, DataModelValue content, CancellationToken token)
+														   Capture[] captures, DataModelValue content, CancellationToken token)
 		{
 			var request = WebRequest.CreateHttp(requestUri);
 
@@ -215,10 +227,12 @@ namespace TSSArt.StateMachine.Services
 			}
 			else if (responseContentType.MediaType == MediaTypeTextHtml)
 			{
-				result.Content = await FromTextHtmlContent(stream, captures).ConfigureAwait(false);
+				result.Content = await FromHtmlContent(stream, captures).ConfigureAwait(false);
 			}
 
 			result.Headers = from key in response.Headers.AllKeys select new KeyValuePair<string, string>(key, response.Headers[key]);
+
+			AppendCookies(requestUri, cookieContainer, response);
 
 			result.Cookies = from object pathList in ((Hashtable) DomainTableField.GetValue(cookieContainer)).Values
 							 from IEnumerable cookieList in ((SortedList) ListField.GetValue(pathList)).Values
@@ -226,6 +240,45 @@ namespace TSSArt.StateMachine.Services
 							 select cookie;
 
 			return result;
+		}
+
+		private static void AppendCookies(Uri uri, CookieContainer cookieContainer, HttpWebResponse response)
+		{
+			var list = response.Headers.GetValues("Set-Cookie");
+
+			if (list == null)
+			{
+				return;
+			}
+
+			var uriBuilder = new UriBuilder(uri);
+
+			foreach (var header in list)
+			{
+				foreach (var path in GetPaths(header))
+				{
+					uriBuilder.Path = path;
+
+					cookieContainer.SetCookies(uriBuilder.Uri, header);
+				}
+			}
+
+			IEnumerable<string> GetPaths(string header)
+			{
+				const string pathPrefix = "path=";
+
+				var p1 = 0;
+				while ((p1 = header.IndexOf(pathPrefix, p1, StringComparison.Ordinal)) >= 0)
+				{
+					p1 += pathPrefix.Length;
+
+					var p2 = header.IndexOf(value: ';', p1);
+
+					var path = p2 < 0 ? header.Substring(p1) : header.Substring(p1, p2 - p1);
+
+					yield return path.Trim().Trim('\"');
+				}
+			}
 		}
 
 		private static async ValueTask WriteContent(WebRequest request, string contentType, DataModelValue content)
@@ -266,7 +319,7 @@ namespace TSSArt.StateMachine.Services
 
 			foreach (var capture in captures)
 			{
-				var result = CaptureEntry(htmlDocument, capture.XPath, capture.Attribute, capture.Regex);
+				var result = CaptureEntry(htmlDocument, capture.XPaths, capture.Attributes, capture.Regex);
 
 				if (result.Type != DataModelValueType.Undefined)
 				{
@@ -279,71 +332,138 @@ namespace TSSArt.StateMachine.Services
 			return new DataModelValue(obj);
 		}
 
-		private static DataModelValue CaptureEntry(HtmlDocument htmlDocument, string[] xpath, string attr, string pattern)
+		private static DataModelValue CaptureEntry(HtmlDocument htmlDocument, string[] xpaths, string[] attrs, string pattern)
 		{
-			var nodes = xpath != null 
-					? xpath.SelectMany(s => (IEnumerable<HtmlNode>)htmlDocument.DocumentNode.SelectNodes(s) ?? Array.Empty<HtmlNode>()) 
-					: Enumerable.Repeat(htmlDocument.DocumentNode, count: 1);
-
-			if (attr == "*")
+			if (xpaths == null)
 			{
-				var array = new DataModelArray();
+				return CaptureInNode(htmlDocument.DocumentNode, attrs, pattern);
+			}
+
+			var array = new DataModelArray();
+
+			foreach (var xpath in xpaths)
+			{
+				var nodes = htmlDocument.DocumentNode.SelectNodes(xpath);
+
+				if (nodes == null)
+				{
+					continue;
+				}
+
 				foreach (var node in nodes)
 				{
-					var obj = new DataModelObject();
-					foreach (var attribute in node.Attributes)
+					var result = CaptureInNode(node, attrs, pattern);
+
+					if (result.Type != DataModelValueType.Undefined)
 					{
-						obj[attribute.Name] = new DataModelValue(attribute.Value);
+						array.Add(result);
 					}
-
-					obj.Freeze();
-					array.Add(new DataModelValue(obj));
 				}
-
-				array.Freeze();
-
-				return new DataModelValue(array);
 			}
 
-			foreach (var node in nodes)
+			array.Freeze();
+
+			return new DataModelValue(array);
+		}
+
+		private static DataModelValue CaptureInNode(HtmlNode node, string[] attrs, string pattern)
+		{
+			if (attrs == null)
 			{
-				var text = attr != null ? node.GetAttributeValue(attr, def: null) : node.InnerHtml;
-
-				if (string.IsNullOrWhiteSpace(text))
-				{
-					continue;
-				}
-
-				if (pattern == null)
-				{
-					return new DataModelValue(text);
-				}
-
-				var regex = new Regex(pattern);
-				var match = regex.Match(text);
-
-				if (!match.Success)
-				{
-					continue;
-				}
-
-				if (match.Groups.Count == 1)
-				{
-					return new DataModelValue(match.Groups[0].Value);
-				}
-
-				var obj = new DataModelObject();
-				foreach (var name in regex.GetGroupNames())
-				{
-					obj[name] = new DataModelValue(match.Groups[name].Value);
-				}
-
-				obj.Freeze();
-
-				return new DataModelValue(obj);
+				return CaptureInText(node.InnerHtml, pattern);
 			}
 
-			return DataModelValue.Undefined;
+			var obj = new DataModelObject();
+
+			foreach (var attr in attrs)
+			{
+				var value = attr.StartsWith(value: "::", StringComparison.Ordinal) ? GetSpecialAttributeValue(node, attr) : node.GetAttributeValue(attr, def: null);
+
+				if (value == null)
+				{
+					return DataModelValue.Undefined;
+				}
+
+				obj[attr] = CaptureInText(value, pattern);
+			}
+
+			obj.Freeze();
+
+			return new DataModelValue(obj);
+		}
+
+		private static string GetSpecialAttributeValue(HtmlNode node, string attr) =>
+				attr switch
+				{
+						"::value" => GetHtmlValue(node),
+						_ => null
+				};
+
+		private static string GetHtmlValue(HtmlNode node) =>
+				node.Name switch
+				{
+						"input" => GetInputValue(node),	
+						"textarea" => GetInputValue(node),
+						"select" => GetSelectValue(node),
+						_ => null
+				};
+
+		private static string GetSelectValue(HtmlNode node)
+		{
+			var selected = node.ChildNodes.FirstOrDefault(n => n.Name == "option" && n.Attributes.Contains("selected"))
+						   ?? node.ChildNodes.FirstOrDefault(n => n.Name == "option");
+
+			return selected != null ? GetValue(selected, check: false) : null;
+		}
+
+		private static string GetInputValue(HtmlNode node) =>
+				node.GetAttributeValue(name: "type", def: null) switch
+				{
+						"radio" => GetValue(node, check: true),
+						"checkbox" => GetValue(node, check: true),
+						_ => GetValue(node, check: false)
+				};
+
+		private static string GetValue(HtmlNode node, bool check)
+		{
+			if (check && !node.Attributes.Contains("checked"))
+			{
+				return null;
+			}
+
+			return node.GetAttributeValue(name: "value", def: null) ?? node.InnerText;
+		}
+
+		private static DataModelValue CaptureInText(string text, string pattern)
+		{
+			if (pattern == null)
+			{
+				return new DataModelValue(text);
+			}
+
+			var regex = new Regex(pattern);
+			var match = regex.Match(text);
+
+			if (!match.Success)
+			{
+				return DataModelValue.Undefined;
+			}
+
+			if (match.Groups.Count == 1)
+			{
+				return new DataModelValue(match.Groups[0].Value);
+			}
+
+			var obj = new DataModelObject();
+
+			foreach (var name in regex.GetGroupNames())
+			{
+				obj[name] = new DataModelValue(match.Groups[name].Value);
+			}
+
+			obj.Freeze();
+
+			return new DataModelValue(obj);
 		}
 
 		private struct Response
@@ -358,10 +478,10 @@ namespace TSSArt.StateMachine.Services
 
 		private struct Capture
 		{
-			public string   Name      { get; set; }
-			public string[] XPath     { get; set; }
-			public string   Attribute { get; set; }
-			public string   Regex     { get; set; }
+			public string   Name       { get; set; }
+			public string[] XPaths     { get; set; }
+			public string[] Attributes { get; set; }
+			public string   Regex      { get; set; }
 		}
 	}
 }
