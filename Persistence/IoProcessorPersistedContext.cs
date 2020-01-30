@@ -23,12 +23,14 @@ namespace TSSArt.StateMachine
 		private          int                                                                 _invokedServiceRecordId;
 		private          int                                                                 _stateMachineRecordId;
 		private          ITransactionalStorage                                               _storage;
+		private          bool                                                                _synchronousEventProcessing;
 
 		public IoProcessorPersistedContext(IIoProcessor ioProcessor, in IoProcessorOptions options) : base(ioProcessor, options)
 		{
 			_ioProcessor = ioProcessor;
 			_storageProvider = options.StorageProvider ?? throw new ArgumentNullException(nameof(options.StorageProvider));
 			_idlePeriod = options.SuspendIdlePeriod;
+			_synchronousEventProcessing = options.SynchronousEventProcessing;
 			_stopToken = options.StopToken;
 		}
 
@@ -134,7 +136,7 @@ namespace TSSArt.StateMachine
 		}
 
 		protected override StateMachineController CreateStateMachineController(string sessionId, IStateMachine stateMachine, in InterpreterOptions options) =>
-				new StateMachinePersistedController(sessionId, stateMachine, _ioProcessor, _storageProvider, _idlePeriod, options);
+				new StateMachinePersistedController(sessionId, stateMachine, _ioProcessor, _storageProvider, _idlePeriod, _synchronousEventProcessing, options);
 
 		public override async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, IStateMachine stateMachine, Uri source, string scxml, DataModelValue parameters)
 		{

@@ -5,18 +5,18 @@ namespace TSSArt.StateMachine
 {
 	public struct InterpreterOptions
 	{
-		public ICollection<IDataModelHandlerFactory> DataModelHandlerFactories { get; set; }
-		public ICollection<ICustomActionProvider>    CustomActionProviders     { get; set; }
-		public IDictionary<string, string>           Configuration             { get; set; }
-		public DataModelValue                        Arguments                 { get; set; }
-		public IExternalCommunication                ExternalCommunication     { get; set; }
-		public INotifyStateChanged                   NotifyStateChanged        { get; set; }
-		public CancellationToken                     SuspendToken              { get; set; }
-		public CancellationToken                     StopToken                 { get; set; }
-		public CancellationToken                     DestroyToken              { get; set; }
-		public IResourceLoader                       ResourceLoader            { get; set; }
-		public PersistenceLevel                      PersistenceLevel          { get; set; }
-		public IStorageProvider                      StorageProvider           { get; set; }
-		public ILogger                               Logger                    { get; set; }
+		public IReadOnlyCollection<IDataModelHandlerFactory> DataModelHandlerFactories { get; set; }
+		public IReadOnlyCollection<ICustomActionProvider>    CustomActionProviders     { get; set; }
+		public IReadOnlyDictionary<string, string>           Configuration             { get; set; }
+		public DataModelValue                                Arguments                 { get; set; }
+		public IExternalCommunication                        ExternalCommunication     { get; set; }
+		public INotifyStateChanged                           NotifyStateChanged        { get; set; }
+		public CancellationToken                             SuspendToken              { get; set; }
+		public CancellationToken                             StopToken                 { get; set; }
+		public CancellationToken                             DestroyToken              { get; set; }
+		public IResourceLoader                               ResourceLoader            { get; set; }
+		public PersistenceLevel                              PersistenceLevel          { get; set; }
+		public IStorageProvider                              StorageProvider           { get; set; }
+		public ILogger                                       Logger                    { get; set; }
 	}
 }

@@ -11,7 +11,7 @@ namespace TSSArt.StateMachine
 	{
 		private int _counter;
 
-		private ICollection<ICustomActionProvider>                _customActionProviders;
+		private IReadOnlyCollection<ICustomActionProvider>        _customActionProviders;
 		private IDataModelHandler                                 _dataModelHandler;
 		private List<DataModelNode>                               _dataModelNodeList;
 		private int                                               _deepLevel;
@@ -41,7 +41,7 @@ namespace TSSArt.StateMachine
 			_counter = _inParallel ? _counter + saved.counter : _counter > saved.counter ? _counter : saved.counter;
 		}
 
-		public InterpreterModel Build(IStateMachine stateMachine, IDataModelHandler dataModelHandler, ICollection<ICustomActionProvider> customActionProviders)
+		public InterpreterModel Build(IStateMachine stateMachine, IDataModelHandler dataModelHandler, IReadOnlyCollection<ICustomActionProvider> customActionProviders)
 		{
 			if (stateMachine == null) throw new ArgumentNullException(nameof(stateMachine));
 
@@ -71,9 +71,8 @@ namespace TSSArt.StateMachine
 			return new InterpreterModel((StateMachineNode) stateMachine, _counter, _entityMap, _dataModelNodeList);
 		}
 
-		public async ValueTask<InterpreterModel> Build(IStateMachine stateMachine, IDataModelHandler dataModelHandler, ICollection<ICustomActionProvider> customActionProviders,
-													   IResourceLoader resourceLoader,
-													   CancellationToken token)
+		public async ValueTask<InterpreterModel> Build(IStateMachine stateMachine, IDataModelHandler dataModelHandler, IReadOnlyCollection<ICustomActionProvider> customActionProviders,
+													   IResourceLoader resourceLoader, CancellationToken token)
 		{
 			if (stateMachine == null) throw new ArgumentNullException(nameof(stateMachine));
 			if (resourceLoader == null) throw new ArgumentNullException(nameof(resourceLoader));

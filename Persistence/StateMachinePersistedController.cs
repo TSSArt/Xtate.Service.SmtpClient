@@ -17,8 +17,8 @@ namespace TSSArt.StateMachine
 		private          int                              _recordId;
 		private          ITransactionalStorage            _storage;
 
-		public StateMachinePersistedController(string sessionId, IStateMachine stateMachine, IIoProcessor ioProcessor, IStorageProvider storageProvider, TimeSpan idlePeriod,
-											   in InterpreterOptions defaultOptions) : base(sessionId, stateMachine, ioProcessor, idlePeriod, defaultOptions)
+		public StateMachinePersistedController(string sessionId, IStateMachine stateMachine, IIoProcessor ioProcessor, IStorageProvider storageProvider, TimeSpan idlePeriod, bool synchronousEventProcessing,
+											   in InterpreterOptions defaultOptions) : base(sessionId, stateMachine, ioProcessor, idlePeriod, synchronousEventProcessing, defaultOptions)
 		{
 			_storageProvider = storageProvider;
 			_stopToken = defaultOptions.StopToken;
@@ -45,11 +45,13 @@ namespace TSSArt.StateMachine
 			return _storageProvider.RemoveAllTransactionalStorage(SessionId, token);
 		}
 
-		public override ValueTask DisposeAsync()
+		public override async ValueTask DisposeAsync()
 		{
 			_scheduledEventsLock.Dispose();
 
-			return _storage.DisposeAsync();
+			await _storage.DisposeAsync();
+
+			await base.DisposeAsync();
 		}
 
 		protected override void Dispose(bool disposing)
@@ -60,6 +62,8 @@ namespace TSSArt.StateMachine
 
 				_storage.Dispose();
 			}
+
+			base.Dispose(disposing);
 		}
 
 		protected override async ValueTask Initialize()

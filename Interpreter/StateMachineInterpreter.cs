@@ -17,27 +17,27 @@ namespace TSSArt.StateMachine
 		private const string StateStorageKey                  = "state";
 		private const string StateMachineDefinitionStorageKey = "smd";
 
-		private readonly CancellationToken                     _anyToken;
-		private readonly DataModelValue                        _arguments;
-		private readonly ICollection<ICustomActionProvider>    _customActionProviders;
-		private readonly ICollection<IDataModelHandlerFactory> _dataModelHandlerFactories;
-		private readonly CancellationToken                     _destroyToken;
-		private readonly ChannelReader<IEvent>                 _eventChannel;
-		private readonly ExternalCommunicationWrapper          _externalCommunication;
-		private readonly LoggerWrapper                         _logger;
-		private readonly INotifyStateChanged                   _notifyStateChanged;
-		private readonly PersistenceLevel                      _persistenceLevel;
-		private readonly IResourceLoader                       _resourceLoader;
-		private readonly string                                _sessionId;
-		private readonly CancellationToken                     _stopToken;
-		private readonly IStorageProvider                      _storageProvider;
-		private readonly CancellationToken                     _suspendToken;
-		private readonly IDictionary<string, string>           _configuration;
-		private          IStateMachineContext                  _context;
-		private          IDataModelHandler                     _dataModelHandler;
-		private          DataModelValue                        _doneData;
-		private          InterpreterModel                      _model;
-		private          bool                                  _stop;
+		private readonly CancellationToken                             _anyToken;
+		private readonly DataModelValue                                _arguments;
+		private readonly IReadOnlyCollection<ICustomActionProvider>    _customActionProviders;
+		private readonly IReadOnlyCollection<IDataModelHandlerFactory> _dataModelHandlerFactories;
+		private readonly CancellationToken                             _destroyToken;
+		private readonly ChannelReader<IEvent>                         _eventChannel;
+		private readonly ExternalCommunicationWrapper                  _externalCommunication;
+		private readonly LoggerWrapper                                 _logger;
+		private readonly INotifyStateChanged                           _notifyStateChanged;
+		private readonly PersistenceLevel                              _persistenceLevel;
+		private readonly IResourceLoader                               _resourceLoader;
+		private readonly string                                        _sessionId;
+		private readonly CancellationToken                             _stopToken;
+		private readonly IStorageProvider                              _storageProvider;
+		private readonly CancellationToken                             _suspendToken;
+		private readonly IReadOnlyDictionary<string, string>           _configuration;
+		private          IStateMachineContext                          _context;
+		private          IDataModelHandler                             _dataModelHandler;
+		private          DataModelValue                                _doneData;
+		private          InterpreterModel                              _model;
+		private          bool                                          _stop;
 
 		private StateMachineInterpreter(string sessionId, ChannelReader<IEvent> eventChannel, in InterpreterOptions options)
 		{
@@ -46,7 +46,7 @@ namespace TSSArt.StateMachine
 			_suspendToken = options.SuspendToken;
 			_stopToken = options.StopToken;
 			_destroyToken = options.DestroyToken;
-			_anyToken = CancellationTokenSource.CreateLinkedTokenSource(_suspendToken, _destroyToken, _stopToken).Token;
+			_anyToken = AnyToken(_suspendToken, _destroyToken, _stopToken);
 			_resourceLoader = options.ResourceLoader ?? DefaultResourceLoader.Instance;
 			_customActionProviders = options.CustomActionProviders;
 			_dataModelHandlerFactories = options.DataModelHandlerFactories;
@@ -57,6 +57,23 @@ namespace TSSArt.StateMachine
 			_persistenceLevel = options.PersistenceLevel;
 			_notifyStateChanged = options.NotifyStateChanged;
 			_arguments = options.Arguments.DeepClone(true);
+		}
+
+		private static CancellationToken AnyToken(CancellationToken token1, CancellationToken token2, CancellationToken token3)
+		{
+			if (!token1.CanBeCanceled)
+			{
+				return token2.CanBeCanceled ? token3.CanBeCanceled ? CancellationTokenSource.CreateLinkedTokenSource(token2, token3).Token : token2 : token3;
+			}
+
+			if (!token2.CanBeCanceled)
+			{
+				return token3.CanBeCanceled ? CancellationTokenSource.CreateLinkedTokenSource(token1, token3).Token : token1;
+			}
+
+			return token3.CanBeCanceled 
+					? CancellationTokenSource.CreateLinkedTokenSource(token1, token2, token3).Token 
+					: CancellationTokenSource.CreateLinkedTokenSource(token1, token2).Token;
 		}
 
 		private bool IsPersistingEnabled => _persistenceLevel != PersistenceLevel.None;
@@ -170,7 +187,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private static IDataModelHandlerFactory GetDataModelHandlerFactory(string dataModelType, ICollection<IDataModelHandlerFactory> factories)
+		private static IDataModelHandlerFactory GetDataModelHandlerFactory(string dataModelType, IReadOnlyCollection<IDataModelHandlerFactory> factories)
 		{
 			if (factories != null)
 			{
@@ -1382,7 +1399,7 @@ namespace TSSArt.StateMachine
 			interpreterObject.SetInternal(property: "version", new DataModelDescriptor(new DataModelValue(version)));
 		}
 
-		private static void PopulateConfigurationObject(IDictionary<string, string> configuration, DataModelObject configurationObject)
+		private static void PopulateConfigurationObject(IReadOnlyDictionary<string, string> configuration, DataModelObject configurationObject)
 		{
 			if (configuration == null) throw new ArgumentNullException(nameof(configuration));
 
