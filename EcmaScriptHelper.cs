@@ -83,12 +83,10 @@ namespace TSSArt.StateMachine.EcmaScript
 			};
 		}
 
-		private static DataModelValue CreateDateTimeOrStringValue(string val)
-		{
-			return DateTime.TryParseExact(val, "o", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None, out var dttm)
-					? new DataModelValue(dttm)
-					: new DataModelValue(val);
-		}
+		private static DataModelValue CreateDateTimeOrStringValue(string val) =>
+				DateTime.TryParseExact(val, format: "o", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None, out var dttm)
+						? new DataModelValue(dttm)
+						: new DataModelValue(val);
 
 		private static DataModelValue CreateDataModelValue(ObjectInstance objectInstance)
 		{
