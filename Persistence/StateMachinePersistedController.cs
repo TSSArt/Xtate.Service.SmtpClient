@@ -17,8 +17,9 @@ namespace TSSArt.StateMachine
 		private          int                              _recordId;
 		private          ITransactionalStorage            _storage;
 
-		public StateMachinePersistedController(string sessionId, IStateMachine stateMachine, IIoProcessor ioProcessor, IStorageProvider storageProvider, TimeSpan idlePeriod, bool synchronousEventProcessing,
-											   in InterpreterOptions defaultOptions) : base(sessionId, stateMachine, ioProcessor, idlePeriod, synchronousEventProcessing, defaultOptions)
+		public StateMachinePersistedController(string sessionId, IStateMachine stateMachine, IIoProcessor ioProcessor, IStorageProvider storageProvider,
+											   TimeSpan idlePeriod, bool synchronousEventProcessing, in InterpreterOptions defaultOptions)
+				: base(sessionId, stateMachine, ioProcessor, idlePeriod, synchronousEventProcessing, defaultOptions)
 		{
 			_storageProvider = storageProvider;
 			_stopToken = defaultOptions.StopToken;
@@ -224,7 +225,7 @@ namespace TSSArt.StateMachine
 				bucket.Add(Key.DelayMs, Event.DelayMs);
 				bucket.Add(Key.FireOn, _fireOnUtcTicks);
 
-				if (Event.Data.Type != DataModelValueType.Undefined)
+				if (!Event.Data.IsUndefined())
 				{
 					var dataBucket = bucket.Nested(Key.Data);
 					using var tracker = new DataModelReferenceTracker(dataBucket.Nested(Key.DataReferences));

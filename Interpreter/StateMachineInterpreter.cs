@@ -19,6 +19,7 @@ namespace TSSArt.StateMachine
 
 		private readonly CancellationToken                             _anyToken;
 		private readonly DataModelValue                                _arguments;
+		private readonly IReadOnlyDictionary<string, string>           _configuration;
 		private readonly IReadOnlyCollection<ICustomActionProvider>    _customActionProviders;
 		private readonly IReadOnlyCollection<IDataModelHandlerFactory> _dataModelHandlerFactories;
 		private readonly CancellationToken                             _destroyToken;
@@ -32,7 +33,6 @@ namespace TSSArt.StateMachine
 		private readonly CancellationToken                             _stopToken;
 		private readonly IStorageProvider                              _storageProvider;
 		private readonly CancellationToken                             _suspendToken;
-		private readonly IReadOnlyDictionary<string, string>           _configuration;
 		private          IStateMachineContext                          _context;
 		private          IDataModelHandler                             _dataModelHandler;
 		private          DataModelValue                                _doneData;
@@ -59,23 +59,6 @@ namespace TSSArt.StateMachine
 			_arguments = options.Arguments.DeepClone(true);
 		}
 
-		private static CancellationToken AnyToken(CancellationToken token1, CancellationToken token2, CancellationToken token3)
-		{
-			if (!token1.CanBeCanceled)
-			{
-				return token2.CanBeCanceled ? token3.CanBeCanceled ? CancellationTokenSource.CreateLinkedTokenSource(token2, token3).Token : token2 : token3;
-			}
-
-			if (!token2.CanBeCanceled)
-			{
-				return token3.CanBeCanceled ? CancellationTokenSource.CreateLinkedTokenSource(token1, token3).Token : token1;
-			}
-
-			return token3.CanBeCanceled 
-					? CancellationTokenSource.CreateLinkedTokenSource(token1, token2, token3).Token 
-					: CancellationTokenSource.CreateLinkedTokenSource(token1, token2).Token;
-		}
-
 		private bool IsPersistingEnabled => _persistenceLevel != PersistenceLevel.None;
 
 		private bool Running
@@ -90,6 +73,23 @@ namespace TSSArt.StateMachine
 					_context.PersistenceContext.SetState((int) StateBagKey.Stop, value ? 0 : 1);
 				}
 			}
+		}
+
+		private static CancellationToken AnyToken(CancellationToken token1, CancellationToken token2, CancellationToken token3)
+		{
+			if (!token1.CanBeCanceled)
+			{
+				return token2.CanBeCanceled ? token3.CanBeCanceled ? CancellationTokenSource.CreateLinkedTokenSource(token2, token3).Token : token2 : token3;
+			}
+
+			if (!token2.CanBeCanceled)
+			{
+				return token3.CanBeCanceled ? CancellationTokenSource.CreateLinkedTokenSource(token1, token3).Token : token1;
+			}
+
+			return token3.CanBeCanceled
+					? CancellationTokenSource.CreateLinkedTokenSource(token1, token2, token3).Token
+					: CancellationTokenSource.CreateLinkedTokenSource(token1, token2).Token;
 		}
 
 		public static ValueTask<StateMachineResult> RunAsync(string sessionId, IStateMachine stateMachine, ChannelReader<IEvent> eventChannel, in InterpreterOptions options = default)
@@ -1334,7 +1334,7 @@ namespace TSSArt.StateMachine
 
 			async ValueTask<DataModelValue> GetValue()
 			{
-				if (overrideValue.Type != DataModelValueType.Undefined)
+				if (!overrideValue.IsUndefined())
 				{
 					return overrideValue;
 				}

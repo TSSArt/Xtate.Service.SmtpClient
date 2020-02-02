@@ -1046,7 +1046,6 @@ namespace TSSArt.StateMachine
 			properties.Body = body;
 		}
 
-
 		protected virtual void Build(ref IParam entity, ref Param properties)
 		{
 			var expression = properties.Expression;
@@ -1080,9 +1079,9 @@ namespace TSSArt.StateMachine
 		protected virtual void Build(ref IExternalScriptExpression entity, ref ExternalScriptExpression properties) { }
 
 		protected virtual void Build(ref IExternalDataExpression entity, ref ExternalDataExpression properties) { }
-		
+
 		protected virtual void Build(ref IContentBody entity, ref ContentBody properties) { }
-		
+
 		#endregion
 
 		#region Build(ref IReadOnlyList<IT> list, ref TrackList<IT> trackList)

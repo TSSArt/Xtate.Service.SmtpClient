@@ -6,8 +6,8 @@ namespace TSSArt.StateMachine
 {
 	public class DoneDataNode : IDoneData, IStoreSupport, IAncestorProvider
 	{
-		private readonly IObjectEvaluator            _contentExpressionEvaluator;
 		private readonly IValueEvaluator             _contentBodyEvaluator;
+		private readonly IObjectEvaluator            _contentExpressionEvaluator;
 		private readonly DoneData                    _doneData;
 		private readonly IReadOnlyList<DefaultParam> _parameterList;
 

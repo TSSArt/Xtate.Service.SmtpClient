@@ -61,6 +61,26 @@ namespace TSSArt.StateMachine
 
 		DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter) => new MetaObject(parameter, this, Dynamic.CreateMetaObject);
 
+		public string ToString(string format, IFormatProvider formatProvider)
+		{
+			var sb = new StringBuilder();
+
+			sb.Append('(');
+			foreach (var pair in _properties)
+			{
+				if (sb.Length > 1)
+				{
+					sb.Append(',');
+				}
+
+				sb.Append(pair.Key).Append('=').Append(pair.Value.Value.ToString(format: null, formatProvider));
+			}
+
+			sb.Append(')');
+
+			return sb.ToString();
+		}
+
 		public event ChangedHandler Changed;
 
 		public void Freeze() => _state = State.Readonly;
@@ -128,9 +148,17 @@ namespace TSSArt.StateMachine
 
 		public DataModelObject DeepClone(bool isReadOnly)
 		{
-			if (isReadOnly && IsDeepReadOnly())
+			if (isReadOnly)
 			{
-				return this;
+				if (_properties.Count == 0)
+				{
+					return Empty;
+				}
+
+				if (IsDeepReadOnly())
+				{
+					return this;
+				}
 			}
 
 			var clone = new DataModelObject(isReadOnly);
@@ -164,25 +192,6 @@ namespace TSSArt.StateMachine
 			}
 
 			return true;
-		}
-
-		public string ToString(string format, IFormatProvider formatProvider)
-		{
-			var sb = new StringBuilder();
-
-			sb.Append('(');
-			foreach (var pair in _properties)
-			{
-				if (sb.Length > 1)
-				{
-					sb.Append(',');
-				}
-
-				sb.Append(pair.Key).Append('=').Append(pair.Value.Value.ToString(format: null, formatProvider));
-			}
-			sb.Append(')');
-
-			return sb.ToString();
 		}
 
 		public override string ToString() => ToString(format: null, formatProvider: null);

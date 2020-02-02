@@ -10,7 +10,7 @@
 			Value = source.Value;
 		}
 
-		bool IEntity<ContentBody, IContentBody>.RefEquals(in ContentBody other) =>  ReferenceEquals(Value, other.Value);
+		bool IEntity<ContentBody, IContentBody>.RefEquals(in ContentBody other) => ReferenceEquals(Value, other.Value);
 
 		internal object Ancestor;
 

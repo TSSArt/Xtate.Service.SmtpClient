@@ -22,7 +22,8 @@ namespace TSSArt.StateMachine
 			return GetParameters(nameEvaluatorList, parameterList, executionContext, token);
 		}
 
-		public static async ValueTask<DataModelValue> GetContent(IValueEvaluator contentBodyEvaluator, IObjectEvaluator contentExpressionEvaluator, IExecutionContext executionContext, CancellationToken token)
+		public static async ValueTask<DataModelValue> GetContent(IValueEvaluator contentBodyEvaluator, IObjectEvaluator contentExpressionEvaluator, IExecutionContext executionContext,
+																 CancellationToken token)
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
 
@@ -39,7 +40,7 @@ namespace TSSArt.StateMachine
 
 				return DataModelValue.FromObject(obj.ToObject()).DeepClone(true);
 			}
-			
+
 			if (contentBodyEvaluator is IStringEvaluator stringEvaluator)
 			{
 				var str = await stringEvaluator.EvaluateString(executionContext, token).ConfigureAwait(false);
