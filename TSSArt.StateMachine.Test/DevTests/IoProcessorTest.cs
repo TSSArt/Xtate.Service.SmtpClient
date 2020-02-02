@@ -106,7 +106,7 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 			var result = await ioProcessor.Execute(new Uri("scxml://a"));
 
 			Console.WriteLine(DataModelConverter.ToJson(result));
-			Assert.IsTrue(result.Type != DataModelValueType.Undefined);
+			Assert.IsFalse(result.IsUndefined());
 		}
 
 		[TestMethod]
@@ -168,8 +168,8 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 
 			var options = new IoProcessorOptions
 						  {
-								  DataModelHandlerFactories = new List<IDataModelHandlerFactory>{ EcmaScriptDataModelHandler.Factory },
-								  ServiceFactories = new List<IServiceFactory>{ HttpClientService.Factory, SmtpClientService.Factory, /*WebBrowserService.GetFactory<CefSharpWebBrowserService>()*/ },
+								  DataModelHandlerFactories = new List<IDataModelHandlerFactory> { EcmaScriptDataModelHandler.Factory },
+								  ServiceFactories = new List<IServiceFactory> { HttpClientService.Factory, SmtpClientService.Factory /*WebBrowserService.GetFactory<CefSharpWebBrowserService>()*/ },
 								  CustomActionProviders = new List<ICustomActionProvider> { BasicCustomActionProvider.Instance, MimeCustomActionProvider.Instance }
 						  };
 
@@ -178,7 +178,7 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 			var result = await ioProcessor.Execute(stateMachine);
 
 			Console.WriteLine(DataModelConverter.ToJson(result));
-			Assert.IsTrue(result.Type != DataModelValueType.Undefined);
+			Assert.IsFalse(result.IsUndefined());
 		}
 	}
 

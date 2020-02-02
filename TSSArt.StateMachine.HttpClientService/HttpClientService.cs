@@ -321,7 +321,7 @@ namespace TSSArt.StateMachine.Services
 			{
 				var result = CaptureEntry(htmlDocument, capture.XPaths, capture.Attributes, capture.Regex);
 
-				if (result.Type != DataModelValueType.Undefined)
+				if (!result.IsUndefined())
 				{
 					obj[capture.Name] = result;
 				}
@@ -354,7 +354,7 @@ namespace TSSArt.StateMachine.Services
 				{
 					var result = CaptureInNode(node, attrs, pattern);
 
-					if (result.Type != DataModelValueType.Undefined)
+					if (!result.IsUndefined())
 					{
 						array.Add(result);
 					}
@@ -402,7 +402,7 @@ namespace TSSArt.StateMachine.Services
 		private static string GetHtmlValue(HtmlNode node) =>
 				node.Name switch
 				{
-						"input" => GetInputValue(node),	
+						"input" => GetInputValue(node),
 						"textarea" => GetInputValue(node),
 						"select" => GetSelectValue(node),
 						_ => null

@@ -25,26 +25,26 @@ namespace TSSArt.StateMachine.Services
 			okButton.Click += (sender, args) => { Close(DialogResult.OK, GetInputResult()); };
 
 			var cancelButton = new Button
-						   {
-								   Top = 10,
-								   Left = 60,
-								   Height = 16,
-								   Width = 48,
-								   Text = "Cancel"
-						   };
+							   {
+									   Top = 10,
+									   Left = 60,
+									   Height = 16,
+									   Width = 48,
+									   Text = "Cancel"
+							   };
 
-			cancelButton.Click += (sender, args) => { Close(DialogResult.Cancel, default); };
+			cancelButton.Click += (sender, args) => { Close(DialogResult.Cancel, result: default); };
 
 			Controls.Add(okButton);
 			Controls.Add(cancelButton);
 		}
 
+		public IDictionary<string, string> Result { get; private set; }
+
 		private IDictionary<string, string> GetInputResult()
 		{
 			return Controls.OfType<TextBox>().ToDictionary(tb => (string) tb.Tag, tb => tb.Text);
 		}
-
-		public IDictionary<string, string> Result { get; private set; }
 
 		public void Close(DialogResult dialogResult, IDictionary<string, string> result)
 		{

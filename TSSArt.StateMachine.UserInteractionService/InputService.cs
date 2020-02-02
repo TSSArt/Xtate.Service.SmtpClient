@@ -6,18 +6,18 @@ namespace TSSArt.StateMachine.Services
 	[SimpleService("http://tssart.com/scxml/service/#Input", Alias = "input")]
 	public class InputService : SimpleServiceBase
 	{
-        public static readonly IServiceFactory Factory = SimpleServiceFactory<InputService>.Instance;
-		private DataModelArray _controls;
+		public static readonly IServiceFactory Factory = SimpleServiceFactory<InputService>.Instance;
+		private                DataModelArray  _controls;
 
 		protected override ValueTask<DataModelValue> Execute()
-        {
+		{
 			var parameters = Content.AsObjectOrEmpty();
 			_controls = parameters["controls"].AsArrayOrEmpty();
 
 			var task = Task.Factory.StartNew(Show, StopToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
 
 			return new ValueTask<DataModelValue>(task);
-        }
+		}
 
 		private DataModelValue Show()
 		{
@@ -29,11 +29,11 @@ namespace TSSArt.StateMachine.Services
 				var name = fieldObj["name"].AsStringOrDefault();
 				var location = fieldObj["location"].AsStringOrDefault();
 				var type = fieldObj["type"].AsStringOrDefault();
-				
+
 				form.AddInput(name, location, type);
 			}
 
-			using var registration = StopToken.Register(() => form.Close(DialogResult.Abort, default));
+			using var registration = StopToken.Register(() => form.Close(DialogResult.Abort, result: default));
 
 			form.Closed += (sender, args) => Application.ExitThread();
 
@@ -50,9 +50,9 @@ namespace TSSArt.StateMachine.Services
 				{
 					parameters[pair.Key] = new DataModelValue(pair.Value);
 				}
-				
+
 				parameters.Freeze();
-				
+
 				result["parameters"] = new DataModelValue(parameters);
 				result.Freeze();
 			}

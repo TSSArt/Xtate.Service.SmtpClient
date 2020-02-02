@@ -61,19 +61,21 @@ namespace TSSArt.StateMachine
 		private static HttpContent GetContent(IOutgoingEvent @event, out bool eventNameInContent)
 		{
 			var data = @event.Data;
-			if (data.Type == DataModelValueType.Undefined || data.Type == DataModelValueType.Null)
+			var dataType = data.Type;
+
+			if (dataType == DataModelValueType.Undefined || dataType == DataModelValueType.Null)
 			{
 				eventNameInContent = @event.NameParts != null;
 				return eventNameInContent ? new FormUrlEncodedContent(GetParameters(@event.NameParts, dataModelObject: null)) : null;
 			}
 
-			if (data.Type == DataModelValueType.String)
+			if (dataType == DataModelValueType.String)
 			{
 				eventNameInContent = false;
 				return new StringContent(data.AsString(), Encoding.UTF8, MediaTypeTextPlain);
 			}
 
-			if (data.Type == DataModelValueType.Object)
+			if (dataType == DataModelValueType.Object)
 			{
 				var dataModelObject = data.AsObject();
 
@@ -87,7 +89,7 @@ namespace TSSArt.StateMachine
 				return new StringContent(DataModelConverter.ToJson(data), Encoding.UTF8, MediaTypeApplicationJson);
 			}
 
-			if (data.Type == DataModelValueType.Array)
+			if (dataType == DataModelValueType.Array)
 			{
 				eventNameInContent = false;
 				return new StringContent(DataModelConverter.ToJson(data), Encoding.UTF8, MediaTypeApplicationJson);

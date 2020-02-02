@@ -61,6 +61,26 @@ namespace TSSArt.StateMachine
 
 		DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter) => new MetaObject(parameter, this, Dynamic.CreateMetaObject);
 
+		public string ToString(string format, IFormatProvider formatProvider)
+		{
+			var sb = new StringBuilder();
+
+			sb.Append('[');
+			foreach (var item in _list)
+			{
+				if (sb.Length > 1)
+				{
+					sb.Append(',');
+				}
+
+				sb.Append(item.Value.ToString(format: null, formatProvider));
+			}
+
+			sb.Append(']');
+
+			return sb.ToString();
+		}
+
 		public bool IsReadOnly => _state != State.Writable;
 
 		public IEnumerator<DataModelValue> GetEnumerator()
@@ -372,9 +392,17 @@ namespace TSSArt.StateMachine
 
 		public DataModelArray DeepClone(bool isReadOnly)
 		{
-			if (isReadOnly && IsDeepReadOnly())
+			if (isReadOnly)
 			{
-				return this;
+				if (_list.Count == 0)
+				{
+					return Empty;
+				}
+
+				if (IsDeepReadOnly())
+				{
+					return this;
+				}
 			}
 
 			var clone = new DataModelArray(isReadOnly);
@@ -408,25 +436,6 @@ namespace TSSArt.StateMachine
 			}
 
 			return true;
-		}
-
-		public string ToString(string format, IFormatProvider formatProvider)
-		{
-			var sb = new StringBuilder();
-
-			sb.Append('[');
-			foreach (var item in _list)
-			{
-				if (sb.Length > 1)
-				{
-					sb.Append(',');
-				}
-
-				sb.Append(item.Value.ToString(format: null, formatProvider));
-			}
-			sb.Append(']');
-
-			return sb.ToString();
 		}
 
 		public override string ToString() => ToString(format: null, formatProvider: null);

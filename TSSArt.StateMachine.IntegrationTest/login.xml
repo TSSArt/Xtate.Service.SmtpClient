@@ -5,7 +5,7 @@
     <data id="password" />
     <data id="cookies" />
   </datamodel>
- 
+
   <state id="login" initial="loadPage">
     <datamodel>
       <data id="sitekey" />
@@ -15,7 +15,7 @@
     <state id="loadPage">
       <invoke srcexpr="loginUrl" type="http">
         <param name="cookies" expr="cookies" />
-        <param name="capture" 
+        <param name="capture"
                expr="({'sitekey': { 
                  'xpath': './/script[@type=\'text/javascript\']', 
                  'regex': '[\\\'\\\&quot;]sitekey[\\\'\\\&quot;]\\s*:\\s*[\\\'\\\&quot;](?&lt;value&gt;[^\\\'\\\&quot;]+)' 
@@ -36,7 +36,7 @@
         <param name="url" expr="loginUrl" />
         <param name="sitekey" expr="sitekey" />
       </invoke>
-      
+
       <transition event="done.invoke" cond="_event.data.status == 'ok'" target="loginRequest">
         <assign location="recaptchaResponse" expr="_event.data.response" />
       </transition>

@@ -20,10 +20,10 @@ namespace TSSArt.StateMachine
 		private readonly Dictionary<string, StateMachineMeta>                                _stateMachines       = new Dictionary<string, StateMachineMeta>();
 		private readonly CancellationToken                                                   _stopToken;
 		private readonly IStorageProvider                                                    _storageProvider;
+		private readonly bool                                                                _synchronousEventProcessing;
 		private          int                                                                 _invokedServiceRecordId;
 		private          int                                                                 _stateMachineRecordId;
 		private          ITransactionalStorage                                               _storage;
-		private          bool                                                                _synchronousEventProcessing;
 
 		public IoProcessorPersistedContext(IIoProcessor ioProcessor, in IoProcessorOptions options) : base(ioProcessor, options)
 		{
@@ -347,7 +347,7 @@ namespace TSSArt.StateMachine
 
 				var parametersBucket = bucket.Nested(Key.Parameters);
 				using var parametersTracker = new DataModelReferenceTracker(parametersBucket.Nested(Key.DataReferences));
-				Parameters = parametersBucket.GetDataModelValue(parametersTracker, default);
+				Parameters = parametersBucket.GetDataModelValue(parametersTracker, baseValue: default);
 			}
 
 			public string                 SessionId  { get; }

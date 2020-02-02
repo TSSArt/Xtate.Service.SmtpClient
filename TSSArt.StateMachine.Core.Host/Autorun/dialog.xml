@@ -27,7 +27,9 @@
       </invoke>
 
       <transition event="done.invoke" target="idle">
-        <send typeexpr="origintype" targetexpr="origin" eventexpr="event"><param name="data" expr="_event.data" /></send>
+        <send typeexpr="origintype" targetexpr="origin" eventexpr="event">
+          <param name="data" expr="_event.data" />
+        </send>
       </transition>
 
       <transition event="error" target="idle" />

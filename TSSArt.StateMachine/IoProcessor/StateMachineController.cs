@@ -10,18 +10,19 @@ namespace TSSArt.StateMachine
 	internal class StateMachineController : IService, IExternalCommunication, INotifyStateChanged, IDisposable, IAsyncDisposable
 	{
 		private readonly TaskCompletionSource<object>         _acceptedTcs = new TaskCompletionSource<object>();
-		private readonly TaskCompletionSource<DataModelValue> _completedTcs = new TaskCompletionSource<DataModelValue>();
-		private readonly CancellationTokenSource              _destroyTokenSource = new CancellationTokenSource();
-		private readonly HashSet<ScheduledEvent>              _scheduledEvents = new HashSet<ScheduledEvent>();
-		private readonly ConcurrentQueue<ScheduledEvent>      _toDelete = new ConcurrentQueue<ScheduledEvent>();
 		private readonly Channel<IEvent>                      _channel;
+		private readonly TaskCompletionSource<DataModelValue> _completedTcs = new TaskCompletionSource<DataModelValue>();
 		private readonly InterpreterOptions                   _defaultOptions;
+		private readonly CancellationTokenSource              _destroyTokenSource = new CancellationTokenSource();
 		private readonly TimeSpan                             _idlePeriod;
 		private readonly IIoProcessor                         _ioProcessor;
+		private readonly HashSet<ScheduledEvent>              _scheduledEvents = new HashSet<ScheduledEvent>();
 		private readonly IStateMachine                        _stateMachine;
+		private readonly ConcurrentQueue<ScheduledEvent>      _toDelete = new ConcurrentQueue<ScheduledEvent>();
 		private          CancellationTokenSource              _suspendOnIdleTokenSource;
 
-		public StateMachineController(string sessionId, IStateMachine stateMachine, IIoProcessor ioProcessor, TimeSpan idlePeriod, bool synchronousEventProcessing, in InterpreterOptions defaultOptions)
+		public StateMachineController(string sessionId, IStateMachine stateMachine, IIoProcessor ioProcessor, TimeSpan idlePeriod, bool synchronousEventProcessing,
+									  in InterpreterOptions defaultOptions)
 		{
 			SessionId = sessionId;
 			_stateMachine = stateMachine;
@@ -51,15 +52,6 @@ namespace TSSArt.StateMachine
 		{
 			Dispose(true);
 			GC.SuppressFinalize(this);
-		}
-
-		protected virtual void Dispose(bool dispose)
-		{
-			if (dispose)
-			{
-				_destroyTokenSource.Dispose();
-				_suspendOnIdleTokenSource?.Dispose();
-			}
 		}
 
 		IReadOnlyList<IEventProcessor> IExternalCommunication.GetIoProcessors() => _ioProcessor.GetIoProcessors();
@@ -123,6 +115,15 @@ namespace TSSArt.StateMachine
 		}
 
 		public ValueTask<DataModelValue> Result => new ValueTask<DataModelValue>(_completedTcs.Task);
+
+		protected virtual void Dispose(bool dispose)
+		{
+			if (dispose)
+			{
+				_destroyTokenSource.Dispose();
+				_suspendOnIdleTokenSource?.Dispose();
+			}
+		}
 
 		public ValueTask StartAsync(CancellationToken token)
 		{

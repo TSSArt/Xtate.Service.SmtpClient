@@ -1,9 +1,10 @@
-﻿<scxml xmlns="http://www.w3.org/2005/07/scxml" xmlns:mid="http://tssart.com/scxml/customaction/mid" version="1.0" datamodel="ecmascript">
+﻿<scxml xmlns="http://www.w3.org/2005/07/scxml" xmlns:mid="http://tssart.com/scxml/customaction/mid" version="1.0"
+       datamodel="ecmascript">
   <datamodel>
     <data id="siteUrl" expr="'https://test.tssart.com/'" />
     <data id="recaptchaSitekey" expr="'6Lcr4RYTAAAAAN_gTioJ2RIkdiHu6IfDq870-2bO'" />
   </datamodel>
- 
+
   <state id="Idle">
     <transition event="authenticate" target="authenticate" />
   </state>
@@ -21,7 +22,7 @@
 
     <state id="authenticateLogin">
       <datamodel>
-        <data id="local_authenticateLogin" expr="{}"/>
+        <data id="local_authenticateLogin" expr="{}" />
       </datamodel>
 
       <onentry>
@@ -36,7 +37,8 @@
           <param name="capture" expr="{'recaptcha': { 'xpath' : '/html/body/script[contains(@src, \'recaptcha\']' }}" />
         </invoke>
 
-        <transition event="done.invoke.authenticateLoginIsCaptchaRequired" cond="!(!_event.data.content.recaptcha)" target="authenticateLoginCaptcha" />
+        <transition event="done.invoke.authenticateLoginIsCaptchaRequired" cond="!(!_event.data.content.recaptcha)"
+                    target="authenticateLoginCaptcha" />
         <transition event="done.invoke.authenticateLoginIsCaptchaRequired" target="authenticateLoginRequest" />
       </state>
 
@@ -46,8 +48,9 @@
           <param id="sitekey" expr="recaptchaSitekey" />
           <source expr="'google-recaptcha'" />
         </invoke>
-        
-        <transition event="done.invoke.authenticateLoginCaptcha" cond="_event.data.status == 'ok'" target="authenticateLoginRequest">
+
+        <transition event="done.invoke.authenticateLoginCaptcha" cond="_event.data.status == 'ok'"
+                    target="authenticateLoginRequest">
           <assign location="local_authenticateLogin.recaptchaResponse" expr="_event.data.response" />
         </transition>
         <transition event="done.invoke.authenticateLoginCaptcha" target="authenticateCancel" />
@@ -69,22 +72,25 @@
                   ]" />
         </invoke>
 
-        <transition event="done.invoke.authenticateLoginRequest" cond="_event.data.statusCode == 302" target="authenticateLoginPostProcess" />
+        <transition event="done.invoke.authenticateLoginRequest" cond="_event.data.statusCode == 302"
+                    target="authenticateLoginPostProcess" />
         <transition event="done.invoke.authenticateLoginRequest" target="authenticateAskCredentials" />
       </state>
     </state>
 
     <state id="authenticateAskCredentials">
       <datamodel>
-        <data id="local_authenticateAskCredentials" expr="{}"/>
+        <data id="local_authenticateAskCredentials" expr="{}" />
       </datamodel>
 
       <onentry>
-        <send locationid="local_authenticateAskCredentials.inputSendId" type="http" target="http://localhost:5000/dialog" event="show">
+        <send locationid="local_authenticateAskCredentials.inputSendId" type="http"
+              target="http://localhost:5000/dialog" event="show">
           <param name="id" location="local_authenticateAskCredentials.inputSendId" />
-          <param name="event" expr="'authenticateAskCredentials'"/>
-          <param name="type" expr="'input'"/>
-          <param name="content" expr="({
+          <param name="event" expr="'authenticateAskCredentials'" />
+          <param name="type" expr="'input'" />
+          <param name="content"
+                 expr="({
                   'controls': [
                     { name: 'Username', location: 'username', type: 'input' },
                     { name: 'Password', location: 'password' , type: 'password' },
@@ -172,7 +178,8 @@
           <param name="source" expr="'https://test.tssart.com/wp-login.php?action=register'" />
           <param name="content" expr="captchaHtml" />
         </send>
-        <send id="CancelRegisterCaptcha" event="CancelRegisterCaptcha" type="scxml" targetexpr="'#_scxml_' + _sessionid" delay="30s" />
+        <send id="CancelRegisterCaptcha" event="CancelRegisterCaptcha" type="scxml"
+              targetexpr="'#_scxml_' + _sessionid" delay="30s" />
       </onentry>
 
       <onexit>
@@ -189,7 +196,8 @@
 
     <state id="RegisterAccount">
       <onentry>
-        <storage xmlns="http://tssart.com/scxml/customaction/mid" location="username" operation="create" template="userid" rule="[a-z0-9]{1,20}" />
+        <storage xmlns="http://tssart.com/scxml/customaction/mid" location="username" operation="create"
+                 template="userid" rule="[a-z0-9]{1,20}" />
       </onentry>
 
       <invoke src="https://test.tssart.com/wp-login.php?action=register" type="http">

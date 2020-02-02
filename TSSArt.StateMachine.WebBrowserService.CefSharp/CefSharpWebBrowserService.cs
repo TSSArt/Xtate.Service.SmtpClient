@@ -21,7 +21,7 @@ namespace TSSArt.StateMachine.Services
 		private DataModelValue Show()
 		{
 			using var form = new BrowserForm(_url, _content);
-			using var registration = StopToken.Register(() => form.Close(DialogResult.Abort, default));
+			using var registration = StopToken.Register(() => form.Close(DialogResult.Abort, result: default));
 
 			form.Closed += (sender, args) => Application.ExitThread();
 

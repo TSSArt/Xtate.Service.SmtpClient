@@ -14,7 +14,7 @@ namespace TSSArt.StateMachine.EcmaScript
 			{
 				return new ValueTask<IObject>(DataModelConverter.FromJson(Value));
 			}
-			catch (JsonException)  { }
+			catch (JsonException) { }
 
 			return new ValueTask<IObject>(new DataModelValue(Value));
 		}

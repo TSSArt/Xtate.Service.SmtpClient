@@ -8,9 +8,10 @@ namespace TSSArt.StateMachine
 {
 	public class FormatAction : CustomActionBase
 	{
-		private static readonly Regex RegexReplacer = new Regex(@"\{\#(\w+)\#\}", RegexOptions.Compiled);
-		private readonly string _destination;
+		private static readonly Regex RegexReplacer = new Regex(pattern: @"\{\#(\w+)\#\}", RegexOptions.Compiled);
+
 		private readonly string _arguments;
+		private readonly string _destination;
 		private readonly string _template;
 
 		public FormatAction(XmlReader xmlReader)

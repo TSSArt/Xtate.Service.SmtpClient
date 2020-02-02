@@ -9,6 +9,29 @@ namespace TSSArt.StateMachine
 {
 	public static class DataModelConverter
 	{
+		private static readonly JsonSerializerOptions Options = new JsonSerializerOptions
+																{
+																		Converters =
+																		{
+																				new JsonValueConverter(),
+																				new JsonObjectConverter(),
+																				new JsonArrayConverter()
+																		},
+																		WriteIndented = true
+																};
+
+		public static string ToJson(DataModelValue value) => JsonSerializer.Serialize(value, Options);
+
+		public static byte[] ToJsonUtf8Bytes(DataModelValue value) => JsonSerializer.SerializeToUtf8Bytes(value, Options);
+
+		public static Task ToJsonAsync(Stream stream, DataModelValue value, CancellationToken token = default) => JsonSerializer.SerializeAsync(stream, value, Options, token);
+
+		public static DataModelValue FromJson(string json) => JsonSerializer.Deserialize<DataModelValue>(json, Options);
+
+		public static DataModelValue FromJson(ReadOnlySpan<byte> utf8Json) => JsonSerializer.Deserialize<DataModelValue>(utf8Json, Options);
+
+		public static ValueTask<DataModelValue> FromJsonAsync(Stream stream, CancellationToken token = default) => JsonSerializer.DeserializeAsync<DataModelValue>(stream, Options, token);
+
 		private class JsonValueConverter : JsonConverter<DataModelValue>
 		{
 			public override DataModelValue Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -109,7 +132,7 @@ namespace TSSArt.StateMachine
 				foreach (var name in obj.Properties)
 				{
 					var value = obj[name];
-					if (value.Type != DataModelValueType.Undefined)
+					if (!value.IsUndefined())
 					{
 						writer.WritePropertyName(name);
 						JsonSerializer.Serialize(writer, value, options);
@@ -156,7 +179,7 @@ namespace TSSArt.StateMachine
 				for (var i = 0; i < arrayLength; i ++)
 				{
 					var value = array[i];
-					if (value.Type != DataModelValueType.Undefined)
+					if (!value.IsUndefined())
 					{
 						JsonSerializer.Serialize(writer, value, options);
 					}
@@ -165,28 +188,5 @@ namespace TSSArt.StateMachine
 				writer.WriteEndArray();
 			}
 		}
-
-		private static readonly JsonSerializerOptions Options = new JsonSerializerOptions
-																{
-																		Converters =
-																		{
-																				new JsonValueConverter(),
-																				new JsonObjectConverter(),
-																				new JsonArrayConverter()
-																		},
-																		WriteIndented = true
-																};
-
-		public static string ToJson(DataModelValue value) => JsonSerializer.Serialize(value, Options);
-	
-		public static byte[] ToJsonUtf8Bytes(DataModelValue value) => JsonSerializer.SerializeToUtf8Bytes(value, Options);
-		
-		public static Task ToJsonAsync(Stream stream, DataModelValue value, CancellationToken token = default) => JsonSerializer.SerializeAsync(stream, value, Options, token);
-
-		public static DataModelValue FromJson(string json) => JsonSerializer.Deserialize<DataModelValue>(json, Options);
-		
-		public static DataModelValue FromJson(ReadOnlySpan<byte> utf8Json) => JsonSerializer.Deserialize<DataModelValue>(utf8Json, Options);
-
-		public static ValueTask<DataModelValue> FromJsonAsync(Stream stream, CancellationToken token = default) => JsonSerializer.DeserializeAsync<DataModelValue>(stream, Options, token);
 	}
 }

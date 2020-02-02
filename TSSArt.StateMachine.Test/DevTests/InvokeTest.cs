@@ -78,7 +78,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			var invokeUniqueId = "";
 			_externalCommunicationMock.Setup(l => l.StartInvoke(It.IsAny<InvokeData>(), default))
-									  .Callback((InvokeData data, CancellationToken token) =>  invokeUniqueId = data.InvokeUniqueId);
+									  .Callback((InvokeData data, CancellationToken token) => invokeUniqueId = data.InvokeUniqueId);
 
 			var channel = Channel.CreateUnbounded<IEvent>();
 			var task = StateMachineInterpreter.RunAsync(sessionId: "session1", _stateMachine, channel, _options);
@@ -96,7 +96,7 @@ namespace TSSArt.StateMachine.Test
 																		 Source = new Uri("proto://src"),
 																		 RawContent = "content",
 																		 Content = DataModelValue.FromObject("content"),
-																		 Parameters = default,
+																		 Parameters = default
 																 }, default));
 			_externalCommunicationMock.Verify(l => l.CancelInvoke("invoke_id", default));
 			_externalCommunicationMock.Verify(l => l.IsInvokeActive("invoke_id", invokeUniqueId));

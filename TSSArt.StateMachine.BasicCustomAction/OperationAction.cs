@@ -10,9 +10,9 @@ namespace TSSArt.StateMachine
 	public class OperationAction : CustomActionBase
 	{
 		private readonly string _left;
-		private readonly string _right;
 		private readonly string _op;
 		private readonly string _result;
+		private readonly string _right;
 
 		public OperationAction(XmlReader xmlReader)
 		{
@@ -45,7 +45,7 @@ namespace TSSArt.StateMachine
 			}
 
 			pattern = Regex.Escape(pattern).Replace(oldValue: "\\*", newValue: ".*");
-			
+
 			return Regex.Match(email, pattern, RegexOptions.IgnoreCase).Success;
 		}
 
@@ -60,7 +60,7 @@ namespace TSSArt.StateMachine
 			{
 				return EmailMatch(email, value.AsString());
 			}
-			
+
 			if (value.Type == DataModelValueType.Array)
 			{
 				return value.AsArrayOrEmpty().Any(i => EmailMatch(email, i.AsStringOrDefault()));

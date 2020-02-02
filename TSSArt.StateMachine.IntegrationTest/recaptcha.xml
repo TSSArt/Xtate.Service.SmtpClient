@@ -1,4 +1,5 @@
-﻿<scxml xmlns="http://www.w3.org/2005/07/scxml" xmlns:basic="http://tssart.com/scxml/customaction/basic" version="1.0" datamodel="ecmascript" initial="recaptchaV2">
+﻿<scxml xmlns="http://www.w3.org/2005/07/scxml" xmlns:basic="http://tssart.com/scxml/customaction/basic" version="1.0"
+       datamodel="ecmascript" initial="recaptchaV2">
   <datamodel>
     <data id="url" />
     <data id="sitekey" />
@@ -11,19 +12,19 @@
       <data id="sendId" />
       <data id="captchaHtmlV2" />
       <data id="captchaHtmlV2template">
-<html xmlns="">
-  <head>
-    <script src="https://www.google.com/recaptcha/api.js" async="" defer=""></script>
-    <script type="text/javascript">
-      function ok(){document.getElementById("frm").submit();}
-    </script>
-  </head>
-  <body>
-    <form id="frm" action="" method="POST">
-      <div class="g-recaptcha" data-sitekey="{#sitekey#}" data-callback="ok"></div>
-    </form>
-  </body>
-</html>
+        <html xmlns="">
+          <head>
+            <script src="https://www.google.com/recaptcha/api.js" async="" defer=""></script>
+            <script type="text/javascript">
+              function ok(){document.getElementById("frm").submit();}
+            </script>
+          </head>
+          <body>
+            <form id="frm" action="" method="POST">
+              <div class="g-recaptcha" data-sitekey="{#sitekey#}" data-callback="ok"></div>
+            </form>
+          </body>
+        </html>
       </data>
     </datamodel>
 

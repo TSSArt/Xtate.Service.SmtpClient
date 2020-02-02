@@ -3,7 +3,7 @@
 namespace TSSArt.StateMachine.Test
 {
 	[TestClass]
-    public class JsonSerializationTest
+	public class JsonSerializationTest
 	{
 		[TestMethod]
 		public void DeserializationJsonTest()
@@ -26,4 +26,3 @@ namespace TSSArt.StateMachine.Test
 		}
 	}
 }
-

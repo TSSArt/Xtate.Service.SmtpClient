@@ -26,196 +26,161 @@ namespace TSSArt.StateMachine
 	[DebuggerDisplay(value: "{ToObject()} ({Type})")]
 	public readonly struct DataModelValue : IObject, IEquatable<DataModelValue>, IFormattable, IDynamicMetaObjectProvider
 	{
+		private static readonly object NullValue     = new object();
+		private static readonly object NumberValue   = new object();
+		private static readonly object DateTimeValue = new object();
+		private static readonly object BooleanValue  = new object();
+
 		private readonly object _value;
 		private readonly long   _int64;
 
 		public DataModelValue(DataModelObject value)
 		{
-			Type = value != null ? DataModelValueType.Object : DataModelValueType.Null;
-			_value = value;
+			_value = value ?? NullValue;
 			_int64 = 0;
 		}
 
 		public DataModelValue(DataModelArray value)
 		{
-			Type = value != null ? DataModelValueType.Array : DataModelValueType.Null;
-			_value = value;
+			_value = value ?? NullValue;
 			_int64 = 0;
 		}
 
 		public DataModelValue(string value)
 		{
-			Type = value != null ? DataModelValueType.String : DataModelValueType.Null;
-			_value = value;
+			_value = value ?? NullValue;
 			_int64 = 0;
 		}
 
 		public DataModelValue(double value)
 		{
-			Type = DataModelValueType.Number;
-			_value = null;
+			_value = NumberValue;
 			_int64 = BitConverter.DoubleToInt64Bits(value);
 		}
 
 		public DataModelValue(DateTime value)
 		{
-			Type = DataModelValueType.DateTime;
-			_value = null;
+			_value = DateTimeValue;
 			_int64 = value.Ticks + ((long) value.Kind << 62);
 		}
 
 		public DataModelValue(bool value)
 		{
-			Type = DataModelValueType.Boolean;
-			_value = null;
+			_value = BooleanValue;
 			_int64 = value ? 1 : 0;
 		}
 
-		public DataModelValueType Type { get; }
+		public static implicit operator DataModelValue(DataModelObject val) => new DataModelValue(val);
+		public static implicit operator DataModelValue(DataModelArray val)  => new DataModelValue(val);
+		public static implicit operator DataModelValue(string val)          => new DataModelValue(val);
+		public static implicit operator DataModelValue(double val)          => new DataModelValue(val);
+		public static implicit operator DataModelValue(DateTime val)        => new DataModelValue(val);
+		public static implicit operator DataModelValue(bool val)            => new DataModelValue(val);
 
-		public bool Equals(DataModelValue other) => Equals(_value, other._value) && _int64 == other._int64 && Type == other.Type;
+		public static explicit operator DataModelObject(DataModelValue val) => val.AsObject();
+		public static explicit operator DataModelArray(DataModelValue val)  => val.AsArray();
+		public static explicit operator string(DataModelValue val)          => val.AsString();
+		public static explicit operator double(DataModelValue val)          => val.AsNumber();
+		public static explicit operator DateTime(DataModelValue val)        => val.AsDateTime();
+		public static explicit operator bool(DataModelValue val)            => val.AsBoolean();
 
-		public bool IsUndefinedOrNull() => Type == DataModelValueType.Undefined || Type == DataModelValueType.Null;
+		public DataModelValueType Type =>
+				_value switch
+				{
+						DataModelObject _ => DataModelValueType.Object,
+						DataModelArray _ => DataModelValueType.Array,
+						string _ => DataModelValueType.String,
+						{ } val when val == DateTimeValue => DataModelValueType.DateTime,
+						{ } val when val == NumberValue => DataModelValueType.Number,
+						{ } val when val == BooleanValue => DataModelValueType.Boolean,
+						{ } val when val == NullValue => DataModelValueType.Null,
+						null => DataModelValueType.Undefined,
+						_ => throw new ArgumentOutOfRangeException()
+				};
 
-		public object ToObject()
-		{
-			return Type switch
-			{
-					DataModelValueType.Undefined => (object) null,
-					DataModelValueType.Null => null,
-					DataModelValueType.String => AsString(),
-					DataModelValueType.Object => AsObject(),
-					DataModelValueType.Array => AsArray(),
-					DataModelValueType.Number => AsNumber(),
-					DataModelValueType.DateTime => AsDateTime(),
-					DataModelValueType.Boolean => AsBoolean(),
-					_ => throw new ArgumentOutOfRangeException()
-			};
-		}
+		public bool Equals(DataModelValue other) => Equals(_value, other._value) && _int64 == other._int64;
+
+		public bool IsUndefinedOrNull() => _value == null || _value == NullValue;
+
+		public bool IsUndefined() => _value == null;
+
+		public object ToObject() =>
+				_value switch
+				{
+						DataModelObject obj => obj,
+						DataModelArray arr => arr,
+						string str => str,
+						{ } val when val == DateTimeValue => AsDateTime(),
+						{ } val when val == NumberValue => AsNumber(),
+						{ } val when val == BooleanValue => AsBoolean(),
+						{ } val when val == NullValue => null,
+						null => null,
+						_ => throw new ArgumentOutOfRangeException()
+				};
 
 		public static readonly DataModelValue Undefined = default;
 
 		public static readonly DataModelValue Null = new DataModelValue((string) null);
 
-		public DataModelObject AsObject()
-		{
-			if (Type == DataModelValueType.Object)
-			{
-				return (DataModelObject) _value;
-			}
+		public DataModelObject AsObject() =>
+				_value switch
+				{
+						DataModelObject obj => obj,
+						{ } val when val == NullValue => null,
+						_ => throw new InvalidOperationException(message: "DataModelValue is not DataModelObject")
+				};
 
-			throw new InvalidOperationException(message: "DataModelValue is not DataModelObject");
-		}
+		public DataModelObject AsObjectOrEmpty() => _value is DataModelObject obj ? obj : DataModelObject.Empty;
 
-		public DataModelObject AsObjectOrEmpty()
-		{
-			if (Type == DataModelValueType.Object)
-			{
-				return (DataModelObject) _value;
-			}
+		public DataModelArray AsArray() =>
+				_value switch
+				{
+						DataModelArray arr => arr,
+						{ } val when val == NullValue => null,
+						_ => throw new InvalidOperationException(message: "DataModelValue is not DataModelArray")
+				};
 
-			return DataModelObject.Empty;
-		}
+		public DataModelArray AsArrayOrEmpty() => _value is DataModelArray arr ? arr : DataModelArray.Empty;
 
-		public DataModelArray AsArray()
-		{
-			if (Type == DataModelValueType.Array)
-			{
-				return (DataModelArray) _value;
-			}
+		public string AsString() =>
+				_value switch
+				{
+						string str => str,
+						{ } val when val == NullValue => null,
+						_ => throw new InvalidOperationException(message: "DataModelValue is not String")
+				};
 
-			throw new InvalidOperationException(message: "DataModelValue is not DataModelArray");
-		}
+		public string AsStringOrDefault() => _value as string;
 
-		public DataModelArray AsArrayOrEmpty()
-		{
-			if (Type == DataModelValueType.Array)
-			{
-				return (DataModelArray) _value;
-			}
+		public double AsNumber() =>
+				_value == NumberValue
+						? BitConverter.Int64BitsToDouble(_int64)
+						: throw new InvalidOperationException(message: "DataModelValue is not Number");
 
-			return DataModelArray.Empty;
-		}
+		public double? AsNumberOrDefault() =>
+				_value == NumberValue
+						? BitConverter.Int64BitsToDouble(_int64)
+						: (double?) null;
 
-		public string AsString()
-		{
-			if (Type == DataModelValueType.String)
-			{
-				return (string) _value;
-			}
+		public bool AsBoolean() =>
+				_value == BooleanValue
+						? _int64 != 0
+						: throw new InvalidOperationException(message: "DataModelValue is not Boolean");
 
-			throw new InvalidOperationException(message: "DataModelValue is not String");
-		}
+		public bool? AsBooleanOrDefault() =>
+				_value == BooleanValue
+						? _int64 != 0
+						: (bool?) null;
 
-		public string AsStringOrDefault()
-		{
-			if (Type == DataModelValueType.String)
-			{
-				return (string) _value;
-			}
+		public DateTime AsDateTime() =>
+				_value == DateTimeValue
+						? new DateTime(_int64 & 0x3FFFFFFFFFFFFFFF, (DateTimeKind) ((_int64 >> 62) & 3))
+						: throw new InvalidOperationException(message: "DataModelValue is not DateTime");
 
-			return null;
-		}
-
-		public double AsNumber()
-		{
-			if (Type == DataModelValueType.Number)
-			{
-				return BitConverter.Int64BitsToDouble(_int64);
-			}
-
-			throw new InvalidOperationException(message: "DataModelValue is not Number");
-		}
-
-		public double? AsNumberOrDefault()
-		{
-			if (Type == DataModelValueType.Number)
-			{
-				return BitConverter.Int64BitsToDouble(_int64);
-			}
-
-			return null;
-		}
-
-		public bool AsBoolean()
-		{
-			if (Type == DataModelValueType.Boolean)
-			{
-				return _int64 != 0;
-			}
-
-			throw new InvalidOperationException(message: "DataModelValue is not Boolean");
-		}
-
-		public bool? AsBooleanOrDefault()
-		{
-			if (Type == DataModelValueType.Boolean)
-			{
-				return _int64 != 0;
-			}
-
-			return null;
-		}
-
-		public DateTime AsDateTime()
-		{
-			if (Type == DataModelValueType.DateTime)
-			{
-				return new DateTime(_int64 & 0x3FFFFFFFFFFFFFFF, (DateTimeKind) ((_int64 >> 62) & 3));
-			}
-
-			throw new InvalidOperationException(message: "DataModelValue is not DateTime");
-		}
-
-		public DateTime? AsDateTimeOrDefault()
-		{
-			if (Type == DataModelValueType.DateTime)
-			{
-				return new DateTime(_int64 & 0x3FFFFFFFFFFFFFFF, (DateTimeKind) ((_int64 >> 62) & 3));
-			}
-
-			return null;
-		}
+		public DateTime? AsDateTimeOrDefault() =>
+				_value == DateTimeValue
+						? new DateTime(_int64 & 0x3FFFFFFFFFFFFFFF, (DateTimeKind) ((_int64 >> 62) & 3))
+						: (DateTime?) null;
 
 		public override bool Equals(object obj) => obj is DataModelValue other && Equals(other);
 
@@ -225,40 +190,33 @@ namespace TSSArt.StateMachine
 
 		public static bool operator !=(DataModelValue left, DataModelValue right) => !left.Equals(right);
 
-		public DataModelValue DeepClone(bool isReadOnly = false)
-		{
-			switch (Type)
-			{
-				case DataModelValueType.Undefined:
-				case DataModelValueType.Null:
-				case DataModelValueType.String:
-				case DataModelValueType.Number:
-				case DataModelValueType.DateTime:
-				case DataModelValueType.Boolean:
-					return this;
+		public DataModelValue DeepClone(bool isReadOnly = false) =>
+				_value switch
+				{
+						DataModelObject _ => new DataModelValue(AsObject().DeepClone(isReadOnly)),
+						DataModelArray _ => new DataModelValue(AsArray().DeepClone(isReadOnly)),
+						string _ => this,
+						{ } val when val == DateTimeValue => this,
+						{ } val when val == NumberValue => this,
+						{ } val when val == BooleanValue => this,
+						{ } val when val == NullValue => this,
+						null => this,
+						_ => throw new ArgumentOutOfRangeException()
+				};
 
-				case DataModelValueType.Object: return new DataModelValue(AsObject().DeepClone(isReadOnly));
-				case DataModelValueType.Array: return new DataModelValue(AsArray().DeepClone(isReadOnly));
-				default: throw new ArgumentOutOfRangeException();
-			}
-		}
-		internal bool IsDeepReadOnly()
-		{
-			switch (Type)
-			{
-				case DataModelValueType.Undefined:
-				case DataModelValueType.Null:
-				case DataModelValueType.String:
-				case DataModelValueType.Number:
-				case DataModelValueType.DateTime:
-				case DataModelValueType.Boolean:
-					return true;
-
-				case DataModelValueType.Object: return AsObject().IsDeepReadOnly();
-				case DataModelValueType.Array: return AsArray().IsDeepReadOnly();
-				default: throw new ArgumentOutOfRangeException();
-			}
-		}
+		internal bool IsDeepReadOnly() =>
+				_value switch
+				{
+						DataModelObject obj => obj.IsDeepReadOnly(),
+						DataModelArray arr => arr.IsDeepReadOnly(),
+						string _ => true,
+						{ } val when val == DateTimeValue => true,
+						{ } val when val == NumberValue => true,
+						{ } val when val == BooleanValue => true,
+						{ } val when val == NullValue => true,
+						null => true,
+						_ => throw new ArgumentOutOfRangeException()
+				};
 
 		public static DataModelValue FromContent(string content, ContentType contentType) => new DataModelValue(content);
 
@@ -421,9 +379,9 @@ namespace TSSArt.StateMachine
 
 			public override bool TryGetMember(GetMemberBinder binder, out object result)
 			{
-				if (_value.Type == DataModelValueType.Object)
+				if (_value._value is DataModelObject obj)
 				{
-					result = _value.AsObject()[binder.Name].ToObject();
+					result = obj[binder.Name].ToObject();
 
 					return true;
 				}
@@ -435,9 +393,9 @@ namespace TSSArt.StateMachine
 
 			public override bool TrySetMember(SetMemberBinder binder, object value)
 			{
-				if (_value.Type == DataModelValueType.Object)
+				if (_value._value is DataModelObject obj)
 				{
-					_value.AsObject()[binder.Name] = FromObject(value);
+					obj[binder.Name] = FromObject(value);
 
 					return true;
 				}
@@ -447,16 +405,16 @@ namespace TSSArt.StateMachine
 
 			public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object result)
 			{
-				if (indexes.Length == 1 && indexes[0] is string key && _value.Type == DataModelValueType.Object)
+				if (indexes.Length == 1 && indexes[0] is string key && _value._value is DataModelObject obj)
 				{
-					result = _value.AsObject()[key].ToObject();
+					result = obj[key].ToObject();
 
 					return true;
 				}
 
-				if (indexes.Length == 1 && indexes[0] is IConvertible convertible && _value.Type == DataModelValueType.Array)
+				if (indexes.Length == 1 && indexes[0] is IConvertible convertible && _value._value is DataModelArray arr)
 				{
-					result = _value.AsArray()[convertible.ToInt32(NumberFormatInfo.InvariantInfo)].ToObject();
+					result = arr[convertible.ToInt32(NumberFormatInfo.InvariantInfo)].ToObject();
 
 					return true;
 				}
@@ -468,16 +426,16 @@ namespace TSSArt.StateMachine
 
 			public override bool TrySetIndex(SetIndexBinder binder, object[] indexes, object value)
 			{
-				if (indexes.Length == 1 && indexes[0] is string key && _value.Type == DataModelValueType.Object)
+				if (indexes.Length == 1 && indexes[0] is string key && _value._value is DataModelObject obj)
 				{
-					_value.AsObject()[key] = FromObject(value);
+					obj[key] = FromObject(value);
 
 					return true;
 				}
 
-				if (indexes.Length == 1 && indexes[0] is IConvertible convertible && _value.Type == DataModelValueType.Array)
+				if (indexes.Length == 1 && indexes[0] is IConvertible convertible && _value._value is DataModelArray arr)
 				{
-					_value.AsArray()[convertible.ToInt32(NumberFormatInfo.InvariantInfo)] = FromObject(value);
+					arr[convertible.ToInt32(NumberFormatInfo.InvariantInfo)] = FromObject(value);
 
 					return true;
 				}

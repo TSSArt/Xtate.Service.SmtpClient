@@ -61,7 +61,7 @@ namespace TSSArt.StateMachine
 		public EntityQueue<IEvent> InternalQueue { get; } = new EntityQueue<IEvent>();
 
 		public DataModelObject InterpreterObject { get; } = new DataModelObject(true);
-		
+
 		public DataModelObject ConfigurationObject { get; } = new DataModelObject(true);
 
 		public OrderedSet<StateEntityNode> StatesToInvoke { get; } = new OrderedSet<StateEntityNode>();

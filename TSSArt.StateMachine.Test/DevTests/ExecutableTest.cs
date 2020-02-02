@@ -16,9 +16,9 @@ namespace TSSArt.StateMachine.Test
 	{
 		private Mock<ICustomActionProvider>  _customActionProvider;
 		private ChannelReader<IEvent>        _eventChannel;
+		private Mock<IExternalCommunication> _externalCommunication;
 		private Mock<ILogger>                _logger;
 		private InterpreterOptions           _options;
-		private Mock<IExternalCommunication> _externalCommunication;
 
 		private IStateMachine GetStateMachine(string scxml)
 		{
@@ -61,7 +61,7 @@ namespace TSSArt.StateMachine.Test
 							   CustomActionProviders = new List<ICustomActionProvider> { _customActionProvider.Object }
 					   };
 			_logger = new Mock<ILogger>();
-			
+
 			_options.Logger = _logger.Object;
 			_externalCommunication = new Mock<IExternalCommunication>();
 			_options.ExternalCommunication = _externalCommunication.Object;

@@ -39,12 +39,12 @@ namespace TSSArt.StateMachine.IntegrationTest
 
 			var prms = new DataModelObject
 					   {
-							   ["loginUrl"] = new DataModelValue("https://test.tssart.com/wp-login.php"),
-							   ["username"] = new DataModelValue("tadex1"),
-							   ["password"] = new DataModelValue("123456")
+							   ["loginUrl"] = "https://test.tssart.com/wp-login.php",
+							   ["username"] = "tadex1",
+							   ["password"] = "123456"
 					   };
 
-			var task = ioProcessor.Execute(new Uri(uriString: "login", UriKind.Relative), new DataModelValue(prms));
+			var task = ioProcessor.Execute(new Uri(uriString: "login", UriKind.Relative), prms);
 
 			var webHost = new WebHostBuilder()
 						  .Configure(builder => builder.Run(handler.ProcessRequest))
@@ -56,10 +56,10 @@ namespace TSSArt.StateMachine.IntegrationTest
 			dynamic result = await task.ConfigureAwait(false);
 
 			var prms2 = new DataModelObject
-					   {
-							   ["profileUrl"] = new DataModelValue("https://test.tssart.com/wp-admin/profile.php"),
-							   ["cookies"] = new DataModelValue(result.data.cookies)
-					   };
+						{
+								["profileUrl"] = "https://test.tssart.com/wp-admin/profile.php",
+								["cookies"] = result.data.cookies
+						};
 			var task2 = ioProcessor.Execute(new Uri(uriString: "captureEmail", UriKind.Relative), new DataModelValue(prms2));
 
 			dynamic result2 = await task2.ConfigureAwait(false);

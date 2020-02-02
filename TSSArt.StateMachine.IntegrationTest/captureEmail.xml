@@ -13,7 +13,8 @@
     <state id="getCurrentEmail">
       <invoke srcexpr="profileUrl" type="http">
         <param name="cookies" expr="cookies" />
-        <param name="capture" expr="({
+        <param name="capture"
+               expr="({
                'email': { 'xpath': './/input[@name=\'email\']', 'attr': 'value' },
                'form': { 'attr': ['name', '::value'], 'xpath': './/form[@id=\'your-profile\']//*[@name]'}})" />
         <finalize>
@@ -43,7 +44,7 @@
     <state id="replaceEmailRequest">
       <transition target="ok" />
     </state>
-  
+
     <transition event="error" target="error" />
   </state>
 
