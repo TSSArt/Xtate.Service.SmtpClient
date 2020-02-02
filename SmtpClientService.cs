@@ -11,12 +11,12 @@ namespace TSSArt.StateMachine.Services
 
 		protected override async ValueTask<DataModelValue> Execute()
 		{
-            var parameters = Parameters.AsObjectOrEmpty();
-            var host = parameters["server"].AsString();
-			var port = (int?)parameters["port"].AsNumberOrDefault() ?? 25;
+			var parameters = Parameters.AsObjectOrEmpty();
+			var host = parameters["server"].AsString();
+			var port = (int?) parameters["port"].AsNumberOrDefault() ?? 25;
 			using var client = new SmtpClient(host, port);
 
-            var fromEmail = parameters["from"].AsStringOrDefault(); 
+			var fromEmail = parameters["from"].AsStringOrDefault();
 			var fromName = parameters["fromName"].AsStringOrDefault();
 			var from = fromName != null ? new MailAddress(fromEmail, fromName, Encoding.UTF8) : new MailAddress(fromEmail);
 
