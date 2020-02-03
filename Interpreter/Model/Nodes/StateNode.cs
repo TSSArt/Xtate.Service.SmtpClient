@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Immutable;
+using System.Collections./**/Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -37,12 +37,12 @@ namespace TSSArt.StateMachine
 		}
 
 		public override bool                           IsAtomicState => true;
-		public override ImmutableArray<InvokeNode>      Invoke        { get; }
-		public override ImmutableArray<TransitionNode>  Transitions   { get; }
-		public override ImmutableArray<HistoryNode>     HistoryStates { get; }
-		public override ImmutableArray<StateEntityNode> States        { get; }
-		public override ImmutableArray<OnEntryNode>     OnEntry       { get; }
-		public override ImmutableArray<OnExitNode>      OnExit        { get; }
+		public override /**/ImmutableArray<InvokeNode>      Invoke        { get; }
+		public override /**/ImmutableArray<TransitionNode>  Transitions   { get; }
+		public override /**/ImmutableArray<HistoryNode>     HistoryStates { get; }
+		public override /**/ImmutableArray<StateEntityNode> States        { get; }
+		public override /**/ImmutableArray<OnEntryNode>     OnEntry       { get; }
+		public override /**/ImmutableArray<OnExitNode>      OnExit        { get; }
 		public override DataModelNode                  DataModel     { get; }
 
 		protected InitialNode Initial { get; }
@@ -55,12 +55,12 @@ namespace TSSArt.StateMachine
 
 		IInitial IState.                   Initial       => Initial;
 		IDataModel IState.                 DataModel     => DataModel;
-		ImmutableArray<IInvoke> IState.     Invoke        => Invoke;
-		ImmutableArray<IStateEntity> IState.States        => States;
-		ImmutableArray<IHistory> IState.    HistoryStates => HistoryStates;
-		ImmutableArray<ITransition> IState. Transitions   => Transitions;
-		ImmutableArray<IOnEntry> IState.    OnEntry       => OnEntry;
-		ImmutableArray<IOnExit> IState.     OnExit        => OnExit;
+		/**/ImmutableArray<IInvoke> IState.     Invoke        => Invoke;
+		/**/ImmutableArray<IStateEntity> IState.States        => States;
+		/**/ImmutableArray<IHistory> IState.    HistoryStates => HistoryStates;
+		/**/ImmutableArray<ITransition> IState. Transitions   => Transitions;
+		/**/ImmutableArray<IOnEntry> IState.    OnEntry       => OnEntry;
+		/**/ImmutableArray<IOnExit> IState.     OnExit        => OnExit;
 
 		protected override void Store(Bucket bucket)
 		{

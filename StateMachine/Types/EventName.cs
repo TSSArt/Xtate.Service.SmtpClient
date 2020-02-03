@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Immutable;
+using System.Collections./**/Immutable;
 using System.Collections.ObjectModel;
 using System.Linq;
 
@@ -14,15 +14,15 @@ namespace TSSArt.StateMachine
 		private static readonly IIdentifier ErrorIdentifier  = (Identifier) "error";
 		private static readonly IIdentifier InvokeIdentifier = (Identifier) "invoke";
 
-		public static readonly ImmutableArray<IIdentifier> ErrorExecution     = ImmutableArray.Create(ErrorIdentifier, (Identifier) "execution");
-		public static readonly ImmutableArray<IIdentifier> ErrorCommunication = ImmutableArray.Create(ErrorIdentifier, (Identifier) "communication");
-		public static readonly ImmutableArray<IIdentifier> ErrorPlatform      = ImmutableArray.Create(ErrorIdentifier, (Identifier) "platform");
+		public static readonly /**/ImmutableArray<IIdentifier> ErrorExecution     = /**/ImmutableArray.Create(ErrorIdentifier, (Identifier) "execution");
+		public static readonly /**/ImmutableArray<IIdentifier> ErrorCommunication = /**/ImmutableArray.Create(ErrorIdentifier, (Identifier) "communication");
+		public static readonly /**/ImmutableArray<IIdentifier> ErrorPlatform      = /**/ImmutableArray.Create(ErrorIdentifier, (Identifier) "platform");
 
-		internal static ImmutableArray<IIdentifier> GetDoneStateNameParts(IIdentifier id) => GetNameParts(DoneIdentifier, StateIdentifier, id.Base<IIdentifier>().ToString());
+		internal static /**/ImmutableArray<IIdentifier> GetDoneStateNameParts(IIdentifier id) => GetNameParts(DoneIdentifier, StateIdentifier, id.Base<IIdentifier>().ToString());
 
-		internal static ImmutableArray<IIdentifier> GetDoneInvokeNameParts(string invokeId) => GetNameParts(DoneIdentifier, InvokeIdentifier, invokeId);
+		internal static /**/ImmutableArray<IIdentifier> GetDoneInvokeNameParts(string invokeId) => GetNameParts(DoneIdentifier, InvokeIdentifier, invokeId);
 
-		private static ImmutableArray<IIdentifier> GetNameParts(IIdentifier id1, IIdentifier id2, string name)
+		private static /**/ImmutableArray<IIdentifier> GetNameParts(IIdentifier id1, IIdentifier id2, string name)
 		{
 			if (name == null) throw new ArgumentNullException(nameof(name));
 
@@ -34,7 +34,7 @@ namespace TSSArt.StateMachine
 
 			SetParts(parts.AsSpan(start: 2, invokeIdPartCount), name);
 
-			return ImmutableArray.Create(parts);
+			return /**/ImmutableArray.Create(parts);
 		}
 
 		private static void SetParts(Span<IIdentifier> span, string id)
@@ -76,14 +76,14 @@ namespace TSSArt.StateMachine
 			return count;
 		}
 
-		public static string ToName(ImmutableArray<IIdentifier> nameParts)
+		public static string ToName(/**/ImmutableArray<IIdentifier> nameParts)
 		{
 			if (nameParts == null) throw new ArgumentNullException(nameof(nameParts));
 
 			return string.Join(separator: ".", nameParts.Select(p => p.Base<IIdentifier>().ToString()));
 		}
 
-		public static ImmutableArray<IIdentifier> ToParts(string name)
+		public static /**/ImmutableArray<IIdentifier> ToParts(string name)
 		{
 			if (string.IsNullOrEmpty(name)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(name));
 
@@ -93,7 +93,7 @@ namespace TSSArt.StateMachine
 
 			SetParts(parts, name);
 
-			return ImmutableArray.Create(parts);
+			return /**/ImmutableArray.Create(parts);
 		}
 	}
 }

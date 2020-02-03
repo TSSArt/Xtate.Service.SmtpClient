@@ -1,10 +1,10 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections./**/Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public struct If : IIf, IEntity<If, IIf>, IAncestorProvider
 	{
-		public ImmutableArray<IExecutableEntity> Action    { get; set; }
+		public /**/ImmutableArray<IExecutableEntity> Action    { get; set; }
 		public IConditionExpression             Condition { get; set; }
 
 		void IEntity<If, IIf>.Init(IIf source)

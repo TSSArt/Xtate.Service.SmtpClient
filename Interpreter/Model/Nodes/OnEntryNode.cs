@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Immutable;
+using System.Collections./**/Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -15,7 +15,7 @@ namespace TSSArt.StateMachine
 			ActionEvaluators = onEntry.Action.AsListOf<IExecEvaluator>();
 		}
 
-		public ImmutableArray<IExecEvaluator> ActionEvaluators { get; }
+		public /**/ImmutableArray<IExecEvaluator> ActionEvaluators { get; }
 
 		object IAncestorProvider.Ancestor => _onEntry.Ancestor;
 
@@ -23,7 +23,7 @@ namespace TSSArt.StateMachine
 
 		public int DocumentId => _documentIdNode.Value;
 
-		public ImmutableArray<IExecutableEntity> Action => _onEntry.Action;
+		public /**/ImmutableArray<IExecutableEntity> Action => _onEntry.Action;
 
 		void IStoreSupport.Store(Bucket bucket)
 		{

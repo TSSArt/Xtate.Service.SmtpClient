@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Immutable;
+using System.Collections./**/Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -15,8 +15,8 @@ namespace TSSArt.StateMachine
 		ILocationExpression                IdLocation       { get; }
 		int?                               DelayMs          { get; }
 		IValueExpression                   DelayExpression  { get; }
-		ImmutableArray<ILocationExpression> NameList         { get; }
-		ImmutableArray<IParam>              Parameters       { get; }
+		/**/ImmutableArray<ILocationExpression> NameList         { get; }
+		/**/ImmutableArray<IParam>              Parameters       { get; }
 		IContent                           Content          { get; }
 	}
 }

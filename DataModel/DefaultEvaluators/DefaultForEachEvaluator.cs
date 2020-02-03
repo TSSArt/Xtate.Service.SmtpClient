@@ -22,7 +22,7 @@ namespace TSSArt.StateMachine
 		public IArrayEvaluator                ArrayEvaluator      { get; }
 		public ILocationEvaluator             ItemEvaluator       { get; }
 		public ILocationEvaluator             IndexEvaluator      { get; }
-		public ImmutableArray<IExecEvaluator> ActionEvaluatorList { get; }
+		public /**/ImmutableArray<IExecEvaluator> ActionEvaluatorList { get; }
 
 		object IAncestorProvider.Ancestor => _forEach.Ancestor;
 
@@ -50,6 +50,6 @@ namespace TSSArt.StateMachine
 		public IValueExpression                  Array  => _forEach.Array;
 		public ILocationExpression               Item   => _forEach.Item;
 		public ILocationExpression               Index  => _forEach.Index;
-		public ImmutableArray<IExecutableEntity> Action => _forEach.Action;
+		public /**/ImmutableArray<IExecutableEntity> Action => _forEach.Action;
 	}
 }

@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections./**/Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -9,7 +9,7 @@ namespace TSSArt.StateMachine
 		private readonly IValueEvaluator             _contentBodyEvaluator;
 		private readonly IObjectEvaluator            _contentExpressionEvaluator;
 		private readonly DoneData                    _doneData;
-		private readonly ImmutableArray<DefaultParam> _parameterList;
+		private readonly /**/ImmutableArray<DefaultParam> _parameterList;
 
 		public DoneDataNode(in DoneData doneData)
 		{
@@ -23,7 +23,7 @@ namespace TSSArt.StateMachine
 
 		public IContent Content => _doneData.Content;
 
-		public ImmutableArray<IParam> Parameters => _doneData.Parameters;
+		public /**/ImmutableArray<IParam> Parameters => _doneData.Parameters;
 
 		void IStoreSupport.Store(Bucket bucket)
 		{

@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Immutable;
+using System.Collections./**/Immutable;
 using System.ComponentModel;
 
 namespace TSSArt.StateMachine
@@ -10,7 +10,7 @@ namespace TSSArt.StateMachine
 		private          BindingType                _bindingType;
 		private          IDataModel                 _dataModel;
 		private          string                     _dataModelType;
-		private          ImmutableArray<IIdentifier> _initialId;
+		private          /**/ImmutableArray<IIdentifier> _initialId;
 		private          string                     _name;
 		private          IScript                    _script;
 
@@ -35,7 +35,7 @@ namespace TSSArt.StateMachine
 			return stateMachine;
 		}
 
-		public void SetInitial(ImmutableArray<IIdentifier> initial)
+		public void SetInitial(/**/ImmutableArray<IIdentifier> initial)
 		{
 			_initialId = IdentifierList.Create(initial ?? throw new ArgumentNullException(nameof(initial)));
 		}

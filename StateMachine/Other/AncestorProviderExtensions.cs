@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
+using System.Collections./**/Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -93,9 +93,9 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public static ImmutableArray<T> AsListOf<T>(this ImmutableArray<IEntity> list)
+		public static /**/ImmutableArray<T> AsListOf<T>(this /**/ImmutableArray<IEntity> list)
 		{
-			return !list.IsDefault ? ImmutableArray.CreateRange(list, item => item.As<T>()) : default;
+			return !list.IsDefault ? /**/ImmutableArray.CreateRange(list, item => item.As<T>()) : default;
 		}
 
 		public static IEnumerable<T> AsEnumerableOf<T>(this IEnumerable<IEntity> enumerable)

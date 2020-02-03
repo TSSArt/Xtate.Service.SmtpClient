@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Immutable;
+using System.Collections./**/Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -8,12 +8,12 @@ namespace TSSArt.StateMachine
 		public IDataModel                  DataModel     { get; set; }
 		public IIdentifier                 Id            { get; set; }
 		public IInitial                    Initial       { get; set; }
-		public ImmutableArray<IInvoke>      Invoke        { get; set; }
-		public ImmutableArray<IOnEntry>     OnEntry       { get; set; }
-		public ImmutableArray<IOnExit>      OnExit        { get; set; }
-		public ImmutableArray<IStateEntity> States        { get; set; }
-		public ImmutableArray<IHistory>     HistoryStates { get; set; }
-		public ImmutableArray<ITransition>  Transitions   { get; set; }
+		public /**/ImmutableArray<IInvoke>      Invoke        { get; set; }
+		public /**/ImmutableArray<IOnEntry>     OnEntry       { get; set; }
+		public /**/ImmutableArray<IOnExit>      OnExit        { get; set; }
+		public /**/ImmutableArray<IStateEntity> States        { get; set; }
+		public /**/ImmutableArray<IHistory>     HistoryStates { get; set; }
+		public /**/ImmutableArray<ITransition>  Transitions   { get; set; }
 
 		void IEntity<State, IState>.Init(IState source)
 		{

@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections./**/Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -6,9 +6,9 @@ namespace TSSArt.StateMachine
 	{
 		ITransition Build();
 
-		void SetEvent(ImmutableArray<IEventDescriptor> eventsDescriptor);
+		void SetEvent(/**/ImmutableArray<IEventDescriptor> eventsDescriptor);
 		void SetCondition(IExecutableEntity condition);
-		void SetTarget(ImmutableArray<IIdentifier> target);
+		void SetTarget(/**/ImmutableArray<IIdentifier> target);
 		void SetType(TransitionType type);
 		void AddAction(IExecutableEntity action);
 	}
