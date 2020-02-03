@@ -1,16 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public interface IParallel : IStateEntity
 	{
 		IIdentifier                 Id            { get; }
-		IReadOnlyList<IStateEntity> States        { get; }
-		IReadOnlyList<IHistory>     HistoryStates { get; }
-		IReadOnlyList<ITransition>  Transitions   { get; }
+		ImmutableArray<IStateEntity> States        { get; }
+		ImmutableArray<IHistory>     HistoryStates { get; }
+		ImmutableArray<ITransition>  Transitions   { get; }
 		IDataModel                  DataModel     { get; }
-		IReadOnlyList<IOnEntry>     OnEntry       { get; }
-		IReadOnlyList<IOnExit>      OnExit        { get; }
-		IReadOnlyList<IInvoke>      Invoke        { get; }
+		ImmutableArray<IOnEntry>     OnEntry       { get; }
+		ImmutableArray<IOnExit>      OnExit        { get; }
+		ImmutableArray<IInvoke>      Invoke        { get; }
 	}
 }

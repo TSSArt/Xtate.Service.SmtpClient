@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Buffers.Binary;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -53,7 +53,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private void OnChanged(KeyList<T>.ChangedAction action, IEntity entity, IReadOnlyList<T> list)
+		private void OnChanged(KeyList<T>.ChangedAction action, IEntity entity, ImmutableArray<T> list)
 		{
 			if (action != KeyList<T>.ChangedAction.Set)
 			{

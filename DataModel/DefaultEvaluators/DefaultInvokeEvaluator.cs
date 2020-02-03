@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,15 +18,15 @@ namespace TSSArt.StateMachine
 			ContentExpressionEvaluator = invoke.Content?.Expression.As<IObjectEvaluator>();
 			ContentBodyEvaluator = invoke.Content?.Body.As<IValueEvaluator>();
 			IdLocationEvaluator = invoke.IdLocation.As<ILocationEvaluator>();
-			NameEvaluatorList = invoke.NameList.AsListOf<ILocationEvaluator>();
-			ParameterList = invoke.Parameters.AsListOf<DefaultParam>();
+			NameEvaluatorList = invoke.NameList.As<IEntity>().AsListOf<ILocationEvaluator>();
+			ParameterList = invoke.Parameters.As<IEntity>().AsListOf<DefaultParam>();
 		}
 
 		public IObjectEvaluator                  ContentExpressionEvaluator { get; }
 		public IValueEvaluator                   ContentBodyEvaluator       { get; }
 		public ILocationEvaluator                IdLocationEvaluator        { get; }
-		public IReadOnlyList<ILocationEvaluator> NameEvaluatorList          { get; }
-		public IReadOnlyList<DefaultParam>       ParameterList              { get; }
+		public ImmutableArray<ILocationEvaluator> NameEvaluatorList          { get; }
+		public ImmutableArray<DefaultParam>       ParameterList              { get; }
 		public IStringEvaluator                  SourceExpressionEvaluator  { get; }
 		public IStringEvaluator                  TypeExpressionEvaluator    { get; }
 
@@ -46,9 +46,9 @@ namespace TSSArt.StateMachine
 		public IValueExpression                   SourceExpression => _invoke.SourceExpression;
 		public string                             Id               => _invoke.Id;
 		public ILocationExpression                IdLocation       => _invoke.IdLocation;
-		public IReadOnlyList<ILocationExpression> NameList         => _invoke.NameList;
+		public ImmutableArray<ILocationExpression> NameList         => _invoke.NameList;
 		public bool                               AutoForward      => _invoke.AutoForward;
-		public IReadOnlyList<IParam>              Parameters       => _invoke.Parameters;
+		public ImmutableArray<IParam>              Parameters       => _invoke.Parameters;
 		public IFinalize                          Finalize         => _invoke.Finalize;
 		public IContent                           Content          => _invoke.Content;
 

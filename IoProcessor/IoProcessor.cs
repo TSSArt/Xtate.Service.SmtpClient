@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -90,7 +90,7 @@ namespace TSSArt.StateMachine
 			return service.Send(serviceEvent, token);
 		}
 
-		IReadOnlyList<IEventProcessor> IIoProcessor.GetIoProcessors() => _ioProcessors;
+		ImmutableArray<IEventProcessor> IIoProcessor.GetIoProcessors() => _ioProcessors;
 
 		async ValueTask IIoProcessor.StartInvoke(string sessionId, InvokeData data, CancellationToken token)
 		{

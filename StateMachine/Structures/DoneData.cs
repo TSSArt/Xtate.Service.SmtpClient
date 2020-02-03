@@ -1,11 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public struct DoneData : IDoneData, IEntity<DoneData, IDoneData>, IAncestorProvider
 	{
 		public IContent              Content    { get; set; }
-		public IReadOnlyList<IParam> Parameters { get; set; }
+		public ImmutableArray<IParam> Parameters { get; set; }
 
 		void IEntity<DoneData, IDoneData>.Init(IDoneData source)
 		{
@@ -16,7 +16,7 @@ namespace TSSArt.StateMachine
 
 		bool IEntity<DoneData, IDoneData>.RefEquals(in DoneData other) =>
 				ReferenceEquals(Content, other.Content) &&
-				ReferenceEquals(Parameters, other.Parameters);
+				Parameters == other.Parameters;
 
 		internal object Ancestor;
 

@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public interface IDataModel : IEntity
 	{
-		IReadOnlyList<IData> Data { get; }
+		ImmutableArray<IData> Data { get; }
 	}
 }

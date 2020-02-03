@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public struct OnExit : IOnExit, IEntity<OnExit, IOnExit>, IAncestorProvider
 	{
-		public IReadOnlyList<IExecutableEntity> Action { get; set; }
+		public ImmutableArray<IExecutableEntity> Action { get; set; }
 
 		void IEntity<OnExit, IOnExit>.Init(IOnExit source)
 		{
@@ -12,7 +12,7 @@ namespace TSSArt.StateMachine
 			Action = source.Action;
 		}
 
-		bool IEntity<OnExit, IOnExit>.RefEquals(in OnExit other) => ReferenceEquals(Action, other.Action);
+		bool IEntity<OnExit, IOnExit>.RefEquals(in OnExit other) => Action == other.Action;
 
 		internal object Ancestor;
 

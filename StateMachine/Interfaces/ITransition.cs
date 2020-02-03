@@ -1,13 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public interface ITransition : IEntity
 	{
-		IReadOnlyList<IEventDescriptor>  Event     { get; }
+		ImmutableArray<IEventDescriptor>  Event     { get; }
 		IExecutableEntity                Condition { get; }
-		IReadOnlyList<IIdentifier>       Target    { get; }
+		ImmutableArray<IIdentifier>       Target    { get; }
 		TransitionType                   Type      { get; }
-		IReadOnlyList<IExecutableEntity> Action    { get; }
+		ImmutableArray<IExecutableEntity> Action    { get; }
 	}
 }

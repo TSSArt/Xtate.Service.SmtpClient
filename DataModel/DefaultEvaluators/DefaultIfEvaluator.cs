@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -14,24 +15,24 @@ namespace TSSArt.StateMachine
 			_if = @if;
 
 			var currentCondition = @if.Condition.As<IBooleanEvaluator>();
-			var currentActions = new List<IExecEvaluator>();
+			var currentActions = ImmutableArray.CreateBuilder<IExecEvaluator>();
 
-			Branches = new List<(IBooleanEvaluator Condition, IReadOnlyList<IExecEvaluator> Actions)>();
+			Branches = new List<(IBooleanEvaluator Condition, ImmutableArray<IExecEvaluator> Actions)>();
 
 			foreach (var op in @if.Action)
 			{
 				switch (op)
 				{
 					case IElseIf elseIf:
-						Branches.Add((currentCondition, currentActions.AsReadOnly()));
+						Branches.Add((currentCondition, currentActions.ToImmutable()));
 						currentCondition = elseIf.Condition.As<IBooleanEvaluator>();
-						currentActions = new List<IExecEvaluator>();
+						currentActions.Clear();
 						break;
 
 					case IElse _:
-						Branches.Add((currentCondition, currentActions.AsReadOnly()));
+						Branches.Add((currentCondition, currentActions.ToImmutable()));
 						currentCondition = null;
-						currentActions = new List<IExecEvaluator>();
+						currentActions.Clear();
 						break;
 
 					default:
@@ -40,10 +41,10 @@ namespace TSSArt.StateMachine
 				}
 			}
 
-			Branches.Add((currentCondition, currentActions));
+			Branches.Add((currentCondition, currentActions.ToImmutable()));
 		}
 
-		public List<(IBooleanEvaluator Condition, IReadOnlyList<IExecEvaluator> Actions)> Branches { get; }
+		public List<(IBooleanEvaluator Condition, ImmutableArray<IExecEvaluator> Actions)> Branches { get; }
 
 		object IAncestorProvider.Ancestor => _if.Ancestor;
 
@@ -65,7 +66,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public IReadOnlyList<IExecutableEntity> Action    => _if.Action;
+		public ImmutableArray<IExecutableEntity> Action    => _if.Action;
 		public IConditionExpression             Condition => _if.Condition;
 	}
 }

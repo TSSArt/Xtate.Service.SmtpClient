@@ -1,6 +1,6 @@
 ﻿namespace TSSArt.StateMachine
 {
-	public sealed class OnEntryList : ValidatedReadOnlyList<OnEntryList, IOnEntry>
+	public sealed class OnEntryList : ValidatedArrayBuilder<>
 	{
 		protected override Options GetOptions() => Options.NullIfEmpty;
 	}

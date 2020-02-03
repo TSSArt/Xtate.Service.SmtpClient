@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -30,8 +30,8 @@ namespace TSSArt.StateMachine
 		public ILocationEvaluator                IdLocationEvaluator        { get; }
 		public IStringEvaluator                  TargetExpressionEvaluator  { get; }
 		public IStringEvaluator                  TypeExpressionEvaluator    { get; }
-		public IReadOnlyList<ILocationEvaluator> NameEvaluatorList          { get; }
-		public IReadOnlyList<DefaultParam>       ParameterList              { get; }
+		public ImmutableArray<ILocationEvaluator> NameEvaluatorList          { get; }
+		public ImmutableArray<DefaultParam>       ParameterList              { get; }
 
 		object IAncestorProvider.Ancestor => _send.Ancestor;
 
@@ -75,8 +75,8 @@ namespace TSSArt.StateMachine
 		public IValueExpression                   EventExpression  => _send.EventExpression;
 		public string                             Id               => _send.Id;
 		public ILocationExpression                IdLocation       => _send.IdLocation;
-		public IReadOnlyList<ILocationExpression> NameList         => _send.NameList;
-		public IReadOnlyList<IParam>              Parameters       => _send.Parameters;
+		public ImmutableArray<ILocationExpression> NameList         => _send.NameList;
+		public ImmutableArray<IParam>              Parameters       => _send.Parameters;
 		public Uri                                Target           => _send.Target;
 		public IValueExpression                   TargetExpression => _send.TargetExpression;
 		public Uri                                Type             => _send.Type;

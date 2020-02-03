@@ -1,27 +1,14 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 
 namespace TSSArt.StateMachine
 {
-	public abstract class ValidatedReadOnlyList<TList, T> : IReadOnlyList<T> where TList : ValidatedReadOnlyList<TList, T>, new()
+	public static class ValidatedArrayBuilder<T>
 	{
-		private static readonly TList Empty = new TList { _items = Array.Empty<T>() };
-
-		private IReadOnlyList<T> _items;
-
-		public IEnumerator<T> GetEnumerator() => _items.GetEnumerator();
-
-		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-		public int Count => _items.Count;
-
-		public T this[int index] => _items[index];
-
-		protected abstract Options GetOptions();
-
-		public static TList Create<TSource>(IReadOnlyList<TSource> list, Func<TSource, T> selector)
+		public static TList Create<TSource>(ImmutableArray<TSource> list, Func<TSource, T> selector)
 		{
 			if (selector == null) throw new ArgumentNullException(nameof(selector));
 
@@ -74,7 +61,7 @@ namespace TSSArt.StateMachine
 			return new TList { _items = items };
 		}
 
-		public static TList Create(IReadOnlyList<T> list)
+		public static TList Create(ImmutableArray<T> list)
 		{
 			if (list is TList result)
 			{

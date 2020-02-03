@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -8,12 +8,12 @@ namespace TSSArt.StateMachine
 		public IDataModel                  DataModel     { get; set; }
 		public IIdentifier                 Id            { get; set; }
 		public IInitial                    Initial       { get; set; }
-		public IReadOnlyList<IInvoke>      Invoke        { get; set; }
-		public IReadOnlyList<IOnEntry>     OnEntry       { get; set; }
-		public IReadOnlyList<IOnExit>      OnExit        { get; set; }
-		public IReadOnlyList<IStateEntity> States        { get; set; }
-		public IReadOnlyList<IHistory>     HistoryStates { get; set; }
-		public IReadOnlyList<ITransition>  Transitions   { get; set; }
+		public ImmutableArray<IInvoke>      Invoke        { get; set; }
+		public ImmutableArray<IOnEntry>     OnEntry       { get; set; }
+		public ImmutableArray<IOnExit>      OnExit        { get; set; }
+		public ImmutableArray<IStateEntity> States        { get; set; }
+		public ImmutableArray<IHistory>     HistoryStates { get; set; }
+		public ImmutableArray<ITransition>  Transitions   { get; set; }
 
 		void IEntity<State, IState>.Init(IState source)
 		{
@@ -31,14 +31,14 @@ namespace TSSArt.StateMachine
 
 		bool IEntity<State, IState>.RefEquals(in State other) =>
 				ReferenceEquals(Id, other.Id) &&
-				ReferenceEquals(Invoke, other.Invoke) &&
 				ReferenceEquals(Initial, other.Initial) &&
 				ReferenceEquals(DataModel, other.DataModel) &&
-				ReferenceEquals(States, other.States) &&
-				ReferenceEquals(HistoryStates, other.HistoryStates) &&
-				ReferenceEquals(OnExit, other.OnExit) &&
-				ReferenceEquals(OnEntry, other.OnEntry) &&
-				ReferenceEquals(Transitions, other.Transitions);
+				Invoke == other.Invoke &&
+				States == other.States &&
+				HistoryStates == other.HistoryStates &&
+				OnExit == other.OnExit &&
+				OnEntry == other.OnEntry &&
+				Transitions == other.Transitions;
 
 		internal object Ancestor;
 

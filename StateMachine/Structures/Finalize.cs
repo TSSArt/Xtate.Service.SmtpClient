@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public struct Finalize : IFinalize, IEntity<Finalize, IFinalize>, IAncestorProvider
 	{
-		public IReadOnlyList<IExecutableEntity> Action { get; set; }
+		public ImmutableArray<IExecutableEntity> Action { get; set; }
 
 		void IEntity<Finalize, IFinalize>.Init(IFinalize source)
 		{
@@ -12,7 +12,7 @@ namespace TSSArt.StateMachine
 			Action = source.Action;
 		}
 
-		bool IEntity<Finalize, IFinalize>.RefEquals(in Finalize other) => ReferenceEquals(Action, other.Action);
+		bool IEntity<Finalize, IFinalize>.RefEquals(in Finalize other) => Action == other.Action;
 
 		internal object Ancestor;
 

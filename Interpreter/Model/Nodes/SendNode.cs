@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -23,8 +23,8 @@ namespace TSSArt.StateMachine
 		public ILocationExpression                IdLocation       => _entity.IdLocation;
 		public int?                               DelayMs          => _entity.DelayMs;
 		public IValueExpression                   DelayExpression  => _entity.DelayExpression;
-		public IReadOnlyList<ILocationExpression> NameList         => _entity.NameList;
-		public IReadOnlyList<IParam>              Parameters       => _entity.Parameters;
+		public ImmutableArray<ILocationExpression> NameList         => _entity.NameList;
+		public ImmutableArray<IParam>              Parameters       => _entity.Parameters;
 		public IContent                           Content          => _entity.Content;
 
 		protected override void Store(Bucket bucket)

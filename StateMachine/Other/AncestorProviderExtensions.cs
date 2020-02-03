@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -93,25 +93,9 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public static IReadOnlyList<T> AsListOf<T>(this IReadOnlyList<IEntity> list)
+		public static ImmutableArray<T> AsListOf<T>(this ImmutableArray<IEntity> list)
 		{
-			if (list == null)
-			{
-				return null;
-			}
-
-			if (list.Count == 0)
-			{
-				return Array.Empty<T>();
-			}
-
-			var result = new T[list.Count];
-			for (var i = 0; i < result.Length; i ++)
-			{
-				result[i] = list[i].As<T>();
-			}
-
-			return new ReadOnlyCollection<T>(result);
+			return !list.IsDefault ? ImmutableArray.CreateRange(list, item => item.As<T>()) : default;
 		}
 
 		public static IEnumerable<T> AsEnumerableOf<T>(this IEnumerable<IEntity> enumerable)

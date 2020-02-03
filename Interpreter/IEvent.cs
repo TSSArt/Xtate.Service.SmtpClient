@@ -1,12 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public interface IEvent : IEntity
 	{
 		string                     SendId         { get; }
-		IReadOnlyList<IIdentifier> NameParts      { get; }
+		ImmutableArray<IIdentifier> NameParts      { get; }
 		EventType                  Type           { get; }
 		Uri                        Origin         { get; }
 		Uri                        OriginType     { get; }

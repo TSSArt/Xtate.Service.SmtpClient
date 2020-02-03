@@ -1,6 +1,6 @@
 ﻿namespace TSSArt.StateMachine
 {
-	public sealed class EventDescriptorList : ValidatedReadOnlyList<EventDescriptorList, IEventDescriptor>
+	public sealed class EventDescriptorList : ValidatedArrayBuilder<>
 	{
 		protected override Options GetOptions() => Options.NonEmpty;
 	}

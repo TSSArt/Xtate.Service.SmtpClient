@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -11,7 +11,7 @@ namespace TSSArt.StateMachine
 		private          IFinalize                          _finalize;
 		private          string                             _id;
 		private          ILocationExpression                _idLocation;
-		private          IReadOnlyList<ILocationExpression> _nameList;
+		private          ImmutableArray<ILocationExpression> _nameList;
 		private          Uri                                _source;
 		private          IValueExpression                   _sourceExpression;
 		private          Uri                                _type;
@@ -63,7 +63,7 @@ namespace TSSArt.StateMachine
 
 		public void SetIdLocation(ILocationExpression idLocation) => _idLocation = idLocation ?? throw new ArgumentNullException(nameof(idLocation));
 
-		public void SetNameList(IReadOnlyList<ILocationExpression> nameList) => _nameList = LocationExpressionList.Create(nameList ?? throw new ArgumentNullException(nameof(nameList)));
+		public void SetNameList(ImmutableArray<ILocationExpression> nameList) => _nameList = LocationExpressionList.Create(nameList ?? throw new ArgumentNullException(nameof(nameList)));
 
 		public void SetAutoForward(bool autoForward) => _autoForward = autoForward;
 

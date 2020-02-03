@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public interface IDoneData : IEntity
 	{
 		IContent              Content    { get; }
-		IReadOnlyList<IParam> Parameters { get; }
+		ImmutableArray<IParam> Parameters { get; }
 	}
 }

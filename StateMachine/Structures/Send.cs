@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -12,8 +12,8 @@ namespace TSSArt.StateMachine
 		public IValueExpression                   EventExpression  { get; set; }
 		public string                             Id               { get; set; }
 		public ILocationExpression                IdLocation       { get; set; }
-		public IReadOnlyList<ILocationExpression> NameList         { get; set; }
-		public IReadOnlyList<IParam>              Parameters       { get; set; }
+		public ImmutableArray<ILocationExpression> NameList         { get; set; }
+		public ImmutableArray<IParam>              Parameters       { get; set; }
 		public Uri                                Target           { get; set; }
 		public IValueExpression                   TargetExpression { get; set; }
 		public Uri                                Type             { get; set; }
@@ -39,6 +39,8 @@ namespace TSSArt.StateMachine
 
 		bool IEntity<Send, ISend>.RefEquals(in Send other) =>
 				DelayMs == other.DelayMs &&
+				Parameters == other.Parameters &&
+				NameList == other.NameList &&
 				ReferenceEquals(DelayExpression, other.DelayExpression) &&
 				ReferenceEquals(Id, other.Id) &&
 				ReferenceEquals(IdLocation, other.IdLocation) &&
@@ -48,9 +50,7 @@ namespace TSSArt.StateMachine
 				ReferenceEquals(TargetExpression, other.TargetExpression) &&
 				ReferenceEquals(Type, other.Type) &&
 				ReferenceEquals(TypeExpression, other.TypeExpression) &&
-				ReferenceEquals(Content, other.Content) &&
-				ReferenceEquals(Parameters, other.Parameters) &&
-				ReferenceEquals(NameList, other.NameList);
+				ReferenceEquals(Content, other.Content);
 
 		internal object Ancestor;
 

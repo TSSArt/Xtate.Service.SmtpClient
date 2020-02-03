@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -36,12 +36,12 @@ namespace TSSArt.StateMachine
 		}
 
 		public override bool                           IsAtomicState => false;
-		public override IReadOnlyList<InvokeNode>      Invoke        { get; }
-		public override IReadOnlyList<TransitionNode>  Transitions   { get; }
-		public override IReadOnlyList<HistoryNode>     HistoryStates { get; }
-		public override IReadOnlyList<StateEntityNode> States        { get; }
-		public override IReadOnlyList<OnEntryNode>     OnEntry       { get; }
-		public override IReadOnlyList<OnExitNode>      OnExit        { get; }
+		public override ImmutableArray<InvokeNode>      Invoke        { get; }
+		public override ImmutableArray<TransitionNode>  Transitions   { get; }
+		public override ImmutableArray<HistoryNode>     HistoryStates { get; }
+		public override ImmutableArray<StateEntityNode> States        { get; }
+		public override ImmutableArray<OnEntryNode>     OnEntry       { get; }
+		public override ImmutableArray<OnExitNode>      OnExit        { get; }
 		public override DataModelNode                  DataModel     { get; }
 
 		object IAncestorProvider.Ancestor => _parallel.Ancestor;
@@ -51,12 +51,12 @@ namespace TSSArt.StateMachine
 		public override IIdentifier Id { get; }
 
 		IDataModel IParallel.                 DataModel     => DataModel;
-		IReadOnlyList<IInvoke> IParallel.     Invoke        => Invoke;
-		IReadOnlyList<IStateEntity> IParallel.States        => States;
-		IReadOnlyList<IHistory> IParallel.    HistoryStates => HistoryStates;
-		IReadOnlyList<ITransition> IParallel. Transitions   => Transitions;
-		IReadOnlyList<IOnEntry> IParallel.    OnEntry       => OnEntry;
-		IReadOnlyList<IOnExit> IParallel.     OnExit        => OnExit;
+		ImmutableArray<IInvoke> IParallel.     Invoke        => Invoke;
+		ImmutableArray<IStateEntity> IParallel.States        => States;
+		ImmutableArray<IHistory> IParallel.    HistoryStates => HistoryStates;
+		ImmutableArray<ITransition> IParallel. Transitions   => Transitions;
+		ImmutableArray<IOnEntry> IParallel.    OnEntry       => OnEntry;
+		ImmutableArray<IOnExit> IParallel.     OnExit        => OnExit;
 
 		protected override void Store(Bucket bucket)
 		{

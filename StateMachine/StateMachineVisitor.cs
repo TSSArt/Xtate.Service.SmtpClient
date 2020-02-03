@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 
@@ -7,11 +8,12 @@ namespace TSSArt.StateMachine
 {
 	public abstract class StateMachineVisitor
 	{
+		private readonly Stack<(object, ImmutableArray<object>)> _path;
+
 		private readonly StateMachineVisitor _masterVisitor;
-		private readonly Stack<object>       _path;
 		private          StringBuilder       _errorMessages;
 
-		protected StateMachineVisitor(bool trackPath = false) => _path = trackPath ? new Stack<object>() : null;
+		protected StateMachineVisitor(bool trackPath = false) => _path = trackPath ? new Stack<(object, ImmutableArray<object>)>() : null;
 
 		protected StateMachineVisitor(StateMachineVisitor masterVisitor)
 		{
@@ -22,9 +24,19 @@ namespace TSSArt.StateMachine
 
 		private string CurrentPath => _path != null ? string.Join(separator: "/", _path.Reverse().Select(EntityName)) : null;
 
-		private string EntityName(object entity) => entity.GetType().Name;
+		private string EntityName((object obj, ImmutableArray<object> array) entry)
+		{
+			if (entry.array.IsDefault)
+			{
+				return entry.obj.GetType().Name;
+			}
 
-		private void Enter<T>(T entity) where T : class => _path?.Push(entity);
+			return ((Type) entry.obj).Name;
+		}
+
+		private void Enter<T>(T entity) where T : class => _path?.Push((entity, default));
+
+		private void Enter<T>(ImmutableArray<T> array) where T : class => _path?.Push((typeof(ImmutableArray<T>), array.CastArray<object>()));
 
 		private void Exit() => _path?.Pop();
 
@@ -42,7 +54,7 @@ namespace TSSArt.StateMachine
 				throw new InvalidOperationException(message: "Root path can be set only before visiting.");
 			}
 
-			_path?.Push(root);
+			_path?.Push((root, default));
 		}
 
 		protected void AddErrorMessage(string message)
@@ -117,55 +129,60 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private ref struct VisitListData<TList, TIEntity> where TList : ValidatedReadOnlyList<TList, TIEntity>, new() where TIEntity : class
+		private ref struct VisitListData<TIEntity> where TIEntity : class
 		{
 			public TrackList<TIEntity> List;
 
-			private readonly IReadOnlyList<TIEntity> _original;
+			private readonly ImmutableArray<TIEntity> _original;
 
-			public VisitListData(IReadOnlyList<TIEntity> list)
+			public VisitListData(ImmutableArray<TIEntity> list)
 			{
-				_original = list ?? throw new ArgumentNullException(nameof(list));
+				if (list.IsDefault)
+				{
+					throw new ArgumentNullException(nameof(list));
+				}
+
+				_original = list;
 				List = new TrackList<TIEntity>(list);
 			}
 
-			public void Update(ref IReadOnlyList<TIEntity> list)
+			public void Update(ref ImmutableArray<TIEntity> list)
 			{
-				if (ReferenceEquals(_original, list) && List.IsModified)
+				if (_original == list && List.IsModified)
 				{
-					list = ValidatedReadOnlyList<TList, TIEntity>.Create(List.Items);
+					list = List.ModifiedItems.ToImmutable();
 				}
 			}
 		}
 
-		protected ref struct TrackList<T>
+		protected ref struct TrackList<T> where T : class
 		{
-			private readonly IReadOnlyList<T> _items;
-			private          List<T>          _newItems;
+			private readonly ImmutableArray<T>         _items;
+			private          ImmutableArray<T>.Builder _builder;
 
-			public TrackList(IReadOnlyList<T> items)
+			public TrackList(ImmutableArray<T> items)
 			{
 				_items = items;
-				_newItems = null;
+				_builder = null;
 			}
 
 			public bool IsModified
 			{
 				get
 				{
-					if (_newItems == null)
+					if (_builder == null)
 					{
 						return false;
 					}
 
-					if (_items.Count != _newItems.Count)
+					if (_items.Length != _builder.Count)
 					{
 						return true;
 					}
 
-					for (var i = 0; i < _items.Count; i ++)
+					for (var i = 0; i < _items.Length; i ++)
 					{
-						if (!ReferenceEquals(_items[i], _newItems[i]))
+						if (!ReferenceEquals(_items[i], _builder[i]))
 						{
 							return true;
 						}
@@ -175,38 +192,39 @@ namespace TSSArt.StateMachine
 				}
 			}
 
-			public IReadOnlyList<T> Items => _newItems ?? _items;
+			public ImmutableArray<T>.Builder ModifiedItems => _builder;
 
-			public int Count => Items.Count;
+			public int Count => _builder?.Count ?? _items.Length;
 
-			public bool Contains(T item) => Items.Contains(item);
+			public bool Contains(T item) => _builder?.Contains(item) ?? _items.Contains(item);
 
-			public IEnumerator<T> GetEnumerator() => Items.GetEnumerator();
+			public IEnumerator<T> GetEnumerator() => _builder != null ? _builder.GetEnumerator() : ((IEnumerable<T>) _items).GetEnumerator();
 
 			public T this[int index]
 			{
-				get => Items[index];
+				get => _builder != null ? _builder[index] : _items[index];
 				set
 				{
-					if (_newItems != null)
+					if (_builder != null)
 					{
-						_newItems[index] = value;
+						_builder[index] = value;
 					}
 					else if (!ReferenceEquals(_items[index], value))
 					{
-						_newItems = new List<T>(_items) { [index] = value };
+						_builder = _items.ToBuilder();
+						_builder[index] = value;
 					}
 				}
 			}
 
 			public void Add(T item)
 			{
-				if (_newItems == null)
+				if (_builder == null)
 				{
-					_newItems = new List<T>(_items);
+					_builder = _items.ToBuilder();
 				}
 
-				_newItems.Add(item);
+				_builder.Add(item);
 			}
 
 			public void Clear()
@@ -216,34 +234,34 @@ namespace TSSArt.StateMachine
 					return;
 				}
 
-				if (_newItems == null)
+				if (_builder == null)
 				{
-					_newItems = new List<T>();
+					_builder = ImmutableArray<T>.Empty.ToBuilder();
 				}
 				else
 				{
-					_newItems.Clear();
+					_builder.Clear();
 				}
 			}
 
 			public void Insert(int index, T item)
 			{
-				if (_newItems == null)
+				if (_builder == null)
 				{
-					_newItems = new List<T>(_items);
+					_builder = _items.ToBuilder();
 				}
 
-				_newItems.Insert(index, item);
+				_builder.Insert(index, item);
 			}
 
 			public void RemoveAt(int index)
 			{
-				if (_newItems == null)
+				if (_builder == null)
 				{
-					_newItems = new List<T>(_items);
+					_builder = _items.ToBuilder();
 				}
 
-				_newItems.RemoveAt(index);
+				_builder.RemoveAt(index);
 			}
 		}
 
@@ -607,88 +625,88 @@ namespace TSSArt.StateMachine
 
 		#endregion
 
-		#region Visit(ref IReadOnlyList<IT> list)
+		#region Visit(ref ImmutableArray<IT> list)
 
-		protected virtual void Visit(ref IReadOnlyList<IIdentifier> list)
+		protected virtual void Visit(ref ImmutableArray<IIdentifier> list)
 		{
-			var data = new VisitListData<IdentifierList, IIdentifier>(list);
+			var data = new VisitListData<IIdentifier>(list);
 			Build(ref list, ref data.List);
 			data.Update(ref list);
 		}
 
-		protected virtual void Visit(ref IReadOnlyList<IStateEntity> list)
+		protected virtual void Visit(ref ImmutableArray<IStateEntity> list)
 		{
-			var data = new VisitListData<StateEntityList, IStateEntity>(list);
+			var data = new VisitListData<IStateEntity>(list);
 			Build(ref list, ref data.List);
 			data.Update(ref list);
 		}
 
-		protected virtual void Visit(ref IReadOnlyList<ITransition> list)
+		protected virtual void Visit(ref ImmutableArray<ITransition> list)
 		{
-			var data = new VisitListData<TransitionList, ITransition>(list);
+			var data = new VisitListData<ITransition>(list);
 			Build(ref list, ref data.List);
 			data.Update(ref list);
 		}
 
-		protected virtual void Visit(ref IReadOnlyList<IEventDescriptor> list)
+		protected virtual void Visit(ref ImmutableArray<IEventDescriptor> list)
 		{
-			var data = new VisitListData<EventDescriptorList, IEventDescriptor>(list);
+			var data = new VisitListData<IEventDescriptor>(list);
 			Build(ref list, ref data.List);
 			data.Update(ref list);
 		}
 
-		protected virtual void Visit(ref IReadOnlyList<IHistory> list)
+		protected virtual void Visit(ref ImmutableArray<IHistory> list)
 		{
-			var data = new VisitListData<HistoryList, IHistory>(list);
+			var data = new VisitListData<IHistory>(list);
 			Build(ref list, ref data.List);
 			data.Update(ref list);
 		}
 
-		protected virtual void Visit(ref IReadOnlyList<IOnEntry> list)
+		protected virtual void Visit(ref ImmutableArray<IOnEntry> list)
 		{
-			var data = new VisitListData<OnEntryList, IOnEntry>(list);
+			var data = new VisitListData<IOnEntry>(list);
 			Build(ref list, ref data.List);
 			data.Update(ref list);
 		}
 
-		protected virtual void Visit(ref IReadOnlyList<IOnExit> list)
+		protected virtual void Visit(ref ImmutableArray<IOnExit> list)
 		{
-			var data = new VisitListData<OnExitList, IOnExit>(list);
+			var data = new VisitListData<IOnExit>(list);
 			Build(ref list, ref data.List);
 			data.Update(ref list);
 		}
 
-		protected virtual void Visit(ref IReadOnlyList<IExecutableEntity> list)
+		protected virtual void Visit(ref ImmutableArray<IExecutableEntity> list)
 		{
-			var data = new VisitListData<ExecutableEntityList, IExecutableEntity>(list);
+			var data = new VisitListData<IExecutableEntity>(list);
 			Build(ref list, ref data.List);
 			data.Update(ref list);
 		}
 
-		protected virtual void Visit(ref IReadOnlyList<IInvoke> list)
+		protected virtual void Visit(ref ImmutableArray<IInvoke> list)
 		{
-			var data = new VisitListData<InvokeList, IInvoke>(list);
+			var data = new VisitListData<IInvoke>(list);
 			Build(ref list, ref data.List);
 			data.Update(ref list);
 		}
 
-		protected virtual void Visit(ref IReadOnlyList<ILocationExpression> list)
+		protected virtual void Visit(ref ImmutableArray<ILocationExpression> list)
 		{
-			var data = new VisitListData<LocationExpressionList, ILocationExpression>(list);
+			var data = new VisitListData<ILocationExpression>(list);
 			Build(ref list, ref data.List);
 			data.Update(ref list);
 		}
 
-		protected virtual void Visit(ref IReadOnlyList<IData> list)
+		protected virtual void Visit(ref ImmutableArray<IData> list)
 		{
-			var data = new VisitListData<DataList, IData>(list);
+			var data = new VisitListData<IData>(list);
 			Build(ref list, ref data.List);
 			data.Update(ref list);
 		}
 
-		protected virtual void Visit(ref IReadOnlyList<IParam> list)
+		protected virtual void Visit(ref ImmutableArray<IParam> list)
 		{
-			var data = new VisitListData<ParamList, IParam>(list);
+			var data = new VisitListData<IParam>(list);
 			Build(ref list, ref data.List);
 			data.Update(ref list);
 		}
@@ -1084,9 +1102,9 @@ namespace TSSArt.StateMachine
 
 		#endregion
 
-		#region Build(ref IReadOnlyList<IT> list, ref TrackList<IT> trackList)
+		#region Build(ref ImmutableArray<IT> list, ref TrackList<IT> trackList)
 
-		protected virtual void Build(ref IReadOnlyList<IIdentifier> list, ref TrackList<IIdentifier> trackList)
+		protected virtual void Build(ref ImmutableArray<IIdentifier> list, ref TrackList<IIdentifier> trackList)
 		{
 			for (var i = 0; i < trackList.Count; i ++)
 			{
@@ -1096,7 +1114,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual void Build(ref IReadOnlyList<IStateEntity> list, ref TrackList<IStateEntity> trackList)
+		protected virtual void Build(ref ImmutableArray<IStateEntity> list, ref TrackList<IStateEntity> trackList)
 		{
 			for (var i = 0; i < trackList.Count; i ++)
 			{
@@ -1106,7 +1124,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual void Build(ref IReadOnlyList<ITransition> list, ref TrackList<ITransition> trackList)
+		protected virtual void Build(ref ImmutableArray<ITransition> list, ref TrackList<ITransition> trackList)
 		{
 			for (var i = 0; i < trackList.Count; i ++)
 			{
@@ -1116,7 +1134,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual void Build(ref IReadOnlyList<IEventDescriptor> list, ref TrackList<IEventDescriptor> trackList)
+		protected virtual void Build(ref ImmutableArray<IEventDescriptor> list, ref TrackList<IEventDescriptor> trackList)
 		{
 			for (var i = 0; i < trackList.Count; i ++)
 			{
@@ -1126,7 +1144,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual void Build(ref IReadOnlyList<IHistory> list, ref TrackList<IHistory> trackList)
+		protected virtual void Build(ref ImmutableArray<IHistory> list, ref TrackList<IHistory> trackList)
 		{
 			for (var i = 0; i < trackList.Count; i ++)
 			{
@@ -1136,7 +1154,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual void Build(ref IReadOnlyList<IOnEntry> list, ref TrackList<IOnEntry> trackList)
+		protected virtual void Build(ref ImmutableArray<IOnEntry> list, ref TrackList<IOnEntry> trackList)
 		{
 			for (var i = 0; i < trackList.Count; i ++)
 			{
@@ -1146,7 +1164,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual void Build(ref IReadOnlyList<IOnExit> list, ref TrackList<IOnExit> trackList)
+		protected virtual void Build(ref ImmutableArray<IOnExit> list, ref TrackList<IOnExit> trackList)
 		{
 			for (var i = 0; i < trackList.Count; i ++)
 			{
@@ -1156,7 +1174,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual void Build(ref IReadOnlyList<IExecutableEntity> list, ref TrackList<IExecutableEntity> trackList)
+		protected virtual void Build(ref ImmutableArray<IExecutableEntity> list, ref TrackList<IExecutableEntity> trackList)
 		{
 			for (var i = 0; i < trackList.Count; i ++)
 			{
@@ -1166,7 +1184,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual void Build(ref IReadOnlyList<IInvoke> list, ref TrackList<IInvoke> trackList)
+		protected virtual void Build(ref ImmutableArray<IInvoke> list, ref TrackList<IInvoke> trackList)
 		{
 			for (var i = 0; i < trackList.Count; i ++)
 			{
@@ -1176,7 +1194,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual void Build(ref IReadOnlyList<ILocationExpression> list, ref TrackList<ILocationExpression> trackList)
+		protected virtual void Build(ref ImmutableArray<ILocationExpression> list, ref TrackList<ILocationExpression> trackList)
 		{
 			for (var i = 0; i < trackList.Count; i ++)
 			{
@@ -1186,7 +1204,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual void Build(ref IReadOnlyList<IData> list, ref TrackList<IData> trackList)
+		protected virtual void Build(ref ImmutableArray<IData> list, ref TrackList<IData> trackList)
 		{
 			for (var i = 0; i < trackList.Count; i ++)
 			{
@@ -1196,7 +1214,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual void Build(ref IReadOnlyList<IParam> list, ref TrackList<IParam> trackList)
+		protected virtual void Build(ref ImmutableArray<IParam> list, ref TrackList<IParam> trackList)
 		{
 			for (var i = 0; i < trackList.Count; i ++)
 			{
@@ -1404,99 +1422,99 @@ namespace TSSArt.StateMachine
 
 		#endregion
 
-		#region VisitWrapper(ref IReadOnlyList<IT> entity)
+		#region VisitWrapper(ref ImmutableArray<IT> entity)
 
-		private void VisitWrapper(ref IReadOnlyList<IStateEntity> entity)
+		private void VisitWrapper(ref ImmutableArray<IStateEntity> entity)
 		{
-			if (entity == null) return;
+			if (entity.IsDefault) return;
 			Enter(entity);
 			Visit(ref entity);
 			Exit();
 		}
 
-		private void VisitWrapper(ref IReadOnlyList<ITransition> entity)
+		private void VisitWrapper(ref ImmutableArray<ITransition> entity)
 		{
-			if (entity == null) return;
+			if (entity.IsDefault) return;
 			Enter(entity);
 			Visit(ref entity);
 			Exit();
 		}
 
-		private void VisitWrapper(ref IReadOnlyList<IEventDescriptor> entity)
+		private void VisitWrapper(ref ImmutableArray<IEventDescriptor> entity)
 		{
-			if (entity == null) return;
+			if (entity.IsDefault) return;
 			Enter(entity);
 			Visit(ref entity);
 			Exit();
 		}
 
-		private void VisitWrapper(ref IReadOnlyList<IIdentifier> entity)
+		private void VisitWrapper(ref ImmutableArray<IIdentifier> entity)
 		{
-			if (entity == null) return;
+			if (entity.IsDefault) return;
 			Enter(entity);
 			Visit(ref entity);
 			Exit();
 		}
 
-		private void VisitWrapper(ref IReadOnlyList<IExecutableEntity> entity)
+		private void VisitWrapper(ref ImmutableArray<IExecutableEntity> entity)
 		{
-			if (entity == null) return;
+			if (entity.IsDefault) return;
 			Enter(entity);
 			Visit(ref entity);
 			Exit();
 		}
 
-		private void VisitWrapper(ref IReadOnlyList<IHistory> entity)
+		private void VisitWrapper(ref ImmutableArray<IHistory> entity)
 		{
-			if (entity == null) return;
+			if (entity.IsDefault) return;
 			Enter(entity);
 			Visit(ref entity);
 			Exit();
 		}
 
-		private void VisitWrapper(ref IReadOnlyList<IOnEntry> entity)
+		private void VisitWrapper(ref ImmutableArray<IOnEntry> entity)
 		{
-			if (entity == null) return;
+			if (entity.IsDefault) return;
 			Enter(entity);
 			Visit(ref entity);
 			Exit();
 		}
 
-		private void VisitWrapper(ref IReadOnlyList<IOnExit> entity)
+		private void VisitWrapper(ref ImmutableArray<IOnExit> entity)
 		{
-			if (entity == null) return;
+			if (entity.IsDefault) return;
 			Enter(entity);
 			Visit(ref entity);
 			Exit();
 		}
 
-		private void VisitWrapper(ref IReadOnlyList<IInvoke> entity)
+		private void VisitWrapper(ref ImmutableArray<IInvoke> entity)
 		{
-			if (entity == null) return;
+			if (entity.IsDefault) return;
 			Enter(entity);
 			Visit(ref entity);
 			Exit();
 		}
 
-		private void VisitWrapper(ref IReadOnlyList<ILocationExpression> entity)
+		private void VisitWrapper(ref ImmutableArray<ILocationExpression> entity)
 		{
-			if (entity == null) return;
+			if (entity.IsDefault) return;
 			Enter(entity);
 			Visit(ref entity);
 			Exit();
 		}
 
-		private void VisitWrapper(ref IReadOnlyList<IData> entity)
+		private void VisitWrapper(ref ImmutableArray<IData> entity)
 		{
-			if (entity == null) return;
+			if (entity.IsDefault) return;
 			Enter(entity);
 			Visit(ref entity);
 			Exit();
 		}
 
-		private void VisitWrapper(ref IReadOnlyList<IParam> entity)
+		private void VisitWrapper(ref ImmutableArray<IParam> entity)
 		{
-			if (entity == null) return;
+			if (entity.IsDefault) return;
 			Enter(entity);
 			Visit(ref entity);
 			Exit();
