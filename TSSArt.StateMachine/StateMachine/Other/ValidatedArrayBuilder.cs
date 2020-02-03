@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.Immutable;
+using System.Collections./**/Immutable;
 using System.Linq;
 
 namespace TSSArt.StateMachine
 {
 	public static class ValidatedArrayBuilder<T>
 	{
-		public static TList Create<TSource>(ImmutableArray<TSource> list, Func<TSource, T> selector)
+		public static TList Create<TSource>(/**/ImmutableArray<TSource> list, Func<TSource, T> selector)
 		{
 			if (selector == null) throw new ArgumentNullException(nameof(selector));
 
@@ -61,7 +61,7 @@ namespace TSSArt.StateMachine
 			return new TList { _items = items };
 		}
 
-		public static TList Create(ImmutableArray<T> list)
+		public static TList Create(/**/ImmutableArray<T> list)
 		{
 			if (list is TList result)
 			{

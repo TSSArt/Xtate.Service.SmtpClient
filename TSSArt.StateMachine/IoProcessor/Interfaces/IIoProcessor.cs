@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections./**/Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -6,7 +6,7 @@ namespace TSSArt.StateMachine
 {
 	internal interface IIoProcessor
 	{
-		ImmutableArray<IEventProcessor> GetIoProcessors();
+		/**/ImmutableArray<IEventProcessor> GetIoProcessors();
 		ValueTask<SendStatus>          DispatchEvent(string sessionId, IOutgoingEvent @event, bool skipDelay, CancellationToken token);
 		ValueTask                      StartInvoke(string sessionId, InvokeData invokeData, CancellationToken token);
 		ValueTask                      CancelInvoke(string sessionId, string invokeId, CancellationToken token);

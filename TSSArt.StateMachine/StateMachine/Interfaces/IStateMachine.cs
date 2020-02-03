@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections./**/Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -8,7 +8,7 @@ namespace TSSArt.StateMachine
 		string                      DataModelType { get; }
 		BindingType                 Binding       { get; }
 		IInitial                    Initial       { get; }
-		ImmutableArray<IStateEntity> States        { get; }
+		/**/ImmutableArray<IStateEntity> States        { get; }
 		IDataModel                  DataModel     { get; }
 		IExecutableEntity           Script        { get; }
 	}

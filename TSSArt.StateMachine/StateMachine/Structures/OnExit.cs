@@ -1,10 +1,10 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections./**/Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public struct OnExit : IOnExit, IEntity<OnExit, IOnExit>, IAncestorProvider
 	{
-		public ImmutableArray<IExecutableEntity> Action { get; set; }
+		public /**/ImmutableArray<IExecutableEntity> Action { get; set; }
 
 		void IEntity<OnExit, IOnExit>.Init(IOnExit source)
 		{

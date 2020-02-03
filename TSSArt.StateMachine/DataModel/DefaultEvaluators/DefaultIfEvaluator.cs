@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
+using System.Collections./**/Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,22 +15,22 @@ namespace TSSArt.StateMachine
 			_if = @if;
 
 			var currentCondition = @if.Condition.As<IBooleanEvaluator>();
-			var currentActions = ImmutableArray.CreateBuilder<IExecEvaluator>();
+			var currentActions = /**/ImmutableArray.CreateBuilder<IExecEvaluator>();
 
-			Branches = new List<(IBooleanEvaluator Condition, ImmutableArray<IExecEvaluator> Actions)>();
+			Branches = new List<(IBooleanEvaluator Condition, /**/ImmutableArray<IExecEvaluator> Actions)>();
 
 			foreach (var op in @if.Action)
 			{
 				switch (op)
 				{
 					case IElseIf elseIf:
-						Branches.Add((currentCondition, currentActions.ToImmutable()));
+						Branches.Add((currentCondition, currentActions.To/**/Immutable()));
 						currentCondition = elseIf.Condition.As<IBooleanEvaluator>();
 						currentActions.Clear();
 						break;
 
 					case IElse _:
-						Branches.Add((currentCondition, currentActions.ToImmutable()));
+						Branches.Add((currentCondition, currentActions.To/**/Immutable()));
 						currentCondition = null;
 						currentActions.Clear();
 						break;
@@ -41,10 +41,10 @@ namespace TSSArt.StateMachine
 				}
 			}
 
-			Branches.Add((currentCondition, currentActions.ToImmutable()));
+			Branches.Add((currentCondition, currentActions.To/**/Immutable()));
 		}
 
-		public List<(IBooleanEvaluator Condition, ImmutableArray<IExecEvaluator> Actions)> Branches { get; }
+		public List<(IBooleanEvaluator Condition, /**/ImmutableArray<IExecEvaluator> Actions)> Branches { get; }
 
 		object IAncestorProvider.Ancestor => _if.Ancestor;
 
@@ -66,7 +66,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public ImmutableArray<IExecutableEntity> Action    => _if.Action;
+		public /**/ImmutableArray<IExecutableEntity> Action    => _if.Action;
 		public IConditionExpression             Condition => _if.Condition;
 	}
 }

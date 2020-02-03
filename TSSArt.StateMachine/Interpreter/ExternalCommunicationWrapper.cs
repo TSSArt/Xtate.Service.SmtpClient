@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Immutable;
+using System.Collections./**/Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,7 +21,7 @@ namespace TSSArt.StateMachine
 			_sessionId = sessionId;
 		}
 
-		public ImmutableArray<IEventProcessor> GetIoProcessors() => _externalCommunication?.GetIoProcessors() ?? Array.Empty<IEventProcessor>();
+		public /**/ImmutableArray<IEventProcessor> GetIoProcessors() => _externalCommunication?.GetIoProcessors() ?? Array.Empty<IEventProcessor>();
 
 		public bool IsCommunicationError(Exception exception, out string sendId)
 		{

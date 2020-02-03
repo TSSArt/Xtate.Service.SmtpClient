@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Immutable;
+using System.Collections./**/Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -14,7 +14,7 @@ namespace TSSArt.StateMachine
 		private          IDataModel                 _dataModel;
 		private          IIdentifier                _id;
 		private          IInitial                   _initial;
-		private          ImmutableArray<IIdentifier> _initialId;
+		private          /**/ImmutableArray<IIdentifier> _initialId;
 
 		public IState Build()
 		{
@@ -43,7 +43,7 @@ namespace TSSArt.StateMachine
 
 		public void SetId(IIdentifier id) => _id = id ?? throw new ArgumentNullException(nameof(id));
 
-		public void SetInitial(ImmutableArray<IIdentifier> initialId) => _initialId = IdentifierList.Create(initialId ?? throw new ArgumentNullException(nameof(initialId)));
+		public void SetInitial(/**/ImmutableArray<IIdentifier> initialId) => _initialId = IdentifierList.Create(initialId ?? throw new ArgumentNullException(nameof(initialId)));
 
 		public void AddState(IState state)
 		{

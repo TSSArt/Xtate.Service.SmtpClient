@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Immutable;
+using System.Collections./**/Immutable;
 using System.Collections.ObjectModel;
 
 namespace TSSArt.StateMachine
@@ -14,7 +14,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public static void AddEntityList<T>(this in Bucket bucket, Key key, ImmutableArray<T> list) where T : IEntity
+		public static void AddEntityList<T>(this in Bucket bucket, Key key, /**/ImmutableArray<T> list) where T : IEntity
 		{
 			if (list == null)
 			{
@@ -42,7 +42,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public static ImmutableArray<T> RestoreList<T>(this in Bucket bucket, Key key, Func<Bucket, T> factory)
+		public static /**/ImmutableArray<T> RestoreList<T>(this in Bucket bucket, Key key, Func<Bucket, T> factory)
 		{
 			if (!bucket.TryGet(key, out int length))
 			{

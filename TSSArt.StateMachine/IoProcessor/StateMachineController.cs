@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Immutable;
+using System.Collections./**/Immutable;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -54,7 +54,7 @@ namespace TSSArt.StateMachine
 			GC.SuppressFinalize(this);
 		}
 
-		ImmutableArray<IEventProcessor> IExternalCommunication.GetIoProcessors() => _ioProcessor.GetIoProcessors();
+		/**/ImmutableArray<IEventProcessor> IExternalCommunication.GetIoProcessors() => _ioProcessor.GetIoProcessors();
 
 		async ValueTask<SendStatus> IExternalCommunication.TrySendEvent(IOutgoingEvent @event, CancellationToken token)
 		{

@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Immutable;
+using System.Collections./**/Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -15,11 +15,11 @@ namespace TSSArt.StateMachine
 			Data = dataModel.Data.AsListOf<DataNode>() ?? Array.Empty<DataNode>();
 		}
 
-		public ImmutableArray<DataNode> Data { get; }
+		public /**/ImmutableArray<DataNode> Data { get; }
 
 		object IAncestorProvider.Ancestor => _dataModel.Ancestor;
 
-		ImmutableArray<IData> IDataModel.Data => _dataModel.Data;
+		/**/ImmutableArray<IData> IDataModel.Data => _dataModel.Data;
 
 		public int DocumentId => _documentIdNode.Value;
 

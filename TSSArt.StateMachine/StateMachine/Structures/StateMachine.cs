@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Immutable;
+using System.Collections./**/Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -9,7 +9,7 @@ namespace TSSArt.StateMachine
 		public IInitial                    Initial       { get; set; }
 		public string                      Name          { get; set; }
 		public BindingType                 Binding       { get; set; }
-		public ImmutableArray<IStateEntity> States        { get; set; }
+		public /**/ImmutableArray<IStateEntity> States        { get; set; }
 		public IDataModel                  DataModel     { get; set; }
 		public IExecutableEntity           Script        { get; set; }
 

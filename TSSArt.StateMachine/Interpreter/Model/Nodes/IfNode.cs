@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Immutable;
+using System.Collections./**/Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -15,7 +15,7 @@ namespace TSSArt.StateMachine
 
 		public IConditionExpression Condition => _entity.Condition;
 
-		public ImmutableArray<IExecutableEntity> Action => _entity.Action;
+		public /**/ImmutableArray<IExecutableEntity> Action => _entity.Action;
 
 		protected override void Store(Bucket bucket)
 		{

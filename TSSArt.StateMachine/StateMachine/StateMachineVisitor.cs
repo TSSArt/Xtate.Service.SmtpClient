@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
+using System.Collections./**/Immutable;
 using System.Linq;
 using System.Text;
 
@@ -8,12 +8,12 @@ namespace TSSArt.StateMachine
 {
 	public abstract class StateMachineVisitor
 	{
-		private readonly Stack<(object, ImmutableArray<object>)> _path;
+		private readonly Stack<(object, /**/ImmutableArray<object>)> _path;
 
 		private readonly StateMachineVisitor _masterVisitor;
 		private          StringBuilder       _errorMessages;
 
-		protected StateMachineVisitor(bool trackPath = false) => _path = trackPath ? new Stack<(object, ImmutableArray<object>)>() : null;
+		protected StateMachineVisitor(bool trackPath = false) => _path = trackPath ? new Stack<(object, /**/ImmutableArray<object>)>() : null;
 
 		protected StateMachineVisitor(StateMachineVisitor masterVisitor)
 		{
@@ -24,7 +24,7 @@ namespace TSSArt.StateMachine
 
 		private string CurrentPath => _path != null ? string.Join(separator: "/", _path.Reverse().Select(EntityName)) : null;
 
-		private string EntityName((object obj, ImmutableArray<object> array) entry)
+		private string EntityName((object obj, /**/ImmutableArray<object> array) entry)
 		{
 			if (entry.array.IsDefault)
 			{
@@ -36,7 +36,7 @@ namespace TSSArt.StateMachine
 
 		private void Enter<T>(T entity) where T : class => _path?.Push((entity, default));
 
-		private void Enter<T>(ImmutableArray<T> array) where T : class => _path?.Push((typeof(ImmutableArray<T>), array.CastArray<object>()));
+		private void Enter<T>(/**/ImmutableArray<T> array) where T : class => _path?.Push((typeof(/**/ImmutableArray<T>), array.CastArray<object>()));
 
 		private void Exit() => _path?.Pop();
 
@@ -133,9 +133,9 @@ namespace TSSArt.StateMachine
 		{
 			public TrackList<TIEntity> List;
 
-			private readonly ImmutableArray<TIEntity> _original;
+			private readonly /**/ImmutableArray<TIEntity> _original;
 
-			public VisitListData(ImmutableArray<TIEntity> list)
+			public VisitListData(/**/ImmutableArray<TIEntity> list)
 			{
 				if (list.IsDefault)
 				{
@@ -146,21 +146,21 @@ namespace TSSArt.StateMachine
 				List = new TrackList<TIEntity>(list);
 			}
 
-			public void Update(ref ImmutableArray<TIEntity> list)
+			public void Update(ref /**/ImmutableArray<TIEntity> list)
 			{
 				if (_original == list && List.IsModified)
 				{
-					list = List.ModifiedItems.ToImmutable();
+					list = List.ModifiedItems.To/**/Immutable();
 				}
 			}
 		}
 
 		protected ref struct TrackList<T> where T : class
 		{
-			private readonly ImmutableArray<T>         _items;
-			private          ImmutableArray<T>.Builder _builder;
+			private readonly /**/ImmutableArray<T>         _items;
+			private          /**/ImmutableArray<T>.Builder _builder;
 
-			public TrackList(ImmutableArray<T> items)
+			public TrackList(/**/ImmutableArray<T> items)
 			{
 				_items = items;
 				_builder = null;
@@ -192,7 +192,7 @@ namespace TSSArt.StateMachine
 				}
 			}
 
-			public ImmutableArray<T>.Builder ModifiedItems => _builder;
+			public /**/ImmutableArray<T>.Builder ModifiedItems => _builder;
 
 			public int Count => _builder?.Count ?? _items.Length;
 
@@ -236,7 +236,7 @@ namespace TSSArt.StateMachine
 
 				if (_builder == null)
 				{
-					_builder = ImmutableArray<T>.Empty.ToBuilder();
+					_builder = /**/ImmutableArray<T>.Empty.ToBuilder();
 				}
 				else
 				{
@@ -625,86 +625,86 @@ namespace TSSArt.StateMachine
 
 		#endregion
 
-		#region Visit(ref ImmutableArray<IT> list)
+		#region Visit(ref /**/ImmutableArray<IT> list)
 
-		protected virtual void Visit(ref ImmutableArray<IIdentifier> list)
+		protected virtual void Visit(ref /**/ImmutableArray<IIdentifier> list)
 		{
 			var data = new VisitListData<IIdentifier>(list);
 			Build(ref list, ref data.List);
 			data.Update(ref list);
 		}
 
-		protected virtual void Visit(ref ImmutableArray<IStateEntity> list)
+		protected virtual void Visit(ref /**/ImmutableArray<IStateEntity> list)
 		{
 			var data = new VisitListData<IStateEntity>(list);
 			Build(ref list, ref data.List);
 			data.Update(ref list);
 		}
 
-		protected virtual void Visit(ref ImmutableArray<ITransition> list)
+		protected virtual void Visit(ref /**/ImmutableArray<ITransition> list)
 		{
 			var data = new VisitListData<ITransition>(list);
 			Build(ref list, ref data.List);
 			data.Update(ref list);
 		}
 
-		protected virtual void Visit(ref ImmutableArray<IEventDescriptor> list)
+		protected virtual void Visit(ref /**/ImmutableArray<IEventDescriptor> list)
 		{
 			var data = new VisitListData<IEventDescriptor>(list);
 			Build(ref list, ref data.List);
 			data.Update(ref list);
 		}
 
-		protected virtual void Visit(ref ImmutableArray<IHistory> list)
+		protected virtual void Visit(ref /**/ImmutableArray<IHistory> list)
 		{
 			var data = new VisitListData<IHistory>(list);
 			Build(ref list, ref data.List);
 			data.Update(ref list);
 		}
 
-		protected virtual void Visit(ref ImmutableArray<IOnEntry> list)
+		protected virtual void Visit(ref /**/ImmutableArray<IOnEntry> list)
 		{
 			var data = new VisitListData<IOnEntry>(list);
 			Build(ref list, ref data.List);
 			data.Update(ref list);
 		}
 
-		protected virtual void Visit(ref ImmutableArray<IOnExit> list)
+		protected virtual void Visit(ref /**/ImmutableArray<IOnExit> list)
 		{
 			var data = new VisitListData<IOnExit>(list);
 			Build(ref list, ref data.List);
 			data.Update(ref list);
 		}
 
-		protected virtual void Visit(ref ImmutableArray<IExecutableEntity> list)
+		protected virtual void Visit(ref /**/ImmutableArray<IExecutableEntity> list)
 		{
 			var data = new VisitListData<IExecutableEntity>(list);
 			Build(ref list, ref data.List);
 			data.Update(ref list);
 		}
 
-		protected virtual void Visit(ref ImmutableArray<IInvoke> list)
+		protected virtual void Visit(ref /**/ImmutableArray<IInvoke> list)
 		{
 			var data = new VisitListData<IInvoke>(list);
 			Build(ref list, ref data.List);
 			data.Update(ref list);
 		}
 
-		protected virtual void Visit(ref ImmutableArray<ILocationExpression> list)
+		protected virtual void Visit(ref /**/ImmutableArray<ILocationExpression> list)
 		{
 			var data = new VisitListData<ILocationExpression>(list);
 			Build(ref list, ref data.List);
 			data.Update(ref list);
 		}
 
-		protected virtual void Visit(ref ImmutableArray<IData> list)
+		protected virtual void Visit(ref /**/ImmutableArray<IData> list)
 		{
 			var data = new VisitListData<IData>(list);
 			Build(ref list, ref data.List);
 			data.Update(ref list);
 		}
 
-		protected virtual void Visit(ref ImmutableArray<IParam> list)
+		protected virtual void Visit(ref /**/ImmutableArray<IParam> list)
 		{
 			var data = new VisitListData<IParam>(list);
 			Build(ref list, ref data.List);
@@ -1102,9 +1102,9 @@ namespace TSSArt.StateMachine
 
 		#endregion
 
-		#region Build(ref ImmutableArray<IT> list, ref TrackList<IT> trackList)
+		#region Build(ref /**/ImmutableArray<IT> list, ref TrackList<IT> trackList)
 
-		protected virtual void Build(ref ImmutableArray<IIdentifier> list, ref TrackList<IIdentifier> trackList)
+		protected virtual void Build(ref /**/ImmutableArray<IIdentifier> list, ref TrackList<IIdentifier> trackList)
 		{
 			for (var i = 0; i < trackList.Count; i ++)
 			{
@@ -1114,7 +1114,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual void Build(ref ImmutableArray<IStateEntity> list, ref TrackList<IStateEntity> trackList)
+		protected virtual void Build(ref /**/ImmutableArray<IStateEntity> list, ref TrackList<IStateEntity> trackList)
 		{
 			for (var i = 0; i < trackList.Count; i ++)
 			{
@@ -1124,7 +1124,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual void Build(ref ImmutableArray<ITransition> list, ref TrackList<ITransition> trackList)
+		protected virtual void Build(ref /**/ImmutableArray<ITransition> list, ref TrackList<ITransition> trackList)
 		{
 			for (var i = 0; i < trackList.Count; i ++)
 			{
@@ -1134,7 +1134,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual void Build(ref ImmutableArray<IEventDescriptor> list, ref TrackList<IEventDescriptor> trackList)
+		protected virtual void Build(ref /**/ImmutableArray<IEventDescriptor> list, ref TrackList<IEventDescriptor> trackList)
 		{
 			for (var i = 0; i < trackList.Count; i ++)
 			{
@@ -1144,7 +1144,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual void Build(ref ImmutableArray<IHistory> list, ref TrackList<IHistory> trackList)
+		protected virtual void Build(ref /**/ImmutableArray<IHistory> list, ref TrackList<IHistory> trackList)
 		{
 			for (var i = 0; i < trackList.Count; i ++)
 			{
@@ -1154,7 +1154,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual void Build(ref ImmutableArray<IOnEntry> list, ref TrackList<IOnEntry> trackList)
+		protected virtual void Build(ref /**/ImmutableArray<IOnEntry> list, ref TrackList<IOnEntry> trackList)
 		{
 			for (var i = 0; i < trackList.Count; i ++)
 			{
@@ -1164,7 +1164,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual void Build(ref ImmutableArray<IOnExit> list, ref TrackList<IOnExit> trackList)
+		protected virtual void Build(ref /**/ImmutableArray<IOnExit> list, ref TrackList<IOnExit> trackList)
 		{
 			for (var i = 0; i < trackList.Count; i ++)
 			{
@@ -1174,7 +1174,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual void Build(ref ImmutableArray<IExecutableEntity> list, ref TrackList<IExecutableEntity> trackList)
+		protected virtual void Build(ref /**/ImmutableArray<IExecutableEntity> list, ref TrackList<IExecutableEntity> trackList)
 		{
 			for (var i = 0; i < trackList.Count; i ++)
 			{
@@ -1184,7 +1184,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual void Build(ref ImmutableArray<IInvoke> list, ref TrackList<IInvoke> trackList)
+		protected virtual void Build(ref /**/ImmutableArray<IInvoke> list, ref TrackList<IInvoke> trackList)
 		{
 			for (var i = 0; i < trackList.Count; i ++)
 			{
@@ -1194,7 +1194,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual void Build(ref ImmutableArray<ILocationExpression> list, ref TrackList<ILocationExpression> trackList)
+		protected virtual void Build(ref /**/ImmutableArray<ILocationExpression> list, ref TrackList<ILocationExpression> trackList)
 		{
 			for (var i = 0; i < trackList.Count; i ++)
 			{
@@ -1204,7 +1204,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual void Build(ref ImmutableArray<IData> list, ref TrackList<IData> trackList)
+		protected virtual void Build(ref /**/ImmutableArray<IData> list, ref TrackList<IData> trackList)
 		{
 			for (var i = 0; i < trackList.Count; i ++)
 			{
@@ -1214,7 +1214,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual void Build(ref ImmutableArray<IParam> list, ref TrackList<IParam> trackList)
+		protected virtual void Build(ref /**/ImmutableArray<IParam> list, ref TrackList<IParam> trackList)
 		{
 			for (var i = 0; i < trackList.Count; i ++)
 			{
@@ -1422,9 +1422,9 @@ namespace TSSArt.StateMachine
 
 		#endregion
 
-		#region VisitWrapper(ref ImmutableArray<IT> entity)
+		#region VisitWrapper(ref /**/ImmutableArray<IT> entity)
 
-		private void VisitWrapper(ref ImmutableArray<IStateEntity> entity)
+		private void VisitWrapper(ref /**/ImmutableArray<IStateEntity> entity)
 		{
 			if (entity.IsDefault) return;
 			Enter(entity);
@@ -1432,7 +1432,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref ImmutableArray<ITransition> entity)
+		private void VisitWrapper(ref /**/ImmutableArray<ITransition> entity)
 		{
 			if (entity.IsDefault) return;
 			Enter(entity);
@@ -1440,7 +1440,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref ImmutableArray<IEventDescriptor> entity)
+		private void VisitWrapper(ref /**/ImmutableArray<IEventDescriptor> entity)
 		{
 			if (entity.IsDefault) return;
 			Enter(entity);
@@ -1448,7 +1448,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref ImmutableArray<IIdentifier> entity)
+		private void VisitWrapper(ref /**/ImmutableArray<IIdentifier> entity)
 		{
 			if (entity.IsDefault) return;
 			Enter(entity);
@@ -1456,7 +1456,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref ImmutableArray<IExecutableEntity> entity)
+		private void VisitWrapper(ref /**/ImmutableArray<IExecutableEntity> entity)
 		{
 			if (entity.IsDefault) return;
 			Enter(entity);
@@ -1464,7 +1464,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref ImmutableArray<IHistory> entity)
+		private void VisitWrapper(ref /**/ImmutableArray<IHistory> entity)
 		{
 			if (entity.IsDefault) return;
 			Enter(entity);
@@ -1472,7 +1472,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref ImmutableArray<IOnEntry> entity)
+		private void VisitWrapper(ref /**/ImmutableArray<IOnEntry> entity)
 		{
 			if (entity.IsDefault) return;
 			Enter(entity);
@@ -1480,7 +1480,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref ImmutableArray<IOnExit> entity)
+		private void VisitWrapper(ref /**/ImmutableArray<IOnExit> entity)
 		{
 			if (entity.IsDefault) return;
 			Enter(entity);
@@ -1488,7 +1488,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref ImmutableArray<IInvoke> entity)
+		private void VisitWrapper(ref /**/ImmutableArray<IInvoke> entity)
 		{
 			if (entity.IsDefault) return;
 			Enter(entity);
@@ -1496,7 +1496,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref ImmutableArray<ILocationExpression> entity)
+		private void VisitWrapper(ref /**/ImmutableArray<ILocationExpression> entity)
 		{
 			if (entity.IsDefault) return;
 			Enter(entity);
@@ -1504,7 +1504,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref ImmutableArray<IData> entity)
+		private void VisitWrapper(ref /**/ImmutableArray<IData> entity)
 		{
 			if (entity.IsDefault) return;
 			Enter(entity);
@@ -1512,7 +1512,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref ImmutableArray<IParam> entity)
+		private void VisitWrapper(ref /**/ImmutableArray<IParam> entity)
 		{
 			if (entity.IsDefault) return;
 			Enter(entity);

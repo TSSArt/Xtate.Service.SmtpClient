@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Immutable;
+using System.Collections./**/Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -11,7 +11,7 @@ namespace TSSArt.StateMachine
 
 		object IAncestorProvider.Ancestor => _event;
 
-		public ImmutableArray<IIdentifier> NameParts => _event.NameParts;
+		public /**/ImmutableArray<IIdentifier> NameParts => _event.NameParts;
 		public string                     SendId    => _event.SendId;
 		public DataModelValue             Data      => _event.Data;
 		public Uri                        Target    => _event.Target;

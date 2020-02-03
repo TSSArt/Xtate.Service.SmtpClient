@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Immutable;
+using System.Collections./**/Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -25,8 +25,8 @@ namespace TSSArt.StateMachine
 		public IObjectEvaluator                  ContentExpressionEvaluator { get; }
 		public IValueEvaluator                   ContentBodyEvaluator       { get; }
 		public ILocationEvaluator                IdLocationEvaluator        { get; }
-		public ImmutableArray<ILocationEvaluator> NameEvaluatorList          { get; }
-		public ImmutableArray<DefaultParam>       ParameterList              { get; }
+		public /**/ImmutableArray<ILocationEvaluator> NameEvaluatorList          { get; }
+		public /**/ImmutableArray<DefaultParam>       ParameterList              { get; }
 		public IStringEvaluator                  SourceExpressionEvaluator  { get; }
 		public IStringEvaluator                  TypeExpressionEvaluator    { get; }
 
@@ -46,9 +46,9 @@ namespace TSSArt.StateMachine
 		public IValueExpression                   SourceExpression => _invoke.SourceExpression;
 		public string                             Id               => _invoke.Id;
 		public ILocationExpression                IdLocation       => _invoke.IdLocation;
-		public ImmutableArray<ILocationExpression> NameList         => _invoke.NameList;
+		public /**/ImmutableArray<ILocationExpression> NameList         => _invoke.NameList;
 		public bool                               AutoForward      => _invoke.AutoForward;
-		public ImmutableArray<IParam>              Parameters       => _invoke.Parameters;
+		public /**/ImmutableArray<IParam>              Parameters       => _invoke.Parameters;
 		public IFinalize                          Finalize         => _invoke.Finalize;
 		public IContent                           Content          => _invoke.Content;
 

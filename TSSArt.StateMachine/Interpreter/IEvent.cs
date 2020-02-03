@@ -1,12 +1,12 @@
 ﻿using System;
-using System.Collections.Immutable;
+using System.Collections./**/Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public interface IEvent : IEntity
 	{
 		string                     SendId         { get; }
-		ImmutableArray<IIdentifier> NameParts      { get; }
+		/**/ImmutableArray<IIdentifier> NameParts      { get; }
 		EventType                  Type           { get; }
 		Uri                        Origin         { get; }
 		Uri                        OriginType     { get; }

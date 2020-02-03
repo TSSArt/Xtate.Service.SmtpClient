@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Immutable;
+using System.Collections./**/Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -7,8 +7,8 @@ namespace TSSArt.StateMachine
 {
 	public static class DataConverter
 	{
-		public static ValueTask<DataModelValue> GetData(IValueEvaluator contentBodyEvaluator, IObjectEvaluator contentExpressionEvaluator, ImmutableArray<ILocationEvaluator> nameEvaluatorList,
-														ImmutableArray<DefaultParam> parameterList, IExecutionContext executionContext, CancellationToken token)
+		public static ValueTask<DataModelValue> GetData(IValueEvaluator contentBodyEvaluator, IObjectEvaluator contentExpressionEvaluator, /**/ImmutableArray<ILocationEvaluator> nameEvaluatorList,
+														/**/ImmutableArray<DefaultParam> parameterList, IExecutionContext executionContext, CancellationToken token)
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
 
@@ -51,7 +51,7 @@ namespace TSSArt.StateMachine
 			return DataModelValue.Undefined;
 		}
 
-		public static async ValueTask<DataModelValue> GetParameters(ImmutableArray<ILocationEvaluator> nameEvaluatorList, ImmutableArray<DefaultParam> parameterList,
+		public static async ValueTask<DataModelValue> GetParameters(/**/ImmutableArray<ILocationEvaluator> nameEvaluatorList, /**/ImmutableArray<DefaultParam> parameterList,
 																	IExecutionContext executionContext, CancellationToken token)
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
@@ -65,9 +65,9 @@ namespace TSSArt.StateMachine
 
 			var attributes = new DataModelObject();
 
-			if (nameEvaluatorList != null)
+			if (!nameEvaluatorList.IsDefaultOrEmpty)
 			{
-				foreach (var locationEvaluator in nameEvaluatorList-)
+				foreach (var locationEvaluator in nameEvaluatorList)
 				{
 					var name = locationEvaluator.GetName(executionContext);
 					var value = locationEvaluator.GetValue(executionContext).ToObject();
@@ -76,9 +76,9 @@ namespace TSSArt.StateMachine
 				}
 			}
 
-			if (parameterList != null)
+			if (!parameterList.IsDefaultOrEmpty)
 			{
-				foreach (var param in parameterList-)
+				foreach (var param in parameterList)
 				{
 					var name = param.Name;
 					object value = null;

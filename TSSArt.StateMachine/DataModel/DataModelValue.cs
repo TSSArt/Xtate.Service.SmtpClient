@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Immutable;
+using System.Collections./**/Immutable;
 using System.Diagnostics;
 using System.Dynamic;
 using System.Globalization;

@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Immutable;
+using System.Collections./**/Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -7,8 +7,8 @@ namespace TSSArt.StateMachine
 	{
 		private readonly List<IExecutableEntity>         _actions = new List<IExecutableEntity>();
 		private          IExecutableEntity               _condition;
-		private          ImmutableArray<IEventDescriptor> _eventDescriptors;
-		private          ImmutableArray<IIdentifier>      _target;
+		private          /**/ImmutableArray<IEventDescriptor> _eventDescriptors;
+		private          /**/ImmutableArray<IIdentifier>      _target;
 		private          TransitionType                  _type;
 
 		public ITransition Build()
@@ -30,11 +30,11 @@ namespace TSSArt.StateMachine
 
 		public void SetCondition(IExecutableEntity condition) => _condition = condition;
 
-		public void SetTarget(ImmutableArray<IIdentifier> target) => _target = target;
+		public void SetTarget(/**/ImmutableArray<IIdentifier> target) => _target = target;
 
 		public void SetType(TransitionType type) => _type = type;
 
-		public void SetEvent(ImmutableArray<IEventDescriptor> eventDescriptors) => _eventDescriptors = eventDescriptors;
+		public void SetEvent(/**/ImmutableArray<IEventDescriptor> eventDescriptors) => _eventDescriptors = eventDescriptors;
 
 		public void AddAction(IExecutableEntity action) => _actions.Add(action);
 	}

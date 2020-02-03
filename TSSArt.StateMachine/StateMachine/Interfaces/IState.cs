@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections./**/Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -6,12 +6,12 @@ namespace TSSArt.StateMachine
 	{
 		IIdentifier                 Id            { get; }
 		IInitial                    Initial       { get; }
-		ImmutableArray<IStateEntity> States        { get; }
-		ImmutableArray<IHistory>     HistoryStates { get; }
-		ImmutableArray<ITransition>  Transitions   { get; }
+		/**/ImmutableArray<IStateEntity> States        { get; }
+		/**/ImmutableArray<IHistory>     HistoryStates { get; }
+		/**/ImmutableArray<ITransition>  Transitions   { get; }
 		IDataModel                  DataModel     { get; }
-		ImmutableArray<IOnEntry>     OnEntry       { get; }
-		ImmutableArray<IOnExit>      OnExit        { get; }
-		ImmutableArray<IInvoke>      Invoke        { get; }
+		/**/ImmutableArray<IOnEntry>     OnEntry       { get; }
+		/**/ImmutableArray<IOnExit>      OnExit        { get; }
+		/**/ImmutableArray<IInvoke>      Invoke        { get; }
 	}
 }
