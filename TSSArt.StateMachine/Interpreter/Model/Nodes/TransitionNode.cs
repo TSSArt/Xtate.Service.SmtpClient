@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -8,7 +8,7 @@ namespace TSSArt.StateMachine
 		private readonly LinkedListNode<int> _documentIdNode;
 		private readonly Transition          _transition;
 
-		public TransitionNode(LinkedListNode<int> documentIdNode, in Transition transition, IReadOnlyList<StateEntityNode> target = null)
+		public TransitionNode(LinkedListNode<int> documentIdNode, in Transition transition, ImmutableArray<StateEntityNode> target = null)
 		{
 			_transition = transition;
 			_documentIdNode = documentIdNode;
@@ -17,9 +17,9 @@ namespace TSSArt.StateMachine
 			ConditionEvaluator = transition.Condition.As<IBooleanEvaluator>();
 		}
 
-		public IReadOnlyList<StateEntityNode> TargetState        { get; private set; }
+		public ImmutableArray<StateEntityNode> TargetState        { get; private set; }
 		public StateEntityNode                Source             { get; private set; }
-		public IReadOnlyList<IExecEvaluator>  ActionEvaluators   { get; }
+		public ImmutableArray<IExecEvaluator>  ActionEvaluators   { get; }
 		public IBooleanEvaluator              ConditionEvaluator { get; }
 
 		object IAncestorProvider.Ancestor => _transition.Ancestor;
@@ -39,15 +39,15 @@ namespace TSSArt.StateMachine
 			bucket.AddEntityList(Key.Action, Action);
 		}
 
-		public IReadOnlyList<IEventDescriptor> Event => _transition.Event;
+		public ImmutableArray<IEventDescriptor> Event => _transition.Event;
 
 		public IExecutableEntity Condition => _transition.Condition;
 
-		public IReadOnlyList<IIdentifier> Target => _transition.Target;
+		public ImmutableArray<IIdentifier> Target => _transition.Target;
 
 		public TransitionType Type => _transition.Type;
 
-		public IReadOnlyList<IExecutableEntity> Action => _transition.Action;
+		public ImmutableArray<IExecutableEntity> Action => _transition.Action;
 
 		public void MapTarget(Dictionary<IIdentifier, StateEntityNode> idMap)
 		{
@@ -56,7 +56,7 @@ namespace TSSArt.StateMachine
 
 		public void SetSource(StateEntityNode source) => Source = source;
 
-		private class StateEntityNodeList : ValidatedReadOnlyList<StateEntityNodeList, StateEntityNode>
+		private class StateEntityNodeList : ValidatedArrayBuilder<>
 		{
 			protected override Options GetOptions() => Options.NullIfEmpty;
 		}

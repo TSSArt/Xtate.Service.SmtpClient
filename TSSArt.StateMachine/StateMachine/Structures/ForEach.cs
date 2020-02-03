@@ -1,13 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public struct ForEach : IForEach, IEntity<ForEach, IForEach>, IAncestorProvider
 	{
-		public IReadOnlyList<IExecutableEntity> Action { get; set; }
-		public IValueExpression                 Array  { get; set; }
-		public ILocationExpression              Index  { get; set; }
-		public ILocationExpression              Item   { get; set; }
+		public ImmutableArray<IExecutableEntity> Action { get; set; }
+		public IValueExpression                  Array  { get; set; }
+		public ILocationExpression               Index  { get; set; }
+		public ILocationExpression               Item   { get; set; }
 
 		void IEntity<ForEach, IForEach>.Init(IForEach source)
 		{
@@ -19,7 +19,7 @@ namespace TSSArt.StateMachine
 		}
 
 		bool IEntity<ForEach, IForEach>.RefEquals(in ForEach other) =>
-				ReferenceEquals(Action, other.Action) &&
+				Action == other.Action &&
 				ReferenceEquals(Array, other.Array) &&
 				ReferenceEquals(Index, other.Index) &&
 				ReferenceEquals(Item, other.Item);

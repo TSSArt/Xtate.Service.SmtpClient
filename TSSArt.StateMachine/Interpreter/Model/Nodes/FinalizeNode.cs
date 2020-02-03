@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -12,11 +12,11 @@ namespace TSSArt.StateMachine
 			ActionEvaluators = finalize.Action.AsListOf<IExecEvaluator>();
 		}
 
-		public IReadOnlyList<IExecEvaluator> ActionEvaluators { get; }
+		public ImmutableArray<IExecEvaluator> ActionEvaluators { get; }
 
 		object IAncestorProvider.Ancestor => _finalize.Ancestor;
 
-		public IReadOnlyList<IExecutableEntity> Action => _finalize.Action;
+		public ImmutableArray<IExecutableEntity> Action => _finalize.Action;
 
 		void IStoreSupport.Store(Bucket bucket)
 		{

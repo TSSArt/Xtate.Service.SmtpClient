@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public struct DataModel : IDataModel, IEntity<DataModel, IDataModel>, IAncestorProvider
 	{
-		public IReadOnlyList<IData> Data { get; set; }
+		public ImmutableArray<IData> Data { get; set; }
 
 		void IEntity<DataModel, IDataModel>.Init(IDataModel source)
 		{
@@ -12,7 +12,7 @@ namespace TSSArt.StateMachine
 			Data = source.Data;
 		}
 
-		bool IEntity<DataModel, IDataModel>.RefEquals(in DataModel other) => ReferenceEquals(Data, other.Data);
+		bool IEntity<DataModel, IDataModel>.RefEquals(in DataModel other) => Data == other.Data;
 
 		internal object Ancestor;
 

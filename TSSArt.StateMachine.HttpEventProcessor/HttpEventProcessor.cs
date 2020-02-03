@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
 using System.Net.Http;
@@ -123,7 +123,7 @@ namespace TSSArt.StateMachine
 			return true;
 		}
 
-		private static IEnumerable<KeyValuePair<string, string>> GetParameters(IReadOnlyList<IIdentifier> eventNameParts, DataModelObject dataModelObject)
+		private static IEnumerable<KeyValuePair<string, string>> GetParameters(ImmutableArray<IIdentifier> eventNameParts, DataModelObject dataModelObject)
 		{
 			if (eventNameParts != null)
 			{

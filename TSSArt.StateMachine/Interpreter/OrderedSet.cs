@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -48,7 +48,7 @@ namespace TSSArt.StateMachine
 			Changed?.Invoke(ChangedAction.Delete, item);
 		}
 
-		public void Union(IReadOnlyList<T> orderedSet)
+		public void Union(ImmutableArray<T> orderedSet)
 		{
 			if (orderedSet == null) throw new ArgumentNullException(nameof(orderedSet));
 
@@ -77,9 +77,9 @@ namespace TSSArt.StateMachine
 
 		public bool Every(Predicate<T> predicate) => _items.TrueForAll(predicate);
 
-		public IReadOnlyList<T> ToList() => _items;
+		public ImmutableArray<T> ToList() => _items;
 
-		public IReadOnlyList<T> ToSortedList(IComparer<T> comparer)
+		public ImmutableArray<T> ToSortedList(IComparer<T> comparer)
 		{
 			var array = _items.ToArray();
 			Array.Sort(array, comparer);
@@ -87,7 +87,7 @@ namespace TSSArt.StateMachine
 			return array;
 		}
 
-		public IReadOnlyList<T> ToFilteredSortedList(Predicate<T> predicate, IComparer<T> comparer)
+		public ImmutableArray<T> ToFilteredSortedList(Predicate<T> predicate, IComparer<T> comparer)
 		{
 			var list = _items.FindAll(predicate);
 			list.Sort(comparer);
@@ -95,6 +95,6 @@ namespace TSSArt.StateMachine
 			return list;
 		}
 
-		public IReadOnlyList<T> ToFilteredList(Predicate<T> predicate) => _items.FindAll(predicate);
+		public ImmutableArray<T> ToFilteredList(Predicate<T> predicate) => _items.FindAll(predicate);
 	}
 }

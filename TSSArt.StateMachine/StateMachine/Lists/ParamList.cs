@@ -1,7 +1,15 @@
-﻿namespace TSSArt.StateMachine
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
+
+namespace TSSArt.StateMachine
 {
-	public sealed class ParamList : ValidatedReadOnlyList<ParamList, IParam>
+	public static class ParamList
 	{
-		protected override Options GetOptions() => Options.NullIfEmpty;
+		public static ImmutableArray<IParam> Create(IReadOnlyList<IParam> list)
+		{
+			return default;
+			//protected override Options GetOptions() => Options.NullIfEmpty;
+
+		}
 	}
 }

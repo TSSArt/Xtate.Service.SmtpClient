@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -17,7 +17,7 @@ namespace TSSArt.StateMachine
 		void SetIdLocation(ILocationExpression idLocation);
 		void SetDelay(int delay);
 		void SetDelayExpression(IValueExpression delayExpression);
-		void SetNameList(IReadOnlyList<ILocationExpression> nameList);
+		void SetNameList(ImmutableArray<ILocationExpression> nameList);
 		void AddParameter(IParam param);
 		void SetContent(IContent content);
 	}

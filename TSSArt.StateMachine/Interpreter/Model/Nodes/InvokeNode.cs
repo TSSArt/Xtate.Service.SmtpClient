@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -42,8 +42,8 @@ namespace TSSArt.StateMachine
 		public string                             Id               => _invoke.Id;
 		public ILocationExpression                IdLocation       => _invoke.IdLocation;
 		public bool                               AutoForward      => _invoke.AutoForward;
-		public IReadOnlyList<ILocationExpression> NameList         => _invoke.NameList;
-		public IReadOnlyList<IParam>              Parameters       => _invoke.Parameters;
+		public ImmutableArray<ILocationExpression> NameList         => _invoke.NameList;
+		public ImmutableArray<IParam>              Parameters       => _invoke.Parameters;
 		public IContent                           Content          => _invoke.Content;
 		IFinalize IInvoke.                        Finalize         => _invoke.Finalize;
 

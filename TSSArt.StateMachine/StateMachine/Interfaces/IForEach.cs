@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -7,6 +7,6 @@ namespace TSSArt.StateMachine
 		IValueExpression                 Array  { get; }
 		ILocationExpression              Item   { get; }
 		ILocationExpression              Index  { get; }
-		IReadOnlyList<IExecutableEntity> Action { get; }
+		ImmutableArray<IExecutableEntity> Action { get; }
 	}
 }

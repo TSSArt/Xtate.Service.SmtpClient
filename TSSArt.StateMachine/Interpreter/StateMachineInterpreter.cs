@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Buffers;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	using DefaultHistoryContent = Dictionary<IIdentifier, IReadOnlyList<IExecEvaluator>>;
+	using DefaultHistoryContent = Dictionary<IIdentifier, ImmutableArray<IExecEvaluator>>;
 
 	public class StateMachineInterpreter
 	{
@@ -790,7 +790,7 @@ namespace TSSArt.StateMachine
 			return filteredTransitions;
 		}
 
-		private async ValueTask Microstep(IReadOnlyList<TransitionNode> enabledTransitions)
+		private async ValueTask Microstep(ImmutableArray<TransitionNode> enabledTransitions)
 		{
 			await DoOperation(StateBagKey.ExitStates, ExitStates, enabledTransitions).ConfigureAwait(false);
 
@@ -799,7 +799,7 @@ namespace TSSArt.StateMachine
 			await DoOperation(StateBagKey.EnterStates, EnterStates, enabledTransitions).ConfigureAwait(false);
 		}
 
-		private async ValueTask ExitStates(IReadOnlyList<TransitionNode> enabledTransitions)
+		private async ValueTask ExitStates(ImmutableArray<TransitionNode> enabledTransitions)
 		{
 			var statesToExit = ComputeExitSet(enabledTransitions);
 
@@ -843,7 +843,7 @@ namespace TSSArt.StateMachine
 			Complete(StateBagKey.OnExit);
 		}
 
-		private async ValueTask EnterStates(IReadOnlyList<TransitionNode> enabledTransitions)
+		private async ValueTask EnterStates(ImmutableArray<TransitionNode> enabledTransitions)
 		{
 			var statesToEnter = new OrderedSet<StateEntityNode>();
 			var statesForDefaultEntry = new OrderedSet<CompoundNode>();
@@ -942,7 +942,7 @@ namespace TSSArt.StateMachine
 			return false;
 		}
 
-		private void ComputeEntrySet(IReadOnlyList<TransitionNode> transitions, OrderedSet<StateEntityNode> statesToEnter, OrderedSet<CompoundNode> statesForDefaultEntry,
+		private void ComputeEntrySet(ImmutableArray<TransitionNode> transitions, OrderedSet<StateEntityNode> statesToEnter, OrderedSet<CompoundNode> statesForDefaultEntry,
 									 DefaultHistoryContent defaultHistoryContent)
 		{
 			foreach (var transition in transitions)
@@ -961,7 +961,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private OrderedSet<StateEntityNode> ComputeExitSet(IReadOnlyList<TransitionNode> transitions)
+		private OrderedSet<StateEntityNode> ComputeExitSet(ImmutableArray<TransitionNode> transitions)
 		{
 			var statesToExit = new OrderedSet<StateEntityNode>();
 			foreach (var transition in transitions)
@@ -1151,7 +1151,7 @@ namespace TSSArt.StateMachine
 			return targets;
 		}
 
-		private async ValueTask ExecuteTransitionContent(IReadOnlyList<TransitionNode> transitions)
+		private async ValueTask ExecuteTransitionContent(ImmutableArray<TransitionNode> transitions)
 		{
 			foreach (var transition in transitions)
 			{
@@ -1163,7 +1163,7 @@ namespace TSSArt.StateMachine
 			Complete(StateBagKey.RunExecutableEntity);
 		}
 
-		private async ValueTask RunExecutableEntity(IReadOnlyList<IExecEvaluator> action)
+		private async ValueTask RunExecutableEntity(ImmutableArray<IExecEvaluator> action)
 		{
 			foreach (var executableEntity in action)
 			{

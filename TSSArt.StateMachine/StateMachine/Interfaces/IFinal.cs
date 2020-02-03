@@ -1,12 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public interface IFinal : IStateEntity
 	{
 		IIdentifier             Id       { get; }
-		IReadOnlyList<IOnEntry> OnEntry  { get; }
-		IReadOnlyList<IOnExit>  OnExit   { get; }
+		ImmutableArray<IOnEntry> OnEntry  { get; }
+		ImmutableArray<IOnExit>  OnExit   { get; }
 		IDoneData               DoneData { get; }
 	}
 }

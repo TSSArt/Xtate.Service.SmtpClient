@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public struct If : IIf, IEntity<If, IIf>, IAncestorProvider
 	{
-		public IReadOnlyList<IExecutableEntity> Action    { get; set; }
+		public ImmutableArray<IExecutableEntity> Action    { get; set; }
 		public IConditionExpression             Condition { get; set; }
 
 		void IEntity<If, IIf>.Init(IIf source)
@@ -15,7 +15,7 @@ namespace TSSArt.StateMachine
 		}
 
 		bool IEntity<If, IIf>.RefEquals(in If other) =>
-				ReferenceEquals(Action, other.Action) &&
+				Action == other.Action &&
 				ReferenceEquals(Condition, other.Condition);
 
 		internal object Ancestor;

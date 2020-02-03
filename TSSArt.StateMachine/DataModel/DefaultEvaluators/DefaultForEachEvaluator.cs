@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,13 +16,13 @@ namespace TSSArt.StateMachine
 			ArrayEvaluator = forEach.Array.As<IArrayEvaluator>();
 			ItemEvaluator = forEach.Item.As<ILocationEvaluator>();
 			IndexEvaluator = forEach.Index.As<ILocationEvaluator>();
-			ActionEvaluatorList = forEach.Action.AsListOf<IExecEvaluator>();
+			ActionEvaluatorList = forEach.Action.As<IEntity>().AsListOf<IExecEvaluator>();
 		}
 
-		public IArrayEvaluator               ArrayEvaluator      { get; }
-		public ILocationEvaluator            ItemEvaluator       { get; }
-		public ILocationEvaluator            IndexEvaluator      { get; }
-		public IReadOnlyList<IExecEvaluator> ActionEvaluatorList { get; }
+		public IArrayEvaluator                ArrayEvaluator      { get; }
+		public ILocationEvaluator             ItemEvaluator       { get; }
+		public ILocationEvaluator             IndexEvaluator      { get; }
+		public ImmutableArray<IExecEvaluator> ActionEvaluatorList { get; }
 
 		object IAncestorProvider.Ancestor => _forEach.Ancestor;
 
@@ -47,9 +47,9 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public IValueExpression                 Array  => _forEach.Array;
-		public ILocationExpression              Item   => _forEach.Item;
-		public ILocationExpression              Index  => _forEach.Index;
-		public IReadOnlyList<IExecutableEntity> Action => _forEach.Action;
+		public IValueExpression                  Array  => _forEach.Array;
+		public ILocationExpression               Item   => _forEach.Item;
+		public ILocationExpression               Index  => _forEach.Index;
+		public ImmutableArray<IExecutableEntity> Action => _forEach.Action;
 	}
 }

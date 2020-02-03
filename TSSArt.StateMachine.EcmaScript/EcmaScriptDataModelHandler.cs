@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using Jint.Parser;
 using Jint.Parser.Ast;
 

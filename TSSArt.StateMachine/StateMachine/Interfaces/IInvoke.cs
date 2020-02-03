@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -11,9 +11,9 @@ namespace TSSArt.StateMachine
 		IValueExpression                   SourceExpression { get; }
 		string                             Id               { get; }
 		ILocationExpression                IdLocation       { get; }
-		IReadOnlyList<ILocationExpression> NameList         { get; }
+		ImmutableArray<ILocationExpression> NameList         { get; }
 		bool                               AutoForward      { get; }
-		IReadOnlyList<IParam>              Parameters       { get; }
+		ImmutableArray<IParam>              Parameters       { get; }
 		IFinalize                          Finalize         { get; }
 		IContent                           Content          { get; }
 	}

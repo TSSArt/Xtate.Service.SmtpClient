@@ -1,9 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public interface IOnExit : IEntity
 	{
-		IReadOnlyList<IExecutableEntity> Action { get; }
+		ImmutableArray<IExecutableEntity> Action { get; }
 	}
 }

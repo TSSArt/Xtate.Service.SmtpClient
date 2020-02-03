@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -9,7 +9,7 @@ namespace TSSArt.StateMachine
 		public IInitial                    Initial       { get; set; }
 		public string                      Name          { get; set; }
 		public BindingType                 Binding       { get; set; }
-		public IReadOnlyList<IStateEntity> States        { get; set; }
+		public ImmutableArray<IStateEntity> States        { get; set; }
 		public IDataModel                  DataModel     { get; set; }
 		public IExecutableEntity           Script        { get; set; }
 
@@ -27,11 +27,11 @@ namespace TSSArt.StateMachine
 
 		bool IEntity<StateMachine, IStateMachine>.RefEquals(in StateMachine other) =>
 				Binding == other.Binding &&
+				States == other.States &&
 				ReferenceEquals(Name, other.Name) &&
 				ReferenceEquals(DataModel, other.DataModel) &&
 				ReferenceEquals(DataModelType, other.DataModelType) &&
 				ReferenceEquals(Initial, other.Initial) &&
-				ReferenceEquals(States, other.States) &&
 				ReferenceEquals(Script, other.Script);
 
 		internal object Ancestor;

@@ -36,7 +36,7 @@ namespace TSSArt.StateMachine
 		{
 			if (@event == null) throw new ArgumentNullException(nameof(@event));
 
-			if (@event.NameParts.Count < _parts.Length)
+			if (@event.NameParts.Length < _parts.Length)
 			{
 				return false;
 			}

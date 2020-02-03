@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -7,12 +7,12 @@ namespace TSSArt.StateMachine
 {
 	public static class DataConverter
 	{
-		public static ValueTask<DataModelValue> GetData(IValueEvaluator contentBodyEvaluator, IObjectEvaluator contentExpressionEvaluator, IReadOnlyList<ILocationEvaluator> nameEvaluatorList,
-														IReadOnlyList<DefaultParam> parameterList, IExecutionContext executionContext, CancellationToken token)
+		public static ValueTask<DataModelValue> GetData(IValueEvaluator contentBodyEvaluator, IObjectEvaluator contentExpressionEvaluator, ImmutableArray<ILocationEvaluator> nameEvaluatorList,
+														ImmutableArray<DefaultParam> parameterList, IExecutionContext executionContext, CancellationToken token)
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
 
-			var attrCount = (nameEvaluatorList?.Count ?? 0) + (parameterList?.Count ?? 0);
+			var attrCount = (!nameEvaluatorList.IsDefault ? nameEvaluatorList.Length : 0) + (!parameterList.IsDefault ? parameterList.Length : 0);
 
 			if (attrCount == 0)
 			{
@@ -51,12 +51,12 @@ namespace TSSArt.StateMachine
 			return DataModelValue.Undefined;
 		}
 
-		public static async ValueTask<DataModelValue> GetParameters(IReadOnlyList<ILocationEvaluator> nameEvaluatorList, IReadOnlyList<DefaultParam> parameterList,
+		public static async ValueTask<DataModelValue> GetParameters(ImmutableArray<ILocationEvaluator> nameEvaluatorList, ImmutableArray<DefaultParam> parameterList,
 																	IExecutionContext executionContext, CancellationToken token)
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
 
-			var attrCount = (nameEvaluatorList?.Count ?? 0) + (parameterList?.Count ?? 0);
+			var attrCount = (!nameEvaluatorList.IsDefault ? nameEvaluatorList.Length : 0) + (!parameterList.IsDefault ? parameterList.Length : 0);
 
 			if (attrCount == 0)
 			{
@@ -67,7 +67,7 @@ namespace TSSArt.StateMachine
 
 			if (nameEvaluatorList != null)
 			{
-				foreach (var locationEvaluator in nameEvaluatorList)
+				foreach (var locationEvaluator in nameEvaluatorList-)
 				{
 					var name = locationEvaluator.GetName(executionContext);
 					var value = locationEvaluator.GetValue(executionContext).ToObject();
@@ -78,7 +78,7 @@ namespace TSSArt.StateMachine
 
 			if (parameterList != null)
 			{
-				foreach (var param in parameterList)
+				foreach (var param in parameterList-)
 				{
 					var name = param.Name;
 					object value = null;

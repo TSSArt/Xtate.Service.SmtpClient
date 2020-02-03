@@ -1,6 +1,6 @@
 ﻿namespace TSSArt.StateMachine
 {
-	public sealed class LocationExpressionList : ValidatedReadOnlyList<LocationExpressionList, ILocationExpression>
+	public sealed class LocationExpressionList : ValidatedArrayBuilder<>
 	{
 		protected override Options GetOptions() => Options.NonEmpty;
 	}

@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -18,11 +18,11 @@ namespace TSSArt.StateMachine
 		}
 
 		public override bool                          IsAtomicState => true;
-		public override IReadOnlyList<TransitionNode> Transitions   => Array.Empty<TransitionNode>();
-		public override IReadOnlyList<HistoryNode>    HistoryStates => Array.Empty<HistoryNode>();
-		public override IReadOnlyList<InvokeNode>     Invoke        => Array.Empty<InvokeNode>();
-		public override IReadOnlyList<OnEntryNode>    OnEntry       { get; }
-		public override IReadOnlyList<OnExitNode>     OnExit        { get; }
+		public override ImmutableArray<TransitionNode> Transitions   => Array.Empty<TransitionNode>();
+		public override ImmutableArray<HistoryNode>    HistoryStates => Array.Empty<HistoryNode>();
+		public override ImmutableArray<InvokeNode>     Invoke        => Array.Empty<InvokeNode>();
+		public override ImmutableArray<OnEntryNode>    OnEntry       { get; }
+		public override ImmutableArray<OnExitNode>     OnExit        { get; }
 		public          DoneDataNode                  DoneData      { get; }
 
 		object IAncestorProvider.Ancestor => _final.Ancestor;
@@ -31,8 +31,8 @@ namespace TSSArt.StateMachine
 
 		public override IIdentifier Id { get; }
 
-		IReadOnlyList<IOnEntry> IFinal.OnEntry  => OnEntry;
-		IReadOnlyList<IOnExit> IFinal. OnExit   => OnExit;
+		ImmutableArray<IOnEntry> IFinal.OnEntry  => OnEntry;
+		ImmutableArray<IOnExit> IFinal. OnExit   => OnExit;
 		IDoneData IFinal.              DoneData => DoneData;
 
 		protected override void Store(Bucket bucket)

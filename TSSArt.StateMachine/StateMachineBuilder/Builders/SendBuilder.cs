@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -13,7 +13,7 @@ namespace TSSArt.StateMachine
 		private          IValueExpression                   _eventExpression;
 		private          string                             _id;
 		private          ILocationExpression                _idLocation;
-		private          IReadOnlyList<ILocationExpression> _nameList;
+		private          ImmutableArray<ILocationExpression> _nameList;
 		private          Uri                                _target;
 		private          IValueExpression                   _targetExpression;
 		private          Uri                                _type;
@@ -104,7 +104,7 @@ namespace TSSArt.StateMachine
 
 		public void SetDelayExpression(IValueExpression delayExpression) => _delayExpression = delayExpression ?? throw new ArgumentNullException(nameof(delayExpression));
 
-		public void SetNameList(IReadOnlyList<ILocationExpression> nameList) => _nameList = LocationExpressionList.Create(nameList ?? throw new ArgumentNullException(nameof(nameList)));
+		public void SetNameList(ImmutableArray<ILocationExpression> nameList) => _nameList = LocationExpressionList.Create(nameList ?? throw new ArgumentNullException(nameof(nameList)));
 
 		public void AddParameter(IParam param)
 		{

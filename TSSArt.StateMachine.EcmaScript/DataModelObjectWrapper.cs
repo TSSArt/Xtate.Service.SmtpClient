@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Immutable;
 using System.Linq;
 using Jint;
 using Jint.Native.Object;

@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -27,12 +27,12 @@ namespace TSSArt.StateMachine
 
 		public virtual bool                           IsAtomicState => throw GetNotSupportedException();
 		public virtual IIdentifier                    Id            => throw GetNotSupportedException();
-		public virtual IReadOnlyList<TransitionNode>  Transitions   => throw GetNotSupportedException();
-		public virtual IReadOnlyList<OnEntryNode>     OnEntry       => throw GetNotSupportedException();
-		public virtual IReadOnlyList<OnExitNode>      OnExit        => throw GetNotSupportedException();
-		public virtual IReadOnlyList<InvokeNode>      Invoke        => throw GetNotSupportedException();
-		public virtual IReadOnlyList<StateEntityNode> States        => throw GetNotSupportedException();
-		public virtual IReadOnlyList<HistoryNode>     HistoryStates => throw GetNotSupportedException();
+		public virtual ImmutableArray<TransitionNode>  Transitions   => throw GetNotSupportedException();
+		public virtual ImmutableArray<OnEntryNode>     OnEntry       => throw GetNotSupportedException();
+		public virtual ImmutableArray<OnExitNode>      OnExit        => throw GetNotSupportedException();
+		public virtual ImmutableArray<InvokeNode>      Invoke        => throw GetNotSupportedException();
+		public virtual ImmutableArray<StateEntityNode> States        => throw GetNotSupportedException();
+		public virtual ImmutableArray<HistoryNode>     HistoryStates => throw GetNotSupportedException();
 		public virtual DataModelNode                  DataModel     => throw GetNotSupportedException();
 
 		public int DocumentId => _documentIdNode.Value;
@@ -41,7 +41,7 @@ namespace TSSArt.StateMachine
 
 		private NotSupportedException GetNotSupportedException() => new NotSupportedException("Specified method is not supported in type " + GetType().Name);
 
-		protected static IEnumerable<StateEntityNode> GetChildNodes(IInitial initial, IReadOnlyList<IStateEntity> states, IReadOnlyList<IHistory> historyStates = null)
+		protected static IEnumerable<StateEntityNode> GetChildNodes(IInitial initial, ImmutableArray<IStateEntity> states, ImmutableArray<IHistory> historyStates = null)
 		{
 			var initialNode = initial.As<InitialNode>();
 

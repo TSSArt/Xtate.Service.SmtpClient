@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -31,7 +31,7 @@ namespace TSSArt.StateMachine
 
 		IDataModel IStateMachine.                 DataModel => _stateMachine.DataModel;
 		IInitial IStateMachine.                   Initial   => _stateMachine.Initial;
-		IReadOnlyList<IStateEntity> IStateMachine.States    => _stateMachine.States;
+		ImmutableArray<IStateEntity> IStateMachine.States    => _stateMachine.States;
 
 		protected override void Store(Bucket bucket)
 		{
