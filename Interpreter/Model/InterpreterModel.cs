@@ -1,8 +1,8 @@
-﻿using System.Collections./**/Immutable;
+﻿using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
-	public class InterpreterModel
+	internal class InterpreterModel
 	{
 		public InterpreterModel(StateMachineNode root, int maxConfigurationLength, Dictionary<int, IEntity> entityMap, List<DataModelNode> dataModelList)
 		{

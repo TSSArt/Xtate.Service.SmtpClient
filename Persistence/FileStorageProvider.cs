@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public class FileStorageProvider : IStorageProvider
+	internal class FileStorageProvider : IStorageProvider
 	{
 		private static readonly char[]   InvalidFileNameChars   = Path.GetInvalidFileNameChars();
 		private static readonly string[] InvalidCharReplacement = GetInvalidCharReplacement();

@@ -1,14 +1,14 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public struct Final : IFinal, IEntity<Final, IFinal>, IAncestorProvider, IDebugEntityId
 	{
-		public IIdentifier             Id       { get; set; }
-		public /**/ImmutableArray<IOnEntry> OnEntry  { get; set; }
-		public /**/ImmutableArray<IOnExit>  OnExit   { get; set; }
-		public IDoneData               DoneData { get; set; }
+		public IIdentifier              Id       { get; set; }
+		public ImmutableArray<IOnEntry> OnEntry  { get; set; }
+		public ImmutableArray<IOnExit>  OnExit   { get; set; }
+		public IDoneData                DoneData { get; set; }
 
 		void IEntity<Final, IFinal>.Init(IFinal source)
 		{

@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
-	public class LogNode : ExecutableEntityNode, ILog, IAncestorProvider, IDebugEntityId
+	internal sealed class LogNode : ExecutableEntityNode, ILog, IAncestorProvider, IDebugEntityId
 	{
 		private readonly Log _entity;
 

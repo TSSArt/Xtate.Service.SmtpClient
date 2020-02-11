@@ -1,6 +1,6 @@
 ﻿namespace TSSArt.StateMachine
 {
-	public class ContentNode : IContent, IStoreSupport, IAncestorProvider
+	internal sealed class ContentNode : IContent, IStoreSupport, IAncestorProvider
 	{
 		private readonly Content _content;
 

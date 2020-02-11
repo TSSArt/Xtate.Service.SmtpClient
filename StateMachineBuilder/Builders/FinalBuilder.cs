@@ -1,16 +1,16 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public class FinalBuilder : IFinalBuilder
 	{
-		private readonly List<IOnEntry> _onEntryList = new List<IOnEntry>();
-		private readonly List<IOnExit>  _onExitList  = new List<IOnExit>();
-		private          IDoneData      _doneData;
-		private          IIdentifier    _id;
+		private IDoneData                        _doneData;
+		private IIdentifier                      _id;
+		private ImmutableArray<IOnEntry>.Builder _onEntryList;
+		private ImmutableArray<IOnExit>.Builder  _onExitList;
 
-		public IFinal Build() => new Final { Id = _id, OnEntry = OnEntryList.Create(_onEntryList), OnExit = OnExitList.Create(_onExitList), DoneData = _doneData };
+		public IFinal Build() => new Final { Id = _id, OnEntry = _onEntryList?.ToImmutable() ?? default, OnExit = _onExitList?.ToImmutable() ?? default, DoneData = _doneData };
 
 		public void SetId(IIdentifier id) => _id = id ?? throw new ArgumentNullException(nameof(id));
 
@@ -18,14 +18,14 @@ namespace TSSArt.StateMachine
 		{
 			if (onEntry == null) throw new ArgumentNullException(nameof(onEntry));
 
-			_onEntryList.Add(onEntry);
+			(_onEntryList ??= ImmutableArray.CreateBuilder<IOnEntry>()).Add(onEntry);
 		}
 
 		public void AddOnExit(IOnExit onExit)
 		{
 			if (onExit == null) throw new ArgumentNullException(nameof(onExit));
 
-			_onExitList.Add(onExit);
+			(_onExitList ??= ImmutableArray.CreateBuilder<IOnExit>()).Add(onExit);
 		}
 
 		public void SetDoneData(IDoneData doneData) => _doneData = doneData ?? throw new ArgumentNullException(nameof(doneData));

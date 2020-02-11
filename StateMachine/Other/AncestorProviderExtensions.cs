@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections./**/Immutable;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public static class AncestorProviderExtensions
+	internal static class AncestorProviderExtensions
 	{
 		public static T Base<T>(this IEntity entity)
 		{
@@ -93,19 +92,14 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public static /**/ImmutableArray<T> AsListOf<T>(this /**/ImmutableArray<IEntity> list)
+		public static ImmutableArray<TDestination> AsArrayOf<TSource, TDestination>(this ImmutableArray<TSource> array, bool emptyArrayIfDefault = false) where TSource : IEntity
 		{
-			return !list.IsDefault ? /**/ImmutableArray.CreateRange(list, item => item.As<T>()) : default;
-		}
-
-		public static IEnumerable<T> AsEnumerableOf<T>(this IEnumerable<IEntity> enumerable)
-		{
-			if (enumerable == null) throw new ArgumentNullException(nameof(enumerable));
-
-			foreach (var item in enumerable)
+			if (array.IsDefault)
 			{
-				yield return item.As<T>();
+				return emptyArrayIfDefault ? ImmutableArray<TDestination>.Empty : default;
 			}
+
+			return ImmutableArray.CreateRange(array, item => item.As<TDestination>());
 		}
 	}
 }

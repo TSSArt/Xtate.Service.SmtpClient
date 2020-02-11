@@ -1,9 +1,10 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public class StateNode : StateEntityNode, IState, IAncestorProvider, IDebugEntityId
+	internal class StateNode : StateEntityNode, IState, IAncestorProvider, IDebugEntityId
 	{
 		private readonly State _state;
 
@@ -12,15 +13,15 @@ namespace TSSArt.StateMachine
 			_state = state;
 
 			var id = state.Id ?? new IdentifierNode(new RuntimeIdentifier());
-			var transitions = state.Transitions.AsListOf<TransitionNode>() ?? Array.Empty<TransitionNode>();
-			var invokeList = state.Invoke.AsListOf<InvokeNode>() ?? Array.Empty<InvokeNode>();
+			var transitions = state.Transitions.AsArrayOf<ITransition, TransitionNode>(true);
+			var invokeList = state.Invoke.AsArrayOf<IInvoke, InvokeNode>(true);
 
 			Id = id;
-			States = state.States.AsListOf<StateEntityNode>();
-			HistoryStates = state.HistoryStates.AsListOf<HistoryNode>() ?? Array.Empty<HistoryNode>();
+			States = state.States.AsArrayOf<IStateEntity, StateEntityNode>();
+			HistoryStates = state.HistoryStates.AsArrayOf<IHistory, HistoryNode>(true);
 			Transitions = transitions;
-			OnEntry = state.OnEntry.AsListOf<OnEntryNode>() ?? Array.Empty<OnEntryNode>();
-			OnExit = state.OnExit.AsListOf<OnExitNode>() ?? Array.Empty<OnExitNode>();
+			OnEntry = state.OnEntry.AsArrayOf<IOnEntry, OnEntryNode>(true);
+			OnExit = state.OnExit.AsArrayOf<IOnExit, OnExitNode>(true);
 			Invoke = invokeList;
 			Initial = state.Initial.As<InitialNode>();
 			DataModel = state.DataModel.As<DataModelNode>();
@@ -36,14 +37,14 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public override bool                           IsAtomicState => true;
-		public override /**/ImmutableArray<InvokeNode>      Invoke        { get; }
-		public override /**/ImmutableArray<TransitionNode>  Transitions   { get; }
-		public override /**/ImmutableArray<HistoryNode>     HistoryStates { get; }
-		public override /**/ImmutableArray<StateEntityNode> States        { get; }
-		public override /**/ImmutableArray<OnEntryNode>     OnEntry       { get; }
-		public override /**/ImmutableArray<OnExitNode>      OnExit        { get; }
-		public override DataModelNode                  DataModel     { get; }
+		public override bool                            IsAtomicState => true;
+		public override ImmutableArray<InvokeNode>      Invoke        { get; }
+		public override ImmutableArray<TransitionNode>  Transitions   { get; }
+		public override ImmutableArray<HistoryNode>     HistoryStates { get; }
+		public override ImmutableArray<StateEntityNode> States        { get; }
+		public override ImmutableArray<OnEntryNode>     OnEntry       { get; }
+		public override ImmutableArray<OnExitNode>      OnExit        { get; }
+		public override DataModelNode                   DataModel     { get; }
 
 		protected InitialNode Initial { get; }
 
@@ -53,14 +54,14 @@ namespace TSSArt.StateMachine
 
 		public override IIdentifier Id { get; }
 
-		IInitial IState.                   Initial       => Initial;
-		IDataModel IState.                 DataModel     => DataModel;
-		/**/ImmutableArray<IInvoke> IState.     Invoke        => Invoke;
-		/**/ImmutableArray<IStateEntity> IState.States        => States;
-		/**/ImmutableArray<IHistory> IState.    HistoryStates => HistoryStates;
-		/**/ImmutableArray<ITransition> IState. Transitions   => Transitions;
-		/**/ImmutableArray<IOnEntry> IState.    OnEntry       => OnEntry;
-		/**/ImmutableArray<IOnExit> IState.     OnExit        => OnExit;
+		IInitial IState.                    Initial       => Initial;
+		IDataModel IState.                  DataModel     => DataModel;
+		ImmutableArray<IInvoke> IState.     Invoke        => ImmutableArray<IInvoke>.CastUp(Invoke);
+		ImmutableArray<IStateEntity> IState.States        => ImmutableArray<IStateEntity>.CastUp(States);
+		ImmutableArray<IHistory> IState.    HistoryStates => ImmutableArray<IHistory>.CastUp(HistoryStates);
+		ImmutableArray<ITransition> IState. Transitions   => ImmutableArray<ITransition>.CastUp(Transitions);
+		ImmutableArray<IOnEntry> IState.    OnEntry       => ImmutableArray<IOnEntry>.CastUp(OnEntry);
+		ImmutableArray<IOnExit> IState.     OnExit        => ImmutableArray<IOnExit>.CastUp(OnExit);
 
 		protected override void Store(Bucket bucket)
 		{

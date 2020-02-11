@@ -1,6 +1,6 @@
 ﻿namespace TSSArt.StateMachine
 {
-	public class ScriptExpressionNode : IScriptExpression, IStoreSupport, IAncestorProvider
+	internal sealed class ScriptExpressionNode : IScriptExpression, IStoreSupport, IAncestorProvider
 	{
 		private readonly ScriptExpression _scriptExpression;
 

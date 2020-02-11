@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -25,7 +25,7 @@ namespace TSSArt.StateMachine
 
 	public interface IExternalCommunication
 	{
-		/**/ImmutableArray<IEventProcessor> GetIoProcessors();
+		ImmutableArray<IEventProcessor> GetIoProcessors();
 
 		ValueTask             StartInvoke(InvokeData invokeData, CancellationToken token);
 		ValueTask             CancelInvoke(string invokeId, CancellationToken token);

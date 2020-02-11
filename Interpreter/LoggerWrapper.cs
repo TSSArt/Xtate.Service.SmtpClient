@@ -1,12 +1,12 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public readonly struct LoggerWrapper
+	internal readonly struct LoggerWrapper
 	{
 		private const string ErrorTypeKey   = "ErrorType";
 		private const string ErrorTypeValue = "Platform";
@@ -109,7 +109,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private string ToString(IEnumerable<IIdentifier> list)
+		private static string ToString(ImmutableArray<IIdentifier> list)
 		{
 			if (list == null)
 			{
@@ -119,7 +119,7 @@ namespace TSSArt.StateMachine
 			return string.Join(separator: " ", list.Select(id => id.Base<IIdentifier>().ToString()));
 		}
 
-		private string ToString(IEnumerable<IEventDescriptor> list)
+		private static string ToString(ImmutableArray<IEventDescriptor> list)
 		{
 			if (list == null)
 			{

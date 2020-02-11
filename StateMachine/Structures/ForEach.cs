@@ -1,10 +1,10 @@
-﻿using System.Collections./**/Immutable;
+﻿using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public struct ForEach : IForEach, IEntity<ForEach, IForEach>, IAncestorProvider
 	{
-		public /**/ImmutableArray<IExecutableEntity> Action { get; set; }
+		public ImmutableArray<IExecutableEntity> Action { get; set; }
 		public IValueExpression                  Array  { get; set; }
 		public ILocationExpression               Index  { get; set; }
 		public ILocationExpression               Item   { get; set; }

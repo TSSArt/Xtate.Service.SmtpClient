@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
-	public class StateMachineReader
+	internal sealed class StateMachineReader
 	{
 		private Dictionary<int, IEntity> _forwardEntities;
 

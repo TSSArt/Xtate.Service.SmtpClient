@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml;
@@ -13,10 +13,10 @@ namespace TSSArt.StateMachine
 		private          string        _current;
 		private          object        _exceptionTag;
 
-		protected XmlDirector(XmlReader xmlReader, GlobalOptions globalOptions)
+		protected XmlDirector(XmlReader xmlReader, in GlobalOptions globalOptions)
 		{
 			_xmlReader = xmlReader ?? throw new ArgumentNullException(nameof(xmlReader));
-			_globalOptions = globalOptions ?? throw new ArgumentNullException(nameof(globalOptions));
+			_globalOptions = globalOptions;
 		}
 
 		protected string Current => _current ?? _xmlReader.Value;
@@ -200,12 +200,12 @@ namespace TSSArt.StateMachine
 			IPolicyBuilder<TEntity> OptionalElement(string name, Action<TDirector, TEntity> located);
 			IPolicyBuilder<TEntity> SingleElement(string name, Action<TDirector, TEntity> located);
 			IPolicyBuilder<TEntity> MultipleElements(string name, Action<TDirector, TEntity> located);
-			IPolicyBuilder<TEntity> ValidateElementName(Options options, string name);
-			IPolicyBuilder<TEntity> RequiredAttribute(Options options, string name, Action<TDirector, TEntity> located);
-			IPolicyBuilder<TEntity> OptionalAttribute(Options options, string name, Action<TDirector, TEntity> located);
-			IPolicyBuilder<TEntity> OptionalElement(Options options, string name, Action<TDirector, TEntity> located);
-			IPolicyBuilder<TEntity> SingleElement(Options options, string name, Action<TDirector, TEntity> located);
-			IPolicyBuilder<TEntity> MultipleElements(Options options, string name, Action<TDirector, TEntity> located);
+			IPolicyBuilder<TEntity> ValidateElementName(in Options options, string name);
+			IPolicyBuilder<TEntity> RequiredAttribute(in Options options, string name, Action<TDirector, TEntity> located);
+			IPolicyBuilder<TEntity> OptionalAttribute(in Options options, string name, Action<TDirector, TEntity> located);
+			IPolicyBuilder<TEntity> OptionalElement(in Options options, string name, Action<TDirector, TEntity> located);
+			IPolicyBuilder<TEntity> SingleElement(in Options options, string name, Action<TDirector, TEntity> located);
+			IPolicyBuilder<TEntity> MultipleElements(in Options options, string name, Action<TDirector, TEntity> located);
 			IPolicyBuilder<TEntity> IgnoreUnknownElements();
 			IPolicyBuilder<TEntity> DenyUnknownElements();
 			IPolicyBuilder<TEntity> RawContent(Action<TDirector, TEntity> action);
@@ -416,76 +416,76 @@ namespace TSSArt.StateMachine
 				_policy.IgnoreUnknownElements = globalOptions.IgnoreUnknownElements;
 			}
 
-			public IPolicyBuilder<TEntity> ValidateElementName(string name) => ValidateElementName(options: null, name);
+			public IPolicyBuilder<TEntity> ValidateElementName(string name) => ValidateElementName(options: default, name);
 
-			public IPolicyBuilder<TEntity> RequiredAttribute(string name, Action<TDirector, TEntity> located) => RequiredAttribute(options: null, name, located);
+			public IPolicyBuilder<TEntity> RequiredAttribute(string name, Action<TDirector, TEntity> located) => RequiredAttribute(options: default, name, located);
 
-			public IPolicyBuilder<TEntity> OptionalAttribute(string name, Action<TDirector, TEntity> located) => OptionalAttribute(options: null, name, located);
+			public IPolicyBuilder<TEntity> OptionalAttribute(string name, Action<TDirector, TEntity> located) => OptionalAttribute(options: default, name, located);
 
-			public IPolicyBuilder<TEntity> OptionalElement(string name, Action<TDirector, TEntity> located) => OptionalElement(options: null, name, located);
+			public IPolicyBuilder<TEntity> OptionalElement(string name, Action<TDirector, TEntity> located) => OptionalElement(options: default, name, located);
 
-			public IPolicyBuilder<TEntity> SingleElement(string name, Action<TDirector, TEntity> located) => SingleElement(options: null, name, located);
+			public IPolicyBuilder<TEntity> SingleElement(string name, Action<TDirector, TEntity> located) => SingleElement(options: default, name, located);
 
-			public IPolicyBuilder<TEntity> MultipleElements(string name, Action<TDirector, TEntity> located) => MultipleElements(options: null, name, located);
+			public IPolicyBuilder<TEntity> MultipleElements(string name, Action<TDirector, TEntity> located) => MultipleElements(options: default, name, located);
 
-			public IPolicyBuilder<TEntity> ValidateElementName(Options options, string name)
+			public IPolicyBuilder<TEntity> ValidateElementName(in Options options, string name)
 			{
 				if (string.IsNullOrEmpty(name)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(name));
 
-				_policy.ElementNamespace = options?.Namespace ?? _globalOptions.ElementDefaultNamespace ?? string.Empty;
+				_policy.ElementNamespace = options.Namespace ?? _globalOptions.ElementDefaultNamespace ?? string.Empty;
 				_policy.ElementName = name;
 
 				return this;
 			}
 
-			public IPolicyBuilder<TEntity> RequiredAttribute(Options options, string name, Action<TDirector, TEntity> located)
+			public IPolicyBuilder<TEntity> RequiredAttribute(in Options options, string name, Action<TDirector, TEntity> located)
 			{
 				if (located == null) throw new ArgumentNullException(nameof(located));
 				if (string.IsNullOrEmpty(name)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(name));
 
-				_policy.AddAttribute(options?.Namespace ?? _globalOptions.AttributeDefaultNamespace ?? string.Empty, name, located, AttributeType.Required);
+				_policy.AddAttribute(options.Namespace ?? _globalOptions.AttributeDefaultNamespace ?? string.Empty, name, located, AttributeType.Required);
 
 				return this;
 			}
 
-			public IPolicyBuilder<TEntity> OptionalAttribute(Options options, string name, Action<TDirector, TEntity> located)
+			public IPolicyBuilder<TEntity> OptionalAttribute(in Options options, string name, Action<TDirector, TEntity> located)
 			{
 				if (located == null) throw new ArgumentNullException(nameof(located));
 				if (string.IsNullOrEmpty(name)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(name));
 
-				_policy.AddAttribute(options?.Namespace ?? _globalOptions.AttributeDefaultNamespace ?? string.Empty, name, located, AttributeType.Optional);
+				_policy.AddAttribute(options.Namespace ?? _globalOptions.AttributeDefaultNamespace ?? string.Empty, name, located, AttributeType.Optional);
 
 				return this;
 			}
 
-			public IPolicyBuilder<TEntity> OptionalElement(Options options, string name, Action<TDirector, TEntity> located)
+			public IPolicyBuilder<TEntity> OptionalElement(in Options options, string name, Action<TDirector, TEntity> located)
 			{
 				if (located == null) throw new ArgumentNullException(nameof(located));
 				if (string.IsNullOrEmpty(name)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(name));
 
-				_policy.AddElement(options?.Namespace ?? _globalOptions.ElementDefaultNamespace ?? string.Empty, name, located, ElementType.ZeroToOne);
+				_policy.AddElement(options.Namespace ?? _globalOptions.ElementDefaultNamespace ?? string.Empty, name, located, ElementType.ZeroToOne);
 
 				return this;
 			}
 
-			public IPolicyBuilder<TEntity> SingleElement(Options options, string name, Action<TDirector, TEntity> located)
+			public IPolicyBuilder<TEntity> SingleElement(in Options options, string name, Action<TDirector, TEntity> located)
 			{
 				if (located == null) throw new ArgumentNullException(nameof(located));
 				if (string.IsNullOrEmpty(name)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(name));
 
 				UseRawContent(val: false);
-				_policy.AddElement(options?.Namespace ?? _globalOptions.ElementDefaultNamespace ?? string.Empty, name, located, ElementType.One);
+				_policy.AddElement(options.Namespace ?? _globalOptions.ElementDefaultNamespace ?? string.Empty, name, located, ElementType.One);
 
 				return this;
 			}
 
-			public IPolicyBuilder<TEntity> MultipleElements(Options options, string name, Action<TDirector, TEntity> located)
+			public IPolicyBuilder<TEntity> MultipleElements(in Options options, string name, Action<TDirector, TEntity> located)
 			{
 				if (located == null) throw new ArgumentNullException(nameof(located));
 				if (string.IsNullOrEmpty(name)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(name));
 
 				UseRawContent(val: false);
-				_policy.AddElement(options?.Namespace ?? _globalOptions.ElementDefaultNamespace ?? string.Empty, name, located, ElementType.ZeroToMany);
+				_policy.AddElement(options.Namespace ?? _globalOptions.ElementDefaultNamespace ?? string.Empty, name, located, ElementType.ZeroToMany);
 
 				return this;
 			}

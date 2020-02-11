@@ -1,9 +1,10 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public abstract class StateEntityNode : IStateEntity, IStoreSupport, IDocumentId
+	internal abstract class StateEntityNode : IStateEntity, IStoreSupport, IDocumentId
 	{
 		public static readonly IComparer<StateEntityNode> EntryOrder = new DocumentOrderComparer(reverseOrder: false);
 		public static readonly IComparer<StateEntityNode> ExitOrder  = new DocumentOrderComparer(reverseOrder: true);
@@ -25,15 +26,15 @@ namespace TSSArt.StateMachine
 
 		public StateEntityNode Parent { get; private set; }
 
-		public virtual bool                           IsAtomicState => throw GetNotSupportedException();
-		public virtual IIdentifier                    Id            => throw GetNotSupportedException();
-		public virtual /**/ImmutableArray<TransitionNode>  Transitions   => throw GetNotSupportedException();
-		public virtual /**/ImmutableArray<OnEntryNode>     OnEntry       => throw GetNotSupportedException();
-		public virtual /**/ImmutableArray<OnExitNode>      OnExit        => throw GetNotSupportedException();
-		public virtual /**/ImmutableArray<InvokeNode>      Invoke        => throw GetNotSupportedException();
-		public virtual /**/ImmutableArray<StateEntityNode> States        => throw GetNotSupportedException();
-		public virtual /**/ImmutableArray<HistoryNode>     HistoryStates => throw GetNotSupportedException();
-		public virtual DataModelNode                  DataModel     => throw GetNotSupportedException();
+		public virtual bool                            IsAtomicState => throw GetNotSupportedException();
+		public virtual IIdentifier                     Id            => throw GetNotSupportedException();
+		public virtual ImmutableArray<TransitionNode>  Transitions   => throw GetNotSupportedException();
+		public virtual ImmutableArray<OnEntryNode>     OnEntry       => throw GetNotSupportedException();
+		public virtual ImmutableArray<OnExitNode>      OnExit        => throw GetNotSupportedException();
+		public virtual ImmutableArray<InvokeNode>      Invoke        => throw GetNotSupportedException();
+		public virtual ImmutableArray<StateEntityNode> States        => throw GetNotSupportedException();
+		public virtual ImmutableArray<HistoryNode>     HistoryStates => throw GetNotSupportedException();
+		public virtual DataModelNode                   DataModel     => throw GetNotSupportedException();
 
 		public int DocumentId => _documentIdNode.Value;
 
@@ -41,7 +42,7 @@ namespace TSSArt.StateMachine
 
 		private NotSupportedException GetNotSupportedException() => new NotSupportedException("Specified method is not supported in type " + GetType().Name);
 
-		protected static IEnumerable<StateEntityNode> GetChildNodes(IInitial initial, /**/ImmutableArray<IStateEntity> states, /**/ImmutableArray<IHistory> historyStates = null)
+		protected static IEnumerable<StateEntityNode> GetChildNodes(IInitial initial, ImmutableArray<IStateEntity> states, ImmutableArray<IHistory> historyStates = default)
 		{
 			var initialNode = initial.As<InitialNode>();
 
@@ -52,17 +53,17 @@ namespace TSSArt.StateMachine
 
 			if (states != null)
 			{
-				foreach (var node in states.AsEnumerableOf<StateEntityNode>())
+				foreach (var node in states)
 				{
-					yield return node;
+					yield return node.As<StateEntityNode>();
 				}
 			}
 
 			if (historyStates != null)
 			{
-				foreach (var node in historyStates.AsEnumerableOf<StateEntityNode>())
+				foreach (var node in historyStates)
 				{
-					yield return node;
+					yield return node.As<StateEntityNode>();
 				}
 			}
 		}

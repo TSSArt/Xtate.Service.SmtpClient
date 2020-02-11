@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
-	public class AssignNode : ExecutableEntityNode, IAssign, IAncestorProvider, IDebugEntityId
+	internal sealed class AssignNode : ExecutableEntityNode, IAssign, IAncestorProvider, IDebugEntityId
 	{
 		private readonly Assign _entity;
 

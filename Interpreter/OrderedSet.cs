@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
-	public class OrderedSet<T>
+	internal sealed class OrderedSet<T> : List<T>
 	{
 		public delegate void ChangedHandler(ChangedAction action, T item);
 
@@ -14,57 +14,60 @@ namespace TSSArt.StateMachine
 			Delete
 		}
 
-		private readonly List<T> _items;
-
-		public OrderedSet() => _items = new List<T>();
-
-		public bool IsEmpty => _items.Count == 0;
+		public bool IsEmpty => Count == 0;
 
 		public event ChangedHandler Changed;
 
-		public void Add(T item)
+		public void AddIfNotExists(T item)
 		{
-			if (!_items.Contains(item))
+			if (!Contains(item))
 			{
-				_items.Add(item);
+				base.Add(item);
 
 				Changed?.Invoke(ChangedAction.Add, item);
 			}
 		}
 
-		public void Clear()
+		public new void Add(T item)
 		{
-			_items.Clear();
+			base.Add(item);
+
+			Changed?.Invoke(ChangedAction.Add, item);
+		}
+
+		public new void Clear()
+		{
+			base.Clear();
 
 			Changed?.Invoke(ChangedAction.Clear, item: default);
 		}
 
-		public bool IsMember(T item) => _items.Contains(item);
+		public bool IsMember(T item) => Contains(item);
 
 		public void Delete(T item)
 		{
-			_items.Remove(item);
+			Remove(item);
 
 			Changed?.Invoke(ChangedAction.Delete, item);
 		}
 
-		public void Union(/**/ImmutableArray<T> orderedSet)
+		public void Union(List<T> orderedSet)
 		{
 			if (orderedSet == null) throw new ArgumentNullException(nameof(orderedSet));
 
 			foreach (var item in orderedSet)
 			{
-				Add(item);
+				AddIfNotExists(item);
 			}
 		}
 
-		public bool HasIntersection(OrderedSet<T> orderedSet)
+		public bool HasIntersection(List<T> orderedSet)
 		{
 			if (orderedSet == null) throw new ArgumentNullException(nameof(orderedSet));
 
-			foreach (var item in orderedSet._items)
+			foreach (var item in orderedSet)
 			{
-				if (_items.Contains(item))
+				if (Contains(item))
 				{
 					return true;
 				}
@@ -73,28 +76,28 @@ namespace TSSArt.StateMachine
 			return false;
 		}
 
-		public bool Some(Predicate<T> predicate) => _items.Exists(predicate);
+		public bool Some(Predicate<T> predicate) => Exists(predicate);
 
-		public bool Every(Predicate<T> predicate) => _items.TrueForAll(predicate);
+		public bool Every(Predicate<T> predicate) => TrueForAll(predicate);
 
-		public /**/ImmutableArray<T> ToList() => _items;
+		public List<T> ToList1() => this;
 
-		public /**/ImmutableArray<T> ToSortedList(IComparer<T> comparer)
+		public List<T> ToSortedList(IComparer<T> comparer)
 		{
-			var array = _items.ToArray();
-			Array.Sort(array, comparer);
-
-			return array;
-		}
-
-		public /**/ImmutableArray<T> ToFilteredSortedList(Predicate<T> predicate, IComparer<T> comparer)
-		{
-			var list = _items.FindAll(predicate);
+			var list = new List<T>(this);
 			list.Sort(comparer);
 
 			return list;
 		}
 
-		public /**/ImmutableArray<T> ToFilteredList(Predicate<T> predicate) => _items.FindAll(predicate);
+		public List<T> ToFilteredSortedList(Predicate<T> predicate, IComparer<T> comparer)
+		{
+			var list = FindAll(predicate);
+			list.Sort(comparer);
+
+			return list;
+		}
+
+		public List<T> ToFilteredList(Predicate<T> predicate) => FindAll(predicate);
 	}
 }

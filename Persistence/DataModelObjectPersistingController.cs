@@ -2,7 +2,7 @@
 
 namespace TSSArt.StateMachine
 {
-	public class DataModelObjectPersistingController : DataModelPersistingController
+	internal sealed class DataModelObjectPersistingController : DataModelPersistingController
 	{
 		private readonly Bucket                    _bucket;
 		private readonly DataModelObject           _dataModelObject;

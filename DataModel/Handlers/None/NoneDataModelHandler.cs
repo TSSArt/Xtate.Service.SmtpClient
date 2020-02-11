@@ -2,7 +2,7 @@
 
 namespace TSSArt.StateMachine
 {
-	public class NoneDataModelHandler : DataModelHandlerBase
+	internal sealed class NoneDataModelHandler : DataModelHandlerBase
 	{
 		public const string DataModelType = "none";
 

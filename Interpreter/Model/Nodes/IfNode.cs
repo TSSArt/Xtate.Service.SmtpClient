@@ -1,9 +1,10 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public class IfNode : ExecutableEntityNode, IIf, IAncestorProvider, IDebugEntityId
+	internal sealed class IfNode : ExecutableEntityNode, IIf, IAncestorProvider, IDebugEntityId
 	{
 		private readonly If _entity;
 
@@ -15,7 +16,7 @@ namespace TSSArt.StateMachine
 
 		public IConditionExpression Condition => _entity.Condition;
 
-		public /**/ImmutableArray<IExecutableEntity> Action => _entity.Action;
+		public ImmutableArray<IExecutableEntity> Action => _entity.Action;
 
 		protected override void Store(Bucket bucket)
 		{

@@ -2,7 +2,7 @@
 
 namespace TSSArt.StateMachine
 {
-	public class EntityQueuePersistingController<T> : IDisposable where T : IEntity
+	internal sealed class EntityQueuePersistingController<T> : IDisposable where T : IEntity
 	{
 		private readonly Bucket         _bucket;
 		private readonly EntityQueue<T> _entityQueue;
@@ -29,16 +29,7 @@ namespace TSSArt.StateMachine
 
 		public void Dispose()
 		{
-			Dispose(true);
-			GC.SuppressFinalize(this);
-		}
-
-		protected virtual void Dispose(bool dispose)
-		{
-			if (dispose)
-			{
-				_entityQueue.Changed -= OnChanged;
-			}
+			_entityQueue.Changed -= OnChanged;
 		}
 
 		private void OnChanged(EntityQueue<T>.ChangedAction action, T entity)

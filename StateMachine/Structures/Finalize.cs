@@ -1,10 +1,10 @@
-﻿using System.Collections./**/Immutable;
+﻿using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public struct Finalize : IFinalize, IEntity<Finalize, IFinalize>, IAncestorProvider
 	{
-		public /**/ImmutableArray<IExecutableEntity> Action { get; set; }
+		public ImmutableArray<IExecutableEntity> Action { get; set; }
 
 		void IEntity<Finalize, IFinalize>.Init(IFinalize source)
 		{

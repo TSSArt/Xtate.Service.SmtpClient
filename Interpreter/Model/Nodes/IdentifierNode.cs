@@ -2,7 +2,7 @@
 
 namespace TSSArt.StateMachine
 {
-	public class IdentifierNode : IIdentifier, IStoreSupport, IAncestorProvider, IDebugEntityId
+	internal sealed class IdentifierNode : IIdentifier, IStoreSupport, IAncestorProvider, IDebugEntityId
 	{
 		public IdentifierNode(IIdentifier id) => Identifier = id ?? throw new ArgumentNullException(nameof(id));
 		public IIdentifier Identifier { get; }

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public sealed class StreamStorage : ITransactionalStorage
+	internal sealed class StreamStorage : ITransactionalStorage
 	{
 		private const byte SkipMark        = 0;
 		private const int  SkipBlockMark   = 2;

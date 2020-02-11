@@ -1,6 +1,6 @@
 ﻿namespace TSSArt.StateMachine
 {
-	public class GlobalOptions
+	public struct GlobalOptions
 	{
 		public string AttributeDefaultNamespace { get; set; }
 		public string ElementDefaultNamespace   { get; set; }

@@ -1,16 +1,14 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public class StateFluentBuilder<TOuterBuilder>
 	{
-		private readonly IStateBuilder           _builder;
-		private readonly Action<IState>          _builtAction;
-		private readonly IBuilderFactory         _factory;
-		private readonly TOuterBuilder           _outerBuilder;
-		private          List<IExecutableEntity> _onEntryList;
-		private          List<IExecutableEntity> _onExitList;
+		private readonly IStateBuilder   _builder;
+		private readonly Action<IState>  _builtAction;
+		private readonly IBuilderFactory _factory;
+		private readonly TOuterBuilder   _outerBuilder;
 
 		public StateFluentBuilder(IBuilderFactory factory, TOuterBuilder outerBuilder, Action<IState> builtAction)
 		{
@@ -22,16 +20,6 @@ namespace TSSArt.StateMachine
 
 		public TOuterBuilder EndState()
 		{
-			if (_onEntryList != null)
-			{
-				_builder.AddOnEntry(new OnEntry { Action = ExecutableEntityList.Create(_onEntryList) });
-			}
-
-			if (_onExitList != null)
-			{
-				_builder.AddOnExit(new OnExit { Action = ExecutableEntityList.Create(_onExitList) });
-			}
-
 			_builtAction(_builder.Build());
 
 			return _outerBuilder;
@@ -41,6 +29,8 @@ namespace TSSArt.StateMachine
 
 		public StateFluentBuilder<TOuterBuilder> SetId(IIdentifier id)
 		{
+			if (id == null) throw new ArgumentNullException(nameof(id));
+
 			_builder.SetId(id);
 
 			return this;
@@ -48,89 +38,74 @@ namespace TSSArt.StateMachine
 
 		public StateFluentBuilder<TOuterBuilder> SetInitial(params string[] initial)
 		{
-			_builder.SetInitial(IdentifierList.Create(initial, Identifier.FromString));
+			if (initial == null) throw new ArgumentNullException(nameof(initial));
+			if (initial.Length == 0) throw new ArgumentException(message: "Value cannot be an empty collection.", nameof(initial));
+
+			var builder = ImmutableArray.CreateBuilder<IIdentifier>(initial.Length);
+
+			foreach (var s in initial)
+			{
+				builder.Add((Identifier) s);
+			}
+
+			_builder.SetInitial(builder.MoveToImmutable());
 
 			return this;
 		}
 
 		public StateFluentBuilder<TOuterBuilder> SetInitial(params IIdentifier[] initial)
 		{
-			_builder.SetInitial(IdentifierList.Create(initial));
+			if (initial == null) throw new ArgumentNullException(nameof(initial));
+			if (initial.Length == 0) throw new ArgumentException(message: "Value cannot be an empty collection.", nameof(initial));
+
+			_builder.SetInitial(initial.ToImmutableArray());
 
 			return this;
 		}
 
-		public StateFluentBuilder<TOuterBuilder> AddOnEntry(ExecutableAction action)
+		public StateFluentBuilder<TOuterBuilder> SetInitial(ImmutableArray<string> initial)
 		{
-			if (_onEntryList == null)
-			{
-				_onEntryList = new List<IExecutableEntity>();
-			}
+			if (initial.IsDefaultOrEmpty) throw new ArgumentException(message: "Value cannot be an empty list.", nameof(initial));
 
-			_onEntryList.Add(new RuntimeAction(action));
+			_builder.SetInitial(ImmutableArray.CreateRange<string, IIdentifier>(initial, id => (Identifier) id));
 
 			return this;
 		}
 
-		public StateFluentBuilder<TOuterBuilder> AddOnEntry(ExecutableTask task)
+		public StateFluentBuilder<TOuterBuilder> SetInitial(ImmutableArray<IIdentifier> initial)
 		{
-			if (_onEntryList == null)
-			{
-				_onEntryList = new List<IExecutableEntity>();
-			}
+			if (initial.IsDefaultOrEmpty) throw new ArgumentException(message: "Value cannot be an empty list.", nameof(initial));
 
-			_onEntryList.Add(new RuntimeAction(task));
+			_builder.SetInitial(initial);
 
 			return this;
 		}
 
-		public StateFluentBuilder<TOuterBuilder> AddOnEntry(ExecutableCancellableTask task)
+		private StateFluentBuilder<TOuterBuilder> AddOnEntry(RuntimeAction action)
 		{
-			if (_onEntryList == null)
-			{
-				_onEntryList = new List<IExecutableEntity>();
-			}
-
-			_onEntryList.Add(new RuntimeAction(task));
+			_builder.AddOnEntry(new OnEntry { Action = ImmutableArray.Create<IExecutableEntity>(action) });
 
 			return this;
 		}
 
-		public StateFluentBuilder<TOuterBuilder> AddOnExit(ExecutableAction action)
+		public StateFluentBuilder<TOuterBuilder> AddOnEntry(ExecutableAction action) => AddOnEntry(new RuntimeAction(action));
+
+		public StateFluentBuilder<TOuterBuilder> AddOnEntry(ExecutableTask task) => AddOnEntry(new RuntimeAction(task));
+
+		public StateFluentBuilder<TOuterBuilder> AddOnEntry(ExecutableCancellableTask task) => AddOnEntry(new RuntimeAction(task));
+
+		private StateFluentBuilder<TOuterBuilder> AddOnExit(RuntimeAction action)
 		{
-			if (_onExitList == null)
-			{
-				_onExitList = new List<IExecutableEntity>();
-			}
-
-			_onExitList.Add(new RuntimeAction(action));
+			_builder.AddOnExit(new OnExit { Action = ImmutableArray.Create<IExecutableEntity>(action) });
 
 			return this;
 		}
 
-		public StateFluentBuilder<TOuterBuilder> AddOnExit(ExecutableTask task)
-		{
-			if (_onExitList == null)
-			{
-				_onExitList = new List<IExecutableEntity>();
-			}
+		public StateFluentBuilder<TOuterBuilder> AddOnExit(ExecutableAction action) => AddOnEntry(new RuntimeAction(action));
 
-			_onExitList.Add(new RuntimeAction(task));
+		public StateFluentBuilder<TOuterBuilder> AddOnExit(ExecutableTask task) => AddOnEntry(new RuntimeAction(task));
 
-			return this;
-		}
-
-		public StateFluentBuilder<TOuterBuilder> AddOnExit(ExecutableCancellableTask task)
-		{
-			if (_onExitList == null)
-			{
-				_onExitList = new List<IExecutableEntity>();
-			}
-
-			_onExitList.Add(new RuntimeAction(task));
-
-			return this;
-		}
+		public StateFluentBuilder<TOuterBuilder> AddOnExit(ExecutableCancellableTask task) => AddOnEntry(new RuntimeAction(task));
 
 		public InitialFluentBuilder<StateFluentBuilder<TOuterBuilder>> BeginInitial() => new InitialFluentBuilder<StateFluentBuilder<TOuterBuilder>>(_factory, this, _builder.SetInitial);
 

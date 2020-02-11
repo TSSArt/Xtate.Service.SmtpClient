@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,17 +18,17 @@ namespace TSSArt.StateMachine
 			ContentExpressionEvaluator = invoke.Content?.Expression.As<IObjectEvaluator>();
 			ContentBodyEvaluator = invoke.Content?.Body.As<IValueEvaluator>();
 			IdLocationEvaluator = invoke.IdLocation.As<ILocationEvaluator>();
-			NameEvaluatorList = invoke.NameList.As<IEntity>().AsListOf<ILocationEvaluator>();
-			ParameterList = invoke.Parameters.As<IEntity>().AsListOf<DefaultParam>();
+			NameEvaluatorList = invoke.NameList.AsArrayOf<ILocationExpression, ILocationEvaluator>();
+			ParameterList = invoke.Parameters.AsArrayOf<IParam, DefaultParam>();
 		}
 
-		public IObjectEvaluator                  ContentExpressionEvaluator { get; }
-		public IValueEvaluator                   ContentBodyEvaluator       { get; }
-		public ILocationEvaluator                IdLocationEvaluator        { get; }
-		public /**/ImmutableArray<ILocationEvaluator> NameEvaluatorList          { get; }
-		public /**/ImmutableArray<DefaultParam>       ParameterList              { get; }
-		public IStringEvaluator                  SourceExpressionEvaluator  { get; }
-		public IStringEvaluator                  TypeExpressionEvaluator    { get; }
+		public IObjectEvaluator                   ContentExpressionEvaluator { get; }
+		public IValueEvaluator                    ContentBodyEvaluator       { get; }
+		public ILocationEvaluator                 IdLocationEvaluator        { get; }
+		public ImmutableArray<ILocationEvaluator> NameEvaluatorList          { get; }
+		public ImmutableArray<DefaultParam>       ParameterList              { get; }
+		public IStringEvaluator                   SourceExpressionEvaluator  { get; }
+		public IStringEvaluator                   TypeExpressionEvaluator    { get; }
 
 		object IAncestorProvider.Ancestor => _invoke.Ancestor;
 
@@ -40,17 +40,17 @@ namespace TSSArt.StateMachine
 			return executionContext.CancelInvoke(invokeId, token);
 		}
 
-		public Uri                                Type             => _invoke.Type;
-		public IValueExpression                   TypeExpression   => _invoke.TypeExpression;
-		public Uri                                Source           => _invoke.Source;
-		public IValueExpression                   SourceExpression => _invoke.SourceExpression;
-		public string                             Id               => _invoke.Id;
-		public ILocationExpression                IdLocation       => _invoke.IdLocation;
-		public /**/ImmutableArray<ILocationExpression> NameList         => _invoke.NameList;
-		public bool                               AutoForward      => _invoke.AutoForward;
-		public /**/ImmutableArray<IParam>              Parameters       => _invoke.Parameters;
-		public IFinalize                          Finalize         => _invoke.Finalize;
-		public IContent                           Content          => _invoke.Content;
+		public Uri                                 Type             => _invoke.Type;
+		public IValueExpression                    TypeExpression   => _invoke.TypeExpression;
+		public Uri                                 Source           => _invoke.Source;
+		public IValueExpression                    SourceExpression => _invoke.SourceExpression;
+		public string                              Id               => _invoke.Id;
+		public ILocationExpression                 IdLocation       => _invoke.IdLocation;
+		public ImmutableArray<ILocationExpression> NameList         => _invoke.NameList;
+		public bool                                AutoForward      => _invoke.AutoForward;
+		public ImmutableArray<IParam>              Parameters       => _invoke.Parameters;
+		public IFinalize                           Finalize         => _invoke.Finalize;
+		public IContent                            Content          => _invoke.Content;
 
 		public virtual async ValueTask<(string InvokeId, string InvokeUniqueId)> Start(string stateId, IExecutionContext executionContext, CancellationToken token)
 		{

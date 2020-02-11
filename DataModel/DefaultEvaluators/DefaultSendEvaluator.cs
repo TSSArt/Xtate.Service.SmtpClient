@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,19 +19,19 @@ namespace TSSArt.StateMachine
 			ContentExpressionEvaluator = send.Content?.Expression.As<IObjectEvaluator>();
 			ContentBodyEvaluator = send.Content?.Body.As<IValueEvaluator>();
 			IdLocationEvaluator = send.IdLocation.As<ILocationEvaluator>();
-			NameEvaluatorList = send.NameList.AsListOf<ILocationEvaluator>();
-			ParameterList = send.Parameters.AsListOf<DefaultParam>();
+			NameEvaluatorList = send.NameList.AsArrayOf<ILocationExpression, ILocationEvaluator>();
+			ParameterList = send.Parameters.AsArrayOf<IParam, DefaultParam>();
 		}
 
-		public IObjectEvaluator                  ContentExpressionEvaluator { get; }
-		public IValueEvaluator                   ContentBodyEvaluator       { get; }
-		public IIntegerEvaluator                 DelayExpressionEvaluator   { get; }
-		public IStringEvaluator                  EventExpressionEvaluator   { get; }
-		public ILocationEvaluator                IdLocationEvaluator        { get; }
-		public IStringEvaluator                  TargetExpressionEvaluator  { get; }
-		public IStringEvaluator                  TypeExpressionEvaluator    { get; }
-		public /**/ImmutableArray<ILocationEvaluator> NameEvaluatorList          { get; }
-		public /**/ImmutableArray<DefaultParam>       ParameterList              { get; }
+		public IObjectEvaluator                   ContentExpressionEvaluator { get; }
+		public IValueEvaluator                    ContentBodyEvaluator       { get; }
+		public IIntegerEvaluator                  DelayExpressionEvaluator   { get; }
+		public IStringEvaluator                   EventExpressionEvaluator   { get; }
+		public ILocationEvaluator                 IdLocationEvaluator        { get; }
+		public IStringEvaluator                   TargetExpressionEvaluator  { get; }
+		public IStringEvaluator                   TypeExpressionEvaluator    { get; }
+		public ImmutableArray<ILocationEvaluator> NameEvaluatorList          { get; }
+		public ImmutableArray<DefaultParam>       ParameterList              { get; }
 
 		object IAncestorProvider.Ancestor => _send.Ancestor;
 
@@ -68,19 +68,19 @@ namespace TSSArt.StateMachine
 			await executionContext.Send(eventObject, token).ConfigureAwait(false);
 		}
 
-		public IContent                           Content          => _send.Content;
-		public IValueExpression                   DelayExpression  => _send.DelayExpression;
-		public int?                               DelayMs          => _send.DelayMs;
-		public string                             Event            => _send.Event;
-		public IValueExpression                   EventExpression  => _send.EventExpression;
-		public string                             Id               => _send.Id;
-		public ILocationExpression                IdLocation       => _send.IdLocation;
-		public /**/ImmutableArray<ILocationExpression> NameList         => _send.NameList;
-		public /**/ImmutableArray<IParam>              Parameters       => _send.Parameters;
-		public Uri                                Target           => _send.Target;
-		public IValueExpression                   TargetExpression => _send.TargetExpression;
-		public Uri                                Type             => _send.Type;
-		public IValueExpression                   TypeExpression   => _send.TypeExpression;
+		public IContent                            Content          => _send.Content;
+		public IValueExpression                    DelayExpression  => _send.DelayExpression;
+		public int?                                DelayMs          => _send.DelayMs;
+		public string                              Event            => _send.Event;
+		public IValueExpression                    EventExpression  => _send.EventExpression;
+		public string                              Id               => _send.Id;
+		public ILocationExpression                 IdLocation       => _send.IdLocation;
+		public ImmutableArray<ILocationExpression> NameList         => _send.NameList;
+		public ImmutableArray<IParam>              Parameters       => _send.Parameters;
+		public Uri                                 Target           => _send.Target;
+		public IValueExpression                    TargetExpression => _send.TargetExpression;
+		public Uri                                 Type             => _send.Type;
+		public IValueExpression                    TypeExpression   => _send.TypeExpression;
 
 		private static Uri ToUri(string uri) => new Uri(uri, UriKind.RelativeOrAbsolute);
 	}

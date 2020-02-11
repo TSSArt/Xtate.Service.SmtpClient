@@ -1,9 +1,10 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public class SendNode : ExecutableEntityNode, ISend, IAncestorProvider, IDebugEntityId
+	internal sealed class SendNode : ExecutableEntityNode, ISend, IAncestorProvider, IDebugEntityId
 	{
 		private readonly Send _entity;
 
@@ -13,19 +14,19 @@ namespace TSSArt.StateMachine
 
 		FormattableString IDebugEntityId.EntityId => $"{Id}(#{DocumentId})";
 
-		public string                             Event            => _entity.Event;
-		public IValueExpression                   EventExpression  => _entity.EventExpression;
-		public Uri                                Target           => _entity.Target;
-		public IValueExpression                   TargetExpression => _entity.TargetExpression;
-		public Uri                                Type             => _entity.Type;
-		public IValueExpression                   TypeExpression   => _entity.TypeExpression;
-		public string                             Id               => _entity.Id;
-		public ILocationExpression                IdLocation       => _entity.IdLocation;
-		public int?                               DelayMs          => _entity.DelayMs;
-		public IValueExpression                   DelayExpression  => _entity.DelayExpression;
-		public /**/ImmutableArray<ILocationExpression> NameList         => _entity.NameList;
-		public /**/ImmutableArray<IParam>              Parameters       => _entity.Parameters;
-		public IContent                           Content          => _entity.Content;
+		public string                              Event            => _entity.Event;
+		public IValueExpression                    EventExpression  => _entity.EventExpression;
+		public Uri                                 Target           => _entity.Target;
+		public IValueExpression                    TargetExpression => _entity.TargetExpression;
+		public Uri                                 Type             => _entity.Type;
+		public IValueExpression                    TypeExpression   => _entity.TypeExpression;
+		public string                              Id               => _entity.Id;
+		public ILocationExpression                 IdLocation       => _entity.IdLocation;
+		public int?                                DelayMs          => _entity.DelayMs;
+		public IValueExpression                    DelayExpression  => _entity.DelayExpression;
+		public ImmutableArray<ILocationExpression> NameList         => _entity.NameList;
+		public ImmutableArray<IParam>              Parameters       => _entity.Parameters;
+		public IContent                            Content          => _entity.Content;
 
 		protected override void Store(Bucket bucket)
 		{

@@ -1,21 +1,21 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public struct Invoke : IInvoke, IEntity<Invoke, IInvoke>, IAncestorProvider, IDebugEntityId
 	{
-		public bool                               AutoForward      { get; set; }
-		public IContent                           Content          { get; set; }
-		public IFinalize                          Finalize         { get; set; }
-		public string                             Id               { get; set; }
-		public ILocationExpression                IdLocation       { get; set; }
-		public /**/ImmutableArray<ILocationExpression> NameList         { get; set; }
-		public /**/ImmutableArray<IParam>              Parameters       { get; set; }
-		public Uri                                Source           { get; set; }
-		public IValueExpression                   SourceExpression { get; set; }
-		public Uri                                Type             { get; set; }
-		public IValueExpression                   TypeExpression   { get; set; }
+		public bool                                AutoForward      { get; set; }
+		public IContent                            Content          { get; set; }
+		public IFinalize                           Finalize         { get; set; }
+		public string                              Id               { get; set; }
+		public ILocationExpression                 IdLocation       { get; set; }
+		public ImmutableArray<ILocationExpression> NameList         { get; set; }
+		public ImmutableArray<IParam>              Parameters       { get; set; }
+		public Uri                                 Source           { get; set; }
+		public IValueExpression                    SourceExpression { get; set; }
+		public Uri                                 Type             { get; set; }
+		public IValueExpression                    TypeExpression   { get; set; }
 
 		void IEntity<Invoke, IInvoke>.Init(IInvoke source)
 		{

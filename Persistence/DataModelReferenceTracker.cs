@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
-	public sealed class DataModelReferenceTracker : IDisposable
+	internal sealed class DataModelReferenceTracker : IDisposable
 	{
 		private readonly Bucket _bucket;
 

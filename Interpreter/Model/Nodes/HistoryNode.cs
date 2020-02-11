@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
-	public class HistoryNode : StateEntityNode, IHistory, IAncestorProvider, IDebugEntityId
+	internal sealed class HistoryNode : StateEntityNode, IHistory, IAncestorProvider, IDebugEntityId
 	{
 		private readonly History _history;
 

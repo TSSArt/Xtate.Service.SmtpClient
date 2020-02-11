@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -7,11 +8,11 @@ using System.Xml;
 
 namespace TSSArt.StateMachine
 {
-	public class InterpreterModelBuilder : StateMachineVisitor
+	internal sealed class InterpreterModelBuilder : StateMachineVisitor
 	{
 		private int _counter;
 
-		private IReadOnlyCollection<ICustomActionProvider>        _customActionProviders;
+		private ImmutableArray<ICustomActionProvider>             _customActionProviders;
 		private IDataModelHandler                                 _dataModelHandler;
 		private List<DataModelNode>                               _dataModelNodeList;
 		private int                                               _deepLevel;
@@ -41,7 +42,7 @@ namespace TSSArt.StateMachine
 			_counter = _inParallel ? _counter + saved.counter : _counter > saved.counter ? _counter : saved.counter;
 		}
 
-		public InterpreterModel Build(IStateMachine stateMachine, IDataModelHandler dataModelHandler, IReadOnlyCollection<ICustomActionProvider> customActionProviders)
+		public InterpreterModel Build(IStateMachine stateMachine, IDataModelHandler dataModelHandler, ImmutableArray<ICustomActionProvider> customActionProviders)
 		{
 			if (stateMachine == null) throw new ArgumentNullException(nameof(stateMachine));
 
@@ -71,7 +72,7 @@ namespace TSSArt.StateMachine
 			return new InterpreterModel((StateMachineNode) stateMachine, _counter, _entityMap, _dataModelNodeList);
 		}
 
-		public async ValueTask<InterpreterModel> Build(IStateMachine stateMachine, IDataModelHandler dataModelHandler, IReadOnlyCollection<ICustomActionProvider> customActionProviders,
+		public async ValueTask<InterpreterModel> Build(IStateMachine stateMachine, IDataModelHandler dataModelHandler, ImmutableArray<ICustomActionProvider> customActionProviders,
 													   IResourceLoader resourceLoader, CancellationToken token)
 		{
 			if (stateMachine == null) throw new ArgumentNullException(nameof(stateMachine));
@@ -126,10 +127,10 @@ namespace TSSArt.StateMachine
 
 			base.Build(ref stateMachine, ref stateMachineProperties);
 
-			if (stateMachineProperties.States?.Count > 0 && stateMachineProperties.Initial == null)
+			if (!stateMachineProperties.States.IsDefaultOrEmpty && stateMachineProperties.Initial == null)
 			{
 				var initialDocId = NewDocumentIdAfter(documentId);
-				var target = new[] { stateMachineProperties.States[index: 0].As<StateEntityNode>() };
+				var target = ImmutableArray.Create(stateMachineProperties.States[index: 0].As<StateEntityNode>());
 				var transition = new TransitionNode(NewDocumentIdAfter(initialDocId), transition: default, target);
 				stateMachineProperties.Initial = new InitialNode(initialDocId, transition);
 			}
@@ -151,12 +152,12 @@ namespace TSSArt.StateMachine
 
 			StateNode newState;
 
-			if (stateProperties.States?.Count > 0)
+			if (!stateProperties.States.IsDefaultOrEmpty)
 			{
 				if (stateProperties.Initial == null)
 				{
 					var initialDocId = NewDocumentIdAfter(documentId);
-					var target = new[] { stateProperties.States[index: 0].As<StateEntityNode>() };
+					var target = ImmutableArray.Create(stateProperties.States[index: 0].As<StateEntityNode>());
 					var transition = new TransitionNode(NewDocumentIdAfter(initialDocId), transition: default, target);
 					stateProperties.Initial = new InitialNode(initialDocId, transition);
 				}
@@ -364,7 +365,7 @@ namespace TSSArt.StateMachine
 
 		private Func<IExecutionContext, CancellationToken, ValueTask> FindAction(string xml)
 		{
-			if (_customActionProviders != null)
+			if (!_customActionProviders.IsDefaultOrEmpty)
 			{
 				using var stringReader = new StringReader(xml);
 				using var xmlReader = XmlReader.Create(stringReader);

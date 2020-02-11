@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
-	public class InitialNode : StateEntityNode, IInitial, IAncestorProvider, IDebugEntityId
+	internal sealed class InitialNode : StateEntityNode, IInitial, IAncestorProvider, IDebugEntityId
 	{
 		private readonly Initial _initial;
 

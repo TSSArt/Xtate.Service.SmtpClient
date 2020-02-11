@@ -1,9 +1,10 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public class OnEntryNode : IOnEntry, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
+	internal sealed class OnEntryNode : IOnEntry, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
 		private readonly LinkedListNode<int> _documentIdNode;
 		private readonly OnEntry             _onEntry;
@@ -12,10 +13,10 @@ namespace TSSArt.StateMachine
 		{
 			_onEntry = onEntry;
 			_documentIdNode = documentIdNode;
-			ActionEvaluators = onEntry.Action.AsListOf<IExecEvaluator>();
+			ActionEvaluators = onEntry.Action.AsArrayOf<IExecutableEntity, IExecEvaluator>();
 		}
 
-		public /**/ImmutableArray<IExecEvaluator> ActionEvaluators { get; }
+		public ImmutableArray<IExecEvaluator> ActionEvaluators { get; }
 
 		object IAncestorProvider.Ancestor => _onEntry.Ancestor;
 
@@ -23,7 +24,7 @@ namespace TSSArt.StateMachine
 
 		public int DocumentId => _documentIdNode.Value;
 
-		public /**/ImmutableArray<IExecutableEntity> Action => _onEntry.Action;
+		public ImmutableArray<IExecutableEntity> Action => _onEntry.Action;
 
 		void IStoreSupport.Store(Bucket bucket)
 		{

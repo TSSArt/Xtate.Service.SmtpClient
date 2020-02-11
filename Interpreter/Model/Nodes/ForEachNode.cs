@@ -1,9 +1,10 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public class ForEachNode : ExecutableEntityNode, IForEach, IAncestorProvider, IDebugEntityId
+	internal sealed class ForEachNode : ExecutableEntityNode, IForEach, IAncestorProvider, IDebugEntityId
 	{
 		private readonly ForEach _entity;
 
@@ -19,7 +20,7 @@ namespace TSSArt.StateMachine
 
 		public ILocationExpression Index => _entity.Index;
 
-		public /**/ImmutableArray<IExecutableEntity> Action => _entity.Action;
+		public ImmutableArray<IExecutableEntity> Action => _entity.Action;
 
 		protected override void Store(Bucket bucket)
 		{

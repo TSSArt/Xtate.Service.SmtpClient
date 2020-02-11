@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
-	public class OrderedSetPersistingController<TEntity> : IDisposable where TEntity : IEntity
+	internal sealed class OrderedSetPersistingController<TEntity> : IDisposable where TEntity : IEntity
 	{
 		private readonly Bucket              _bucket;
 		private readonly OrderedSet<TEntity> _orderedSet;
@@ -46,7 +46,7 @@ namespace TSSArt.StateMachine
 				bucket.RemoveSubtree(Bucket.RootKey);
 
 				_record = 0;
-				foreach (var entity in orderedSet.ToList())
+				foreach (var entity in orderedSet.ToList1())
 				{
 					var recordBucket = bucket.Nested(_record ++);
 					recordBucket.Add(Keys.DocumentId, entity.As<IDocumentId>().DocumentId);
@@ -59,18 +59,9 @@ namespace TSSArt.StateMachine
 
 		public void Dispose()
 		{
-			Dispose(true);
-			GC.SuppressFinalize(this);
+			_orderedSet.Changed -= OnChanged;
 		}
-
-		protected virtual void Dispose(bool dispose)
-		{
-			if (dispose)
-			{
-				_orderedSet.Changed -= OnChanged;
-			}
-		}
-
+		
 		private void OnChanged(OrderedSet<TEntity>.ChangedAction action, TEntity item)
 		{
 			switch (action)

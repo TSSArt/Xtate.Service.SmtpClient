@@ -1,11 +1,11 @@
-﻿using System.Collections./**/Immutable;
+﻿using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public struct DoneData : IDoneData, IEntity<DoneData, IDoneData>, IAncestorProvider
 	{
-		public IContent              Content    { get; set; }
-		public /**/ImmutableArray<IParam> Parameters { get; set; }
+		public IContent               Content    { get; set; }
+		public ImmutableArray<IParam> Parameters { get; set; }
 
 		void IEntity<DoneData, IDoneData>.Init(IDoneData source)
 		{

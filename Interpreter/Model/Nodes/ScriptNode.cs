@@ -1,8 +1,8 @@
-﻿using System.Collections./**/Immutable;
+﻿using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
-	public class ScriptNode : ExecutableEntityNode, IScript, IAncestorProvider
+	internal sealed class ScriptNode : ExecutableEntityNode, IScript, IAncestorProvider
 	{
 		private readonly Script _entity;
 

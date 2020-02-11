@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -11,7 +11,7 @@ namespace TSSArt.StateMachine
 		public string                      RawData   { get; set; }
 		public DataModelValue              Data      { get; set; }
 		public int                         DelayMs   { get; set; }
-		public /**/ImmutableArray<IIdentifier> NameParts { get; set; }
+		public ImmutableArray<IIdentifier> NameParts { get; set; }
 		public string                      SendId    { get; set; }
 		public Uri                         Target    { get; set; }
 		public Uri                         Type      { get; set; }

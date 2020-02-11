@@ -1,24 +1,24 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Immutable;
 using System.ComponentModel;
 
 namespace TSSArt.StateMachine
 {
 	public class StateMachineBuilder : IStateMachineBuilder
 	{
-		private readonly List<IStateEntity>         _states = new List<IStateEntity>();
-		private          BindingType                _bindingType;
-		private          IDataModel                 _dataModel;
-		private          string                     _dataModelType;
-		private          /**/ImmutableArray<IIdentifier> _initialId;
-		private          string                     _name;
-		private          IScript                    _script;
+		private BindingType                          _bindingType;
+		private IDataModel                           _dataModel;
+		private string                               _dataModelType;
+		private ImmutableArray<IIdentifier>          _initialId;
+		private string                               _name;
+		private IScript                              _script;
+		private ImmutableArray<IStateEntity>.Builder _states;
 
 		public IStateMachine Build()
 		{
 			var initial = _initialId != null ? (IInitial) new Initial { Transition = new Transition { Target = _initialId } } : null;
 
-			if (initial != null && _states.Count == 0)
+			if (initial != null && _states == null)
 			{
 				throw new InvalidOperationException(message: "Initial state/property cannot be used without any states");
 			}
@@ -26,7 +26,7 @@ namespace TSSArt.StateMachine
 			IStateMachine stateMachine = new StateMachine
 										 {
 												 Name = _name, Initial = initial, DataModelType = _dataModelType, Binding = _bindingType,
-												 States = StateEntityList.Create(_states), DataModel = _dataModel, Script = _script
+												 States = _states?.ToImmutable() ?? default, DataModel = _dataModel, Script = _script
 										 };
 
 			NoneDataModelHandler.Validate(stateMachine);
@@ -35,9 +35,11 @@ namespace TSSArt.StateMachine
 			return stateMachine;
 		}
 
-		public void SetInitial(/**/ImmutableArray<IIdentifier> initial)
+		public void SetInitial(ImmutableArray<IIdentifier> initialId)
 		{
-			_initialId = IdentifierList.Create(initial ?? throw new ArgumentNullException(nameof(initial)));
+			if (initialId.IsDefaultOrEmpty) throw new ArgumentException(message: "Value cannot be empty list.", nameof(initialId));
+
+			_initialId = initialId;
 		}
 
 		public void SetName(string name)
@@ -49,7 +51,7 @@ namespace TSSArt.StateMachine
 
 		public void SetBindingType(BindingType bindingType)
 		{
-			if (!Enum.IsDefined(typeof(BindingType), bindingType)) throw new InvalidEnumArgumentException(nameof(bindingType), (int) bindingType, typeof(BindingType));
+			if (bindingType < BindingType.Early || bindingType > BindingType.Late) throw new InvalidEnumArgumentException(nameof(bindingType), (int) bindingType, typeof(BindingType));
 
 			_bindingType = bindingType;
 		}
@@ -58,21 +60,21 @@ namespace TSSArt.StateMachine
 		{
 			if (state == null) throw new ArgumentNullException(nameof(state));
 
-			_states.Add(state);
+			(_states ??= ImmutableArray.CreateBuilder<IStateEntity>()).Add(state);
 		}
 
 		public void AddParallel(IParallel parallel)
 		{
 			if (parallel == null) throw new ArgumentNullException(nameof(parallel));
 
-			_states.Add(parallel);
+			(_states ??= ImmutableArray.CreateBuilder<IStateEntity>()).Add(parallel);
 		}
 
 		public void AddFinal(IFinal final)
 		{
 			if (final == null) throw new ArgumentNullException(nameof(final));
 
-			_states.Add(final);
+			(_states ??= ImmutableArray.CreateBuilder<IStateEntity>()).Add(final);
 		}
 
 		public void SetDataModel(IDataModel dataModel) => _dataModel = dataModel ?? throw new ArgumentNullException(nameof(dataModel));

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	internal class DefaultLogger : ILogger
+	internal sealed class DefaultLogger : ILogger
 	{
 		public static readonly ILogger Instance = new DefaultLogger();
 

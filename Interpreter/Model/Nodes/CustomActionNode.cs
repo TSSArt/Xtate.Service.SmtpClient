@@ -1,8 +1,8 @@
-﻿using System.Collections./**/Immutable;
+﻿using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
-	public class CustomActionNode : ExecutableEntityNode, ICustomAction, IAncestorProvider
+	internal sealed class CustomActionNode : ExecutableEntityNode, ICustomAction, IAncestorProvider
 	{
 		private readonly CustomAction _entity;
 

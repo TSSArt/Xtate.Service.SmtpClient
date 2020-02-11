@@ -1,6 +1,6 @@
 ﻿namespace TSSArt.StateMachine
 {
-	public enum TypeInfo
+	internal enum TypeInfo
 	{
 		AssignNode,
 		CancelNode,

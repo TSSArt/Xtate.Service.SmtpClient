@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public class DefaultResourceLoader : IResourceLoader
+	internal sealed class DefaultResourceLoader : IResourceLoader
 	{
 		public static readonly IResourceLoader Instance = new DefaultResourceLoader();
 

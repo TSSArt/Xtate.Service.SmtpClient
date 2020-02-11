@@ -1,4 +1,4 @@
-﻿using System.Collections./**/Immutable;
+﻿using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -7,7 +7,7 @@ namespace TSSArt.StateMachine
 		IState Build();
 
 		void SetId(IIdentifier id);
-		void SetInitial(/**/ImmutableArray<IIdentifier> initial);
+		void SetInitial(ImmutableArray<IIdentifier> initial);
 		void AddState(IState state);
 		void AddParallel(IParallel parallel);
 		void AddFinal(IFinal final);

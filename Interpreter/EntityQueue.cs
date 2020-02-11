@@ -2,7 +2,7 @@
 
 namespace TSSArt.StateMachine
 {
-	public class EntityQueue<T> where T : IEntity
+	internal sealed class EntityQueue<T> where T : IEntity
 	{
 		public delegate void ChangeHandler(ChangedAction action, T entity);
 

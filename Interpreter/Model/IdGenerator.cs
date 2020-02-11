@@ -3,7 +3,7 @@ using System.Globalization;
 
 namespace TSSArt.StateMachine
 {
-	public static class IdGenerator
+	internal static class IdGenerator
 	{
 		private static string NewGuidString() => Guid.NewGuid().ToString(format: "D", CultureInfo.InvariantCulture);
 

@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public readonly struct ExternalCommunicationWrapper
+	internal readonly struct ExternalCommunicationWrapper
 	{
 		private const string ErrorTypeKey   = "ErrorType";
 		private const string ErrorTypeValue = "Communication";
@@ -21,7 +21,7 @@ namespace TSSArt.StateMachine
 			_sessionId = sessionId;
 		}
 
-		public /**/ImmutableArray<IEventProcessor> GetIoProcessors() => _externalCommunication?.GetIoProcessors() ?? Array.Empty<IEventProcessor>();
+		public ImmutableArray<IEventProcessor> GetIoProcessors() => _externalCommunication?.GetIoProcessors() ?? default;
 
 		public bool IsCommunicationError(Exception exception, out string sendId)
 		{
