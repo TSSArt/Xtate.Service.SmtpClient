@@ -1,13 +1,13 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public class FinalizeBuilder : IFinalizeBuilder
 	{
-		private readonly List<IExecutableEntity> _actions = new List<IExecutableEntity>();
+		private ImmutableArray<IExecutableEntity>.Builder _actions;
 
-		public IFinalize Build() => new Finalize { Action = ExecutableEntityList.Create(_actions) };
+		public IFinalize Build() => new Finalize { Action = _actions.ToImmutable() };
 
 		public void AddAction(IExecutableEntity action)
 		{
@@ -23,7 +23,7 @@ namespace TSSArt.StateMachine
 				throw new InvalidOperationException("Send can't be used in Finalize element");
 			}
 
-			_actions.Add(action);
+			(_actions ??= ImmutableArray.CreateBuilder<IExecutableEntity>()).Add(action);
 		}
 	}
 }

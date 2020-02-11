@@ -10,9 +10,9 @@ namespace TSSArt.StateMachine.Test
 		{
 			var options = new IoProcessorOptions
 						  {
-								  DataModelHandlerFactories = new List<IDataModelHandlerFactory>(),
-								  EventProcessors = new List<IEventProcessor>(),
-								  ServiceFactories = new List<IServiceFactory>()
+								  DataModelHandlerFactories = ImmutableArray<IDataModelHandlerFactory>.Empty,
+								  EventProcessors = ImmutableArray<IEventProcessor>.Empty,
+								  ServiceFactories = ImmutableArray<IServiceFactory>.Empty
 						  };
 
 			build(ref options);

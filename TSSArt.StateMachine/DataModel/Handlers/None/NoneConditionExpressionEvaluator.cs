@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public class NoneConditionExpressionEvaluator : IConditionExpression, IBooleanEvaluator, IAncestorProvider, IDebugEntityId
+	internal sealed class NoneConditionExpressionEvaluator : IConditionExpression, IBooleanEvaluator, IAncestorProvider, IDebugEntityId
 	{
 		private readonly ConditionExpression _conditionExpression;
 		private readonly IIdentifier         _inState;

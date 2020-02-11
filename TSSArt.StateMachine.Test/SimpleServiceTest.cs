@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Immutable;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TSSArt.StateMachine.EcmaScript;
 
@@ -36,8 +37,8 @@ namespace TSSArt.StateMachine.Test
 
 			var options = IoProcessorOptionsBuilder.Create((ref IoProcessorOptions o) =>
 														   {
-															   o.DataModelHandlerFactories = new[] { EcmaScriptDataModelHandler.Factory };
-															   o.ServiceFactories = new[] { SimpleServiceFactory<PassthroughService>.Instance };
+															   o.DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory);
+															   o.ServiceFactories = ImmutableArray.Create(SimpleServiceFactory<PassthroughService>.Instance);
 														   });
 
 			await using var ioProcessor = new IoProcessor(options);

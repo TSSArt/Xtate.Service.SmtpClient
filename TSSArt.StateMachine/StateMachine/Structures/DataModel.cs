@@ -1,10 +1,10 @@
-﻿using System.Collections./**/Immutable;
+﻿using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public struct DataModel : IDataModel, IEntity<DataModel, IDataModel>, IAncestorProvider
 	{
-		public /**/ImmutableArray<IData> Data { get; set; }
+		public ImmutableArray<IData> Data { get; set; }
 
 		void IEntity<DataModel, IDataModel>.Init(IDataModel source)
 		{

@@ -2,7 +2,7 @@
 
 namespace TSSArt.StateMachine
 {
-	public class ExternalDataExpressionNode : IExternalDataExpression, IStoreSupport, IAncestorProvider
+	internal sealed class ExternalDataExpressionNode : IExternalDataExpression, IStoreSupport, IAncestorProvider
 	{
 		private readonly ExternalDataExpression _externalDataExpression;
 

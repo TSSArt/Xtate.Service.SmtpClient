@@ -21,18 +21,19 @@ namespace TSSArt.StateMachine.IntegrationTest
 			var baseUri = new Uri(args.Length > 0 ? args[0] : "http://localhost:5001/");
 			using var handler = new HttpEventProcessorHandler(baseUri);
 			var httpEventProcessor = handler.CreateEventProcessor(baseUri.AbsolutePath);
+
+			var configurationBuilder = ImmutableDictionary.CreateBuilder<string, string>();
+			configurationBuilder["uiEndpoint"] = "http://localhost:5000/dialog";
+			configurationBuilder["mailEndpoint"] = "http://mid.dev.tssart.com/MailServer/Web2/api/Mail/";
+
 			var options = new IoProcessorOptions
 						  {
-								  EventProcessors = new[] { httpEventProcessor },
-								  ServiceFactories = new[] { HttpClientService.Factory, SmtpClientService.Factory },
-								  DataModelHandlerFactories = new[] { EcmaScriptDataModelHandler.Factory },
-								  CustomActionProviders = new[] { BasicCustomActionProvider.Instance, MimeCustomActionProvider.Instance, MidCustomActionProvider.Instance },
+								  EventProcessors = ImmutableArray.Create(httpEventProcessor),
+								  ServiceFactories = ImmutableArray.Create(HttpClientService.Factory, SmtpClientService.Factory),
+								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
+								  CustomActionProviders = ImmutableArray.Create(BasicCustomActionProvider.Instance, MimeCustomActionProvider.Instance, MidCustomActionProvider.Instance),
 								  StateMachineProvider = new ResourceProvider(),
-								  Configuration = new Dictionary<string, string>
-												  {
-														  { "uiEndpoint", "http://localhost:5000/dialog" },
-														  { "mailEndpoint", "http://mid.dev.tssart.com/MailServer/Web2/api/Mail/" }
-												  }
+								  Configuration = configurationBuilder.ToImmutable()
 						  };
 
 			await using var ioProcessor = new IoProcessor(options);

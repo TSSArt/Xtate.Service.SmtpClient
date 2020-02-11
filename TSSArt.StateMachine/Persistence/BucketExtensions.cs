@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Collections./**/Immutable;
-using System.Collections.ObjectModel;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public static class BucketExtensions
+	internal static class BucketExtensions
 	{
 		public static void AddEntity<T>(this in Bucket bucket, Key key, T entity) where T : IEntity
 		{
@@ -14,27 +14,20 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public static void AddEntityList<T>(this in Bucket bucket, Key key, /**/ImmutableArray<T> list) where T : IEntity
+		public static void AddEntityList<T>(this in Bucket bucket, Key key, ImmutableArray<T> array) where T : IEntity
 		{
-			if (list == null)
+			if (array.IsDefaultOrEmpty)
 			{
 				return;
 			}
 
-			var count = list.Count;
-
-			if (count == 0)
-			{
-				return;
-			}
-
-			bucket.Add(key, count);
+			bucket.Add(key, array.Length);
 
 			var listStorage = bucket.Nested(key);
 
-			for (var i = 0; i < count; i ++)
+			for (var i = 0; i < array.Length; i ++)
 			{
-				var entity = list[i];
+				var entity = array[i];
 				if (entity != null)
 				{
 					entity.As<IStoreSupport>().Store(listStorage.Nested(i));
@@ -42,23 +35,23 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public static /**/ImmutableArray<T> RestoreList<T>(this in Bucket bucket, Key key, Func<Bucket, T> factory)
+		public static ImmutableArray<T> RestoreList<T>(this in Bucket bucket, Key key, Func<Bucket, T> factory)
 		{
 			if (!bucket.TryGet(key, out int length))
 			{
-				return null;
+				return default;
 			}
 
 			var itemsBucket = bucket.Nested(key);
 
-			var list = new T[length];
+			var builder = ImmutableArray.CreateBuilder<T>(length);
 
 			for (var i = 0; i < length; i ++)
 			{
-				list[i] = factory(itemsBucket.Nested(i));
+				builder.Add(factory(itemsBucket.Nested(i)));
 			}
 
-			return new ReadOnlyCollection<T>(list);
+			return builder.MoveToImmutable();
 		}
 
 		public static TEnum Get<TEnum>(this in Bucket bucket, Key key) where TEnum : struct, Enum =>

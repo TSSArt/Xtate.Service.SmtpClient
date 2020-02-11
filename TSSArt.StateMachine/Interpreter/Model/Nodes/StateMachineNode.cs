@@ -1,9 +1,10 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public class StateMachineNode : StateEntityNode, IStateMachine, IAncestorProvider, IDebugEntityId
+	internal sealed class StateMachineNode : StateEntityNode, IStateMachine, IAncestorProvider, IDebugEntityId
 	{
 		private readonly StateMachine _stateMachine;
 
@@ -29,9 +30,9 @@ namespace TSSArt.StateMachine
 		public string            DataModelType => _stateMachine.DataModelType;
 		public IExecutableEntity Script        => _stateMachine.Script;
 
-		IDataModel IStateMachine.                 DataModel => _stateMachine.DataModel;
-		IInitial IStateMachine.                   Initial   => _stateMachine.Initial;
-		/**/ImmutableArray<IStateEntity> IStateMachine.States    => _stateMachine.States;
+		IDataModel IStateMachine.                  DataModel => _stateMachine.DataModel;
+		IInitial IStateMachine.                    Initial   => _stateMachine.Initial;
+		ImmutableArray<IStateEntity> IStateMachine.States    => _stateMachine.States;
 
 		protected override void Store(Bucket bucket)
 		{

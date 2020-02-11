@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Immutable;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -26,9 +27,9 @@ namespace TSSArt.StateMachine.Core.Host
 			var httpEventProcessor = handler.CreateEventProcessor(baseUri.AbsolutePath);
 			var options = new IoProcessorOptions
 						  {
-								  EventProcessors = new[] { httpEventProcessor },
-								  ServiceFactories = new[] { WebBrowserService.GetFactory<CefSharpWebBrowserService>(), InputService.Factory },
-								  DataModelHandlerFactories = new[] { EcmaScriptDataModelHandler.Factory }
+								  EventProcessors = ImmutableArray.Create(httpEventProcessor),
+								  ServiceFactories = ImmutableArray.Create(WebBrowserService.GetFactory<CefSharpWebBrowserService>(), InputService.Factory),
+								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory)
 						  };
 
 			await using var ioProcessor = new IoProcessor(options);

@@ -1,16 +1,14 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public class ParallelFluentBuilder<TOuterBuilder>
 	{
-		private readonly IParallelBuilder        _builder;
-		private readonly Action<IParallel>       _builtAction;
-		private readonly IBuilderFactory         _factory;
-		private readonly TOuterBuilder           _outerBuilder;
-		private          List<IExecutableEntity> _onEntryList;
-		private          List<IExecutableEntity> _onExitList;
+		private readonly IParallelBuilder  _builder;
+		private readonly Action<IParallel> _builtAction;
+		private readonly IBuilderFactory   _factory;
+		private readonly TOuterBuilder     _outerBuilder;
 
 		public ParallelFluentBuilder(IBuilderFactory factory, TOuterBuilder outerBuilder, Action<IParallel> builtAction)
 		{
@@ -22,16 +20,6 @@ namespace TSSArt.StateMachine
 
 		public TOuterBuilder EndParallel()
 		{
-			if (_onEntryList != null)
-			{
-				_builder.AddOnEntry(new OnEntry { Action = ExecutableEntityList.Create(_onEntryList) });
-			}
-
-			if (_onExitList != null)
-			{
-				_builder.AddOnExit(new OnExit { Action = ExecutableEntityList.Create(_onExitList) });
-			}
-
 			_builtAction(_builder.Build());
 			return _outerBuilder;
 		}
@@ -40,82 +28,38 @@ namespace TSSArt.StateMachine
 
 		public ParallelFluentBuilder<TOuterBuilder> SetId(IIdentifier id)
 		{
+			if (id == null) throw new ArgumentNullException(nameof(id));
+
 			_builder.SetId(id);
 
 			return this;
 		}
 
-		public ParallelFluentBuilder<TOuterBuilder> AddOnEntry(ExecutableAction action)
+		private ParallelFluentBuilder<TOuterBuilder> AddOnEntry(RuntimeAction action)
 		{
-			if (_onEntryList == null)
-			{
-				_onEntryList = new List<IExecutableEntity>();
-			}
-
-			_onEntryList.Add(new RuntimeAction(action));
+			_builder.AddOnEntry(new OnEntry { Action = ImmutableArray.Create<IExecutableEntity>(action) });
 
 			return this;
 		}
 
-		public ParallelFluentBuilder<TOuterBuilder> AddOnEntry(ExecutableTask task)
-		{
-			if (_onEntryList == null)
-			{
-				_onEntryList = new List<IExecutableEntity>();
-			}
+		public ParallelFluentBuilder<TOuterBuilder> AddOnEntry(ExecutableAction action) => AddOnEntry(new RuntimeAction(action));
 
-			_onEntryList.Add(new RuntimeAction(task));
+		public ParallelFluentBuilder<TOuterBuilder> AddOnEntry(ExecutableTask task) => AddOnEntry(new RuntimeAction(task));
+
+		public ParallelFluentBuilder<TOuterBuilder> AddOnEntry(ExecutableCancellableTask task) => AddOnEntry(new RuntimeAction(task));
+
+		private ParallelFluentBuilder<TOuterBuilder> AddOnExit(RuntimeAction action)
+		{
+			_builder.AddOnExit(new OnExit { Action = ImmutableArray.Create<IExecutableEntity>(action) });
 
 			return this;
 		}
 
-		public ParallelFluentBuilder<TOuterBuilder> AddOnEntry(ExecutableCancellableTask task)
-		{
-			if (_onEntryList == null)
-			{
-				_onEntryList = new List<IExecutableEntity>();
-			}
+		public ParallelFluentBuilder<TOuterBuilder> AddOnExit(ExecutableAction action) => AddOnEntry(new RuntimeAction(action));
 
-			_onEntryList.Add(new RuntimeAction(task));
+		public ParallelFluentBuilder<TOuterBuilder> AddOnExit(ExecutableTask task) => AddOnEntry(new RuntimeAction(task));
 
-			return this;
-		}
-
-		public ParallelFluentBuilder<TOuterBuilder> AddOnExit(ExecutableAction action)
-		{
-			if (_onExitList == null)
-			{
-				_onExitList = new List<IExecutableEntity>();
-			}
-
-			_onExitList.Add(new RuntimeAction(action));
-
-			return this;
-		}
-
-		public ParallelFluentBuilder<TOuterBuilder> AddOnExit(ExecutableTask task)
-		{
-			if (_onExitList == null)
-			{
-				_onExitList = new List<IExecutableEntity>();
-			}
-
-			_onExitList.Add(new RuntimeAction(task));
-
-			return this;
-		}
-
-		public ParallelFluentBuilder<TOuterBuilder> AddOnExit(ExecutableCancellableTask task)
-		{
-			if (_onExitList == null)
-			{
-				_onExitList = new List<IExecutableEntity>();
-			}
-
-			_onExitList.Add(new RuntimeAction(task));
-
-			return this;
-		}
+		public ParallelFluentBuilder<TOuterBuilder> AddOnExit(ExecutableCancellableTask task) => AddOnEntry(new RuntimeAction(task));
 
 		public StateFluentBuilder<ParallelFluentBuilder<TOuterBuilder>> BeginState() => new StateFluentBuilder<ParallelFluentBuilder<TOuterBuilder>>(_factory, this, _builder.AddState);
 

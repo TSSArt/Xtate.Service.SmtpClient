@@ -52,7 +52,7 @@ namespace TSSArt.StateMachine
 			return true;
 		}
 
-		public static implicit operator EventDescriptor(string val) => new EventDescriptor(val);
+		public static explicit operator EventDescriptor(string val) => new EventDescriptor(val);
 
 		public override string ToString() => _val;
 	}

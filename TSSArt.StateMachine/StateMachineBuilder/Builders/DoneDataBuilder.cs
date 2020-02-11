@@ -1,15 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections./**/Immutable;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public class DoneDataBuilder : IDoneDataBuilder
 	{
-		private readonly List<IParam> _parameters = new List<IParam>();
-		private          IContent     _content;
+		private IContent                       _content;
+		private ImmutableArray<IParam>.Builder _parameters;
 
-		public IDoneData Build() => new DoneData { Content = _content, Parameters = ParamList.Create(_parameters) };
+		public IDoneData Build() => new DoneData { Content = _content, Parameters = _parameters?.ToImmutable() ?? default };
 
 		public void SetContent(IContent content) => _content = content ?? throw new ArgumentNullException(nameof(content));
 
@@ -17,7 +16,7 @@ namespace TSSArt.StateMachine
 		{
 			if (parameter == null) throw new ArgumentNullException(nameof(parameter));
 
-			_parameters.Add(parameter);
+			(_parameters ??= ImmutableArray.CreateBuilder<IParam>()).Add(parameter);
 		}
 	}
 }

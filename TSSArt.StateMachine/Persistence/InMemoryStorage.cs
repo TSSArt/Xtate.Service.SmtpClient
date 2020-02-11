@@ -1,18 +1,17 @@
 ﻿using System;
 using System.Buffers;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace TSSArt.StateMachine
 {
-	public class InMemoryStorage : IStorage
+	internal class InMemoryStorage : IStorage
 	{
 		private IMemoryOwner<byte>                         _baselineOwner;
 		private Memory<byte>                               _buffer;
 		private List<(IMemoryOwner<byte> Owner, int Size)> _buffers;
 		private IMemoryOwner<byte>                         _owner;
-
-		private SortedSet<Entry> _readModel;
+		private SortedSet<Entry>                           _readModel;
 
 		public InMemoryStorage(ReadOnlySpan<byte> baseline)
 		{
@@ -94,16 +93,15 @@ namespace TSSArt.StateMachine
 #if NETSTANDARD2_1
 			return _readModel.TryGetValue(equalEntry, out actualEntry);
 #else
-			foreach (var entry in _readModel)
+			foreach (var entry in _readModel.GetViewBetween(equalEntry, equalEntry))
 			{
-				if (entry.CompareTo(equalEntry) == 0)
-				{
-					actualEntry = entry;
-					return true;
-				}
+				actualEntry = entry;
+
+				return true;
 			}
 
 			actualEntry = default;
+
 			return false;
 #endif
 		}

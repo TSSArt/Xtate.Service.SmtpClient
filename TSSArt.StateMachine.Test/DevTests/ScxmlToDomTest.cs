@@ -31,7 +31,7 @@ namespace TSSArt.StateMachine.Test
 			Assert.IsNull(sm.Initial);
 			Assert.IsNull(sm.Name);
 			Assert.IsNull(sm.Script);
-			Assert.IsNull(sm.States);
+			Assert.IsTrue(sm.States.IsDefault);
 		}
 
 		[TestMethod]
@@ -42,7 +42,7 @@ namespace TSSArt.StateMachine.Test
 			Assert.IsNull(sm.Initial);
 			Assert.IsNull(sm.Name);
 			Assert.IsNull(sm.Script);
-			Assert.IsNull(sm.States);
+			Assert.IsTrue(sm.States.IsDefault);
 		}
 
 		[TestMethod]
@@ -152,7 +152,7 @@ namespace TSSArt.StateMachine.Test
 			var sm = GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' initial=' trg2  trg1 '><state/></scxml>");
 			Assert.AreEqual((Identifier) "trg2", sm.Initial.Transition.Target[0]);
 			Assert.AreEqual((Identifier) "trg1", sm.Initial.Transition.Target[1]);
-			Assert.AreEqual(expected: 2, sm.Initial.Transition.Target.Count);
+			Assert.AreEqual(expected: 2, sm.Initial.Transition.Target.Length);
 		}
 
 		[TestMethod]
@@ -160,7 +160,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			var sm = GetStateMachineXyzDataModel("<datamodel></datamodel>");
 			Assert.IsNotNull(sm.DataModel);
-			Assert.IsNull(sm.DataModel.Data);
+			Assert.IsTrue(sm.DataModel.Data.IsDefault);
 		}
 
 		[TestMethod]
@@ -175,7 +175,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			var sm = GetStateMachineXyzDataModel("<datamodel><data id='a'/><data id='b'></data><data id='c' src='c-src'/><data id='d' expr='d-expr'/><data id='e'>e-body</data></datamodel>");
 			Assert.IsNotNull(sm.DataModel);
-			Assert.AreEqual(expected: 5, sm.DataModel.Data.Count);
+			Assert.AreEqual(expected: 5, sm.DataModel.Data.Length);
 
 			Assert.AreEqual(expected: "a", sm.DataModel.Data[0].Id);
 			Assert.IsNull(sm.DataModel.Data[0].Source);
@@ -382,20 +382,20 @@ namespace TSSArt.StateMachine.Test
 		}
 
 		[TestMethod]
-		public void AtomicStateTeat()
+		public void AtomicStateTest()
 		{
 			var sm = GetStateMachineWithRoot("<state><onentry/><onexit/><transition event='e'/><invoke/></state>");
 
 			var state = (IState) sm.States[0];
 			Assert.IsNull(state.Id);
-			Assert.AreEqual(expected: 1, state.OnEntry.Count);
-			Assert.AreEqual(expected: 1, state.OnExit.Count);
-			Assert.AreEqual(expected: 1, state.Transitions.Count);
-			Assert.AreEqual(expected: 1, state.Invoke.Count);
+			Assert.AreEqual(expected: 1, state.OnEntry.Length);
+			Assert.AreEqual(expected: 1, state.OnExit.Length);
+			Assert.AreEqual(expected: 1, state.Transitions.Length);
+			Assert.AreEqual(expected: 1, state.Invoke.Length);
 			Assert.IsNull(state.DataModel);
-			Assert.IsNull(state.HistoryStates);
+			Assert.IsTrue(state.HistoryStates.IsDefault);
 			Assert.IsNull(state.Initial);
-			Assert.IsNull(state.States);
+			Assert.IsTrue(state.States.IsDefault);
 		}
 	}
 }

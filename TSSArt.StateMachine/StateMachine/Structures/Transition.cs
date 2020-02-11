@@ -1,14 +1,14 @@
-﻿using System.Collections./**/Immutable;
+﻿using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public struct Transition : ITransition, IEntity<Transition, ITransition>, IAncestorProvider
 	{
-		public /**/ImmutableArray<IEventDescriptor>  Event     { get; set; }
-		public IExecutableEntity                Condition { get; set; }
-		public /**/ImmutableArray<IIdentifier>       Target    { get; set; }
-		public TransitionType                   Type      { get; set; }
-		public /**/ImmutableArray<IExecutableEntity> Action    { get; set; }
+		public ImmutableArray<IEventDescriptor>  Event     { get; set; }
+		public IExecutableEntity                 Condition { get; set; }
+		public ImmutableArray<IIdentifier>       Target    { get; set; }
+		public TransitionType                    Type      { get; set; }
+		public ImmutableArray<IExecutableEntity> Action    { get; set; }
 
 		void IEntity<Transition, ITransition>.Init(ITransition source)
 		{

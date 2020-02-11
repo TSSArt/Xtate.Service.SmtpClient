@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
-	public class ParamNode : IParam, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
+	internal sealed class ParamNode : IParam, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
 		private readonly LinkedListNode<int> _documentIdNode;
 		private readonly Param               _param;

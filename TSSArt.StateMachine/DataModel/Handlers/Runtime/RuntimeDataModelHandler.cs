@@ -2,7 +2,7 @@
 
 namespace TSSArt.StateMachine
 {
-	public class RuntimeDataModelHandler : DataModelHandlerBase
+	internal sealed class RuntimeDataModelHandler : DataModelHandlerBase
 	{
 		public const string DataModelType = "runtime";
 

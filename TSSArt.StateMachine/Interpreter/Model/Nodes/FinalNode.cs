@@ -1,9 +1,10 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public class FinalNode : StateEntityNode, IFinal, IAncestorProvider, IDebugEntityId
+	internal sealed class FinalNode : StateEntityNode, IFinal, IAncestorProvider, IDebugEntityId
 	{
 		private readonly Final _final;
 
@@ -12,18 +13,18 @@ namespace TSSArt.StateMachine
 			_final = final;
 
 			Id = final.Id ?? new IdentifierNode(new RuntimeIdentifier());
-			OnEntry = final.OnEntry.AsListOf<OnEntryNode>() ?? Array.Empty<OnEntryNode>();
-			OnExit = final.OnExit.AsListOf<OnExitNode>() ?? Array.Empty<OnExitNode>();
+			OnEntry = final.OnEntry.AsArrayOf<IOnEntry, OnEntryNode>(true);
+			OnExit = final.OnExit.AsArrayOf<IOnExit, OnExitNode>(true);
 			DoneData = final.DoneData.As<DoneDataNode>();
 		}
 
-		public override bool                          IsAtomicState => true;
-		public override /**/ImmutableArray<TransitionNode> Transitions   => Array.Empty<TransitionNode>();
-		public override /**/ImmutableArray<HistoryNode>    HistoryStates => Array.Empty<HistoryNode>();
-		public override /**/ImmutableArray<InvokeNode>     Invoke        => Array.Empty<InvokeNode>();
-		public override /**/ImmutableArray<OnEntryNode>    OnEntry       { get; }
-		public override /**/ImmutableArray<OnExitNode>     OnExit        { get; }
-		public          DoneDataNode                  DoneData      { get; }
+		public override bool                           IsAtomicState => true;
+		public override ImmutableArray<TransitionNode> Transitions   => ImmutableArray<TransitionNode>.Empty;
+		public override ImmutableArray<HistoryNode>    HistoryStates => ImmutableArray<HistoryNode>.Empty;
+		public override ImmutableArray<InvokeNode>     Invoke        => ImmutableArray<InvokeNode>.Empty;
+		public override ImmutableArray<OnEntryNode>    OnEntry       { get; }
+		public override ImmutableArray<OnExitNode>     OnExit        { get; }
+		public          DoneDataNode                   DoneData      { get; }
 
 		object IAncestorProvider.Ancestor => _final.Ancestor;
 
@@ -31,9 +32,9 @@ namespace TSSArt.StateMachine
 
 		public override IIdentifier Id { get; }
 
-		/**/ImmutableArray<IOnEntry> IFinal.OnEntry  => OnEntry;
-		/**/ImmutableArray<IOnExit> IFinal. OnExit   => OnExit;
-		IDoneData IFinal.              DoneData => DoneData;
+		ImmutableArray<IOnEntry> IFinal.OnEntry  => ImmutableArray<IOnEntry>.CastUp(OnEntry);
+		ImmutableArray<IOnExit> IFinal. OnExit   => ImmutableArray<IOnExit>.CastUp(OnExit);
+		IDoneData IFinal.               DoneData => DoneData;
 
 		protected override void Store(Bucket bucket)
 		{

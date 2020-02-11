@@ -1,9 +1,9 @@
-﻿using System;
-using System.Collections./**/Immutable;
+﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public class DataModelNode : IDataModel, IStoreSupport, IAncestorProvider, IDocumentId
+	internal sealed class DataModelNode : IDataModel, IStoreSupport, IAncestorProvider, IDocumentId
 	{
 		private readonly DataModel           _dataModel;
 		private readonly LinkedListNode<int> _documentIdNode;
@@ -12,14 +12,14 @@ namespace TSSArt.StateMachine
 		{
 			_documentIdNode = documentIdNode;
 			_dataModel = dataModel;
-			Data = dataModel.Data.AsListOf<DataNode>() ?? Array.Empty<DataNode>();
+			Data = dataModel.Data.AsArrayOf<IData, DataNode>(true);
 		}
 
-		public /**/ImmutableArray<DataNode> Data { get; }
+		public ImmutableArray<DataNode> Data { get; }
 
 		object IAncestorProvider.Ancestor => _dataModel.Ancestor;
 
-		/**/ImmutableArray<IData> IDataModel.Data => _dataModel.Data;
+		ImmutableArray<IData> IDataModel.Data => _dataModel.Data;
 
 		public int DocumentId => _documentIdNode.Value;
 

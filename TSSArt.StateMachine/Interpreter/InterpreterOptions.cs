@@ -1,13 +1,13 @@
-﻿using System.Collections./**/Immutable;
+﻿using System.Collections.Immutable;
 using System.Threading;
 
 namespace TSSArt.StateMachine
 {
 	public struct InterpreterOptions
 	{
-		public /**/ImmutableArray<IDataModelHandlerFactory> DataModelHandlerFactories { get; set; }
-		public /**/ImmutableArray<ICustomActionProvider>    CustomActionProviders     { get; set; }
-		public /**/ImmutableDictionary<string, string>      Configuration             { get; set; }
+		public ImmutableArray<IDataModelHandlerFactory> DataModelHandlerFactories { get; set; }
+		public ImmutableArray<ICustomActionProvider>    CustomActionProviders     { get; set; }
+		public ImmutableDictionary<string, string>      Configuration             { get; set; }
 		public DataModelValue                           Arguments                 { get; set; }
 		public IExternalCommunication                   ExternalCommunication     { get; set; }
 		public INotifyStateChanged                      NotifyStateChanged        { get; set; }

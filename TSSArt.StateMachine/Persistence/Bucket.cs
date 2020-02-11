@@ -5,7 +5,7 @@ using System.Text;
 
 namespace TSSArt.StateMachine
 {
-	public readonly struct Bucket
+	internal readonly struct Bucket
 	{
 		public static readonly RootType RootKey = RootType.Instance;
 

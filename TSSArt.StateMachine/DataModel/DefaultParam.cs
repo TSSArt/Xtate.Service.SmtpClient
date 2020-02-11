@@ -2,7 +2,7 @@
 
 namespace TSSArt.StateMachine
 {
-	public class DefaultParam : IParam, IAncestorProvider, IDebugEntityId
+	public sealed class DefaultParam : IParam, IAncestorProvider, IDebugEntityId
 	{
 		private readonly Param _param;
 

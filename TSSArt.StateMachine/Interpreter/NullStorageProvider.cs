@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public sealed class NullStorageProvider : IStorageProvider, ITransactionalStorage
+	internal sealed class NullStorageProvider : IStorageProvider, ITransactionalStorage
 	{
 		public static readonly NullStorageProvider Instance = new NullStorageProvider();
 

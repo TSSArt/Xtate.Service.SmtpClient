@@ -39,7 +39,7 @@ namespace TSSArt.StateMachine.Test
 			await channel.Writer.WriteAsync(new EventObject("Timer"));
 			channel.Writer.Complete(new ArgumentException("333"));
 
-			var options = new InterpreterOptions { DataModelHandlerFactories = new List<IDataModelHandlerFactory> { EcmaScriptDataModelHandler.Factory } };
+			var options = new InterpreterOptions { DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory) };
 
 			await StateMachineInterpreter.RunAsync(IdGenerator.NewSessionId(), _stateMachine, channel.Reader, options);
 		}
@@ -51,7 +51,7 @@ namespace TSSArt.StateMachine.Test
 
 			channel.Writer.Complete(new ArgumentException("333"));
 
-			var options = new InterpreterOptions { DataModelHandlerFactories = new List<IDataModelHandlerFactory> { EcmaScriptDataModelHandler.Factory } };
+			var options = new InterpreterOptions { DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory) };
 
 			await StateMachineInterpreter.RunAsync(IdGenerator.NewSessionId(), _stateMachine, channel.Reader, options);
 		}
@@ -61,7 +61,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			var interpreterModelBuilder = new InterpreterModelBuilder();
 			var dataModelHandler = EcmaScriptDataModelHandler.Factory.CreateHandler(interpreterModelBuilder);
-			var interpreterModel = interpreterModelBuilder.Build(_stateMachine, dataModelHandler, customActionProviders: null);
+			var interpreterModel = interpreterModelBuilder.Build(_stateMachine, dataModelHandler, customActionProviders: default);
 			var serializer = new ScxmlSerializer();
 			var text = new StringWriter();
 			using (var xmlWriter = XmlWriter.Create(text, new XmlWriterSettings { Encoding = Encoding.UTF8, Indent = true }))

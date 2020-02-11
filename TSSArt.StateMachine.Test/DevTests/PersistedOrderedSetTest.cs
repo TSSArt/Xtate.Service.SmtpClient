@@ -1,4 +1,4 @@
-﻿using System.Collections.Immutable;
+﻿using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TSSArt.StateMachine.Test
@@ -55,7 +55,7 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public void ClearTest()
 		{
-			_sourceSet.Add(_node1);
+			_sourceSet.AddIfNotExists(_node1);
 
 			Assert.IsFalse(_sourceSet.IsEmpty);
 			_sourceSet.Clear();
@@ -69,9 +69,9 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public void AddTest()
 		{
-			_sourceSet.Add(_node1);
-			_sourceSet.Add(_node2);
-			_sourceSet.Add(_node3);
+			_sourceSet.AddIfNotExists(_node1);
+			_sourceSet.AddIfNotExists(_node2);
+			_sourceSet.AddIfNotExists(_node3);
 
 			Assert.IsFalse(_sourceSet.IsEmpty);
 
@@ -85,9 +85,9 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public void RemoveTest()
 		{
-			_sourceSet.Add(_node1);
-			_sourceSet.Add(_node2);
-			_sourceSet.Add(_node3);
+			_sourceSet.AddIfNotExists(_node1);
+			_sourceSet.AddIfNotExists(_node2);
+			_sourceSet.AddIfNotExists(_node3);
 			_sourceSet.Delete(_node2);
 
 			Assert.IsFalse(_sourceSet.IsEmpty);
@@ -102,9 +102,9 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public void DeleteAllTest()
 		{
-			_sourceSet.Add(_node1);
-			_sourceSet.Add(_node2);
-			_sourceSet.Add(_node3);
+			_sourceSet.AddIfNotExists(_node1);
+			_sourceSet.AddIfNotExists(_node2);
+			_sourceSet.AddIfNotExists(_node3);
 			_sourceSet.Delete(_node1);
 			_sourceSet.Delete(_node2);
 			_sourceSet.Delete(_node3);
@@ -121,9 +121,9 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public void ShrinkTest()
 		{
-			_sourceSet.Add(_node1);
-			_sourceSet.Add(_node2);
-			_sourceSet.Add(_node3);
+			_sourceSet.AddIfNotExists(_node1);
+			_sourceSet.AddIfNotExists(_node2);
+			_sourceSet.AddIfNotExists(_node3);
 			_sourceSet.Delete(_node1);
 			_sourceSet.Delete(_node2);
 

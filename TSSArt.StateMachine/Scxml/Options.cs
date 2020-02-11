@@ -1,6 +1,6 @@
 ﻿namespace TSSArt.StateMachine
 {
-	public class Options
+	public struct Options
 	{
 		public string Namespace { get; set; }
 	}

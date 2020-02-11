@@ -23,7 +23,7 @@ namespace TSSArt.StateMachine
 
 		public void SetType(HistoryType type)
 		{
-			if (!Enum.IsDefined(typeof(HistoryType), type)) throw new InvalidEnumArgumentException(nameof(type), (int) type, typeof(HistoryType));
+			if (type < HistoryType.Shallow || type > HistoryType.Deep) throw new InvalidEnumArgumentException(nameof(type), (int) type, typeof(HistoryType));
 
 			_type = type;
 		}

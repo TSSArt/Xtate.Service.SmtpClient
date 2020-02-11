@@ -1,20 +1,18 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public static class DataConverter
+	internal static class DataConverter
 	{
-		public static ValueTask<DataModelValue> GetData(IValueEvaluator contentBodyEvaluator, IObjectEvaluator contentExpressionEvaluator, /**/ImmutableArray<ILocationEvaluator> nameEvaluatorList,
-														/**/ImmutableArray<DefaultParam> parameterList, IExecutionContext executionContext, CancellationToken token)
+		public static ValueTask<DataModelValue> GetData(IValueEvaluator contentBodyEvaluator, IObjectEvaluator contentExpressionEvaluator, ImmutableArray<ILocationEvaluator> nameEvaluatorList,
+														ImmutableArray<DefaultParam> parameterList, IExecutionContext executionContext, CancellationToken token)
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
 
-			var attrCount = (!nameEvaluatorList.IsDefault ? nameEvaluatorList.Length : 0) + (!parameterList.IsDefault ? parameterList.Length : 0);
-
-			if (attrCount == 0)
+			if (nameEvaluatorList.IsDefaultOrEmpty && parameterList.IsDefaultOrEmpty)
 			{
 				return GetContent(contentBodyEvaluator, contentExpressionEvaluator, executionContext, token);
 			}
@@ -22,8 +20,8 @@ namespace TSSArt.StateMachine
 			return GetParameters(nameEvaluatorList, parameterList, executionContext, token);
 		}
 
-		public static async ValueTask<DataModelValue> GetContent(IValueEvaluator contentBodyEvaluator, IObjectEvaluator contentExpressionEvaluator, IExecutionContext executionContext,
-																 CancellationToken token)
+		public static async ValueTask<DataModelValue> GetContent(IValueEvaluator contentBodyEvaluator, IObjectEvaluator contentExpressionEvaluator,
+																 IExecutionContext executionContext, CancellationToken token)
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
 
@@ -51,14 +49,12 @@ namespace TSSArt.StateMachine
 			return DataModelValue.Undefined;
 		}
 
-		public static async ValueTask<DataModelValue> GetParameters(/**/ImmutableArray<ILocationEvaluator> nameEvaluatorList, /**/ImmutableArray<DefaultParam> parameterList,
+		public static async ValueTask<DataModelValue> GetParameters(ImmutableArray<ILocationEvaluator> nameEvaluatorList, ImmutableArray<DefaultParam> parameterList,
 																	IExecutionContext executionContext, CancellationToken token)
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
 
-			var attrCount = (!nameEvaluatorList.IsDefault ? nameEvaluatorList.Length : 0) + (!parameterList.IsDefault ? parameterList.Length : 0);
-
-			if (attrCount == 0)
+			if (nameEvaluatorList.IsDefaultOrEmpty && parameterList.IsDefaultOrEmpty)
 			{
 				return DataModelValue.Undefined;
 			}

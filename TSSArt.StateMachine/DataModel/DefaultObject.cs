@@ -1,6 +1,6 @@
 ﻿namespace TSSArt.StateMachine
 {
-	public class DefaultObject : IObject
+	internal sealed class DefaultObject : IObject
 	{
 		private readonly object _value;
 

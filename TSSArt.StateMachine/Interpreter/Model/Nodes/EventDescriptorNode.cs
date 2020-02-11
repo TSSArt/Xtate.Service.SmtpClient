@@ -2,7 +2,7 @@
 
 namespace TSSArt.StateMachine
 {
-	public class EventDescriptorNode : IEventDescriptor, IStoreSupport, IAncestorProvider, IDebugEntityId
+	internal sealed class EventDescriptorNode : IEventDescriptor, IStoreSupport, IAncestorProvider, IDebugEntityId
 	{
 		private readonly IEventDescriptor _eventDescriptor;
 

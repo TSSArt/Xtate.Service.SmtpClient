@@ -2,7 +2,7 @@
 
 namespace TSSArt.StateMachine
 {
-	public class ExternalScriptExpressionNode : IExternalScriptExpression, IExternalScriptConsumer, IStoreSupport, IAncestorProvider
+	internal sealed class ExternalScriptExpressionNode : IExternalScriptExpression, IExternalScriptConsumer, IStoreSupport, IAncestorProvider
 	{
 		private readonly ExternalScriptExpression _externalScriptExpression;
 		private          string                   _content;

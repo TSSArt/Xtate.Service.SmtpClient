@@ -1,8 +1,8 @@
-﻿using System.Collections./**/Immutable;
+﻿using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
-	public class RuntimeExecNode : IExecutableEntity, IStoreSupport, IAncestorProvider, IDocumentId
+	internal sealed class RuntimeExecNode : IExecutableEntity, IStoreSupport, IAncestorProvider, IDocumentId
 	{
 		private readonly LinkedListNode<int> _documentIdNode;
 		private readonly IExecutableEntity   _entity;

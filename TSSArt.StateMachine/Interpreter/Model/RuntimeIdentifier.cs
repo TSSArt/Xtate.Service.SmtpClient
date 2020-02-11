@@ -1,6 +1,6 @@
 ﻿namespace TSSArt.StateMachine
 {
-	public class RuntimeIdentifier : IIdentifier
+	internal sealed class RuntimeIdentifier : IIdentifier
 	{
 		private string _val;
 

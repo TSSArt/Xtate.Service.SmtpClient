@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -18,13 +19,46 @@ namespace TSSArt.StateMachine
 
 		public StateMachineFluentBuilder SetInitial(params string[] initial)
 		{
-			_builder.SetInitial(IdentifierList.Create(initial, Identifier.FromString));
+			if (initial == null) throw new ArgumentNullException(nameof(initial));
+			if (initial.Length == 0) throw new ArgumentException(message: "Value cannot be an empty collection.", nameof(initial));
+
+			var builder = ImmutableArray.CreateBuilder<IIdentifier>(initial.Length);
+
+			foreach (var s in initial)
+			{
+				builder.Add((Identifier) s);
+			}
+
+			_builder.SetInitial(builder.MoveToImmutable());
+
 			return this;
 		}
 
 		public StateMachineFluentBuilder SetInitial(params IIdentifier[] initial)
 		{
-			_builder.SetInitial(IdentifierList.Create(initial));
+			if (initial == null) throw new ArgumentNullException(nameof(initial));
+			if (initial.Length == 0) throw new ArgumentException(message: "Value cannot be an empty collection.", nameof(initial));
+
+			_builder.SetInitial(initial.ToImmutableArray());
+
+			return this;
+		}
+
+		public StateMachineFluentBuilder SetInitial(ImmutableArray<string> initial)
+		{
+			if (initial.IsDefaultOrEmpty) throw new ArgumentException(message: "Value cannot be an empty list.", nameof(initial));
+
+			_builder.SetInitial(ImmutableArray.CreateRange<string, IIdentifier>(initial, id => (Identifier) id));
+
+			return this;
+		}
+
+		public StateMachineFluentBuilder SetInitial(ImmutableArray<IIdentifier> initial)
+		{
+			if (initial.IsDefaultOrEmpty) throw new ArgumentException(message: "Value cannot be an empty list.", nameof(initial));
+
+			_builder.SetInitial(initial);
+
 			return this;
 		}
 

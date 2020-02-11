@@ -1,21 +1,21 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public class InvokeBuilder : IInvokeBuilder
 	{
-		private readonly List<IParam>                       _parameters = new List<IParam>();
-		private          bool                               _autoForward;
-		private          IContent                           _content;
-		private          IFinalize                          _finalize;
-		private          string                             _id;
-		private          ILocationExpression                _idLocation;
-		private          /**/ImmutableArray<ILocationExpression> _nameList;
-		private          Uri                                _source;
-		private          IValueExpression                   _sourceExpression;
-		private          Uri                                _type;
-		private          IValueExpression                   _typeExpression;
+		private bool                                _autoForward;
+		private IContent                            _content;
+		private IFinalize                           _finalize;
+		private string                              _id;
+		private ILocationExpression                 _idLocation;
+		private ImmutableArray<ILocationExpression> _nameList;
+		private ImmutableArray<IParam>.Builder      _parameters;
+		private Uri                                 _source;
+		private IValueExpression                    _sourceExpression;
+		private Uri                                 _type;
+		private IValueExpression                    _typeExpression;
 
 		public IInvoke Build()
 		{
@@ -34,7 +34,7 @@ namespace TSSArt.StateMachine
 				throw new InvalidOperationException(message: "Source and SourceExpression can't be used at the same time in Invoke element");
 			}
 
-			if (_nameList != null && _parameters.Count > 0)
+			if (!_nameList.IsDefaultOrEmpty && _parameters != null)
 			{
 				throw new InvalidOperationException(message: "NameList and Parameters can't be used at the same time in Invoke element");
 			}
@@ -42,7 +42,7 @@ namespace TSSArt.StateMachine
 			return new Invoke
 				   {
 						   Type = _type, TypeExpression = _typeExpression, Source = _source, SourceExpression = _sourceExpression, Id = _id, IdLocation = _idLocation,
-						   NameList = _nameList, AutoForward = _autoForward, Parameters = ParamList.Create(_parameters), Finalize = _finalize, Content = _content
+						   NameList = _nameList, AutoForward = _autoForward, Parameters = _parameters?.ToImmutable() ?? default, Finalize = _finalize, Content = _content
 				   };
 		}
 
@@ -63,7 +63,12 @@ namespace TSSArt.StateMachine
 
 		public void SetIdLocation(ILocationExpression idLocation) => _idLocation = idLocation ?? throw new ArgumentNullException(nameof(idLocation));
 
-		public void SetNameList(/**/ImmutableArray<ILocationExpression> nameList) => _nameList = LocationExpressionList.Create(nameList ?? throw new ArgumentNullException(nameof(nameList)));
+		public void SetNameList(ImmutableArray<ILocationExpression> nameList)
+		{
+			if (nameList.IsDefaultOrEmpty) throw new ArgumentException(message: "Value cannot be empty list.", nameof(nameList));
+
+			_nameList = nameList;
+		}
 
 		public void SetAutoForward(bool autoForward) => _autoForward = autoForward;
 
@@ -71,7 +76,7 @@ namespace TSSArt.StateMachine
 		{
 			if (param == null) throw new ArgumentNullException(nameof(param));
 
-			_parameters.Add(param);
+			(_parameters ??= ImmutableArray.CreateBuilder<IParam>()).Add(param);
 		}
 
 		public void SetFinalize(IFinalize finalize) => _finalize = finalize ?? throw new ArgumentNullException(nameof(finalize));

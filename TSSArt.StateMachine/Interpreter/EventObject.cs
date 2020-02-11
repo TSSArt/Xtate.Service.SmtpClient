@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public class EventObject : IEvent, IStoreSupport
+	internal sealed class EventObject : IEvent, IStoreSupport
 	{
 		public EventObject(string name, string invokeId = null, string invokeUniqueId = null) :
 				this(EventType.External, EventName.ToParts(name), data: default, sendId: null, invokeId, invokeUniqueId) { }
@@ -11,10 +11,10 @@ namespace TSSArt.StateMachine
 		public EventObject(EventType type, IOutgoingEvent @event, Uri origin = null, Uri originType = null, string invokeId = null, string invokeUniqueId = null)
 				: this(type, @event.SendId, @event.NameParts, invokeId, invokeUniqueId, origin, originType, @event.Data) { }
 
-		public EventObject(EventType type, /**/ImmutableArray<IIdentifier> nameParts, DataModelValue data = default, string sendId = null, string invokeId = null, string invokeUniqueId = null)
+		public EventObject(EventType type, ImmutableArray<IIdentifier> nameParts, DataModelValue data = default, string sendId = null, string invokeId = null, string invokeUniqueId = null)
 				: this(type, sendId, nameParts, invokeId, invokeUniqueId, origin: null, originType: null, data) { }
 
-		public EventObject(EventType type, string sendId, /**/ImmutableArray<IIdentifier> nameParts, string invokeId, string invokeUniqueId, Uri origin, Uri originType, DataModelValue data)
+		public EventObject(EventType type, string sendId, ImmutableArray<IIdentifier> nameParts, string invokeId, string invokeUniqueId, Uri origin, Uri originType, DataModelValue data)
 		{
 			Type = type;
 			SendId = sendId;
@@ -54,7 +54,7 @@ namespace TSSArt.StateMachine
 
 		public string InvokeUniqueId { get; }
 
-		public /**/ImmutableArray<IIdentifier> NameParts { get; }
+		public ImmutableArray<IIdentifier> NameParts { get; }
 
 		public Uri Origin { get; }
 

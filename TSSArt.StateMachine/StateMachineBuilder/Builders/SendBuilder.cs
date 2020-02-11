@@ -1,23 +1,23 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public class SendBuilder : ISendBuilder
 	{
-		private readonly List<IParam>                       _parameters = new List<IParam>();
-		private          IContent                           _content;
-		private          IValueExpression                   _delayExpression;
-		private          int?                               _delayMs;
-		private          string                             _event;
-		private          IValueExpression                   _eventExpression;
-		private          string                             _id;
-		private          ILocationExpression                _idLocation;
-		private          /**/ImmutableArray<ILocationExpression> _nameList;
-		private          Uri                                _target;
-		private          IValueExpression                   _targetExpression;
-		private          Uri                                _type;
-		private          IValueExpression                   _typeExpression;
+		private IContent                            _content;
+		private IValueExpression                    _delayExpression;
+		private int?                                _delayMs;
+		private string                              _event;
+		private IValueExpression                    _eventExpression;
+		private string                              _id;
+		private ILocationExpression                 _idLocation;
+		private ImmutableArray<ILocationExpression> _nameList;
+		private ImmutableArray<IParam>.Builder      _parameters;
+		private Uri                                 _target;
+		private IValueExpression                    _targetExpression;
+		private Uri                                 _type;
+		private IValueExpression                    _typeExpression;
 
 		public ISend Build()
 		{
@@ -51,7 +51,7 @@ namespace TSSArt.StateMachine
 				throw new InvalidOperationException(message: "NameList and Content can't be used at the same time in Send element");
 			}
 
-			if (_parameters.Count > 0 && _content != null)
+			if (_parameters != null && _content != null)
 			{
 				throw new InvalidOperationException(message: "Parameters and Content can't be used at the same time in Send element");
 			}
@@ -65,7 +65,7 @@ namespace TSSArt.StateMachine
 				   {
 						   Event = _event, EventExpression = _eventExpression, Target = _target, TargetExpression = _targetExpression,
 						   Type = _type, TypeExpression = _typeExpression, Id = _id, IdLocation = _idLocation, DelayMs = _delayMs,
-						   DelayExpression = _delayExpression, NameList = _nameList, Parameters = ParamList.Create(_parameters), Content = _content
+						   DelayExpression = _delayExpression, NameList = _nameList, Parameters = _parameters?.ToImmutable() ?? default, Content = _content
 				   };
 		}
 
@@ -104,13 +104,18 @@ namespace TSSArt.StateMachine
 
 		public void SetDelayExpression(IValueExpression delayExpression) => _delayExpression = delayExpression ?? throw new ArgumentNullException(nameof(delayExpression));
 
-		public void SetNameList(/**/ImmutableArray<ILocationExpression> nameList) => _nameList = LocationExpressionList.Create(nameList ?? throw new ArgumentNullException(nameof(nameList)));
+		public void SetNameList(ImmutableArray<ILocationExpression> nameList)
+		{
+			if (nameList.IsDefaultOrEmpty) throw new ArgumentException(message: "Value cannot be empty list.", nameof(nameList));
+
+			_nameList = nameList;
+		}
 
 		public void AddParameter(IParam param)
 		{
 			if (param == null) throw new ArgumentNullException(nameof(param));
 
-			_parameters.Add(param);
+			(_parameters ??= ImmutableArray.CreateBuilder<IParam>()).Add(param);
 		}
 
 		public void SetContent(IContent content) => _content = content ?? throw new ArgumentNullException(nameof(content));

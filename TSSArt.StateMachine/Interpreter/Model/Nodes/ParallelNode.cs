@@ -1,9 +1,10 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public class ParallelNode : StateEntityNode, IParallel, IAncestorProvider, IDebugEntityId
+	internal sealed class ParallelNode : StateEntityNode, IParallel, IAncestorProvider, IDebugEntityId
 	{
 		private readonly Parallel _parallel;
 
@@ -12,15 +13,15 @@ namespace TSSArt.StateMachine
 			_parallel = parallel;
 
 			var id = parallel.Id ?? new IdentifierNode(new RuntimeIdentifier());
-			var transitions = parallel.Transitions.AsListOf<TransitionNode>() ?? Array.Empty<TransitionNode>();
-			var invokeList = parallel.Invoke.AsListOf<InvokeNode>() ?? Array.Empty<InvokeNode>();
+			var transitions = parallel.Transitions.AsArrayOf<ITransition, TransitionNode>(true);
+			var invokeList = parallel.Invoke.AsArrayOf<IInvoke, InvokeNode>(true);
 
 			Id = id;
-			States = parallel.States.AsListOf<StateEntityNode>();
-			HistoryStates = parallel.HistoryStates.AsListOf<HistoryNode>() ?? Array.Empty<HistoryNode>();
+			States = parallel.States.AsArrayOf<IStateEntity, StateEntityNode>();
+			HistoryStates = parallel.HistoryStates.AsArrayOf<IHistory, HistoryNode>(true);
 			Transitions = transitions;
-			OnEntry = parallel.OnEntry.AsListOf<OnEntryNode>() ?? Array.Empty<OnEntryNode>();
-			OnExit = parallel.OnExit.AsListOf<OnExitNode>() ?? Array.Empty<OnExitNode>();
+			OnEntry = parallel.OnEntry.AsArrayOf<IOnEntry, OnEntryNode>(true);
+			OnExit = parallel.OnExit.AsArrayOf<IOnExit, OnExitNode>(true);
 			Invoke = invokeList;
 			DataModel = parallel.DataModel.As<DataModelNode>();
 
@@ -35,14 +36,14 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public override bool                           IsAtomicState => false;
-		public override /**/ImmutableArray<InvokeNode>      Invoke        { get; }
-		public override /**/ImmutableArray<TransitionNode>  Transitions   { get; }
-		public override /**/ImmutableArray<HistoryNode>     HistoryStates { get; }
-		public override /**/ImmutableArray<StateEntityNode> States        { get; }
-		public override /**/ImmutableArray<OnEntryNode>     OnEntry       { get; }
-		public override /**/ImmutableArray<OnExitNode>      OnExit        { get; }
-		public override DataModelNode                  DataModel     { get; }
+		public override bool                            IsAtomicState => false;
+		public override ImmutableArray<InvokeNode>      Invoke        { get; }
+		public override ImmutableArray<TransitionNode>  Transitions   { get; }
+		public override ImmutableArray<HistoryNode>     HistoryStates { get; }
+		public override ImmutableArray<StateEntityNode> States        { get; }
+		public override ImmutableArray<OnEntryNode>     OnEntry       { get; }
+		public override ImmutableArray<OnExitNode>      OnExit        { get; }
+		public override DataModelNode                   DataModel     { get; }
 
 		object IAncestorProvider.Ancestor => _parallel.Ancestor;
 
@@ -50,13 +51,13 @@ namespace TSSArt.StateMachine
 
 		public override IIdentifier Id { get; }
 
-		IDataModel IParallel.                 DataModel     => DataModel;
-		/**/ImmutableArray<IInvoke> IParallel.     Invoke        => Invoke;
-		/**/ImmutableArray<IStateEntity> IParallel.States        => States;
-		/**/ImmutableArray<IHistory> IParallel.    HistoryStates => HistoryStates;
-		/**/ImmutableArray<ITransition> IParallel. Transitions   => Transitions;
-		/**/ImmutableArray<IOnEntry> IParallel.    OnEntry       => OnEntry;
-		/**/ImmutableArray<IOnExit> IParallel.     OnExit        => OnExit;
+		IDataModel IParallel.                  DataModel     => DataModel;
+		ImmutableArray<IInvoke> IParallel.     Invoke        => ImmutableArray<IInvoke>.CastUp(Invoke);
+		ImmutableArray<IStateEntity> IParallel.States        => ImmutableArray<IStateEntity>.CastUp(States);
+		ImmutableArray<IHistory> IParallel.    HistoryStates => ImmutableArray<IHistory>.CastUp(HistoryStates);
+		ImmutableArray<ITransition> IParallel. Transitions   => ImmutableArray<ITransition>.CastUp(Transitions);
+		ImmutableArray<IOnEntry> IParallel.    OnEntry       => ImmutableArray<IOnEntry>.CastUp(OnEntry);
+		ImmutableArray<IOnExit> IParallel.     OnExit        => ImmutableArray<IOnExit>.CastUp(OnExit);
 
 		protected override void Store(Bucket bucket)
 		{

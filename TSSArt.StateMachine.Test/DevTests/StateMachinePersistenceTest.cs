@@ -46,7 +46,7 @@ namespace TSSArt.StateMachine.Test
 
 			var options = new InterpreterOptions
 						  {
-								  DataModelHandlerFactories = new List<IDataModelHandlerFactory> { EcmaScriptDataModelHandler.Factory },
+								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
 								  ResourceLoader = _resourceLoaderMock.Object,
 								  PersistenceLevel = PersistenceLevel.ExecutableAction,
 								  StorageProvider = new TestStorage()

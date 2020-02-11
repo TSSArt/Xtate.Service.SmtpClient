@@ -8,7 +8,7 @@ using TSSArt.StateMachine.EcmaScript;
 namespace TSSArt.StateMachine.Test
 {
 	[TestClass]
-	public class StorageTest
+	internal class StorageTest
 	{
 		public static string Dump(InMemoryStorage storage, string delimiter = "", bool hex = false)
 		{
@@ -249,7 +249,7 @@ namespace TSSArt.StateMachine.Test
 
 			var imBuilder = new InterpreterModelBuilder();
 			var dataModelHandler = EcmaScriptDataModelHandler.Factory.CreateHandler(imBuilder);
-			var model = imBuilder.Build(stateMachine, dataModelHandler, customActionProviders: null);
+			var model = imBuilder.Build(stateMachine, dataModelHandler, customActionProviders: default);
 			var storeSupport = model.Root.As<IStoreSupport>();
 
 			var storage = new InMemoryStorage();

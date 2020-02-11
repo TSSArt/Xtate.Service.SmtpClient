@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Collections./**/Immutable;
-using System.Linq;
+using System.Collections.Immutable;
 using System.Xml;
 
 namespace TSSArt.StateMachine
@@ -8,6 +7,7 @@ namespace TSSArt.StateMachine
 	public class ScxmlSerializer : StateMachineVisitor
 	{
 		private const string ScxmlNs = "http://www.w3.org/2005/07/scxml";
+		private const string Space   = " ";
 
 		private XmlWriter _writer;
 
@@ -16,23 +16,6 @@ namespace TSSArt.StateMachine
 			_writer = writer;
 
 			Visit(ref stateMachine);
-		}
-
-		private string ToString(IOutgoingEvent @event) => EventName.ToName(@event.NameParts);
-
-		private string ToString(IEnumerable<IIdentifier> list)
-		{
-			return string.Join(separator: " ", list.Select(id => id.ToString()));
-		}
-
-		private string ToString(IEnumerable<IEventDescriptor> list)
-		{
-			return string.Join(separator: " ", list.Select(id => id.ToString()));
-		}
-
-		private string ToString(IEnumerable<ILocationExpression> list)
-		{
-			return string.Join(separator: " ", list.Select(id => id.Expression));
 		}
 
 		protected override void Build(ref IStateMachine entity, ref StateMachine properties)
@@ -45,10 +28,12 @@ namespace TSSArt.StateMachine
 				_writer.WriteAttributeString(localName: "datamodel", properties.DataModelType);
 			}
 
-			var target = properties.Initial?.Transition?.Target;
-			if (target != null)
+			var target = properties.Initial?.Transition?.Target ?? default;
+			if (!target.IsDefaultOrEmpty)
 			{
-				_writer.WriteAttributeString(localName: "initial", ToString(target));
+				_writer.WriteStartAttribute("initial");
+				WriteArray(target, i => i.ToString(), Space);
+				_writer.WriteEndAttribute();
 			}
 
 			properties.Initial = null;
@@ -146,9 +131,11 @@ namespace TSSArt.StateMachine
 				_writer.WriteAttributeString(localName: "type", value: "internal");
 			}
 
-			if (entity.Event != null)
+			if (!entity.Event.IsDefaultOrEmpty)
 			{
-				_writer.WriteAttributeString(localName: "event", ToString(entity.Event));
+				_writer.WriteStartAttribute("event");
+				WriteArray(entity.Event, ed => ed.ToString(), Space);
+				_writer.WriteEndAttribute();
 			}
 
 			if (entity.Condition != null)
@@ -156,14 +143,32 @@ namespace TSSArt.StateMachine
 				_writer.WriteAttributeString(localName: "cond", ((IConditionExpression) entity.Condition).Expression);
 			}
 
-			if (entity.Target != null)
+			if (!entity.Target.IsDefaultOrEmpty)
 			{
-				_writer.WriteAttributeString(localName: "target", ToString(entity.Target));
+				_writer.WriteStartAttribute("target");
+				WriteArray(entity.Target, i => i.ToString(), Space);
+				_writer.WriteEndAttribute();
 			}
 
 			base.Visit(ref entity);
 
 			_writer.WriteEndElement();
+		}
+
+		private void WriteArray<T>(ImmutableArray<T> array, Func<T, string> converter, string delimiter)
+		{
+			var writeDelimiter = false;
+			foreach (var item in array)
+			{
+				if (writeDelimiter)
+				{
+					_writer.WriteString(delimiter);
+				}
+
+				_writer.WriteString(converter(item));
+
+				writeDelimiter = true;
+			}
 		}
 
 		protected override void Visit(ref ISend entity)
@@ -222,9 +227,11 @@ namespace TSSArt.StateMachine
 				_writer.WriteAttributeString(localName: "delayexpr", entity.DelayExpression.Expression);
 			}
 
-			if (entity.NameList != null)
+			if (!entity.NameList.IsDefaultOrEmpty)
 			{
-				_writer.WriteAttributeString(localName: "namelist", ToString(entity.NameList));
+				_writer.WriteStartAttribute("namelist");
+				WriteArray(entity.NameList, le => le.Expression.ToString(), Space);
+				_writer.WriteEndAttribute();
 			}
 
 			base.Visit(ref entity);
@@ -264,7 +271,9 @@ namespace TSSArt.StateMachine
 
 			_writer.WriteStartElement("raise");
 
-			_writer.WriteAttributeString(localName: "event", ToString(entity.Event));
+			_writer.WriteStartAttribute("event");
+			EventName.WriteXml(_writer, entity.Event.NameParts);
+			_writer.WriteEndAttribute();
 
 			_writer.WriteEndElement();
 		}
@@ -467,9 +476,11 @@ namespace TSSArt.StateMachine
 				_writer.WriteAttributeString(localName: "idlocation", entity.IdLocation.Expression);
 			}
 
-			if (entity.NameList != null)
+			if (!entity.NameList.IsDefaultOrEmpty)
 			{
-				_writer.WriteAttributeString(localName: "namelist", ToString(entity.NameList));
+				_writer.WriteStartAttribute("namelist");
+				WriteArray(entity.NameList, le => le.Expression.ToString(), Space);
+				_writer.WriteEndAttribute();
 			}
 
 			if (entity.AutoForward)

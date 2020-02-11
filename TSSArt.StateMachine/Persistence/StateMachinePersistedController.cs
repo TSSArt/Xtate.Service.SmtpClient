@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	internal class StateMachinePersistedController : StateMachineController, IStorageProvider
+	internal sealed class StateMachinePersistedController : StateMachineController, IStorageProvider
 	{
 		private const string ControllerStateKey = "cs";
 		private const int    ScheduledEventsKey = 0;

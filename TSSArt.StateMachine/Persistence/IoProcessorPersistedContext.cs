@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	internal class IoProcessorPersistedContext : IoProcessorContext
+	internal sealed class IoProcessorPersistedContext : IoProcessorContext
 	{
 		private const string IoProcessorPartition = "IoProcessor";
 		private const string ContextKey           = "context";

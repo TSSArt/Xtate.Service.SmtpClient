@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -10,34 +11,34 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	using DefaultHistoryContent = Dictionary<IIdentifier, /**/ImmutableArray<IExecEvaluator>>;
+	using DefaultHistoryContent = Dictionary<IIdentifier, ImmutableArray<IExecEvaluator>>;
 
-	public class StateMachineInterpreter
+	public sealed class StateMachineInterpreter
 	{
 		private const string StateStorageKey                  = "state";
 		private const string StateMachineDefinitionStorageKey = "smd";
 
-		private readonly CancellationToken                             _anyToken;
-		private readonly DataModelValue                                _arguments;
-		private readonly IReadOnlyDictionary<string, string>           _configuration;
-		private readonly IReadOnlyCollection<ICustomActionProvider>    _customActionProviders;
-		private readonly IReadOnlyCollection<IDataModelHandlerFactory> _dataModelHandlerFactories;
-		private readonly CancellationToken                             _destroyToken;
-		private readonly ChannelReader<IEvent>                         _eventChannel;
-		private readonly ExternalCommunicationWrapper                  _externalCommunication;
-		private readonly LoggerWrapper                                 _logger;
-		private readonly INotifyStateChanged                           _notifyStateChanged;
-		private readonly PersistenceLevel                              _persistenceLevel;
-		private readonly IResourceLoader                               _resourceLoader;
-		private readonly string                                        _sessionId;
-		private readonly CancellationToken                             _stopToken;
-		private readonly IStorageProvider                              _storageProvider;
-		private readonly CancellationToken                             _suspendToken;
-		private          IStateMachineContext                          _context;
-		private          IDataModelHandler                             _dataModelHandler;
-		private          DataModelValue                                _doneData;
-		private          InterpreterModel                              _model;
-		private          bool                                          _stop;
+		private readonly CancellationToken                        _anyToken;
+		private readonly DataModelValue                           _arguments;
+		private readonly ImmutableDictionary<string, string>      _configuration;
+		private readonly ImmutableArray<ICustomActionProvider>    _customActionProviders;
+		private readonly ImmutableArray<IDataModelHandlerFactory> _dataModelHandlerFactories;
+		private readonly CancellationToken                        _destroyToken;
+		private readonly ChannelReader<IEvent>                    _eventChannel;
+		private readonly ExternalCommunicationWrapper             _externalCommunication;
+		private readonly LoggerWrapper                            _logger;
+		private readonly INotifyStateChanged                      _notifyStateChanged;
+		private readonly PersistenceLevel                         _persistenceLevel;
+		private readonly IResourceLoader                          _resourceLoader;
+		private readonly string                                   _sessionId;
+		private readonly CancellationToken                        _stopToken;
+		private readonly IStorageProvider                         _storageProvider;
+		private readonly CancellationToken                        _suspendToken;
+		private          IStateMachineContext                     _context;
+		private          IDataModelHandler                        _dataModelHandler;
+		private          DataModelValue                           _doneData;
+		private          InterpreterModel                         _model;
+		private          bool                                     _stop;
 
 		private StateMachineInterpreter(string sessionId, ChannelReader<IEvent> eventChannel, in InterpreterOptions options)
 		{
@@ -187,9 +188,9 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private static IDataModelHandlerFactory GetDataModelHandlerFactory(string dataModelType, IReadOnlyCollection<IDataModelHandlerFactory> factories)
+		private static IDataModelHandlerFactory GetDataModelHandlerFactory(string dataModelType, ImmutableArray<IDataModelHandlerFactory> factories)
 		{
-			if (factories != null)
+			if (!factories.IsDefaultOrEmpty)
 			{
 				foreach (var factory in factories)
 				{
@@ -289,17 +290,16 @@ namespace TSSArt.StateMachine
 			return value;
 		}
 
-		private ValueTask<OrderedSet<TransitionNode>> Capture(StateBagKey key, Func<ValueTask<OrderedSet<TransitionNode>>> value)
+		private ValueTask<List<TransitionNode>> Capture(StateBagKey key, Func<ValueTask<List<TransitionNode>>> value)
 		{
 			return IsPersistingEnabled ? CaptureAsync() : value();
 
-			async ValueTask<OrderedSet<TransitionNode>> CaptureAsync()
+			async ValueTask<List<TransitionNode>> CaptureAsync()
 			{
 				var persistenceContext = _context.PersistenceContext;
 				if (persistenceContext.GetState((int) key) == 0)
 				{
-					var set = await value().ConfigureAwait(false);
-					var list = set.ToList();
+					var list = await value().ConfigureAwait(false);
 					persistenceContext.SetState((int) key, subKey: 0, list.Count);
 
 					for (var i = 0; i < list.Count; i ++)
@@ -309,10 +309,10 @@ namespace TSSArt.StateMachine
 
 					persistenceContext.SetState((int) key, value: 1);
 
-					return set;
+					return list;
 				}
 
-				var capturedSet = new OrderedSet<TransitionNode>();
+				var capturedSet = new List<TransitionNode>();
 				var length = persistenceContext.GetState((int) key, subKey: 0);
 				for (var i = 0; i < length; i ++)
 				{
@@ -428,7 +428,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private ValueTask InitialEnterStates() => EnterStates(new[] { _model.Root.Initial.Transition });
+		private ValueTask InitialEnterStates() => EnterStates(new List<TransitionNode>(1) { _model.Root.Initial.Transition });
 
 		private async ValueTask MainEventLoop()
 		{
@@ -475,7 +475,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private ValueTask<OrderedSet<TransitionNode>> SelectInternalEventTransitions()
+		private ValueTask<List<TransitionNode>> SelectInternalEventTransitions()
 		{
 			var internalEvent = _context.InternalQueue.Dequeue();
 
@@ -494,9 +494,9 @@ namespace TSSArt.StateMachine
 			{
 				var transitions = await Capture(StateBagKey.SelectInternalEventTransitions, SelectInternalEventTransitions).ConfigureAwait(false);
 
-				if (!transitions.IsEmpty)
+				if (transitions.Count > 0)
 				{
-					await Microstep(transitions.ToList()).ConfigureAwait(false);
+					await Microstep(transitions).ConfigureAwait(false);
 
 					await CheckPoint(PersistenceLevel.Transition).ConfigureAwait(false);
 				}
@@ -518,9 +518,9 @@ namespace TSSArt.StateMachine
 			var exit = false;
 			var transitions = await Capture(StateBagKey.EventlessTransitions, SelectEventlessTransitions).ConfigureAwait(false);
 
-			if (!transitions.IsEmpty)
+			if (transitions.Count > 0)
 			{
-				await Microstep(transitions.ToList()).ConfigureAwait(false);
+				await Microstep(transitions).ConfigureAwait(false);
 
 				await CheckPoint(PersistenceLevel.Transition).ConfigureAwait(false);
 			}
@@ -561,7 +561,7 @@ namespace TSSArt.StateMachine
 
 					_context.DataModel.SetInternal(property: "_event", new DataModelDescriptor(DataModelValue.FromEvent(externalEvent), isReadOnly: true));
 
-					foreach (var state in _context.Configuration.ToList())
+					foreach (var state in _context.Configuration.ToList1())
 					{
 						foreach (var invoke in state.Invoke)
 						{
@@ -579,9 +579,9 @@ namespace TSSArt.StateMachine
 
 					var transitions = await SelectTransitions(externalEvent).ConfigureAwait(false);
 
-					if (!transitions.IsEmpty)
+					if (transitions.Count > 0)
 					{
-						await Microstep(transitions.ToList()).ConfigureAwait(false);
+						await Microstep(transitions).ConfigureAwait(false);
 
 						await CheckPoint(PersistenceLevel.Event).ConfigureAwait(false);
 					}
@@ -682,11 +682,11 @@ namespace TSSArt.StateMachine
 			Complete(StateBagKey.OnExit);
 		}
 
-		private ValueTask<OrderedSet<TransitionNode>> SelectEventlessTransitions() => SelectTransitions(@event: null);
+		private ValueTask<List<TransitionNode>> SelectEventlessTransitions() => SelectTransitions(@event: null);
 
-		private async ValueTask<OrderedSet<TransitionNode>> SelectTransitions(IEvent @event)
+		private async ValueTask<List<TransitionNode>> SelectTransitions(IEvent @event)
 		{
-			var transitions = new OrderedSet<TransitionNode>();
+			var transitions = new List<TransitionNode>();
 
 			foreach (var state in _context.Configuration.ToFilteredSortedList(s => s.IsAtomicState, StateEntityNode.EntryOrder))
 			{
@@ -751,22 +751,28 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private OrderedSet<TransitionNode> RemoveConflictingTransitions(OrderedSet<TransitionNode> enabledTransitions)
+		private List<TransitionNode> RemoveConflictingTransitions(List<TransitionNode> enabledTransitions)
 		{
-			var filteredTransitions = new OrderedSet<TransitionNode>();
+			var filteredTransitions = new List<TransitionNode>();
+			List<TransitionNode> transitionsToRemove = null;
+			List<TransitionNode> tr1 = null;
+			List<TransitionNode> tr2 = null;
 
-			foreach (var t1 in enabledTransitions.ToList())
+			foreach (var t1 in enabledTransitions)
 			{
 				var t1Preempted = false;
-				var transitionsToRemove = new OrderedSet<TransitionNode>();
+				transitionsToRemove?.Clear();
 
-				foreach (var t2 in filteredTransitions.ToList())
+				foreach (var t2 in filteredTransitions)
 				{
-					if (ComputeExitSet(new[] { t1 }).HasIntersection(ComputeExitSet(new[] { t2 })))
+					(tr1 ??= new List<TransitionNode>(1) { default })[0] = t1;
+					(tr2 ??= new List<TransitionNode>(1) { default })[0] = t2;
+
+					if (HasIntersection(ComputeExitSet(tr1), ComputeExitSet(tr2)))
 					{
 						if (IsDescendant(t1.Source, t2.Source))
 						{
-							transitionsToRemove.Add(t2);
+							(transitionsToRemove ??= new List<TransitionNode>()).Add(t2);
 						}
 						else
 						{
@@ -778,9 +784,12 @@ namespace TSSArt.StateMachine
 
 				if (!t1Preempted)
 				{
-					foreach (var t3 in transitionsToRemove.ToList())
+					if (transitionsToRemove != null)
 					{
-						filteredTransitions.Delete(t3);
+						foreach (var t3 in transitionsToRemove)
+						{
+							filteredTransitions.Remove(t3);
+						}
 					}
 
 					filteredTransitions.Add(t1);
@@ -790,7 +799,7 @@ namespace TSSArt.StateMachine
 			return filteredTransitions;
 		}
 
-		private async ValueTask Microstep(/**/ImmutableArray<TransitionNode> enabledTransitions)
+		private async ValueTask Microstep(List<TransitionNode> enabledTransitions)
 		{
 			await DoOperation(StateBagKey.ExitStates, ExitStates, enabledTransitions).ConfigureAwait(false);
 
@@ -799,16 +808,16 @@ namespace TSSArt.StateMachine
 			await DoOperation(StateBagKey.EnterStates, EnterStates, enabledTransitions).ConfigureAwait(false);
 		}
 
-		private async ValueTask ExitStates(/**/ImmutableArray<TransitionNode> enabledTransitions)
+		private async ValueTask ExitStates(List<TransitionNode> enabledTransitions)
 		{
 			var statesToExit = ComputeExitSet(enabledTransitions);
 
-			foreach (var state in statesToExit.ToList())
+			foreach (var state in statesToExit)
 			{
 				_context.StatesToInvoke.Delete(state);
 			}
 
-			var states = statesToExit.ToSortedList(StateEntityNode.ExitOrder);
+			var states = ToSortedList(statesToExit, StateEntityNode.ExitOrder);
 
 			foreach (var state in states)
 			{
@@ -843,18 +852,47 @@ namespace TSSArt.StateMachine
 			Complete(StateBagKey.OnExit);
 		}
 
-		private async ValueTask EnterStates(/**/ImmutableArray<TransitionNode> enabledTransitions)
+		private static void AddIfNotExists<T>(List<T> list, T item)
 		{
-			var statesToEnter = new OrderedSet<StateEntityNode>();
-			var statesForDefaultEntry = new OrderedSet<CompoundNode>();
+			if (!list.Contains(item))
+			{
+				list.Add(item);
+			}
+		}
+
+		private static List<T> ToSortedList<T>(List<T> list, IComparer<T> comparer)
+		{
+			var result = new List<T>(list);
+			result.Sort(comparer);
+
+			return result;
+		}
+
+		public bool HasIntersection<T>(List<T> list1, List<T> list2)
+		{
+			foreach (var item in list1)
+			{
+				if (list2.Contains(item))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		private async ValueTask EnterStates(List<TransitionNode> enabledTransitions)
+		{
+			var statesToEnter = new List<StateEntityNode>();
+			var statesForDefaultEntry = new List<CompoundNode>();
 			var defaultHistoryContent = new DefaultHistoryContent();
 
 			ComputeEntrySet(enabledTransitions, statesToEnter, statesForDefaultEntry, defaultHistoryContent);
 
-			foreach (var state in statesToEnter.ToSortedList(StateEntityNode.EntryOrder))
+			foreach (var state in ToSortedList(statesToEnter, StateEntityNode.EntryOrder))
 			{
-				_context.Configuration.Add(state);
-				_context.StatesToInvoke.Add(state);
+				_context.Configuration.AddIfNotExists(state);
+				_context.StatesToInvoke.AddIfNotExists(state);
 
 				if (_model.Root.Binding == BindingType.Late)
 				{
@@ -868,7 +906,7 @@ namespace TSSArt.StateMachine
 					await DoOperation(StateBagKey.OnEntry, onEntry, RunExecutableEntity, onEntry.ActionEvaluators).ConfigureAwait(false);
 				}
 
-				if (state is CompoundNode compound && statesForDefaultEntry.IsMember(compound))
+				if (state is CompoundNode compound && statesForDefaultEntry.Contains(compound))
 				{
 					await DoOperation(StateBagKey.DefaultEntry, state, RunExecutableEntity, compound.Initial.Transition.ActionEvaluators).ConfigureAwait(false);
 				}
@@ -942,7 +980,7 @@ namespace TSSArt.StateMachine
 			return false;
 		}
 
-		private void ComputeEntrySet(/**/ImmutableArray<TransitionNode> transitions, OrderedSet<StateEntityNode> statesToEnter, OrderedSet<CompoundNode> statesForDefaultEntry,
+		private void ComputeEntrySet(List<TransitionNode> transitions, List<StateEntityNode> statesToEnter, List<CompoundNode> statesForDefaultEntry,
 									 DefaultHistoryContent defaultHistoryContent)
 		{
 			foreach (var transition in transitions)
@@ -954,26 +992,26 @@ namespace TSSArt.StateMachine
 
 				var ancestor = GetTransitionDomain(transition);
 
-				foreach (var state in GetEffectiveTargetStates(transition).ToList())
+				foreach (var state in GetEffectiveTargetStates(transition))
 				{
 					AddAncestorStatesToEnter(state, ancestor, statesToEnter, statesForDefaultEntry, defaultHistoryContent);
 				}
 			}
 		}
 
-		private OrderedSet<StateEntityNode> ComputeExitSet(/**/ImmutableArray<TransitionNode> transitions)
+		private List<StateEntityNode> ComputeExitSet(List<TransitionNode> transitions)
 		{
-			var statesToExit = new OrderedSet<StateEntityNode>();
+			var statesToExit = new List<StateEntityNode>();
 			foreach (var transition in transitions)
 			{
 				if (transition.Target != null)
 				{
 					var domain = GetTransitionDomain(transition);
-					foreach (var state in _context.Configuration.ToList())
+					foreach (var state in _context.Configuration.ToList1())
 					{
 						if (IsDescendant(state, domain))
 						{
-							statesToExit.Add(state);
+							AddIfNotExists(statesToExit, state);
 						}
 					}
 				}
@@ -982,7 +1020,7 @@ namespace TSSArt.StateMachine
 			return statesToExit;
 		}
 
-		private void AddDescendantStatesToEnter(StateEntityNode state, OrderedSet<StateEntityNode> statesToEnter, OrderedSet<CompoundNode> statesForDefaultEntry,
+		private void AddDescendantStatesToEnter(StateEntityNode state, List<StateEntityNode> statesToEnter, List<CompoundNode> statesForDefaultEntry,
 												DefaultHistoryContent defaultHistoryContent)
 		{
 			if (state is HistoryNode history)
@@ -1016,10 +1054,10 @@ namespace TSSArt.StateMachine
 			}
 			else
 			{
-				statesToEnter.Add(state);
+				AddIfNotExists(statesToEnter, state);
 				if (state is CompoundNode compound)
 				{
-					statesForDefaultEntry.Add(compound);
+					AddIfNotExists(statesForDefaultEntry, compound);
 
 					foreach (var s in compound.Initial.Transition.TargetState)
 					{
@@ -1037,7 +1075,7 @@ namespace TSSArt.StateMachine
 					{
 						foreach (var child in state.States)
 						{
-							if (!statesToEnter.Some(s => IsDescendant(s, child)))
+							if (!statesToEnter.Exists(s => IsDescendant(s, child)))
 							{
 								AddDescendantStatesToEnter(child, statesToEnter, statesForDefaultEntry, defaultHistoryContent);
 							}
@@ -1047,18 +1085,18 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private void AddAncestorStatesToEnter(StateEntityNode state, StateEntityNode ancestor, OrderedSet<StateEntityNode> statesToEnter, OrderedSet<CompoundNode> statesForDefaultEntry,
+		private void AddAncestorStatesToEnter(StateEntityNode state, StateEntityNode ancestor, List<StateEntityNode> statesToEnter, List<CompoundNode> statesForDefaultEntry,
 											  DefaultHistoryContent defaultHistoryContent)
 		{
-			foreach (var anc in GetProperAncestors(state, ancestor).ToList())
+			foreach (var anc in GetProperAncestors(state, ancestor))
 			{
-				statesToEnter.Add(anc);
+				AddIfNotExists(statesToEnter, anc);
 
 				if (anc is ParallelNode)
 				{
 					foreach (var child in anc.States)
 					{
-						if (!statesToEnter.Some(s => IsDescendant(s, child)))
+						if (!statesToEnter.Exists(s => IsDescendant(s, child)))
 						{
 							AddDescendantStatesToEnter(child, statesToEnter, statesForDefaultEntry, defaultHistoryContent);
 						}
@@ -1084,12 +1122,12 @@ namespace TSSArt.StateMachine
 		{
 			var tstates = GetEffectiveTargetStates(transition);
 
-			if (tstates.IsEmpty)
+			if (tstates.Count == 0)
 			{
 				return null;
 			}
 
-			if (transition.Type == TransitionType.Internal && transition.Source is CompoundNode && tstates.Every(s => IsDescendant(s, transition.Source)))
+			if (transition.Type == TransitionType.Internal && transition.Source is CompoundNode && tstates.TrueForAll(s => IsDescendant(s, transition.Source)))
 			{
 				return transition.Source;
 			}
@@ -1097,11 +1135,11 @@ namespace TSSArt.StateMachine
 			return FindLcca(transition.Source, tstates);
 		}
 
-		private StateEntityNode FindLcca(StateEntityNode headState, OrderedSet<StateEntityNode> tailStates)
+		private StateEntityNode FindLcca(StateEntityNode headState, List<StateEntityNode> tailStates)
 		{
-			foreach (var anc in GetProperAncestors(headState, state2: null).ToList())
+			foreach (var anc in GetProperAncestors(headState, state2: null))
 			{
-				if (tailStates.Every(s => IsDescendant(s, anc)))
+				if (tailStates.TrueForAll(s => IsDescendant(s, anc)))
 				{
 					return anc;
 				}
@@ -1110,9 +1148,9 @@ namespace TSSArt.StateMachine
 			return null;
 		}
 
-		private OrderedSet<StateEntityNode> GetProperAncestors(StateEntityNode state1, StateEntityNode state2)
+		private List<StateEntityNode> GetProperAncestors(StateEntityNode state1, StateEntityNode state2)
 		{
-			var states = new OrderedSet<StateEntityNode>();
+			var states = new List<StateEntityNode>();
 
 			for (var s = state1.Parent; s != null; s = s.Parent)
 			{
@@ -1124,12 +1162,12 @@ namespace TSSArt.StateMachine
 				states.Add(s);
 			}
 
-			return state2 == null ? states : new OrderedSet<StateEntityNode>();
+			return state2 == null ? states : new List<StateEntityNode>();
 		}
 
-		private OrderedSet<StateEntityNode> GetEffectiveTargetStates(TransitionNode transition)
+		private List<StateEntityNode> GetEffectiveTargetStates(TransitionNode transition)
 		{
-			var targets = new OrderedSet<StateEntityNode>();
+			var targets = new List<StateEntityNode>();
 
 			foreach (var state in transition.TargetState)
 			{
@@ -1137,21 +1175,24 @@ namespace TSSArt.StateMachine
 				{
 					if (!_context.HistoryValue.TryGetValue(history.Id, out var values))
 					{
-						values = GetEffectiveTargetStates(history.Transition).ToList();
+						values = GetEffectiveTargetStates(history.Transition);
 					}
 
-					targets.Union(values);
+					foreach (var s in values)
+					{
+						AddIfNotExists(targets, s);
+					}
 				}
 				else
 				{
-					targets.Add(state);
+					AddIfNotExists(targets, state);
 				}
 			}
 
 			return targets;
 		}
 
-		private async ValueTask ExecuteTransitionContent(/**/ImmutableArray<TransitionNode> transitions)
+		private async ValueTask ExecuteTransitionContent(List<TransitionNode> transitions)
 		{
 			foreach (var transition in transitions)
 			{
@@ -1163,7 +1204,7 @@ namespace TSSArt.StateMachine
 			Complete(StateBagKey.RunExecutableEntity);
 		}
 
-		private async ValueTask RunExecutableEntity(/**/ImmutableArray<IExecEvaluator> action)
+		private async ValueTask RunExecutableEntity(ImmutableArray<IExecEvaluator> action)
 		{
 			foreach (var executableEntity in action)
 			{

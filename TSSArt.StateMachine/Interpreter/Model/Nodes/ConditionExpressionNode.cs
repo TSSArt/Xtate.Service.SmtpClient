@@ -1,6 +1,6 @@
 ﻿namespace TSSArt.StateMachine
 {
-	public class ConditionExpressionNode : IConditionExpression, IStoreSupport, IAncestorProvider
+	internal sealed class ConditionExpressionNode : IConditionExpression, IStoreSupport, IAncestorProvider
 	{
 		private readonly ConditionExpression _conditionExpression;
 

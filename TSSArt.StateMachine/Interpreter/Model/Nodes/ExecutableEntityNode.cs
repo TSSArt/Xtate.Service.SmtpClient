@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public abstract class ExecutableEntityNode : IExecutableEntity, IExecEvaluator, IStoreSupport, IDocumentId
+	internal abstract class ExecutableEntityNode : IExecutableEntity, IExecEvaluator, IStoreSupport, IDocumentId
 	{
 		private readonly LinkedListNode<int> _documentIdNode;
 		private readonly IExecEvaluator      _execEvaluator;

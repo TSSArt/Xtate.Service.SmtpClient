@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -23,9 +24,22 @@ namespace TSSArt.StateMachine
 			return _outerBuilder;
 		}
 
-		public TransitionFluentBuilder<TOuterBuilder> SetEvent(params EventDescriptor[] eventsDescriptor)
+		public TransitionFluentBuilder<TOuterBuilder> SetEvent(params IEventDescriptor[] eventsDescriptor)
 		{
-			_builder.SetEvent(EventDescriptorList.Create(eventsDescriptor));
+			if (eventsDescriptor == null) throw new ArgumentNullException(nameof(eventsDescriptor));
+			if (eventsDescriptor.Length == 0) throw new ArgumentException(message: "Value cannot be an empty collection.", nameof(eventsDescriptor));
+
+			_builder.SetEvent(eventsDescriptor.ToImmutableArray());
+
+			return this;
+		}
+
+		public TransitionFluentBuilder<TOuterBuilder> SetEvent(ImmutableArray<IEventDescriptor> eventsDescriptor)
+		{
+			if (eventsDescriptor.IsDefaultOrEmpty) throw new ArgumentException(message: "Value cannot be an empty list.", nameof(eventsDescriptor));
+
+			_builder.SetEvent(eventsDescriptor);
+
 			return this;
 		}
 
@@ -43,13 +57,46 @@ namespace TSSArt.StateMachine
 
 		public TransitionFluentBuilder<TOuterBuilder> SetTarget(params string[] target)
 		{
-			_builder.SetTarget(IdentifierList.Create(target, Identifier.FromString));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (target.Length == 0) throw new ArgumentException(message: "Value cannot be an empty collection.", nameof(target));
+
+			var builder = ImmutableArray.CreateBuilder<IIdentifier>(target.Length);
+
+			foreach (var s in target)
+			{
+				builder.Add((Identifier) s);
+			}
+
+			_builder.SetTarget(builder.MoveToImmutable());
+
 			return this;
 		}
 
 		public TransitionFluentBuilder<TOuterBuilder> SetTarget(params IIdentifier[] target)
 		{
-			_builder.SetTarget(IdentifierList.Create(target));
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (target.Length == 0) throw new ArgumentException(message: "Value cannot be an empty collection.", nameof(target));
+
+			_builder.SetTarget(target.ToImmutableArray());
+
+			return this;
+		}
+
+		public TransitionFluentBuilder<TOuterBuilder> SetTarget(ImmutableArray<string> target)
+		{
+			if (target.IsDefaultOrEmpty) throw new ArgumentException(message: "Value cannot be an empty list.", nameof(target));
+
+			_builder.SetTarget(ImmutableArray.CreateRange<string, IIdentifier>(target, id => (Identifier) id));
+
+			return this;
+		}
+
+		public TransitionFluentBuilder<TOuterBuilder> SetTarget(ImmutableArray<IIdentifier> target)
+		{
+			if (target.IsDefaultOrEmpty) throw new ArgumentException(message: "Value cannot be an empty list.", nameof(target));
+
+			_builder.SetTarget(target);
+
 			return this;
 		}
 

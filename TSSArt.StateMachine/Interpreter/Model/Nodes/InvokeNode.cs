@@ -1,11 +1,12 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public class InvokeNode : IInvoke, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
+	internal sealed class InvokeNode : IInvoke, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
 		private readonly ICancelInvokeEvaluator _cancelInvokeEvaluator;
 		private readonly LinkedListNode<int>    _documentIdNode;
@@ -35,17 +36,17 @@ namespace TSSArt.StateMachine
 
 		public int DocumentId => _documentIdNode.Value;
 
-		public Uri                                Type             => _invoke.Type;
-		public IValueExpression                   TypeExpression   => _invoke.TypeExpression;
-		public Uri                                Source           => _invoke.Source;
-		public IValueExpression                   SourceExpression => _invoke.SourceExpression;
-		public string                             Id               => _invoke.Id;
-		public ILocationExpression                IdLocation       => _invoke.IdLocation;
-		public bool                               AutoForward      => _invoke.AutoForward;
-		public /**/ImmutableArray<ILocationExpression> NameList         => _invoke.NameList;
-		public /**/ImmutableArray<IParam>              Parameters       => _invoke.Parameters;
-		public IContent                           Content          => _invoke.Content;
-		IFinalize IInvoke.                        Finalize         => _invoke.Finalize;
+		public Uri                                 Type             => _invoke.Type;
+		public IValueExpression                    TypeExpression   => _invoke.TypeExpression;
+		public Uri                                 Source           => _invoke.Source;
+		public IValueExpression                    SourceExpression => _invoke.SourceExpression;
+		public string                              Id               => _invoke.Id;
+		public ILocationExpression                 IdLocation       => _invoke.IdLocation;
+		public bool                                AutoForward      => _invoke.AutoForward;
+		public ImmutableArray<ILocationExpression> NameList         => _invoke.NameList;
+		public ImmutableArray<IParam>              Parameters       => _invoke.Parameters;
+		public IContent                            Content          => _invoke.Content;
+		IFinalize IInvoke.                         Finalize         => _invoke.Finalize;
 
 		void IStoreSupport.Store(Bucket bucket)
 		{

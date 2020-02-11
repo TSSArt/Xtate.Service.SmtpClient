@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
-	public class RaiseNode : ExecutableEntityNode, IRaise, IAncestorProvider, IDebugEntityId
+	internal sealed class RaiseNode : ExecutableEntityNode, IRaise, IAncestorProvider, IDebugEntityId
 	{
 		private readonly Raise _entity;
 

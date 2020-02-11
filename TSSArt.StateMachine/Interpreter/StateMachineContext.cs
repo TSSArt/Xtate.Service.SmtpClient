@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -103,25 +103,38 @@ namespace TSSArt.StateMachine
 						   };
 			platform.Freeze();
 
-			var ioProcessors = new DataModelObject();
-			foreach (var ioProcessor in _externalCommunication.GetIoProcessors())
-			{
-				var ioProcessorObject = new DataModelObject { ["location"] = new DataModelValue(ioProcessor.GetTarget(sessionId).ToString()) };
-				ioProcessorObject.Freeze();
-				ioProcessors[ioProcessor.Id.ToString()] = new DataModelValue(ioProcessorObject);
-			}
-
-			ioProcessors.Freeze();
-
 			var dataModel = new DataModelObject();
 
 			dataModel.SetInternal(property: "_name", new DataModelDescriptor(new DataModelValue(stateMachineName), isReadOnly: true));
 			dataModel.SetInternal(property: "_sessionid", new DataModelDescriptor(new DataModelValue(sessionId), isReadOnly: true));
 			dataModel.SetInternal(property: "_event", new DataModelDescriptor(value: default, isReadOnly: true));
-			dataModel.SetInternal(property: "_ioprocessors", new DataModelDescriptor(new DataModelValue(ioProcessors), isReadOnly: true));
+			dataModel.SetInternal(property: "_ioprocessors", new DataModelDescriptor(new DataModelValue(GetIoProcessors()), isReadOnly: true));
 			dataModel.SetInternal(property: "_x", new DataModelDescriptor(new DataModelValue(platform), isReadOnly: true));
 
 			return dataModel;
+
+			DataModelObject GetIoProcessors()
+			{
+				var eventProcessors = _externalCommunication.GetIoProcessors();
+
+				if (eventProcessors.IsDefaultOrEmpty)
+				{
+					return DataModelObject.Empty;
+				}
+
+				var ioProcessors = new DataModelObject();
+				
+				foreach (var ioProcessor in eventProcessors)
+				{
+					var ioProcessorObject = new DataModelObject { ["location"] = new DataModelValue(ioProcessor.GetTarget(sessionId).ToString()) };
+					ioProcessorObject.Freeze();
+					ioProcessors[ioProcessor.Id.ToString()] = new DataModelValue(ioProcessorObject);
+				}
+
+				ioProcessors.Freeze();
+
+				return ioProcessors;
+			}
 		}
 
 		private class ContextItems : IContextItems

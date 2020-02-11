@@ -1,6 +1,6 @@
 ﻿namespace TSSArt.StateMachine
 {
-	public interface IDocumentId
+	internal interface IDocumentId
 	{
 		int DocumentId { get; }
 	}

@@ -57,8 +57,8 @@ namespace TSSArt.StateMachine.Test
 
 			_options = new InterpreterOptions
 					   {
-							   DataModelHandlerFactories = new List<IDataModelHandlerFactory> { EcmaScriptDataModelHandler.Factory },
-							   CustomActionProviders = new List<ICustomActionProvider> { _customActionProvider.Object }
+							   DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
+							   CustomActionProviders = ImmutableArray.Create(_customActionProvider.Object)
 					   };
 			_logger = new Mock<ILogger>();
 

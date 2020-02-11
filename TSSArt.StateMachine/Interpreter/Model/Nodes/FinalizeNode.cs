@@ -1,22 +1,22 @@
-﻿using System.Collections./**/Immutable;
+﻿using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public class FinalizeNode : IFinalize, IStoreSupport, IAncestorProvider
+	internal sealed class FinalizeNode : IFinalize, IStoreSupport, IAncestorProvider
 	{
 		private readonly Finalize _finalize;
 
 		public FinalizeNode(in Finalize finalize)
 		{
 			_finalize = finalize;
-			ActionEvaluators = finalize.Action.AsListOf<IExecEvaluator>();
+			ActionEvaluators = finalize.Action.AsArrayOf<IExecutableEntity, IExecEvaluator>();
 		}
 
-		public /**/ImmutableArray<IExecEvaluator> ActionEvaluators { get; }
+		public ImmutableArray<IExecEvaluator> ActionEvaluators { get; }
 
 		object IAncestorProvider.Ancestor => _finalize.Ancestor;
 
-		public /**/ImmutableArray<IExecutableEntity> Action => _finalize.Action;
+		public ImmutableArray<IExecutableEntity> Action => _finalize.Action;
 
 		void IStoreSupport.Store(Bucket bucket)
 		{

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
@@ -185,7 +186,7 @@ namespace TSSArt.StateMachine
 
 			eventName ??= eventNameInContent ?? request.Method;
 
-			return new EventObject(EventType.External, sendId: null, EventName.ToParts(eventName), invokeId: null, invokeUniqueId: null, origin, EventProcessorId, data);
+			return new EventObject(eventName, origin, EventProcessorId, data);
 		}
 
 		private DataModelValue CreateData(string mediaType, string body, out string eventName)

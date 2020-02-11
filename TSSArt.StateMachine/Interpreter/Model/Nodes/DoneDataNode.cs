@@ -1,29 +1,29 @@
-﻿using System.Collections./**/Immutable;
+﻿using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public class DoneDataNode : IDoneData, IStoreSupport, IAncestorProvider
+	internal sealed class DoneDataNode : IDoneData, IStoreSupport, IAncestorProvider
 	{
-		private readonly IValueEvaluator             _contentBodyEvaluator;
-		private readonly IObjectEvaluator            _contentExpressionEvaluator;
-		private readonly DoneData                    _doneData;
-		private readonly /**/ImmutableArray<DefaultParam> _parameterList;
+		private readonly IValueEvaluator              _contentBodyEvaluator;
+		private readonly IObjectEvaluator             _contentExpressionEvaluator;
+		private readonly DoneData                     _doneData;
+		private readonly ImmutableArray<DefaultParam> _parameterList;
 
 		public DoneDataNode(in DoneData doneData)
 		{
 			_doneData = doneData;
 			_contentExpressionEvaluator = doneData.Content?.Expression.As<IObjectEvaluator>();
 			_contentBodyEvaluator = doneData.Content?.Body.As<IValueEvaluator>();
-			_parameterList = doneData.Parameters.AsListOf<DefaultParam>();
+			_parameterList = doneData.Parameters.AsArrayOf<IParam, DefaultParam>();
 		}
 
 		object IAncestorProvider.Ancestor => _doneData.Ancestor;
 
 		public IContent Content => _doneData.Content;
 
-		public /**/ImmutableArray<IParam> Parameters => _doneData.Parameters;
+		public ImmutableArray<IParam> Parameters => _doneData.Parameters;
 
 		void IStoreSupport.Store(Bucket bucket)
 		{
@@ -33,6 +33,6 @@ namespace TSSArt.StateMachine
 		}
 
 		public ValueTask<DataModelValue> Evaluate(IExecutionContext executionContext, CancellationToken token) =>
-				DataConverter.GetData(_contentBodyEvaluator, _contentExpressionEvaluator, nameEvaluatorList: null, _parameterList, executionContext, token);
+				DataConverter.GetData(_contentBodyEvaluator, _contentExpressionEvaluator, nameEvaluatorList: default, _parameterList, executionContext, token);
 	}
 }

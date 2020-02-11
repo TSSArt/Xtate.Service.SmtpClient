@@ -34,7 +34,7 @@ namespace TSSArt.StateMachine.Test
 
 			var options = new IoProcessorOptions
 						  {
-								  DataModelHandlerFactories = new List<IDataModelHandlerFactory> { EcmaScriptDataModelHandler.Factory },
+								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
 								  StateMachineProvider = new StateMachineProvider(),
 								  ResourceLoader = resourceLoaderMock.Object
 						  };
@@ -53,7 +53,7 @@ namespace TSSArt.StateMachine.Test
 
 			var options = new IoProcessorOptions
 						  {
-								  DataModelHandlerFactories = new List<IDataModelHandlerFactory> { EcmaScriptDataModelHandler.Factory },
+								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
 								  StateMachineProvider = stateMachineProviderMock.Object
 						  };
 
@@ -96,8 +96,8 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 
 			var options = new IoProcessorOptions
 						  {
-								  DataModelHandlerFactories = new List<IDataModelHandlerFactory> { EcmaScriptDataModelHandler.Factory },
-								  ServiceFactories = new List<IServiceFactory> { HttpClientService.Factory },
+								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
+								  ServiceFactories = ImmutableArray.Create(HttpClientService.Factory),
 								  StateMachineProvider = stateMachineProviderMock.Object
 						  };
 
@@ -168,9 +168,9 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 
 			var options = new IoProcessorOptions
 						  {
-								  DataModelHandlerFactories = new List<IDataModelHandlerFactory> { EcmaScriptDataModelHandler.Factory },
-								  ServiceFactories = new List<IServiceFactory> { HttpClientService.Factory, SmtpClientService.Factory /*WebBrowserService.GetFactory<CefSharpWebBrowserService>()*/ },
-								  CustomActionProviders = new List<ICustomActionProvider> { BasicCustomActionProvider.Instance, MimeCustomActionProvider.Instance }
+								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
+								  ServiceFactories = ImmutableArray.Create(HttpClientService.Factory, SmtpClientService.Factory /*WebBrowserService.GetFactory<CefSharpWebBrowserService>()*/),
+								  CustomActionProviders = ImmutableArray.Create(BasicCustomActionProvider.Instance, MimeCustomActionProvider.Instance)
 						  };
 
 			var ioProcessor = new IoProcessor(options);

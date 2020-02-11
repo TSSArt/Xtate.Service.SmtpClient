@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.Xml;
 
@@ -16,11 +16,11 @@ namespace TSSArt.StateMachine
 
 		public ScxmlDirector(XmlReader xmlReader, IBuilderFactory factory) : base(xmlReader, new GlobalOptions { ElementDefaultNamespace = ScxmlNs }) => _factory = factory;
 
-		private Identifier ToIdentifier(string val)
+		private IIdentifier AsIdentifier()
 		{
 			try
 			{
-				return (Identifier) val;
+				return (Identifier) Current;
 			}
 			catch (ArgumentException ex)
 			{
@@ -28,11 +28,11 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private Event ToEvent(string val)
+		private IOutgoingEvent AsEvent()
 		{
 			try
 			{
-				return new Event(val) { Target = Event.InternalTarget };
+				return new Event(Current) { Target = Event.InternalTarget };
 			}
 			catch (ArgumentException ex)
 			{
@@ -40,74 +40,80 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private IdentifierList ToIdentifierList(string val)
+		private ImmutableArray<IIdentifier> AsIdentifierList()
 		{
-			if (string.IsNullOrEmpty(val))
+			var val = Current;
+
+			if (string.IsNullOrWhiteSpace(val))
 			{
 				throw GetXmlException(message: "List of identifiers cannot be empty");
 			}
 
-			if (val.IndexOf(Space) < 0)
+			try
 			{
-				return IdentifierList.Create(new[] { ToIdentifier(val) });
-			}
-
-			var list = new List<IIdentifier>();
-
-			foreach (var idRef in val.Split(SpaceSplitter, StringSplitOptions.RemoveEmptyEntries))
-			{
-				list.Add(ToIdentifier(idRef));
-			}
-
-			return IdentifierList.Create(list);
-		}
-
-		private EventDescriptor ToEventDescriptor(string val)
-		{
-			if (string.IsNullOrEmpty(val))
-			{
-				throw GetXmlException(message: "Event cannot be empty");
-			}
-
-			for (var i = 0; i < val.Length; i ++)
-			{
-				if (char.IsWhiteSpace(val, i))
+				if (val.IndexOf(Space) < 0)
 				{
-					throw GetXmlException(message: "Event cannot contains whitespace");
+					return ImmutableArray.Create<IIdentifier>((Identifier) val);
 				}
-			}
 
-			return val;
+				var identifiers = val.Split(SpaceSplitter, StringSplitOptions.RemoveEmptyEntries);
+
+				var builder = ImmutableArray.CreateBuilder<IIdentifier>(identifiers.Length);
+
+				foreach (var identifier in identifiers)
+				{
+					builder.Add((Identifier) identifier);
+				}
+
+				return builder.MoveToImmutable();
+			}
+			catch (ArgumentException ex)
+			{
+				throw GetXmlException(ex.Message);
+			}
 		}
 
-		private EventDescriptorList ToEventDescriptorList(string val)
+		private ImmutableArray<IEventDescriptor> AsEventDescriptorList()
 		{
+			var val = Current;
+
 			if (string.IsNullOrEmpty(val))
 			{
 				throw GetXmlException(message: "List of events cannot be empty");
 			}
 
-			if (val.IndexOf(Space) < 0)
+			try
 			{
-				return EventDescriptorList.Create(new[] { ToEventDescriptor(val) });
+				if (val.IndexOf(Space) < 0)
+				{
+					return ImmutableArray.Create<IEventDescriptor>((EventDescriptor) val);
+				}
+
+				var eventDescriptors = val.Split(SpaceSplitter, StringSplitOptions.RemoveEmptyEntries);
+
+				var builder = ImmutableArray.CreateBuilder<IEventDescriptor>(eventDescriptors.Length);
+
+				foreach (var identifier in eventDescriptors)
+				{
+					builder.Add((EventDescriptor) identifier);
+				}
+
+				return builder.MoveToImmutable();
 			}
-
-			var list = new List<IEventDescriptor>();
-
-			foreach (var idRef in val.Split(SpaceSplitter, StringSplitOptions.RemoveEmptyEntries))
+			catch (ArgumentException ex)
 			{
-				list.Add(ToEventDescriptor(idRef));
+				throw GetXmlException(ex.Message);
 			}
-
-			return EventDescriptorList.Create(list);
 		}
 
-		private ConditionExpression ToConditionalExpression(string expression) => new ConditionExpression { Expression = expression };
+		private IConditionExpression AsConditionalExpression() => new ConditionExpression { Expression = Current };
 
-		private LocationExpression ToLocationExpression(string expression) => new LocationExpression { Expression = expression };
+		private ILocationExpression AsLocationExpression() => new LocationExpression { Expression = Current };
 
-		private LocationExpressionList ToLocationExpressionList(string expression)
+		private ImmutableArray<ILocationExpression> AsLocationExpressionList()
 		{
+			var expression = Current;
+
 			if (string.IsNullOrEmpty(expression))
 			{
 				throw GetXmlException(message: "List of locations cannot be empty");
@@ -115,31 +121,35 @@ namespace TSSArt.StateMachine
 
 			if (expression.IndexOf(Space) < 0)
 			{
-				return LocationExpressionList.Create(new[] { (ILocationExpression) ToLocationExpression(expression) });
+				return ImmutableArray.Create<ILocationExpression>(new LocationExpression { Expression = expression });
 			}
 
-			var list = new List<ILocationExpression>();
+			var locationExpressions = expression.Split(SpaceSplitter, StringSplitOptions.RemoveEmptyEntries);
 
-			foreach (var locationExpression in expression.Split(SpaceSplitter, StringSplitOptions.RemoveEmptyEntries))
+			var builder = ImmutableArray.CreateBuilder<ILocationExpression>(locationExpressions.Length);
+
+			foreach (var locationExpression in locationExpressions)
 			{
-				list.Add(ToLocationExpression(locationExpression));
+				builder.Add(new LocationExpression { Expression = locationExpression });
 			}
 
-			return LocationExpressionList.Create(list);
+			return builder.MoveToImmutable();
 		}
 
-		private ValueExpression ToValueExpression(string expression) => new ValueExpression { Expression = expression };
+		private IValueExpression AsValueExpression() => new ValueExpression { Expression = Current };
 
-		private ScriptExpression ToScriptExpression(string expression) => new ScriptExpression { Expression = expression };
+		private IScriptExpression AsScriptExpression() => new ScriptExpression { Expression = Current };
 
-		private ExternalScriptExpression ToExternalScriptExpression(string uri) => new ExternalScriptExpression { Uri = ToUri(uri) };
+		private IExternalScriptExpression AsExternalScriptExpression() => new ExternalScriptExpression { Uri = new Uri(Current, UriKind.RelativeOrAbsolute) };
 
-		private ExternalDataExpression ToExternalDataExpression(string uri) => new ExternalDataExpression { Uri = ToUri(uri) };
+		private IExternalDataExpression AsExternalDataExpression() => new ExternalDataExpression { Uri = new Uri(Current, UriKind.RelativeOrAbsolute) };
 
-		private Uri ToUri(string val) => new Uri(val, UriKind.RelativeOrAbsolute);
+		private Uri AsUri() => new Uri(Current, UriKind.RelativeOrAbsolute);
 
-		private T ToEnum<T>(string val) where T : struct
+		private T AsEnum<T>() where T : struct
 		{
+			var val = Current;
+
 			if (!Enum.TryParse(val, ignoreCase: true, out T result) || val.ToLowerInvariant() != val)
 			{
 				throw GetXmlException($"Value cannot be parsed for type {typeof(T).Name}");
@@ -148,8 +158,10 @@ namespace TSSArt.StateMachine
 			return result;
 		}
 
-		private int ToMilliseconds(string val)
+		private int AsMilliseconds()
 		{
+			var val = Current;
+
 			if (val == null || val == "0")
 			{
 				return 0;
@@ -185,9 +197,9 @@ namespace TSSArt.StateMachine
 						 pb => pb
 							   .ValidateElementName(name: "scxml")
 							   .RequiredAttribute(name: "version", (dr, b) => dr.CheckScxmlVersion(dr.Current))
-							   .OptionalAttribute(name: "initial", (dr, b) => b.SetInitial(dr.ToIdentifierList(dr.Current)))
+							   .OptionalAttribute(name: "initial", (dr, b) => b.SetInitial(dr.AsIdentifierList()))
 							   .OptionalAttribute(name: "datamodel", (dr, b) => b.SetDataModelType(dr.Current))
-							   .OptionalAttribute(name: "binding", (dr, b) => b.SetBindingType(ToEnum<BindingType>(dr.Current)))
+							   .OptionalAttribute(name: "binding", (dr, b) => b.SetBindingType(dr.AsEnum<BindingType>()))
 							   .OptionalAttribute(name: "name", (dr, b) => b.SetName(dr.Current))
 							   .MultipleElements(name: "state", (dr, b) => b.AddState(dr.ReadState()))
 							   .MultipleElements(name: "parallel", (dr, b) => b.AddParallel(dr.ReadParallel()))
@@ -198,8 +210,8 @@ namespace TSSArt.StateMachine
 		private IState ReadState() =>
 				Populate(_factory.CreateStateBuilder(),
 						 pb => pb
-							   .OptionalAttribute(name: "id", (dr, b) => b.SetId(dr.ToIdentifier(dr.Current)))
-							   .OptionalAttribute(name: "initial", (dr, b) => b.SetInitial(dr.ToIdentifierList(dr.Current)))
+							   .OptionalAttribute(name: "id", (dr, b) => b.SetId(dr.AsIdentifier()))
+							   .OptionalAttribute(name: "initial", (dr, b) => b.SetInitial(dr.AsIdentifierList()))
 							   .MultipleElements(name: "state", (dr, b) => b.AddState(dr.ReadState()))
 							   .MultipleElements(name: "parallel", (dr, b) => b.AddParallel(dr.ReadParallel()))
 							   .MultipleElements(name: "final", (dr, b) => b.AddFinal(dr.ReadFinal()))
@@ -214,7 +226,7 @@ namespace TSSArt.StateMachine
 		private IParallel ReadParallel() =>
 				Populate(_factory.CreateParallelBuilder(),
 						 pb => pb
-							   .OptionalAttribute(name: "id", (dr, b) => b.SetId(dr.ToIdentifier(dr.Current)))
+							   .OptionalAttribute(name: "id", (dr, b) => b.SetId(dr.AsIdentifier()))
 							   .MultipleElements(name: "state", (dr, b) => b.AddState(dr.ReadState()))
 							   .MultipleElements(name: "parallel", (dr, b) => b.AddParallel(dr.ReadParallel()))
 							   .MultipleElements(name: "history", (dr, b) => b.AddHistory(dr.ReadHistory()))
@@ -227,7 +239,7 @@ namespace TSSArt.StateMachine
 		private IFinal ReadFinal() =>
 				Populate(_factory.CreateFinalBuilder(),
 						 pb => pb
-							   .OptionalAttribute(name: "id", (dr, b) => b.SetId(dr.ToIdentifier(dr.Current)))
+							   .OptionalAttribute(name: "id", (dr, b) => b.SetId(dr.AsIdentifier()))
 							   .MultipleElements(name: "onentry", (dr, b) => b.AddOnEntry(dr.ReadOnEntry()))
 							   .MultipleElements(name: "onexit", (dr, b) => b.AddOnExit(dr.ReadOnExit()))
 							   .OptionalElement(name: "donedata", (dr, b) => b.SetDoneData(dr.ReadDoneData()))).Build();
@@ -240,17 +252,17 @@ namespace TSSArt.StateMachine
 		private IHistory ReadHistory() =>
 				Populate(_factory.CreateHistoryBuilder(),
 						 pb => pb
-							   .OptionalAttribute(name: "id", (dr, b) => b.SetId(dr.ToIdentifier(dr.Current)))
-							   .OptionalAttribute(name: "type", (dr, b) => b.SetType(dr.ToEnum<HistoryType>(dr.Current)))
+							   .OptionalAttribute(name: "id", (dr, b) => b.SetId(dr.AsIdentifier()))
+							   .OptionalAttribute(name: "type", (dr, b) => b.SetType(dr.AsEnum<HistoryType>()))
 							   .SingleElement(name: "transition", (dr, b) => b.SetTransition(dr.ReadTransition()))).Build();
 
 		private ITransition ReadTransition() =>
 				Populate(_factory.CreateTransitionBuilder(),
 						 pb => pb
-							   .OptionalAttribute(name: "event", (dr, b) => b.SetEvent(dr.ToEventDescriptorList(dr.Current)))
-							   .OptionalAttribute(name: "cond", (dr, b) => b.SetCondition(ToConditionalExpression(dr.Current)))
-							   .OptionalAttribute(name: "target", (dr, b) => b.SetTarget(dr.ToIdentifierList(dr.Current)))
-							   .OptionalAttribute(name: "type", (dr, b) => b.SetType(dr.ToEnum<TransitionType>(dr.Current)))
+							   .OptionalAttribute(name: "event", (dr, b) => b.SetEvent(dr.AsEventDescriptorList()))
+							   .OptionalAttribute(name: "cond", (dr, b) => b.SetCondition(dr.AsConditionalExpression()))
+							   .OptionalAttribute(name: "target", (dr, b) => b.SetTarget(dr.AsIdentifierList()))
+							   .OptionalAttribute(name: "type", (dr, b) => b.SetType(dr.AsEnum<TransitionType>()))
 							   .MultipleElements(name: "assign", (dr, b) => b.AddAction(dr.ReadAssign()))
 							   .MultipleElements(name: "foreach", (dr, b) => b.AddAction(dr.ReadForeach()))
 							   .MultipleElements(name: "if", (dr, b) => b.AddAction(dr.ReadIf()))
@@ -265,22 +277,22 @@ namespace TSSArt.StateMachine
 				Populate(_factory.CreateLogBuilder(),
 						 pb => pb
 							   .OptionalAttribute(name: "label", (dr, b) => b.SetLabel(dr.Current))
-							   .OptionalAttribute(name: "expr", (dr, b) => b.SetExpression(ToValueExpression(dr.Current)))).Build();
+							   .OptionalAttribute(name: "expr", (dr, b) => b.SetExpression(dr.AsValueExpression()))).Build();
 
 		private ISend ReadSend() =>
 				Populate(_factory.CreateSendBuilder(),
 						 pb => pb
 							   .OptionalAttribute(name: "event", (dr, b) => b.SetEvent(dr.Current))
-							   .OptionalAttribute(name: "eventexpr", (dr, b) => b.SetEventExpression(ToValueExpression(dr.Current)))
-							   .OptionalAttribute(name: "target", (dr, b) => b.SetTarget(ToUri(dr.Current)))
-							   .OptionalAttribute(name: "targetexpr", (dr, b) => b.SetTargetExpression(ToValueExpression(dr.Current)))
-							   .OptionalAttribute(name: "type", (dr, b) => b.SetType(ToUri(dr.Current)))
-							   .OptionalAttribute(name: "typeexpr", (dr, b) => b.SetTypeExpression(ToValueExpression(dr.Current)))
+							   .OptionalAttribute(name: "eventexpr", (dr, b) => b.SetEventExpression(dr.AsValueExpression()))
+							   .OptionalAttribute(name: "target", (dr, b) => b.SetTarget(dr.AsUri()))
+							   .OptionalAttribute(name: "targetexpr", (dr, b) => b.SetTargetExpression(dr.AsValueExpression()))
+							   .OptionalAttribute(name: "type", (dr, b) => b.SetType(dr.AsUri()))
+							   .OptionalAttribute(name: "typeexpr", (dr, b) => b.SetTypeExpression(dr.AsValueExpression()))
 							   .OptionalAttribute(name: "id", (dr, b) => b.SetId(dr.Current))
-							   .OptionalAttribute(name: "idlocation", (dr, b) => b.SetIdLocation(ToLocationExpression(dr.Current)))
-							   .OptionalAttribute(name: "delay", (dr, b) => b.SetDelay(ToMilliseconds(dr.Current)))
-							   .OptionalAttribute(name: "delayexpr", (dr, b) => b.SetDelayExpression(ToValueExpression(dr.Current)))
-							   .OptionalAttribute(name: "namelist", (dr, b) => b.SetNameList(ToLocationExpressionList(dr.Current)))
+							   .OptionalAttribute(name: "idlocation", (dr, b) => b.SetIdLocation(dr.AsLocationExpression()))
+							   .OptionalAttribute(name: "delay", (dr, b) => b.SetDelay(dr.AsMilliseconds()))
+							   .OptionalAttribute(name: "delayexpr", (dr, b) => b.SetDelayExpression(dr.AsValueExpression()))
+							   .OptionalAttribute(name: "namelist", (dr, b) => b.SetNameList(dr.AsLocationExpressionList()))
 							   .MultipleElements(name: "param", (dr, b) => b.AddParameter(dr.ReadParam()))
 							   .OptionalElement(name: "content", (dr, b) => b.SetContent(dr.ReadContent()))).Build();
 
@@ -288,13 +300,13 @@ namespace TSSArt.StateMachine
 				Populate(_factory.CreateParamBuilder(),
 						 pb => pb
 							   .RequiredAttribute(name: "name", (dr, b) => b.SetName(dr.Current))
-							   .OptionalAttribute(name: "expr", (dr, b) => b.SetExpression(ToValueExpression(dr.Current)))
-							   .OptionalAttribute(name: "location", (dr, b) => b.SetLocation(ToLocationExpression(dr.Current)))).Build();
+							   .OptionalAttribute(name: "expr", (dr, b) => b.SetExpression(dr.AsValueExpression()))
+							   .OptionalAttribute(name: "location", (dr, b) => b.SetLocation(dr.AsLocationExpression()))).Build();
 
 		private IContent ReadContent() =>
 				Populate(_factory.CreateContentBuilder(),
 						 pb => pb
-							   .OptionalAttribute(name: "expr", (dr, b) => b.SetExpression(ToValueExpression(dr.Current)))
+							   .OptionalAttribute(name: "expr", (dr, b) => b.SetExpression(dr.AsValueExpression()))
 							   .RawContent((dr, b) => b.SetBody(dr.Current))).Build();
 
 		private IOnEntry ReadOnEntry() =>
@@ -326,13 +338,13 @@ namespace TSSArt.StateMachine
 		private IInvoke ReadInvoke() =>
 				Populate(_factory.CreateInvokeBuilder(),
 						 pb => pb
-							   .OptionalAttribute(name: "type", (dr, b) => b.SetType(ToUri(dr.Current)))
-							   .OptionalAttribute(name: "typeexpr", (dr, b) => b.SetTypeExpression(ToValueExpression(dr.Current)))
-							   .OptionalAttribute(name: "src", (dr, b) => b.SetSource(ToUri(dr.Current)))
-							   .OptionalAttribute(name: "srcexpr", (dr, b) => b.SetSourceExpression(ToValueExpression(dr.Current)))
+							   .OptionalAttribute(name: "type", (dr, b) => b.SetType(dr.AsUri()))
+							   .OptionalAttribute(name: "typeexpr", (dr, b) => b.SetTypeExpression(dr.AsValueExpression()))
+							   .OptionalAttribute(name: "src", (dr, b) => b.SetSource(dr.AsUri()))
+							   .OptionalAttribute(name: "srcexpr", (dr, b) => b.SetSourceExpression(dr.AsValueExpression()))
 							   .OptionalAttribute(name: "id", (dr, b) => b.SetId(dr.Current))
-							   .OptionalAttribute(name: "idlocation", (dr, b) => b.SetIdLocation(ToLocationExpression(dr.Current)))
-							   .OptionalAttribute(name: "namelist", (dr, b) => b.SetNameList(ToLocationExpressionList(dr.Current)))
+							   .OptionalAttribute(name: "idlocation", (dr, b) => b.SetIdLocation(dr.AsLocationExpression()))
+							   .OptionalAttribute(name: "namelist", (dr, b) => b.SetNameList(dr.AsLocationExpressionList()))
 							   .OptionalAttribute(name: "autoforward", (dr, b) => b.SetAutoForward(XmlConvert.ToBoolean(dr.Current)))
 							   .MultipleElements(name: "param", (dr, b) => b.AddParam(dr.ReadParam()))
 							   .OptionalElement(name: "finalize", (dr, b) => b.SetFinalize(dr.ReadFinalize()))
@@ -359,8 +371,8 @@ namespace TSSArt.StateMachine
 		private IScript ReadScript() =>
 				Populate(_factory.CreateScriptBuilder(),
 						 pb => pb
-							   .OptionalAttribute(name: "src", (dr, b) => b.SetSource(ToExternalScriptExpression(dr.Current)))
-							   .RawContent((dr, b) => b.SetBody(ToScriptExpression(dr.Current)))).Build();
+							   .OptionalAttribute(name: "src", (dr, b) => b.SetSource(dr.AsExternalScriptExpression()))
+							   .RawContent((dr, b) => b.SetBody(dr.AsScriptExpression()))).Build();
 
 		private IDataModel ReadDataModel() =>
 				Populate(_factory.CreateDataModelBuilder(),
@@ -370,8 +382,8 @@ namespace TSSArt.StateMachine
 				Populate(_factory.CreateDataBuilder(),
 						 pb => pb
 							   .RequiredAttribute(name: "id", (dr, b) => b.SetId(dr.Current))
-							   .OptionalAttribute(name: "src", (dr, b) => b.SetSource(ToExternalDataExpression(dr.Current)))
-							   .OptionalAttribute(name: "expr", (dr, b) => b.SetExpression(ToValueExpression(dr.Current)))
+							   .OptionalAttribute(name: "src", (dr, b) => b.SetSource(dr.AsExternalDataExpression()))
+							   .OptionalAttribute(name: "expr", (dr, b) => b.SetExpression(dr.AsValueExpression()))
 							   .RawContent((dr, b) => b.SetInlineContent(dr.Current))).Build();
 
 		private IDoneData ReadDoneData() =>
@@ -383,9 +395,9 @@ namespace TSSArt.StateMachine
 		private IForEach ReadForeach() =>
 				Populate(_factory.CreateForeachBuilder(),
 						 pb => pb
-							   .RequiredAttribute(name: "array", (dr, b) => b.SetArray(ToValueExpression(dr.Current)))
-							   .RequiredAttribute(name: "item", (dr, b) => b.SetItem(ToLocationExpression(dr.Current)))
-							   .OptionalAttribute(name: "index", (dr, b) => b.SetIndex(ToLocationExpression(dr.Current)))
+							   .RequiredAttribute(name: "array", (dr, b) => b.SetArray(dr.AsValueExpression()))
+							   .RequiredAttribute(name: "item", (dr, b) => b.SetItem(dr.AsLocationExpression()))
+							   .OptionalAttribute(name: "index", (dr, b) => b.SetIndex(dr.AsLocationExpression()))
 							   .MultipleElements(name: "assign", (dr, b) => b.AddAction(dr.ReadAssign()))
 							   .MultipleElements(name: "foreach", (dr, b) => b.AddAction(dr.ReadForeach()))
 							   .MultipleElements(name: "if", (dr, b) => b.AddAction(dr.ReadIf()))
@@ -399,7 +411,7 @@ namespace TSSArt.StateMachine
 		private IIf ReadIf() =>
 				Populate(_factory.CreateIfBuilder(),
 						 pb => pb
-							   .RequiredAttribute(name: "cond", (dr, b) => b.SetCondition(ToConditionalExpression(dr.Current)))
+							   .RequiredAttribute(name: "cond", (dr, b) => b.SetCondition(dr.AsConditionalExpression()))
 							   .MultipleElements(name: "elseif", (dr, b) => b.AddAction(dr.ReadElseIf()))
 							   .MultipleElements(name: "else", (dr, b) => b.AddAction(dr.ReadElse()))
 							   .MultipleElements(name: "assign", (dr, b) => b.AddAction(dr.ReadAssign()))
@@ -416,23 +428,23 @@ namespace TSSArt.StateMachine
 
 		private IElseIf ReadElseIf() =>
 				Populate(_factory.CreateElseIfBuilder(),
-						 pb => pb.RequiredAttribute(name: "cond", (dr, b) => b.SetCondition(ToConditionalExpression(dr.Current)))).Build();
+						 pb => pb.RequiredAttribute(name: "cond", (dr, b) => b.SetCondition(dr.AsConditionalExpression()))).Build();
 
 		private IRaise ReadRaise() =>
 				Populate(_factory.CreateRaiseBuilder(),
-						 pb => pb.RequiredAttribute(name: "event", (dr, b) => b.SetEvent(ToEvent(dr.Current)))).Build();
+						 pb => pb.RequiredAttribute(name: "event", (dr, b) => b.SetEvent(dr.AsEvent()))).Build();
 
 		private IAssign ReadAssign() =>
 				Populate(_factory.CreateAssignBuilder(),
 						 pb => pb
-							   .RequiredAttribute(name: "location", (dr, b) => b.SetLocation(ToLocationExpression(dr.Current)))
-							   .OptionalAttribute(name: "expr", (dr, b) => b.SetExpression(ToValueExpression(dr.Current)))
+							   .RequiredAttribute(name: "location", (dr, b) => b.SetLocation(dr.AsLocationExpression()))
+							   .OptionalAttribute(name: "expr", (dr, b) => b.SetExpression(dr.AsValueExpression()))
 							   .RawContent((dr, b) => b.SetInlineContent(dr.Current))).Build();
 
 		private ICancel ReadCancel() =>
 				Populate(_factory.CreateCancelBuilder(),
 						 pb => pb
 							   .OptionalAttribute(name: "sendid", (dr, b) => b.SetSendId(dr.Current))
-							   .OptionalAttribute(name: "sendidexpr", (dr, b) => b.SetSendIdExpression(ToValueExpression(dr.Current)))).Build();
+							   .OptionalAttribute(name: "sendidexpr", (dr, b) => b.SetSendIdExpression(dr.AsValueExpression()))).Build();
 	}
 }

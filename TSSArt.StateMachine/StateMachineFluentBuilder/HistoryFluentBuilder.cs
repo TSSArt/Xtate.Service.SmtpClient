@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace TSSArt.StateMachine
 {
@@ -27,12 +28,16 @@ namespace TSSArt.StateMachine
 
 		public HistoryFluentBuilder<TOuterBuilder> SetId(IIdentifier id)
 		{
+			if (id == null) throw new ArgumentNullException(nameof(id));
+
 			_builder.SetId(id);
 			return this;
 		}
 
 		public HistoryFluentBuilder<TOuterBuilder> SetType(HistoryType type)
 		{
+			if (type < HistoryType.Shallow || type > HistoryType.Deep) throw new InvalidEnumArgumentException(nameof(type), (int) type, typeof(HistoryType));
+
 			_builder.SetType(type);
 			return this;
 		}

@@ -16,13 +16,13 @@ namespace TSSArt.StateMachine
 			ArrayEvaluator = forEach.Array.As<IArrayEvaluator>();
 			ItemEvaluator = forEach.Item.As<ILocationEvaluator>();
 			IndexEvaluator = forEach.Index.As<ILocationEvaluator>();
-			ActionEvaluatorList = forEach.Action.As<IEntity>().AsListOf<IExecEvaluator>();
+			ActionEvaluatorList = forEach.Action.AsArrayOf<IExecutableEntity, IExecEvaluator>();
 		}
 
 		public IArrayEvaluator                ArrayEvaluator      { get; }
 		public ILocationEvaluator             ItemEvaluator       { get; }
 		public ILocationEvaluator             IndexEvaluator      { get; }
-		public /**/ImmutableArray<IExecEvaluator> ActionEvaluatorList { get; }
+		public ImmutableArray<IExecEvaluator> ActionEvaluatorList { get; }
 
 		object IAncestorProvider.Ancestor => _forEach.Ancestor;
 
@@ -50,6 +50,6 @@ namespace TSSArt.StateMachine
 		public IValueExpression                  Array  => _forEach.Array;
 		public ILocationExpression               Item   => _forEach.Item;
 		public ILocationExpression               Index  => _forEach.Index;
-		public /**/ImmutableArray<IExecutableEntity> Action => _forEach.Action;
+		public ImmutableArray<IExecutableEntity> Action => _forEach.Action;
 	}
 }

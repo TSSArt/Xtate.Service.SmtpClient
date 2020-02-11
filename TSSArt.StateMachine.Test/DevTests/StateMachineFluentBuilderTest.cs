@@ -16,7 +16,7 @@ namespace TSSArt.StateMachine.Test
 			var stateMachine = builder.Build();
 
 			Assert.IsNotNull(stateMachine);
-			Assert.IsNull(stateMachine.States);
+			Assert.IsTrue(stateMachine.States.IsDefault);
 		}
 
 		[TestMethod]
@@ -31,7 +31,7 @@ namespace TSSArt.StateMachine.Test
 			var stateMachine = builder.Build();
 
 			Assert.IsNotNull(stateMachine);
-			Assert.AreEqual(expected: 1, stateMachine.States.Count);
+			Assert.AreEqual(expected: 1, stateMachine.States.Length);
 			Assert.IsInstanceOfType(stateMachine.Initial, typeof(IInitial));
 			Assert.IsInstanceOfType(stateMachine.States[0], typeof(IState));
 			Assert.AreEqual((Identifier) "S1", ((IState) stateMachine.States[0]).Id);
@@ -50,7 +50,7 @@ namespace TSSArt.StateMachine.Test
 			var stateMachine = builder.Build();
 
 			Assert.IsNotNull(stateMachine);
-			Assert.AreEqual(expected: 3, stateMachine.States.Count);
+			Assert.AreEqual(expected: 3, stateMachine.States.Length);
 			Assert.IsInstanceOfType(stateMachine.States[0], typeof(IState));
 			Assert.IsInstanceOfType(stateMachine.States[1], typeof(IParallel));
 			Assert.IsInstanceOfType(stateMachine.States[2], typeof(IFinal));

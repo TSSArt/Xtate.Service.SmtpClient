@@ -1,26 +1,27 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public class TransitionNode : ITransition, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
+	internal sealed class TransitionNode : ITransition, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
 		private readonly LinkedListNode<int> _documentIdNode;
 		private readonly Transition          _transition;
 
-		public TransitionNode(LinkedListNode<int> documentIdNode, in Transition transition, /**/ImmutableArray<StateEntityNode> target = null)
+		public TransitionNode(LinkedListNode<int> documentIdNode, in Transition transition, ImmutableArray<StateEntityNode> target = default)
 		{
 			_transition = transition;
 			_documentIdNode = documentIdNode;
 			TargetState = target;
-			ActionEvaluators = transition.Action.AsListOf<IExecEvaluator>() ?? Array.Empty<IExecEvaluator>();
+			ActionEvaluators = transition.Action.AsArrayOf<IExecutableEntity, IExecEvaluator>(true);
 			ConditionEvaluator = transition.Condition.As<IBooleanEvaluator>();
 		}
 
-		public /**/ImmutableArray<StateEntityNode> TargetState        { get; private set; }
-		public StateEntityNode                Source             { get; private set; }
-		public /**/ImmutableArray<IExecEvaluator>  ActionEvaluators   { get; }
-		public IBooleanEvaluator              ConditionEvaluator { get; }
+		public ImmutableArray<StateEntityNode> TargetState        { get; private set; }
+		public StateEntityNode                 Source             { get; private set; }
+		public ImmutableArray<IExecEvaluator>  ActionEvaluators   { get; }
+		public IBooleanEvaluator               ConditionEvaluator { get; }
 
 		object IAncestorProvider.Ancestor => _transition.Ancestor;
 
@@ -39,26 +40,21 @@ namespace TSSArt.StateMachine
 			bucket.AddEntityList(Key.Action, Action);
 		}
 
-		public /**/ImmutableArray<IEventDescriptor> Event => _transition.Event;
+		public ImmutableArray<IEventDescriptor> Event => _transition.Event;
 
 		public IExecutableEntity Condition => _transition.Condition;
 
-		public /**/ImmutableArray<IIdentifier> Target => _transition.Target;
+		public ImmutableArray<IIdentifier> Target => _transition.Target;
 
 		public TransitionType Type => _transition.Type;
 
-		public /**/ImmutableArray<IExecutableEntity> Action => _transition.Action;
+		public ImmutableArray<IExecutableEntity> Action => _transition.Action;
 
 		public void MapTarget(Dictionary<IIdentifier, StateEntityNode> idMap)
 		{
-			TargetState = StateEntityNodeList.Create(Target, id => idMap[id]);
+			TargetState = ImmutableArray.CreateRange(Target, id => idMap[id]);
 		}
 
 		public void SetSource(StateEntityNode source) => Source = source;
-
-		private class StateEntityNodeList : ValidatedArrayBuilder<>
-		{
-			protected override Options GetOptions() => Options.NullIfEmpty;
-		}
 	}
 }

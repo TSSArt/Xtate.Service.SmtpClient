@@ -1,6 +1,6 @@
 ﻿namespace TSSArt.StateMachine
 {
-	public class LocationExpressionNode : ILocationExpression, IStoreSupport, IAncestorProvider
+	internal sealed class LocationExpressionNode : ILocationExpression, IStoreSupport, IAncestorProvider
 	{
 		private readonly LocationExpression _locationExpression;
 

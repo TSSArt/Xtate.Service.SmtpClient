@@ -2,7 +2,7 @@
 
 namespace TSSArt.StateMachine
 {
-	public static class Encode
+	internal static class Encode
 	{
 		internal static int GetLength(byte val)
 		{

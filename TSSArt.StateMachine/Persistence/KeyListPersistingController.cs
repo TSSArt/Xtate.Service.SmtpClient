@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Buffers.Binary;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
-	public class KeyListPersistingController<T> : IDisposable where T : IEntity
+	internal sealed class KeyListPersistingController<T> : IDisposable where T : IEntity
 	{
 		private readonly Bucket               _bucket;
 		private readonly KeyList<T>           _keyList;
@@ -33,7 +33,7 @@ namespace TSSArt.StateMachine
 				}
 
 				_records.Add(documentId, _records.Count);
-				keyList.Set(entityMap[documentId], list.AsReadOnly());
+				keyList.Set(entityMap[documentId], list);
 			}
 
 			keyList.Changed += OnChanged;
@@ -41,19 +41,10 @@ namespace TSSArt.StateMachine
 
 		public void Dispose()
 		{
-			Dispose(true);
-			GC.SuppressFinalize(this);
+			_keyList.Changed -= OnChanged;
 		}
 
-		protected virtual void Dispose(bool dispose)
-		{
-			if (dispose)
-			{
-				_keyList.Changed -= OnChanged;
-			}
-		}
-
-		private void OnChanged(KeyList<T>.ChangedAction action, IEntity entity, /**/ImmutableArray<T> list)
+		private void OnChanged(KeyList<T>.ChangedAction action, IEntity entity, List<T> list)
 		{
 			if (action != KeyList<T>.ChangedAction.Set)
 			{

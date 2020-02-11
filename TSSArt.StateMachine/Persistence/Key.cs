@@ -1,6 +1,6 @@
 ﻿namespace TSSArt.StateMachine
 {
-	public enum Key
+	internal enum Key
 	{
 		Action,
 		Array,

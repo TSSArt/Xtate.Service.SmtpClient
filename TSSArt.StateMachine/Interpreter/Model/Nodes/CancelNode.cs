@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
-	public class CancelNode : ExecutableEntityNode, ICancel, IAncestorProvider, IDebugEntityId
+	internal sealed class CancelNode : ExecutableEntityNode, ICancel, IAncestorProvider, IDebugEntityId
 	{
 		private readonly Cancel _entity;
 

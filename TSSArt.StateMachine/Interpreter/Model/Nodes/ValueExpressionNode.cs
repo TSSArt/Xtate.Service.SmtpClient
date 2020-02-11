@@ -1,6 +1,6 @@
 ﻿namespace TSSArt.StateMachine
 {
-	public class ValueExpressionNode : IValueExpression, IStoreSupport, IAncestorProvider
+	internal sealed class ValueExpressionNode : IValueExpression, IStoreSupport, IAncestorProvider
 	{
 		private readonly ValueExpression _valueExpression;
 

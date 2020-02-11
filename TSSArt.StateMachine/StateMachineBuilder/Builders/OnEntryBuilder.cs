@@ -1,19 +1,19 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public class OnEntryBuilder : IOnEntryBuilder
 	{
-		private readonly List<IExecutableEntity> _actions = new List<IExecutableEntity>();
+		private ImmutableArray<IExecutableEntity>.Builder _actions;
 
-		public IOnEntry Build() => new OnEntry { Action = ExecutableEntityList.Create(_actions) };
+		public IOnEntry Build() => new OnEntry { Action = _actions?.ToImmutable() ?? default };
 
 		public void AddAction(IExecutableEntity action)
 		{
 			if (action == null) throw new ArgumentNullException(nameof(action));
 
-			_actions.Add(action);
+			(_actions ??= ImmutableArray.CreateBuilder<IExecutableEntity>()).Add(action);
 		}
 	}
 }

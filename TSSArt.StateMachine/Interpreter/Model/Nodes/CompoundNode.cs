@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
-	public class CompoundNode : StateNode, IStoreSupport, IDebugEntityId
+	internal sealed class CompoundNode : StateNode, IStoreSupport, IDebugEntityId
 	{
 		public CompoundNode(LinkedListNode<int> documentIdNode, in State state) : base(documentIdNode, state) { }
 

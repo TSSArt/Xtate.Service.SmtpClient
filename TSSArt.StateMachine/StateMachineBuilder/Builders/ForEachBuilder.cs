@@ -1,14 +1,14 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	public class ForEachBuilder : IForEachBuilder
 	{
-		private readonly List<IExecutableEntity> _actions = new List<IExecutableEntity>();
-		private          IValueExpression        _array;
-		private          ILocationExpression     _index;
-		private          ILocationExpression     _item;
+		private ImmutableArray<IExecutableEntity>.Builder _actions;
+		private IValueExpression                          _array;
+		private ILocationExpression                       _index;
+		private ILocationExpression                       _item;
 
 		public IForEach Build()
 		{
@@ -22,7 +22,7 @@ namespace TSSArt.StateMachine
 				throw new InvalidOperationException(message: "Condition property required for ForEach element");
 			}
 
-			return new ForEach { Array = _array, Item = _item, Index = _index, Action = _actions };
+			return new ForEach { Array = _array, Item = _item, Index = _index, Action = _actions?.ToImmutable() ?? default };
 		}
 
 		public void SetArray(IValueExpression array) => _array = array ?? throw new ArgumentNullException(nameof(array));
@@ -41,7 +41,7 @@ namespace TSSArt.StateMachine
 		{
 			if (action == null) throw new ArgumentNullException(nameof(action));
 
-			_actions.Add(action);
+			(_actions ??= ImmutableArray.CreateBuilder<IExecutableEntity>()).Add(action);
 		}
 	}
 }

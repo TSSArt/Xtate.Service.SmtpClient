@@ -1,5 +1,6 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,23 +16,29 @@ namespace TSSArt.StateMachine
 		private static readonly Uri InternalTarget            = new Uri(uriString: "#_internal", UriKind.Relative);
 
 		private readonly IoProcessorContext               _context;
-		private readonly Dictionary<Uri, IEventProcessor> _eventProcessors  = new Dictionary<Uri, IEventProcessor>(UriComparer.Instance);
-		private readonly List<IEventProcessor>            _ioProcessors     = new List<IEventProcessor>();
+		private readonly Dictionary<Uri, IEventProcessor> _eventProcessors = new Dictionary<Uri, IEventProcessor>(UriComparer.Instance);
+		private readonly ImmutableArray<IEventProcessor>  _ioProcessors;
 		private readonly Dictionary<Uri, IServiceFactory> _serviceFactories = new Dictionary<Uri, IServiceFactory>(UriComparer.Instance);
 
 		public IoProcessor(in IoProcessorOptions options)
 		{
-			_ioProcessors.Add(this);
+			var eventProcessors = options.EventProcessors;
+			var eventProcessorsCount = !eventProcessors.IsDefaultOrEmpty ? eventProcessors.Length + 1 : 1;
+			var ioProcessorsBuilder = ImmutableArray.CreateBuilder<IEventProcessor>(eventProcessorsCount);
+
+			ioProcessorsBuilder.Add(this);
 			AddEventProcessor(this);
 
-			if (options.EventProcessors != null)
+			if (!eventProcessors.IsDefaultOrEmpty)
 			{
-				foreach (var eventProcessor in options.EventProcessors)
+				foreach (var eventProcessor in eventProcessors)
 				{
-					_ioProcessors.Add(eventProcessor);
+					ioProcessorsBuilder.Add(eventProcessor);
 					AddEventProcessor(eventProcessor);
 				}
 			}
+
+			_ioProcessors = ioProcessorsBuilder.MoveToImmutable();
 
 			AddServiceFactory(this);
 
@@ -47,9 +54,9 @@ namespace TSSArt.StateMachine
 					? new IoProcessorPersistedContext(this, options)
 					: new IoProcessorContext(this, options);
 
-			if (options.EventProcessors != null)
+			if (eventProcessors != null)
 			{
-				foreach (var eventProcessor in options.EventProcessors)
+				foreach (var eventProcessor in eventProcessors)
 				{
 					eventProcessor.RegisterEventConsumer(this);
 				}
@@ -90,7 +97,7 @@ namespace TSSArt.StateMachine
 			return service.Send(serviceEvent, token);
 		}
 
-		/**/ImmutableArray<IEventProcessor> IIoProcessor.GetIoProcessors() => _ioProcessors;
+		ImmutableArray<IEventProcessor> IIoProcessor.GetIoProcessors() => _ioProcessors;
 
 		async ValueTask IIoProcessor.StartInvoke(string sessionId, InvokeData data, CancellationToken token)
 		{

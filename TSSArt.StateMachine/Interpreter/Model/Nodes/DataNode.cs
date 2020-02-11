@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections./**/Immutable;
+using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
-	public class DataNode : IData, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
+	internal sealed class DataNode : IData, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
 		private readonly Data                _data;
 		private readonly LinkedListNode<int> _documentIdNode;
