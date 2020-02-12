@@ -1,16 +1,16 @@
 ﻿namespace TSSArt.StateMachine
 {
-	public struct ElseIf : IElseIf, IEntity<ElseIf, IElseIf>, IAncestorProvider
+	public struct ElseIf : IElseIf, IVisitorEntity<ElseIf, IElseIf>, IAncestorProvider
 	{
 		public IConditionExpression Condition { get; set; }
 
-		void IEntity<ElseIf, IElseIf>.Init(IElseIf source)
+		void IVisitorEntity<ElseIf, IElseIf>.Init(IElseIf source)
 		{
 			Ancestor = source;
 			Condition = source.Condition;
 		}
 
-		bool IEntity<ElseIf, IElseIf>.RefEquals(in ElseIf other) => ReferenceEquals(Condition, other.Condition);
+		bool IVisitorEntity<ElseIf, IElseIf>.RefEquals(in ElseIf other) => ReferenceEquals(Condition, other.Condition);
 
 		internal object Ancestor;
 

@@ -2,17 +2,17 @@
 
 namespace TSSArt.StateMachine
 {
-	public struct DataModel : IDataModel, IEntity<DataModel, IDataModel>, IAncestorProvider
+	public struct DataModel : IDataModel, IVisitorEntity<DataModel, IDataModel>, IAncestorProvider
 	{
 		public ImmutableArray<IData> Data { get; set; }
 
-		void IEntity<DataModel, IDataModel>.Init(IDataModel source)
+		void IVisitorEntity<DataModel, IDataModel>.Init(IDataModel source)
 		{
 			Ancestor = source;
 			Data = source.Data;
 		}
 
-		bool IEntity<DataModel, IDataModel>.RefEquals(in DataModel other) => Data == other.Data;
+		bool IVisitorEntity<DataModel, IDataModel>.RefEquals(in DataModel other) => Data == other.Data;
 
 		internal object Ancestor;
 

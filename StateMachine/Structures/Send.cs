@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public struct Send : ISend, IEntity<Send, ISend>, IAncestorProvider, IDebugEntityId
+	public struct Send : ISend, IVisitorEntity<Send, ISend>, IAncestorProvider, IDebugEntityId
 	{
 		public IContent                            Content          { get; set; }
 		public IValueExpression                    DelayExpression  { get; set; }
@@ -19,7 +19,7 @@ namespace TSSArt.StateMachine
 		public Uri                                 Type             { get; set; }
 		public IValueExpression                    TypeExpression   { get; set; }
 
-		void IEntity<Send, ISend>.Init(ISend source)
+		void IVisitorEntity<Send, ISend>.Init(ISend source)
 		{
 			Ancestor = source;
 			Id = source.Id;
@@ -37,7 +37,7 @@ namespace TSSArt.StateMachine
 			NameList = source.NameList;
 		}
 
-		bool IEntity<Send, ISend>.RefEquals(in Send other) =>
+		bool IVisitorEntity<Send, ISend>.RefEquals(in Send other) =>
 				DelayMs == other.DelayMs &&
 				Parameters == other.Parameters &&
 				NameList == other.NameList &&

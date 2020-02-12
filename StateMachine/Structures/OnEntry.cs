@@ -2,17 +2,17 @@
 
 namespace TSSArt.StateMachine
 {
-	public struct OnEntry : IOnEntry, IEntity<OnEntry, IOnEntry>, IAncestorProvider
+	public struct OnEntry : IOnEntry, IVisitorEntity<OnEntry, IOnEntry>, IAncestorProvider
 	{
 		public ImmutableArray<IExecutableEntity> Action { get; set; }
 
-		void IEntity<OnEntry, IOnEntry>.Init(IOnEntry source)
+		void IVisitorEntity<OnEntry, IOnEntry>.Init(IOnEntry source)
 		{
 			Ancestor = source;
 			Action = source.Action;
 		}
 
-		bool IEntity<OnEntry, IOnEntry>.RefEquals(in OnEntry other) => Action == other.Action;
+		bool IVisitorEntity<OnEntry, IOnEntry>.RefEquals(in OnEntry other) => Action == other.Action;
 
 		internal object Ancestor;
 

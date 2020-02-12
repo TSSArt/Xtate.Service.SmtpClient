@@ -3,14 +3,14 @@ using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public struct Final : IFinal, IEntity<Final, IFinal>, IAncestorProvider, IDebugEntityId
+	public struct Final : IFinal, IVisitorEntity<Final, IFinal>, IAncestorProvider, IDebugEntityId
 	{
 		public IIdentifier              Id       { get; set; }
 		public ImmutableArray<IOnEntry> OnEntry  { get; set; }
 		public ImmutableArray<IOnExit>  OnExit   { get; set; }
 		public IDoneData                DoneData { get; set; }
 
-		void IEntity<Final, IFinal>.Init(IFinal source)
+		void IVisitorEntity<Final, IFinal>.Init(IFinal source)
 		{
 			Ancestor = source;
 			Id = source.Id;
@@ -19,7 +19,7 @@ namespace TSSArt.StateMachine
 			DoneData = source.DoneData;
 		}
 
-		bool IEntity<Final, IFinal>.RefEquals(in Final other) =>
+		bool IVisitorEntity<Final, IFinal>.RefEquals(in Final other) =>
 				OnExit == other.OnExit &&
 				OnEntry == other.OnEntry &&
 				ReferenceEquals(Id, other.Id) &&

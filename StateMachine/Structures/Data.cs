@@ -2,14 +2,14 @@
 
 namespace TSSArt.StateMachine
 {
-	public struct Data : IData, IEntity<Data, IData>, IAncestorProvider, IDebugEntityId
+	public struct Data : IData, IVisitorEntity<Data, IData>, IAncestorProvider, IDebugEntityId
 	{
 		public string                  Id            { get; set; }
 		public IExternalDataExpression Source        { get; set; }
 		public IValueExpression        Expression    { get; set; }
 		public string                  InlineContent { get; set; }
 
-		void IEntity<Data, IData>.Init(IData source)
+		void IVisitorEntity<Data, IData>.Init(IData source)
 		{
 			Ancestor = source;
 			Id = source.Id;
@@ -18,7 +18,7 @@ namespace TSSArt.StateMachine
 			InlineContent = source.InlineContent;
 		}
 
-		bool IEntity<Data, IData>.RefEquals(in Data other) =>
+		bool IVisitorEntity<Data, IData>.RefEquals(in Data other) =>
 				ReferenceEquals(Id, other.Id) &&
 				ReferenceEquals(Source, other.Source) &&
 				ReferenceEquals(InlineContent, other.InlineContent) &&

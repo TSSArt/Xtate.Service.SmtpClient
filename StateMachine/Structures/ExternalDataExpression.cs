@@ -2,17 +2,17 @@
 
 namespace TSSArt.StateMachine
 {
-	public struct ExternalDataExpression : IExternalDataExpression, IEntity<ExternalDataExpression, IExternalDataExpression>, IAncestorProvider
+	public struct ExternalDataExpression : IExternalDataExpression, IVisitorEntity<ExternalDataExpression, IExternalDataExpression>, IAncestorProvider
 	{
 		public Uri Uri { get; set; }
 
-		void IEntity<ExternalDataExpression, IExternalDataExpression>.Init(IExternalDataExpression source)
+		void IVisitorEntity<ExternalDataExpression, IExternalDataExpression>.Init(IExternalDataExpression source)
 		{
 			Ancestor = source;
 			Uri = source.Uri;
 		}
 
-		bool IEntity<ExternalDataExpression, IExternalDataExpression>.RefEquals(in ExternalDataExpression other) => ReferenceEquals(Uri, other.Uri);
+		bool IVisitorEntity<ExternalDataExpression, IExternalDataExpression>.RefEquals(in ExternalDataExpression other) => ReferenceEquals(Uri, other.Uri);
 
 		internal object Ancestor;
 

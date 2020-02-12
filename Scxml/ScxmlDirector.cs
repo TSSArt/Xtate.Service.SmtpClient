@@ -8,9 +8,13 @@ namespace TSSArt.StateMachine
 	public class ScxmlDirector : XmlDirector<ScxmlDirector>
 	{
 		private const string ScxmlNs = "http://www.w3.org/2005/07/scxml";
+		private const string TSSArtScxmlNs = "http://tssart.com/scxml";
+		private const string Persistence = "persistence";
+		private const string Synchronous = "synchronous";
 		private const char   Space   = ' ';
 
 		private static readonly char[] SpaceSplitter = { Space };
+		private static readonly Options TSSArtSpace = new Options { Namespace = TSSArtScxmlNs };
 
 		private readonly IBuilderFactory _factory;
 
@@ -201,6 +205,8 @@ namespace TSSArt.StateMachine
 							   .OptionalAttribute(name: "datamodel", (dr, b) => b.SetDataModelType(dr.Current))
 							   .OptionalAttribute(name: "binding", (dr, b) => b.SetBindingType(dr.AsEnum<BindingType>()))
 							   .OptionalAttribute(name: "name", (dr, b) => b.SetName(dr.Current))
+							   .OptionalAttribute(TSSArtSpace, Persistence, (dr, b) => b.SetOption(Persistence, dr.Current))
+							   .OptionalAttribute(TSSArtSpace, Synchronous, (dr, b) => b.SetOption(Synchronous, dr.Current))
 							   .MultipleElements(name: "state", (dr, b) => b.AddState(dr.ReadState()))
 							   .MultipleElements(name: "parallel", (dr, b) => b.AddParallel(dr.ReadParallel()))
 							   .MultipleElements(name: "final", (dr, b) => b.AddFinal(dr.ReadFinal()))

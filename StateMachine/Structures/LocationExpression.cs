@@ -1,16 +1,16 @@
 ﻿namespace TSSArt.StateMachine
 {
-	public struct LocationExpression : ILocationExpression, IEntity<LocationExpression, ILocationExpression>, IAncestorProvider
+	public struct LocationExpression : ILocationExpression, IVisitorEntity<LocationExpression, ILocationExpression>, IAncestorProvider
 	{
 		public string Expression { get; set; }
 
-		void IEntity<LocationExpression, ILocationExpression>.Init(ILocationExpression source)
+		void IVisitorEntity<LocationExpression, ILocationExpression>.Init(ILocationExpression source)
 		{
 			Ancestor = source;
 			Expression = source.Expression;
 		}
 
-		bool IEntity<LocationExpression, ILocationExpression>.RefEquals(in LocationExpression other) => ReferenceEquals(Expression, other.Expression);
+		bool IVisitorEntity<LocationExpression, ILocationExpression>.RefEquals(in LocationExpression other) => ReferenceEquals(Expression, other.Expression);
 
 		internal object Ancestor;
 

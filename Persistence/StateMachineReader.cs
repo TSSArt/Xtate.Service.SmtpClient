@@ -62,7 +62,8 @@ namespace TSSArt.StateMachine
 								  Script = RestoreScript(bucket.Nested(Key.Script)),
 								  DataModel = RestoreDataModel(bucket.Nested(Key.DataModel)),
 								  Initial = RestoreInitial(bucket.Nested(Key.Initial)),
-								  States = bucket.RestoreList(Key.States, RestoreStateEntity)
+								  States = bucket.RestoreList(Key.States, RestoreStateEntity),
+								  Options = bucket.RestoreDictionary(Key.Options)
 						  }
 						: (IStateMachine) null;
 

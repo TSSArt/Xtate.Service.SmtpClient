@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public struct Parallel : IParallel, IEntity<Parallel, IParallel>, IAncestorProvider, IDebugEntityId
+	public struct Parallel : IParallel, IVisitorEntity<Parallel, IParallel>, IAncestorProvider, IDebugEntityId
 	{
 		public IIdentifier                  Id            { get; set; }
 		public ImmutableArray<IStateEntity> States        { get; set; }
@@ -14,7 +14,7 @@ namespace TSSArt.StateMachine
 		public ImmutableArray<IOnExit>      OnExit        { get; set; }
 		public ImmutableArray<IInvoke>      Invoke        { get; set; }
 
-		void IEntity<Parallel, IParallel>.Init(IParallel source)
+		void IVisitorEntity<Parallel, IParallel>.Init(IParallel source)
 		{
 			Ancestor = source;
 			Id = source.Id;
@@ -27,7 +27,7 @@ namespace TSSArt.StateMachine
 			Transitions = source.Transitions;
 		}
 
-		bool IEntity<Parallel, IParallel>.RefEquals(in Parallel other) =>
+		bool IVisitorEntity<Parallel, IParallel>.RefEquals(in Parallel other) =>
 				ReferenceEquals(Id, other.Id) &&
 				ReferenceEquals(DataModel, other.DataModel) &&
 				Invoke == other.Invoke &&

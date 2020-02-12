@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public struct State : IState, IEntity<State, IState>, IAncestorProvider, IDebugEntityId
+	public struct State : IState, IVisitorEntity<State, IState>, IAncestorProvider, IDebugEntityId
 	{
 		public IDataModel                   DataModel     { get; set; }
 		public IIdentifier                  Id            { get; set; }
@@ -15,7 +15,7 @@ namespace TSSArt.StateMachine
 		public ImmutableArray<IHistory>     HistoryStates { get; set; }
 		public ImmutableArray<ITransition>  Transitions   { get; set; }
 
-		void IEntity<State, IState>.Init(IState source)
+		void IVisitorEntity<State, IState>.Init(IState source)
 		{
 			Ancestor = source;
 			Id = source.Id;
@@ -29,7 +29,7 @@ namespace TSSArt.StateMachine
 			Transitions = source.Transitions;
 		}
 
-		bool IEntity<State, IState>.RefEquals(in State other) =>
+		bool IVisitorEntity<State, IState>.RefEquals(in State other) =>
 				ReferenceEquals(Id, other.Id) &&
 				ReferenceEquals(Initial, other.Initial) &&
 				ReferenceEquals(DataModel, other.DataModel) &&

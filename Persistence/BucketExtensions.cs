@@ -35,6 +35,46 @@ namespace TSSArt.StateMachine
 			}
 		}
 
+		public static void AddDictionary(this in Bucket bucket, Key key, ImmutableDictionary<string, string> dictionary)
+		{
+			if (dictionary == null)
+			{
+				return;
+			}
+
+			bucket.Add(key, dictionary.Count);
+
+			var dicStorage = bucket.Nested(key);
+
+			var index = 0;
+			foreach (var pair in dictionary)
+			{
+				var pairStorage = dicStorage.Nested(index ++);
+				pairStorage.Add(Key.Key, pair.Key);
+				pairStorage.Add(Key.Value, pair.Value);
+			}
+		}
+
+		public static ImmutableDictionary<string, string> RestoreDictionary(this in Bucket bucket, Key key)
+		{
+			if (!bucket.TryGet(key, out int length))
+			{
+				return null;
+			}
+
+			var itemsBucket = bucket.Nested(key);
+
+			var builder = ImmutableDictionary.CreateBuilder<string, string>();
+
+			for (var i = 0; i < length; i ++)
+			{
+				var pair = itemsBucket.Nested(i);
+				builder[pair.GetString(Key.Key)] = pair.GetString(Key.Value);
+			}
+
+			return builder.ToImmutable();
+		}
+
 		public static ImmutableArray<T> RestoreList<T>(this in Bucket bucket, Key key, Func<Bucket, T> factory)
 		{
 			if (!bucket.TryGet(key, out int length))

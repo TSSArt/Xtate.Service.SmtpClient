@@ -25,10 +25,11 @@ namespace TSSArt.StateMachine
 
 		FormattableString IDebugEntityId.EntityId => $"{Name}(#{DocumentId})";
 
-		public BindingType       Binding       => _stateMachine.Binding;
-		public string            Name          => _stateMachine.Name;
-		public string            DataModelType => _stateMachine.DataModelType;
-		public IExecutableEntity Script        => _stateMachine.Script;
+		public BindingType                         Binding       => _stateMachine.Binding;
+		public string                              Name          => _stateMachine.Name;
+		public string                              DataModelType => _stateMachine.DataModelType;
+		public IExecutableEntity                   Script        => _stateMachine.Script;
+		public ImmutableDictionary<string, string> Options       => _stateMachine.Options;
 
 		IDataModel IStateMachine.                  DataModel => _stateMachine.DataModel;
 		IInitial IStateMachine.                    Initial   => _stateMachine.Initial;
@@ -45,6 +46,7 @@ namespace TSSArt.StateMachine
 			bucket.AddEntity(Key.DataModel, DataModel);
 			bucket.AddEntity(Key.Initial, Initial);
 			bucket.AddEntityList(Key.States, _stateMachine.States);
+			bucket.AddDictionary(Key.Options, _stateMachine.Options);
 		}
 	}
 }
