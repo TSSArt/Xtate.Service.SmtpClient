@@ -2,7 +2,7 @@
 
 namespace TSSArt.StateMachine
 {
-	public struct Transition : ITransition, IEntity<Transition, ITransition>, IAncestorProvider
+	public struct Transition : ITransition, IVisitorEntity<Transition, ITransition>, IAncestorProvider
 	{
 		public ImmutableArray<IEventDescriptor>  Event     { get; set; }
 		public IExecutableEntity                 Condition { get; set; }
@@ -10,7 +10,7 @@ namespace TSSArt.StateMachine
 		public TransitionType                    Type      { get; set; }
 		public ImmutableArray<IExecutableEntity> Action    { get; set; }
 
-		void IEntity<Transition, ITransition>.Init(ITransition source)
+		void IVisitorEntity<Transition, ITransition>.Init(ITransition source)
 		{
 			Ancestor = source;
 			Action = source.Action;
@@ -20,7 +20,7 @@ namespace TSSArt.StateMachine
 			Type = source.Type;
 		}
 
-		bool IEntity<Transition, ITransition>.RefEquals(in Transition other) =>
+		bool IVisitorEntity<Transition, ITransition>.RefEquals(in Transition other) =>
 				Type == other.Type &&
 				Target == other.Target &&
 				Action == other.Action &&

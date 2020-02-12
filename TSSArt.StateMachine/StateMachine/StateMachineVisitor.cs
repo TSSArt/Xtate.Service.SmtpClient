@@ -95,7 +95,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private ref struct VisitData<TEntity, TIEntity> where TEntity : struct, IEntity<TEntity, TIEntity>, TIEntity where TIEntity : class
+		private ref struct VisitData<TEntity, TIEntity> where TEntity : struct, IVisitorEntity<TEntity, TIEntity>, TIEntity where TIEntity : class
 		{
 			public TEntity Properties;
 

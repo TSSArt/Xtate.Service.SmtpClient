@@ -1,16 +1,16 @@
 ﻿namespace TSSArt.StateMachine
 {
-	public struct ConditionExpression : IConditionExpression, IEntity<ConditionExpression, IConditionExpression>, IAncestorProvider
+	public struct ConditionExpression : IConditionExpression, IVisitorEntity<ConditionExpression, IConditionExpression>, IAncestorProvider
 	{
 		public string Expression { get; set; }
 
-		void IEntity<ConditionExpression, IConditionExpression>.Init(IConditionExpression source)
+		void IVisitorEntity<ConditionExpression, IConditionExpression>.Init(IConditionExpression source)
 		{
 			Ancestor = source;
 			Expression = source.Expression;
 		}
 
-		bool IEntity<ConditionExpression, IConditionExpression>.RefEquals(in ConditionExpression other) => ReferenceEquals(Expression, other.Expression);
+		bool IVisitorEntity<ConditionExpression, IConditionExpression>.RefEquals(in ConditionExpression other) => ReferenceEquals(Expression, other.Expression);
 
 		internal object Ancestor;
 

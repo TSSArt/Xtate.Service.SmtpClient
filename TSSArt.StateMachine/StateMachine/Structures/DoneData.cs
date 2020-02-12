@@ -2,19 +2,19 @@
 
 namespace TSSArt.StateMachine
 {
-	public struct DoneData : IDoneData, IEntity<DoneData, IDoneData>, IAncestorProvider
+	public struct DoneData : IDoneData, IVisitorEntity<DoneData, IDoneData>, IAncestorProvider
 	{
 		public IContent               Content    { get; set; }
 		public ImmutableArray<IParam> Parameters { get; set; }
 
-		void IEntity<DoneData, IDoneData>.Init(IDoneData source)
+		void IVisitorEntity<DoneData, IDoneData>.Init(IDoneData source)
 		{
 			Ancestor = source;
 			Content = source.Content;
 			Parameters = source.Parameters;
 		}
 
-		bool IEntity<DoneData, IDoneData>.RefEquals(in DoneData other) =>
+		bool IVisitorEntity<DoneData, IDoneData>.RefEquals(in DoneData other) =>
 				ReferenceEquals(Content, other.Content) &&
 				Parameters == other.Parameters;
 

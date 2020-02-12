@@ -2,17 +2,17 @@
 
 namespace TSSArt.StateMachine
 {
-	public struct Finalize : IFinalize, IEntity<Finalize, IFinalize>, IAncestorProvider
+	public struct Finalize : IFinalize, IVisitorEntity<Finalize, IFinalize>, IAncestorProvider
 	{
 		public ImmutableArray<IExecutableEntity> Action { get; set; }
 
-		void IEntity<Finalize, IFinalize>.Init(IFinalize source)
+		void IVisitorEntity<Finalize, IFinalize>.Init(IFinalize source)
 		{
 			Ancestor = source;
 			Action = source.Action;
 		}
 
-		bool IEntity<Finalize, IFinalize>.RefEquals(in Finalize other) => Action == other.Action;
+		bool IVisitorEntity<Finalize, IFinalize>.RefEquals(in Finalize other) => Action == other.Action;
 
 		internal object Ancestor;
 

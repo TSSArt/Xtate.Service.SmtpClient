@@ -28,7 +28,7 @@ namespace TSSArt.StateMachine
 				_initial = new Initial { Transition = new Transition { Target = _initialId } };
 			}
 
-			if (_initial != null && _states.Count == 0)
+			if (_initial != null && _states == null)
 			{
 				throw new InvalidOperationException(message: "Initial state/property can be used only in complex (compound) states");
 			}

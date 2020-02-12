@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public struct Invoke : IInvoke, IEntity<Invoke, IInvoke>, IAncestorProvider, IDebugEntityId
+	public struct Invoke : IInvoke, IVisitorEntity<Invoke, IInvoke>, IAncestorProvider, IDebugEntityId
 	{
 		public bool                                AutoForward      { get; set; }
 		public IContent                            Content          { get; set; }
@@ -17,7 +17,7 @@ namespace TSSArt.StateMachine
 		public Uri                                 Type             { get; set; }
 		public IValueExpression                    TypeExpression   { get; set; }
 
-		void IEntity<Invoke, IInvoke>.Init(IInvoke source)
+		void IVisitorEntity<Invoke, IInvoke>.Init(IInvoke source)
 		{
 			Ancestor = source;
 			Id = source.Id;
@@ -33,7 +33,7 @@ namespace TSSArt.StateMachine
 			AutoForward = source.AutoForward;
 		}
 
-		bool IEntity<Invoke, IInvoke>.RefEquals(in Invoke other) =>
+		bool IVisitorEntity<Invoke, IInvoke>.RefEquals(in Invoke other) =>
 				AutoForward == other.AutoForward &&
 				NameList == other.NameList &&
 				Parameters == other.Parameters &&

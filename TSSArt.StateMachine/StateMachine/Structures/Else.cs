@@ -1,13 +1,13 @@
 ﻿namespace TSSArt.StateMachine
 {
-	public struct Else : IElse, IEntity<Else, IElse>, IAncestorProvider
+	public struct Else : IElse, IVisitorEntity<Else, IElse>, IAncestorProvider
 	{
-		void IEntity<Else, IElse>.Init(IElse source)
+		void IVisitorEntity<Else, IElse>.Init(IElse source)
 		{
 			Ancestor = source;
 		}
 
-		bool IEntity<Else, IElse>.RefEquals(in Else other) => true;
+		bool IVisitorEntity<Else, IElse>.RefEquals(in Else other) => true;
 
 		internal object Ancestor;
 

@@ -49,6 +49,7 @@ namespace TSSArt.StateMachine
 					  {
 							  Configuration = _options.Configuration,
 							  PersistenceLevel = _options.PersistenceLevel,
+							  StorageProvider = _options.StorageProvider,
 							  ResourceLoader = _options.ResourceLoader,
 							  CustomActionProviders = _options.CustomActionProviders,
 							  StopToken = _options.StopToken,
@@ -83,11 +84,26 @@ namespace TSSArt.StateMachine
 						: await _options.StateMachineProvider.GetStateMachine(scxml).ConfigureAwait(false);
 			}
 
+			if (TryGetOption(stateMachine, key: "persistence", out var value) && !value)
+			{
+				options.PersistenceLevel = null;
+			}
+
+			if (TryGetOption(stateMachine, key: "synchronous", out var value))
+			{
+				options.s;
+			}
+
 			var stateMachineController = CreateStateMachineController(sessionId, stateMachine, options);
 			ValidateTrue(_stateMachinesBySessionId.TryAdd(sessionId, stateMachineController));
 			ValidateTrue(_serviceByTarget.TryAdd(new Uri("#_scxml_" + stateMachineController.SessionId, UriKind.Relative), stateMachineController));
 
 			return stateMachineController;
+		}
+
+		private bool TryGetOption(IStateMachine stateMachine, string key, out bool value)
+		{
+			throw new NotImplementedException();
 		}
 
 		public virtual ValueTask DestroyStateMachine(string sessionId)

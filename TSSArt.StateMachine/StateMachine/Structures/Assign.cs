@@ -1,12 +1,12 @@
 ﻿namespace TSSArt.StateMachine
 {
-	public struct Assign : IAssign, IEntity<Assign, IAssign>, IAncestorProvider
+	public struct Assign : IAssign, IVisitorEntity<Assign, IAssign>, IAncestorProvider
 	{
 		public ILocationExpression Location      { get; set; }
 		public IValueExpression    Expression    { get; set; }
 		public string              InlineContent { get; set; }
 
-		void IEntity<Assign, IAssign>.Init(IAssign source)
+		void IVisitorEntity<Assign, IAssign>.Init(IAssign source)
 		{
 			Ancestor = source;
 			Location = source.Location;
@@ -14,7 +14,7 @@
 			Expression = source.Expression;
 		}
 
-		bool IEntity<Assign, IAssign>.RefEquals(in Assign other) =>
+		bool IVisitorEntity<Assign, IAssign>.RefEquals(in Assign other) =>
 				ReferenceEquals(Location, other.Location) &&
 				ReferenceEquals(Expression, other.Expression) &&
 				ReferenceEquals(InlineContent, other.InlineContent);
