@@ -12,7 +12,6 @@ namespace TSSArt.StateMachine
 		public ImmutableArray<IStateEntity>        States        { get; set; }
 		public IDataModel                          DataModel     { get; set; }
 		public IExecutableEntity                   Script        { get; set; }
-		public ImmutableDictionary<string, string> Options       { get; set; }
 
 		void IVisitorEntity<StateMachine, IStateMachine>.Init(IStateMachine source)
 		{
@@ -24,7 +23,6 @@ namespace TSSArt.StateMachine
 			States = source.States;
 			DataModel = source.DataModel;
 			Script = source.Script;
-			Options = source.Options;
 		}
 
 		bool IVisitorEntity<StateMachine, IStateMachine>.RefEquals(in StateMachine other) =>
@@ -34,8 +32,7 @@ namespace TSSArt.StateMachine
 				ReferenceEquals(DataModel, other.DataModel) &&
 				ReferenceEquals(DataModelType, other.DataModelType) &&
 				ReferenceEquals(Initial, other.Initial) &&
-				ReferenceEquals(Script, other.Script) &&
-				ReferenceEquals(Options, other.Options);
+				ReferenceEquals(Script, other.Script);
 
 		internal object Ancestor;
 

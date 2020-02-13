@@ -15,6 +15,5 @@ namespace TSSArt.StateMachine
 		void SetName(string name);
 		void SetDataModelType(string dataModelType);
 		void SetBindingType(BindingType bindingType);
-		void SetOption(string key, string value);
 	}
 }

@@ -35,7 +35,6 @@
 		Invoke,
 		InvokeId,
 		Item,
-		Key,
 		Label,
 		Location,
 		Name,
@@ -43,7 +42,6 @@
 		OnEntry,
 		OnExit,
 		Operation,
-		Options,
 		Origin,
 		OriginType,
 		Parameters,
@@ -73,7 +71,6 @@
 		TypeExpression,
 		TypeInfo,
 		Uri,
-		Value,
 		Version
 	}
 }
