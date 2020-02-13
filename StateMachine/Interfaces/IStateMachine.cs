@@ -11,6 +11,5 @@ namespace TSSArt.StateMachine
 		ImmutableArray<IStateEntity>        States        { get; }
 		IDataModel                          DataModel     { get; }
 		IExecutableEntity                   Script        { get; }
-		ImmutableDictionary<string, string> Options       { get; }
 	}
 }

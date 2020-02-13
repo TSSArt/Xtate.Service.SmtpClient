@@ -635,19 +635,29 @@ namespace TSSArt.StateMachine
 
 		private async ValueTask<IEvent> ReadExternalEventUnfiltered()
 		{
-			var externalBufferedQueue = _context.ExternalBufferedQueue;
-
-			while (_eventChannel.TryRead(out var @event))
+			if (IsPersistingEnabled)
 			{
-				externalBufferedQueue.Enqueue(@event);
-			}
+				var externalBufferedQueue = _context.ExternalBufferedQueue;
 
-			if (externalBufferedQueue.Count > 0)
+				while (_eventChannel.TryRead(out var @event))
+				{
+					externalBufferedQueue.Enqueue(@event);
+				}
+
+				if (externalBufferedQueue.Count > 0)
+				{
+					return externalBufferedQueue.Dequeue();
+				}
+
+				await CheckPoint(PersistenceLevel.StableState).ConfigureAwait(false);
+			}
+			else
 			{
-				return externalBufferedQueue.Dequeue();
+				if (_eventChannel.TryRead(out var @event))
+				{
+					return @event;
+				}
 			}
-
-			await CheckPoint(PersistenceLevel.StableState).ConfigureAwait(false);
 
 			await NotifyWaiting().ConfigureAwait(false);
 

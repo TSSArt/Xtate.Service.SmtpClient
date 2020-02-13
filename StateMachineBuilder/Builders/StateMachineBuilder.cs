@@ -4,6 +4,13 @@ using System.ComponentModel;
 
 namespace TSSArt.StateMachine
 {
+	public interface IStateMachineOptions
+	{
+
+	}
+
+	public 
+
 	public class StateMachineBuilder : IStateMachineBuilder
 	{
 		private BindingType                          _bindingType;
