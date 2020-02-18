@@ -20,7 +20,6 @@ namespace TSSArt.StateMachine
 		public void Dispose()
 		{
 			Dispose(true);
-			GC.SuppressFinalize(this);
 		}
 
 		ValueTask IService.Send(IEvent @event, CancellationToken token) => default;

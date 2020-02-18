@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace TSSArt.StateMachine
 {
@@ -36,7 +38,6 @@ namespace TSSArt.StateMachine
 		public void Dispose()
 		{
 			Dispose(true);
-			GC.SuppressFinalize(this);
 		}
 
 		protected virtual void Dispose(bool disposing) { }
@@ -72,17 +73,46 @@ namespace TSSArt.StateMachine
 		protected virtual StateMachineController CreateStateMachineController(string sessionId, IStateMachine stateMachine, in InterpreterOptions options) =>
 				new StateMachineController(sessionId, stateMachine, _ioProcessor, _options.SuspendIdlePeriod, _options.SynchronousEventProcessing, options);
 
-		public virtual async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, IStateMachine stateMachine, Uri source, string scxml, DataModelValue parameters)
+		private static XmlReaderSettings GetXmlReaderSettings(bool useAsync = false) => new XmlReaderSettings { Async = useAsync };
+
+		private static XmlParserContext GetXmlParserContext() => null;
+
+		private static IBuilderFactory GetBuilderFactory() => new BuilderFactory();
+
+		protected async ValueTask<IStateMachine> GetStateMachine(IStateMachine stateMachine, Uri source, string scxml, CancellationToken token)
+		{
+			if (stateMachine != null)
+			{
+				return stateMachine;
+			}
+
+			if (source != null)
+			{
+				var xmlReader = await _options.ResourceLoader.RequestXmlReader(source, GetXmlReaderSettings(), GetXmlParserContext(), token).ConfigureAwait(false);
+				var scxmlDirector = new ScxmlDirector(xmlReader, GetBuilderFactory());
+			
+				return scxmlDirector.ConstructStateMachine();
+			}
+			
+			if(scxml != null)
+			{
+				using var stringReader = new StringReader(scxml);
+				using var xmlReader = XmlReader.Create(stringReader, GetXmlReaderSettings(), GetXmlParserContext());
+				var scxmlDirector = new ScxmlDirector(xmlReader, GetBuilderFactory());
+				
+				return scxmlDirector.ConstructStateMachine();
+			}
+
+			return null;
+		}
+
+		public virtual async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, IStateMachine stateMachine, Uri source, string scxml, 
+																						DataModelValue parameters, CancellationToken token)
 		{
 			FillInterpreterOptions(out var options);
 			options.Arguments = parameters;
 
-			if (stateMachine == null)
-			{
-				stateMachine = source != null
-						? await _options.StateMachineProvider.GetStateMachine(source).ConfigureAwait(false)
-						: await _options.StateMachineProvider.GetStateMachine(scxml).ConfigureAwait(false);
-			}
+			stateMachine = await GetStateMachine(stateMachine, source, scxml, token).ConfigureAwait(false);
 			
 			var stateMachineController = CreateStateMachineController(sessionId, stateMachine, options);
 			ValidateTrue(_stateMachinesBySessionId.TryAdd(sessionId, stateMachineController));

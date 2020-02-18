@@ -135,25 +135,37 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected override StateMachineController CreateStateMachineController(string sessionId, IStateMachine stateMachine, in InterpreterOptions options) =>
-				new StateMachinePersistedController(sessionId, stateMachine, _ioProcessor, _storageProvider, _idlePeriod, _synchronousEventProcessing, options);
-
-		public override async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, IStateMachine stateMachine, Uri source, string scxml, DataModelValue parameters)
+		private static bool IsStateMachinePersistable(IStateMachine stateMachine)
 		{
-			if (stateMachine != null)
+			return stateMachine.Is<IStateMachineOptions>(out var options) && options.PersistenceLevel != PersistenceLevel.None;
+		}
+
+		protected override StateMachineController CreateStateMachineController(string sessionId, IStateMachine stateMachine, in InterpreterOptions options)
+		{
+			return IsStateMachinePersistable(stateMachine)
+					? new StateMachinePersistedController(sessionId, stateMachine, _ioProcessor, _storageProvider, _idlePeriod, _synchronousEventProcessing, options)
+					: base.CreateStateMachineController(sessionId, stateMachine, options);
+		}
+
+		public override async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, IStateMachine stateMachine, Uri source, string scxml,
+																						 DataModelValue parameters, CancellationToken token)
+		{
+			stateMachine = await GetStateMachine(stateMachine, source, scxml, token);
+
+			if (!IsStateMachinePersistable(stateMachine))
 			{
-				return await base.CreateAndAddStateMachine(sessionId, stateMachine, source, scxml, parameters).ConfigureAwait(false);
+				return await base.CreateAndAddStateMachine(sessionId, stateMachine, source: null, scxml: null, parameters, token).ConfigureAwait(false);
 			}
 
 			await _lockStateMachines.WaitAsync(_stopToken).ConfigureAwait(false);
 			try
 			{
-				var stateMachineController = await base.CreateAndAddStateMachine(sessionId, stateMachine: null, source, scxml, parameters).ConfigureAwait(false);
+				var stateMachineController = await base.CreateAndAddStateMachine(sessionId, stateMachine, source: null, scxml: null, parameters, token).ConfigureAwait(false);
 
 				var bucket = new Bucket(_storage).Nested(StateMachinesKey);
 				var recordId = _stateMachineRecordId ++;
 
-				var stateMachineMeta = new StateMachineMeta(sessionId, source, scxml, parameters) { RecordId = recordId, Controller = stateMachineController };
+				var stateMachineMeta = new StateMachineMeta(sessionId, parameters) { RecordId = recordId, Controller = stateMachineController };
 				_stateMachines.Add(sessionId, stateMachineMeta);
 
 				bucket.Add(Bucket.RootKey, _stateMachineRecordId);
@@ -243,8 +255,8 @@ namespace TSSArt.StateMachine
 					if (eventBucket.TryGet(Key.TypeInfo, out TypeInfo typeInfo) && typeInfo == TypeInfo.StateMachine)
 					{
 						var stateMachine = new StateMachineMeta(bucket) { RecordId = i };
-						var stateMachineController = await base.CreateAndAddStateMachine(stateMachine.SessionId, stateMachine: null, stateMachine.Source,
-																						 stateMachine.Scxml, stateMachine.Parameters).ConfigureAwait(false);
+						var stateMachineController = await base.CreateAndAddStateMachine(stateMachine.SessionId, stateMachine: null, source: null, scxml: null,
+																						 stateMachine.Parameters, token).ConfigureAwait(false);
 						stateMachine.Controller = stateMachineController;
 
 						_stateMachines.Add(stateMachine.SessionId, stateMachine);
@@ -327,23 +339,15 @@ namespace TSSArt.StateMachine
 
 		private class StateMachineMeta : IStoreSupport
 		{
-			public StateMachineMeta(string sessionId, Uri source, string scxml, DataModelValue parameters)
+			public StateMachineMeta(string sessionId, DataModelValue parameters)
 			{
 				SessionId = sessionId;
-				Source = source;
-				Scxml = scxml;
 				Parameters = parameters;
 			}
 
 			public StateMachineMeta(Bucket bucket)
 			{
 				SessionId = bucket.GetString(Key.SessionId);
-				Source = bucket.GetUri(Key.Source);
-
-				if (bucket.TryGet(Key.Scxml, out string scxml))
-				{
-					Scxml = scxml;
-				}
 
 				var parametersBucket = bucket.Nested(Key.Parameters);
 				using var parametersTracker = new DataModelReferenceTracker(parametersBucket.Nested(Key.DataReferences));
@@ -351,8 +355,6 @@ namespace TSSArt.StateMachine
 			}
 
 			public string                 SessionId  { get; }
-			public Uri                    Source     { get; }
-			public string                 Scxml      { get; }
 			public DataModelValue         Parameters { get; }
 			public int                    RecordId   { get; set; }
 			public StateMachineController Controller { get; set; }
@@ -361,12 +363,6 @@ namespace TSSArt.StateMachine
 			{
 				bucket.Add(Key.TypeInfo, TypeInfo.StateMachine);
 				bucket.Add(Key.SessionId, SessionId);
-				bucket.Add(Key.Source, Source);
-
-				if (Scxml != null)
-				{
-					bucket.Add(Key.Scxml, Scxml);
-				}
 
 				if (!Parameters.IsUndefinedOrNull())
 				{

@@ -4,14 +4,7 @@ using System.ComponentModel;
 
 namespace TSSArt.StateMachine
 {
-	public interface IStateMachineOptions
-	{
-
-	}
-
-	public 
-
-	public class StateMachineBuilder : IStateMachineBuilder
+	public class StateMachineBuilder : IStateMachineBuilder, IStateMachineOptionsBuilder
 	{
 		private BindingType                          _bindingType;
 		private IDataModel                           _dataModel;
@@ -20,6 +13,10 @@ namespace TSSArt.StateMachine
 		private string                               _name;
 		private IScript                              _script;
 		private ImmutableArray<IStateEntity>.Builder _states;
+
+		private PersistenceLevel? _persistenceLevel;
+		private bool?             _synchronousEventProcessing;
+		private int?              _externalQueueSize;
 
 		public IStateMachine Build()
 		{
@@ -32,6 +29,12 @@ namespace TSSArt.StateMachine
 
 			IStateMachine stateMachine = new StateMachine
 										 {
+												 Ancestor = new StateMachineOptions
+															{
+																	PersistenceLevel = _persistenceLevel,
+																	ExternalQueueSize = _externalQueueSize, 
+																	SynchronousEventProcessing = _synchronousEventProcessing
+															},
 												 Name = _name, Initial = initial, DataModelType = _dataModelType, Binding = _bindingType,
 												 States = _states?.ToImmutable() ?? default, DataModel = _dataModel, Script = _script
 										 };
@@ -89,5 +92,11 @@ namespace TSSArt.StateMachine
 		public void SetScript(IScript script) => _script = script ?? throw new ArgumentNullException(nameof(script));
 
 		public void SetDataModelType(string dataModelType) => _dataModelType = dataModelType ?? throw new ArgumentNullException(nameof(dataModelType));
+
+		public void SetPersistenceLevel(PersistenceLevel persistenceLevel) => _persistenceLevel = persistenceLevel;
+		
+		public void SetSynchronousEventProcessing(bool value) => _synchronousEventProcessing = value;
+		
+		public void SetExternalQueueSize(int size) => _externalQueueSize = size;
 	}
 }

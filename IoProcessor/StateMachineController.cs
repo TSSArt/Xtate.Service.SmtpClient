@@ -52,7 +52,6 @@ namespace TSSArt.StateMachine
 		public void Dispose()
 		{
 			Dispose(true);
-			GC.SuppressFinalize(this);
 		}
 
 		ImmutableArray<IEventProcessor> IExternalCommunication.GetIoProcessors() => _ioProcessor.GetIoProcessors();
@@ -285,7 +284,7 @@ namespace TSSArt.StateMachine
 			}
 			catch (Exception ex)
 			{
-				await _defaultOptions.Logger.Error(ErrorType.Communication, SessionId, _stateMachine.Name, scheduledEvent.Event.SendId, ex, token: default).ConfigureAwait(false);
+				await _defaultOptions.Logger.Error(ErrorType.Communication, SessionId, _stateMachine?.Name, scheduledEvent.Event.SendId, ex, token: default).ConfigureAwait(false);
 			}
 		}
 
