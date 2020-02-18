@@ -12,7 +12,6 @@ namespace TSSArt.StateMachine
 		public ImmutableArray<ICustomActionProvider>    CustomActionProviders      { get; set; }
 		public ImmutableDictionary<string, string>      Configuration              { get; set; }
 		public bool                                     SynchronousEventProcessing { get; set; }
-		public IStateMachineProvider                    StateMachineProvider       { get; set; }
 		public ILogger                                  Logger                     { get; set; }
 		public PersistenceLevel                         PersistenceLevel           { get; set; }
 		public IStorageProvider                         StorageProvider            { get; set; }

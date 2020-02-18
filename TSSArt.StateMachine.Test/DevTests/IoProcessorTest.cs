@@ -15,14 +15,13 @@ namespace TSSArt.StateMachine.Test
 	[TestClass]
 	public class IoProcessorTest
 	{
-		private IStateMachine GetStateMachineBase(string scxml)
+		private XmlReader GetStateMachineBase(string scxml)
 		{
-			using var textReader = new StringReader(scxml);
-			using var reader = XmlReader.Create(textReader);
-			return new ScxmlDirector(reader, new BuilderFactory()).ConstructStateMachine();
+			var textReader = new StringReader(scxml);
+			return XmlReader.Create(textReader, new XmlReaderSettings { CloseInput = true });
 		}
 
-		private IStateMachine GetStateMachine(string xml) => GetStateMachineBase("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' datamodel='ecmascript'>" + xml + "</scxml>");
+		private XmlReader GetStateMachine(string xml) => GetStateMachineBase("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' datamodel='ecmascript'>" + xml + "</scxml>");
 
 		[TestMethod]
 		public void SimpleTest()
@@ -35,7 +34,6 @@ namespace TSSArt.StateMachine.Test
 			var options = new IoProcessorOptions
 						  {
 								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
-								  StateMachineProvider = new StateMachineProvider(),
 								  ResourceLoader = resourceLoaderMock.Object
 						  };
 
@@ -48,13 +46,14 @@ namespace TSSArt.StateMachine.Test
 		{
 			var stateMachine = GetStateMachine("<datamodel><data id='dmValue' expr='111'/></datamodel><final id='fin'><donedata><content expr='dmValue'/></donedata></final>");
 
-			var stateMachineProviderMock = new Mock<IStateMachineProvider>();
-			stateMachineProviderMock.Setup(x => x.GetStateMachine(new Uri("scxml://a"))).Returns(new ValueTask<IStateMachine>(stateMachine));
+			var stateMachineProviderMock = new Mock<IResourceLoader>();
+			stateMachineProviderMock.Setup(x => x.RequestXmlReader(new Uri("scxml://a"), It.IsAny<XmlReaderSettings>(), It.IsAny<XmlParserContext>(), It.IsAny<CancellationToken>()))
+									.Returns(new ValueTask<XmlReader>(stateMachine));
 
 			var options = new IoProcessorOptions
 						  {
 								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
-								  StateMachineProvider = stateMachineProviderMock.Object
+								  ResourceLoader = stateMachineProviderMock.Object
 						  };
 
 			var ioProcessor = new IoProcessor(options);
@@ -91,14 +90,15 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 	<donedata><content expr='_event.data'/></donedata>
 </final>");
 
-			var stateMachineProviderMock = new Mock<IStateMachineProvider>();
-			stateMachineProviderMock.Setup(x => x.GetStateMachine(new Uri("scxml://a"))).Returns(new ValueTask<IStateMachine>(stateMachine));
+			var stateMachineProviderMock = new Mock<IResourceLoader>();
+			stateMachineProviderMock.Setup(x => x.RequestXmlReader(new Uri("scxml://a"), It.IsAny<XmlReaderSettings>(), It.IsAny<XmlParserContext>(), It.IsAny<CancellationToken>()))
+									.Returns(new ValueTask<XmlReader>(stateMachine));
 
 			var options = new IoProcessorOptions
 						  {
 								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
 								  ServiceFactories = ImmutableArray.Create(HttpClientService.Factory),
-								  StateMachineProvider = stateMachineProviderMock.Object
+								  ResourceLoader = stateMachineProviderMock.Object
 						  };
 
 			var ioProcessor = new IoProcessor(options);
@@ -182,7 +182,7 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 		}
 	}
 
-	public class StateMachineProvider : IStateMachineProvider
+	public class StateMachineProvider : IResourceLoader
 	{
 		public ValueTask<IStateMachine> GetStateMachine(Uri source)
 		{
@@ -202,6 +202,13 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 			var director = new ScxmlDirector(xmlReader, new BuilderFactory());
 
 			return new ValueTask<IStateMachine>(director.ConstructStateMachine());
+		}
+
+		public ValueTask<Resource> Request(Uri uri, CancellationToken token) => throw new NotSupportedException();
+
+		public ValueTask<XmlReader> RequestXmlReader(Uri uri, XmlReaderSettings readerSettings = null, XmlParserContext parserContext = null, CancellationToken token = default)
+		{
+			return new ValueTask<XmlReader>(XmlReader.Create(uri.ToString(), readerSettings, parserContext));
 		}
 	}
 }

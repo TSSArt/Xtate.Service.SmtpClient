@@ -7,12 +7,12 @@ namespace TSSArt.StateMachine
 {
 	public class ScxmlDirector : XmlDirector<ScxmlDirector>
 	{
-		private const string ScxmlNs = "http://www.w3.org/2005/07/scxml";
+		private const string ScxmlNs       = "http://www.w3.org/2005/07/scxml";
 		private const string TSSArtScxmlNs = "http://tssart.com/scxml";
-		private const char   Space   = ' ';
+		private const char   Space         = ' ';
 
-		private static readonly char[] SpaceSplitter = { Space };
-		private static readonly Options TSSArtSpace = new Options { Namespace = TSSArtScxmlNs };
+		private static readonly char[]  SpaceSplitter = { Space };
+		private static readonly Options TSSArtSpace   = new Options { Namespace = TSSArtScxmlNs };
 
 		private readonly IBuilderFactory _factory;
 
@@ -207,7 +207,11 @@ namespace TSSArt.StateMachine
 							   .MultipleElements(name: "parallel", (dr, b) => b.AddParallel(dr.ReadParallel()))
 							   .MultipleElements(name: "final", (dr, b) => b.AddFinal(dr.ReadFinal()))
 							   .OptionalElement(name: "datamodel", (dr, b) => b.SetDataModel(dr.ReadDataModel()))
-							   .OptionalElement(name: "script", (dr, b) => b.SetScript(dr.ReadScript()))).Build();
+							   .OptionalElement(name: "script", (dr, b) => b.SetScript(dr.ReadScript()))
+							   .OptionalAttribute(TSSArtSpace, name: "synchronous", (dr, b) => (b as IStateMachineOptionsBuilder)?.SetSynchronousEventProcessing(XmlConvert.ToBoolean(dr.Current)))
+							   .OptionalAttribute(TSSArtSpace, name: "queueSize", (dr, b) => (b as IStateMachineOptionsBuilder)?.SetExternalQueueSize(XmlConvert.ToInt32(dr.Current)))
+							   .OptionalAttribute(TSSArtSpace, name: "persistence",
+												  (dr, b) => (b as IStateMachineOptionsBuilder)?.SetPersistenceLevel((PersistenceLevel) Enum.Parse(typeof(PersistenceLevel), dr.Current)))).Build();
 
 		private IState ReadState() =>
 				Populate(_factory.CreateStateBuilder(),

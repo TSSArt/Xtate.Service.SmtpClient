@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.AspNetCore.Builder;
@@ -32,7 +33,7 @@ namespace TSSArt.StateMachine.IntegrationTest
 								  ServiceFactories = ImmutableArray.Create(HttpClientService.Factory, SmtpClientService.Factory),
 								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
 								  CustomActionProviders = ImmutableArray.Create(BasicCustomActionProvider.Instance, MimeCustomActionProvider.Instance, MidCustomActionProvider.Instance),
-								  StateMachineProvider = new ResourceProvider(),
+								  ResourceLoader = new ResourceProvider(),
 								  Configuration = configurationBuilder.ToImmutable()
 						  };
 
@@ -71,22 +72,14 @@ namespace TSSArt.StateMachine.IntegrationTest
 		}
 	}
 
-	internal class ResourceProvider : IStateMachineProvider
+	internal class ResourceProvider : IResourceLoader
 	{
-		public ValueTask<IStateMachine> GetStateMachine(Uri source)
-		{
-			using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("TSSArt.StateMachine.IntegrationTest." + source + ".xml");
-			using var xmlReader = XmlReader.Create(stream);
-			var stateMachine = new ScxmlDirector(xmlReader, new BuilderFactory()).ConstructStateMachine();
-			return new ValueTask<IStateMachine>(stateMachine);
-		}
+		public ValueTask<Resource> Request(Uri uri, CancellationToken token) => throw new NotSupportedException();
 
-		public ValueTask<IStateMachine> GetStateMachine(string scxml)
+		public ValueTask<XmlReader> RequestXmlReader(Uri uri, XmlReaderSettings readerSettings = null, XmlParserContext parserContext = null, CancellationToken token = default)
 		{
-			using var reader = new StringReader(scxml);
-			using var xmlReader = XmlReader.Create(reader);
-			var stateMachine = new ScxmlDirector(xmlReader, new BuilderFactory()).ConstructStateMachine();
-			return new ValueTask<IStateMachine>(stateMachine);
+			using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("TSSArt.StateMachine.IntegrationTest." + uri + ".xml");
+			return new ValueTask<XmlReader>(XmlReader.Create(stream));
 		}
 	}
 }

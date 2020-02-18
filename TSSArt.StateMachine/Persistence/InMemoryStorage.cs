@@ -52,7 +52,6 @@ namespace TSSArt.StateMachine
 		public void Dispose()
 		{
 			Dispose(true);
-			GC.SuppressFinalize(this);
 		}
 
 		public void Add(ReadOnlySpan<byte> key, ReadOnlySpan<byte> value)

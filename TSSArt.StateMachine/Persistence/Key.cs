@@ -51,7 +51,6 @@
 		RefId,
 		Remove,
 		Script,
-		Scxml,
 		SendId,
 		SendIdExpression,
 		SessionId,

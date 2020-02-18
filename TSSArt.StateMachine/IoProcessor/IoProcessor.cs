@@ -63,6 +63,8 @@ namespace TSSArt.StateMachine
 			}
 		}
 
+		public ValueTask Initialize() => _context.Initialize();
+
 		ValueTask IAsyncDisposable.DisposeAsync() => _context.DisposeAsync();
 
 		public void Dispose() => _context.Dispose();
@@ -211,7 +213,7 @@ namespace TSSArt.StateMachine
 		{
 			var sessionId = IdGenerator.NewSessionId();
 			var scxml = rawContent ?? content.AsStringOrDefault();
-			var service = await _context.CreateAndAddStateMachine(sessionId, stateMachine: null, source, scxml, parameters).ConfigureAwait(false);
+			var service = await _context.CreateAndAddStateMachine(sessionId, stateMachine: null, source, scxml, parameters, token).ConfigureAwait(false);
 
 			await service.StartAsync(token).ConfigureAwait(false);
 
@@ -246,7 +248,7 @@ namespace TSSArt.StateMachine
 		{
 			if (sessionId == null) throw new ArgumentNullException(nameof(sessionId));
 
-			var service = await _context.CreateAndAddStateMachine(sessionId, stateMachine, source, scxml, parameters).ConfigureAwait(false);
+			var service = await _context.CreateAndAddStateMachine(sessionId, stateMachine, source, scxml, parameters, default).ConfigureAwait(false);
 
 			try
 			{
