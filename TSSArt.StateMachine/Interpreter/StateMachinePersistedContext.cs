@@ -4,17 +4,18 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	internal class StateMachinePersistedContext : StateMachineContext, IPersistenceContext
+	internal sealed class StateMachinePersistedContext : StateMachineContext, IPersistenceContext
 	{
 		private readonly OrderedSetPersistingController<StateEntityNode> _configurationController;
 		private readonly DataModelObjectPersistingController             _dataModelObjectPersistingController;
 		private readonly DataModelReferenceTracker                       _dataModelReferenceTracker;
-		private readonly EntityQueuePersistingController<IEvent>         _externalBufferedQueuePersistingController;
 		private readonly KeyListPersistingController<StateEntityNode>    _historyValuePersistingController;
 		private readonly EntityQueuePersistingController<IEvent>         _internalQueuePersistingController;
 		private readonly Bucket                                          _state;
 		private readonly OrderedSetPersistingController<StateEntityNode> _statesToInvokeController;
 		private readonly ITransactionalStorage                           _storage;
+
+		private bool _disposed;
 
 		public StateMachinePersistedContext(string stateMachineName, string sessionId, DataModelValue arguments, ITransactionalStorage storage,
 											Dictionary<int, IEntity> entityMap, LoggerWrapper logger, ExternalCommunicationWrapper externalCommunication)
@@ -29,7 +30,6 @@ namespace TSSArt.StateMachine
 			_dataModelObjectPersistingController = new DataModelObjectPersistingController(bucket.Nested(StorageSection.DataModel), _dataModelReferenceTracker, DataModel);
 			_historyValuePersistingController = new KeyListPersistingController<StateEntityNode>(bucket.Nested(StorageSection.HistoryValue), HistoryValue, entityMap);
 			_internalQueuePersistingController = new EntityQueuePersistingController<IEvent>(bucket.Nested(StorageSection.InternalQueue), InternalQueue, EventCreator);
-			_externalBufferedQueuePersistingController = new EntityQueuePersistingController<IEvent>(bucket.Nested(StorageSection.ExternalBufferedQueue), ExternalBufferedQueue, EventCreator);
 			_state = bucket.Nested(StorageSection.StateBag);
 		}
 
@@ -51,29 +51,23 @@ namespace TSSArt.StateMachine
 
 		private static IEvent EventCreator(Bucket bucket) => new EventObject(bucket);
 
-		private void DisposeControllers()
+		public override async ValueTask DisposeAsync()
 		{
-			_externalBufferedQueuePersistingController.Dispose();
+			if (_disposed)
+			{
+				return;
+			}
+
+			await _storage.DisposeAsync().ConfigureAwait(false);
+
 			_internalQueuePersistingController.Dispose();
 			_historyValuePersistingController.Dispose();
 			_dataModelObjectPersistingController.Dispose();
 			_dataModelReferenceTracker.Dispose();
 			_statesToInvokeController.Dispose();
 			_configurationController.Dispose();
-		}
-
-		public override void Dispose()
-		{
-			_storage.Dispose();
-
-			DisposeControllers();
-
-			base.Dispose();
-		}
-
-		public override async ValueTask DisposeAsync()
-		{
-			await _storage.DisposeAsync().ConfigureAwait(false);
+	
+			_disposed = true;
 
 			await base.DisposeAsync().ConfigureAwait(false);
 		}
@@ -84,7 +78,6 @@ namespace TSSArt.StateMachine
 			StatesToInvoke,
 			DataModel,
 			DataModelReferences,
-			ExternalBufferedQueue,
 			InternalQueue,
 			HistoryValue,
 			StateBag

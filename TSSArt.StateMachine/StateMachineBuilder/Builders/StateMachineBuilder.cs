@@ -4,7 +4,7 @@ using System.ComponentModel;
 
 namespace TSSArt.StateMachine
 {
-	public class StateMachineBuilder : IStateMachineBuilder, IStateMachineOptionsBuilder
+	public class StateMachineBuilder : IStateMachineBuilder
 	{
 		private BindingType                          _bindingType;
 		private IDataModel                           _dataModel;
@@ -13,10 +13,7 @@ namespace TSSArt.StateMachine
 		private string                               _name;
 		private IScript                              _script;
 		private ImmutableArray<IStateEntity>.Builder _states;
-
-		private PersistenceLevel? _persistenceLevel;
-		private bool?             _synchronousEventProcessing;
-		private int?              _externalQueueSize;
+		private StateMachineOptions                  _options;
 
 		public IStateMachine Build()
 		{
@@ -29,13 +26,7 @@ namespace TSSArt.StateMachine
 
 			IStateMachine stateMachine = new StateMachine
 										 {
-												 Ancestor = new StateMachineOptions
-															{
-																	PersistenceLevel = _persistenceLevel,
-																	ExternalQueueSize = _externalQueueSize, 
-																	SynchronousEventProcessing = _synchronousEventProcessing
-															},
-												 Name = _name, Initial = initial, DataModelType = _dataModelType, Binding = _bindingType,
+												 Ancestor = _options, Name = _name, Initial = initial, DataModelType = _dataModelType, Binding = _bindingType,
 												 States = _states?.ToImmutable() ?? default, DataModel = _dataModel, Script = _script
 										 };
 
@@ -93,10 +84,10 @@ namespace TSSArt.StateMachine
 
 		public void SetDataModelType(string dataModelType) => _dataModelType = dataModelType ?? throw new ArgumentNullException(nameof(dataModelType));
 
-		public void SetPersistenceLevel(PersistenceLevel persistenceLevel) => _persistenceLevel = persistenceLevel;
-		
-		public void SetSynchronousEventProcessing(bool value) => _synchronousEventProcessing = value;
-		
-		public void SetExternalQueueSize(int size) => _externalQueueSize = size;
+		public void SetPersistenceLevel(PersistenceLevel persistenceLevel) => _options.PersistenceLevel = persistenceLevel;
+
+		public void SetSynchronousEventProcessing(bool value) => _options.SynchronousEventProcessing = value;
+
+		public void SetExternalQueueSize(int size) => _options.ExternalQueueSize = size;
 	}
 }

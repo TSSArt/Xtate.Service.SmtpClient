@@ -80,8 +80,6 @@ namespace TSSArt.StateMachine
 
 		public bool Every(Predicate<T> predicate) => TrueForAll(predicate);
 
-		public List<T> ToList1() => this;
-
 		public List<T> ToSortedList(IComparer<T> comparer)
 		{
 			var list = new List<T>(this);

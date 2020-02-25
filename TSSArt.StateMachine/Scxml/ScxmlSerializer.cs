@@ -7,6 +7,7 @@ namespace TSSArt.StateMachine
 	public class ScxmlSerializer : StateMachineVisitor
 	{
 		private const string ScxmlNs = "http://www.w3.org/2005/07/scxml";
+		private const string TSSArtScxmlNs = "http://tssart.com/scxml";
 		private const string Space   = " ";
 
 		private XmlWriter _writer;
@@ -36,10 +37,33 @@ namespace TSSArt.StateMachine
 				_writer.WriteEndAttribute();
 			}
 
+			if (entity.Is<IStateMachineOptions>(out var options))
+			{
+				WriteOptions(options);
+			}
+
 			properties.Initial = null;
 			base.Build(ref entity, ref properties);
 
 			_writer.WriteEndElement();
+		}
+
+		private void WriteOptions(IStateMachineOptions options)
+		{
+			if (options.PersistenceLevel != null)
+			{
+				_writer.WriteAttributeString(localName: "persistence", TSSArtScxmlNs, options.PersistenceLevel.Value.ToString());
+			}
+
+			if (options.SynchronousEventProcessing != null)
+			{
+				_writer.WriteAttributeString(localName: "synchronous", TSSArtScxmlNs, XmlConvert.ToString(options.SynchronousEventProcessing.Value));
+			}
+
+			if (options.ExternalQueueSize != null)
+			{
+				_writer.WriteAttributeString(localName: "queueSize", TSSArtScxmlNs, XmlConvert.ToString(options.ExternalQueueSize.Value));
+			}
 		}
 
 		protected override void Visit(ref IInitial entity)

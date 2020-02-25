@@ -79,5 +79,26 @@ namespace TSSArt.StateMachine
 		public FinalFluentBuilder<StateMachineFluentBuilder> BeginFinal(string id) => BeginFinal((Identifier) id);
 
 		public FinalFluentBuilder<StateMachineFluentBuilder> BeginFinal(IIdentifier id) => new FinalFluentBuilder<StateMachineFluentBuilder>(_factory, this, _builder.AddFinal).SetId(id);
+
+		public StateMachineFluentBuilder SetPersistenceLevel(PersistenceLevel persistenceLevel)
+		{
+			_builder.SetPersistenceLevel(persistenceLevel);
+
+			return this;
+		}
+
+		public StateMachineFluentBuilder SetSynchronousEventProcessing(bool value)
+		{
+			_builder.SetSynchronousEventProcessing(value);
+
+			return this;
+		}
+
+		public StateMachineFluentBuilder SetExternalQueueSize(int size)
+		{
+			_builder.SetExternalQueueSize(size);
+
+			return this;
+		}
 	}
 }

@@ -12,11 +12,20 @@ namespace TSSArt.StateMachine
 		private readonly List<HttpEventProcessor> _httpEventProcessors = new List<HttpEventProcessor>();
 		private readonly ReaderWriterLockSlim     _rwLock              = new ReaderWriterLockSlim();
 
+		private bool _disposed;
+
 		public HttpEventProcessorHandler(Uri baseUri) => _baseUri = baseUri;
 
 		public void Dispose()
 		{
+			if (_disposed)
+			{
+				return;
+			}
+
 			_rwLock.Dispose();
+
+			_disposed = true;
 		}
 
 		public IEventProcessor CreateEventProcessor(string path = "/")

@@ -46,7 +46,7 @@ namespace TSSArt.StateMachine
 				bucket.RemoveSubtree(Bucket.RootKey);
 
 				_record = 0;
-				foreach (var entity in orderedSet.ToList1())
+				foreach (var entity in orderedSet)
 				{
 					var recordBucket = bucket.Nested(_record ++);
 					recordBucket.Add(Keys.DocumentId, entity.As<IDocumentId>().DocumentId);

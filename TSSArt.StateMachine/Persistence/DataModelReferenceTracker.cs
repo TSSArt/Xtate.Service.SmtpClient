@@ -9,7 +9,9 @@ namespace TSSArt.StateMachine
 
 		private readonly Dictionary<object, Entry> _objects = new Dictionary<object, Entry>();
 		private readonly Dictionary<int, object>   _refIds  = new Dictionary<int, object>();
-		private          int                       _nextRefId;
+
+		private int  _nextRefId;
+		private bool _disposed;
 
 		public DataModelReferenceTracker(Bucket bucket)
 		{
@@ -19,10 +21,17 @@ namespace TSSArt.StateMachine
 
 		public void Dispose()
 		{
+			if (_disposed)
+			{
+				return;
+			}
+
 			foreach (var entry in _objects.Values)
 			{
 				entry.Controller.Dispose();
 			}
+
+			_disposed = true;
 		}
 
 		public object GetValue(int refId, DataModelValueType type, object baseObject)

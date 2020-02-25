@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
@@ -8,22 +9,30 @@ namespace TSSArt.StateMachine
 	internal sealed class StateMachinePersistedController : StateMachineController, IStorageProvider
 	{
 		private const string ControllerStateKey = "cs";
-		private const int    ScheduledEventsKey = 0;
+		private const int    ExternalEventsKey  = 0;
+		private const int    ScheduledEventsKey = 1;
 
-		private readonly HashSet<ScheduledPersistedEvent> _scheduledEvents     = new HashSet<ScheduledPersistedEvent>();
-		private readonly SemaphoreSlim                    _scheduledEventsLock = new SemaphoreSlim(initialCount: 1, maxCount: 1);
-		private readonly CancellationToken                _stopToken;
-		private readonly IStorageProvider                 _storageProvider;
-		private          int                              _recordId;
-		private          ITransactionalStorage            _storage;
+		private readonly HashSet<ScheduledPersistedEvent>    _scheduledEvents = new HashSet<ScheduledPersistedEvent>();
+		private readonly CancellationToken                   _stopToken;
+		private readonly SemaphoreSlim                       _storageLock = new SemaphoreSlim(initialCount: 0, maxCount: 1);
+		private readonly ChannelPersistingController<IEvent> _channelPersistingController;
+		private readonly IStorageProvider                    _storageProvider;
 
-		public StateMachinePersistedController(string sessionId, IStateMachine stateMachine, IIoProcessor ioProcessor, IStorageProvider storageProvider,
-											   TimeSpan idlePeriod, bool synchronousEventProcessing, in InterpreterOptions defaultOptions)
-				: base(sessionId, stateMachine, ioProcessor, idlePeriod, synchronousEventProcessing, defaultOptions)
+		private bool                                _disposed;
+		private int                                 _recordId;
+		private ITransactionalStorage               _storage;
+
+		public StateMachinePersistedController(string sessionId, IStateMachineOptions options, IStateMachine stateMachine, IIoProcessor ioProcessor,
+											   IStorageProvider storageProvider, TimeSpan idlePeriod, in InterpreterOptions defaultOptions)
+				: base(sessionId, options, stateMachine, ioProcessor, idlePeriod, defaultOptions)
 		{
 			_storageProvider = storageProvider;
 			_stopToken = defaultOptions.StopToken;
+
+			_channelPersistingController = new ChannelPersistingController<IEvent>(base.Channel);
 		}
+
+		protected override Channel<IEvent> Channel => _channelPersistingController;
 
 		ValueTask<ITransactionalStorage> IStorageProvider.GetTransactionalStorage(string partition, string key, CancellationToken token)
 		{
@@ -48,23 +57,20 @@ namespace TSSArt.StateMachine
 
 		public override async ValueTask DisposeAsync()
 		{
-			_scheduledEventsLock.Dispose();
+			if (_disposed)
+			{
+				return;
+			}
+
+			_storageLock.Dispose();
+
+			_channelPersistingController?.Dispose();
 
 			await _storage.DisposeAsync();
 
 			await base.DisposeAsync();
-		}
 
-		protected override void Dispose(bool disposing)
-		{
-			if (disposing)
-			{
-				_scheduledEventsLock.Dispose();
-
-				_storage.Dispose();
-			}
-
-			base.Dispose(disposing);
+			_disposed = true;
 		}
 
 		protected override async ValueTask Initialize()
@@ -72,14 +78,23 @@ namespace TSSArt.StateMachine
 			await base.Initialize().ConfigureAwait(false);
 
 			_storage = await _storageProvider.GetTransactionalStorage(SessionId, ControllerStateKey, _stopToken).ConfigureAwait(false);
-			await LoadState(_stopToken).ConfigureAwait(false);
+
+			_channelPersistingController.Initialize(new Bucket(_storage).Nested(ExternalEventsKey), EventCreator, _storageLock, CheckPointAction);
+
+			LoadScheduledEvents();
+
+			_storageLock.Release();
 		}
+
+		private ValueTask CheckPointAction(CancellationToken token) => _storage.CheckPoint(level: 0, token);
+
+		private static IEvent EventCreator(Bucket bucket) => new EventObject(bucket);
 
 		protected override async ValueTask ScheduleEvent(IOutgoingEvent @event, CancellationToken token)
 		{
 			var scheduledPersistedEvent = new ScheduledPersistedEvent(@event);
 
-			await _scheduledEventsLock.WaitAsync(token).ConfigureAwait(false);
+			await _storageLock.WaitAsync(token).ConfigureAwait(false);
 			try
 			{
 				_scheduledEvents.Add(scheduledPersistedEvent);
@@ -97,7 +112,7 @@ namespace TSSArt.StateMachine
 			}
 			finally
 			{
-				_scheduledEventsLock.Release();
+				_storageLock.Release();
 			}
 
 			var _ = DelayedFire(scheduledPersistedEvent, @event.DelayMs);
@@ -111,7 +126,7 @@ namespace TSSArt.StateMachine
 
 			scheduledPersistedEvent.Dispose();
 
-			await _scheduledEventsLock.WaitAsync(token).ConfigureAwait(false);
+			await _storageLock.WaitAsync(token).ConfigureAwait(false);
 			try
 			{
 				_scheduledEvents.Remove(scheduledPersistedEvent);
@@ -128,7 +143,7 @@ namespace TSSArt.StateMachine
 			}
 			finally
 			{
-				_scheduledEventsLock.Release();
+				_storageLock.Release();
 			}
 		}
 
@@ -158,44 +173,31 @@ namespace TSSArt.StateMachine
 			await _storage.Shrink(token).ConfigureAwait(false);
 		}
 
-		private async ValueTask LoadState(CancellationToken token)
+		private void LoadScheduledEvents()
 		{
 			var bucket = new Bucket(_storage).Nested(ScheduledEventsKey);
 
 			bucket.TryGet(Bucket.RootKey, out _recordId);
 
-			if (_recordId == 0)
-			{
-				return;
-			}
-
 			var utcNow = DateTime.UtcNow;
 
-			await _scheduledEventsLock.WaitAsync(token).ConfigureAwait(false);
-			try
+			for (var i = 0; i < _recordId; i ++)
 			{
-				for (var i = 0; i < _recordId; i ++)
+				var eventBucket = bucket.Nested(i);
+				if (eventBucket.TryGet(Key.TypeInfo, out TypeInfo typeInfo) && typeInfo == TypeInfo.ScheduledEvent)
 				{
-					var eventBucket = bucket.Nested(i);
-					if (eventBucket.TryGet(Key.TypeInfo, out TypeInfo typeInfo) && typeInfo == TypeInfo.ScheduledEvent)
-					{
-						var scheduledEvent = new ScheduledPersistedEvent(eventBucket) { RecordId = i };
+					var scheduledEvent = new ScheduledPersistedEvent(eventBucket) { RecordId = i };
 
-						_scheduledEvents.Add(scheduledEvent);
+					_scheduledEvents.Add(scheduledEvent);
 
-						var delayMs = (int) ((scheduledEvent.FireOnUtc - utcNow).Ticks / TimeSpan.TicksPerMillisecond);
+					var delayMs = (int) ((scheduledEvent.FireOnUtc - utcNow).Ticks / TimeSpan.TicksPerMillisecond);
 
-						var _ = DelayedFire(scheduledEvent, delayMs > 1 ? delayMs : 1);
-					}
+					var _ = DelayedFire(scheduledEvent, delayMs > 1 ? delayMs : 1);
 				}
 			}
-			finally
-			{
-				_scheduledEventsLock.Release();
-			}
 		}
-
-		protected class ScheduledPersistedEvent : ScheduledEvent, IStoreSupport
+		
+		private sealed class ScheduledPersistedEvent : ScheduledEvent, IStoreSupport
 		{
 			private readonly long _fireOnUtcTicks;
 

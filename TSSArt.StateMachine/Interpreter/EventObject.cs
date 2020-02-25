@@ -41,7 +41,7 @@ namespace TSSArt.StateMachine
 			OriginType = bucket.GetUri(Key.OriginType);
 			InvokeId = bucket.GetString(Key.InvokeId);
 
-			if (bucket.GetBoolean(Key.Data))
+			if (bucket.TryGet(Key.Data, out bool data) && data)
 			{
 				using var tracker = new DataModelReferenceTracker(bucket.Nested(Key.DataReferences));
 				Data = bucket.Nested(Key.DataValue).GetDataModelValue(tracker, baseValue: default);
