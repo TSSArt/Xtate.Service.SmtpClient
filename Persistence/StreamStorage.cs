@@ -17,9 +17,10 @@ namespace TSSArt.StateMachine
 		private static readonly int MaxInt32Length = Encode.GetEncodedLength(int.MaxValue);
 
 		private readonly Stream          _stream;
+		private readonly bool            _disposeStream;
 		private          bool            _canShrink = true;
-		private          bool            _disposeStream;
 		private          InMemoryStorage _inMemoryStorage;
+		private          bool            _disposed;
 
 		private StreamStorage(Stream stream, bool disposeStream)
 		{
@@ -80,29 +81,50 @@ namespace TSSArt.StateMachine
 			}
 		}
 
+#if NETSTANDARD2_1
+		public void Dispose() => DisposeAsync().GetAwaiter().GetResult();
+		
+		public async ValueTask DisposeAsync()
+		{
+			if (_disposed)
+			{
+				return;
+			}
+
+			if (_disposeStream)
+			{
+				await _stream.DisposeAsync().ConfigureAwait(false);
+			}
+
+			_inMemoryStorage?.Dispose();
+
+			_disposed = true;
+		}
+#else
 		public void Dispose()
 		{
-			_inMemoryStorage?.Dispose();
+			if (_disposed)
+			{
+				return;
+			}
 
 			if (_disposeStream)
 			{
 				_stream.Dispose();
-
-				_disposeStream = false;
 			}
-		}
 
-		public async ValueTask DisposeAsync()
+			_inMemoryStorage?.Dispose();
+
+			_disposed = true;
+		}
+		
+		public ValueTask DisposeAsync()
 		{
-			if (_disposeStream && _stream is IAsyncDisposable asyncDisposable)
-			{
-				await asyncDisposable.DisposeAsync().ConfigureAwait(false);
-				_disposeStream = false;
-			}
-
 			Dispose();
-		}
 
+			return default;
+		}
+#endif
 		public static async ValueTask<StreamStorage> CreateAsync(Stream stream, bool disposeStream = true, CancellationToken token = default) =>
 				new StreamStorage(stream, disposeStream)
 				{

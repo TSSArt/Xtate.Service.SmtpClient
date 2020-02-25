@@ -4,10 +4,12 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public abstract class SimpleServiceBase : IService, IDisposable
+	public abstract class SimpleServiceBase : IService, IAsyncDisposable
 	{
 		private readonly TaskCompletionSource<DataModelValue> _completedTcs = new TaskCompletionSource<DataModelValue>();
 		private readonly CancellationTokenSource              _tokenSource  = new CancellationTokenSource();
+
+		private bool _disposed;
 
 		protected Uri                   Source               { get; private set; }
 		protected string                RawContent           { get; private set; }
@@ -17,9 +19,10 @@ namespace TSSArt.StateMachine
 
 		protected CancellationToken StopToken => _tokenSource.Token;
 
-		public void Dispose()
+		public async ValueTask DisposeAsync()
 		{
-			Dispose(true);
+			await DisposeAsync(true);
+			GC.SuppressFinalize(this);
 		}
 
 		ValueTask IService.Send(IEvent @event, CancellationToken token) => default;
@@ -63,12 +66,21 @@ namespace TSSArt.StateMachine
 
 		protected abstract ValueTask<DataModelValue> Execute();
 
-		protected virtual void Dispose(bool disposing)
+		protected virtual ValueTask DisposeAsync(bool disposing)
 		{
+			if (_disposed)
+			{
+				return default;
+			}
+
 			if (disposing)
 			{
 				_tokenSource.Dispose();
 			}
+
+			_disposed = true;
+
+			return default;
 		}
 	}
 }

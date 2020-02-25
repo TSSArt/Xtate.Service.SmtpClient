@@ -208,10 +208,9 @@ namespace TSSArt.StateMachine
 							   .MultipleElements(name: "final", (dr, b) => b.AddFinal(dr.ReadFinal()))
 							   .OptionalElement(name: "datamodel", (dr, b) => b.SetDataModel(dr.ReadDataModel()))
 							   .OptionalElement(name: "script", (dr, b) => b.SetScript(dr.ReadScript()))
-							   .OptionalAttribute(TSSArtSpace, name: "synchronous", (dr, b) => (b as IStateMachineOptionsBuilder)?.SetSynchronousEventProcessing(XmlConvert.ToBoolean(dr.Current)))
-							   .OptionalAttribute(TSSArtSpace, name: "queueSize", (dr, b) => (b as IStateMachineOptionsBuilder)?.SetExternalQueueSize(XmlConvert.ToInt32(dr.Current)))
-							   .OptionalAttribute(TSSArtSpace, name: "persistence",
-												  (dr, b) => (b as IStateMachineOptionsBuilder)?.SetPersistenceLevel((PersistenceLevel) Enum.Parse(typeof(PersistenceLevel), dr.Current)))).Build();
+							   .OptionalAttribute(TSSArtSpace, name: "synchronous", (dr, b) => b.SetSynchronousEventProcessing(XmlConvert.ToBoolean(dr.Current)))
+							   .OptionalAttribute(TSSArtSpace, name: "queueSize", (dr, b) => b.SetExternalQueueSize(XmlConvert.ToInt32(dr.Current)))
+							   .OptionalAttribute(TSSArtSpace, name: "persistence", (dr, b) => b.SetPersistenceLevel((PersistenceLevel) Enum.Parse(typeof(PersistenceLevel), dr.Current)))).Build();
 
 		private IState ReadState() =>
 				Populate(_factory.CreateStateBuilder(),

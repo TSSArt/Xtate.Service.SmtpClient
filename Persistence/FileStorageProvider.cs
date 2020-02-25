@@ -33,7 +33,7 @@ namespace TSSArt.StateMachine
 			}
 
 			var path = Path.Combine(dir, Escape(key) + _extension);
-			var fileStream = new FileStream(path, FileMode.Create, FileAccess.ReadWrite, FileShare.None, bufferSize: 4096, FileOptions.Asynchronous);
+			var fileStream = new FileStream(path, FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None, bufferSize: 4096, FileOptions.Asynchronous);
 			var streamStorage = await StreamStorage.CreateAsync(fileStream, disposeStream: true, token).ConfigureAwait(false);
 
 			return streamStorage;
@@ -74,7 +74,7 @@ namespace TSSArt.StateMachine
 
 			for (var i = 0; i < list.Length; i ++)
 			{
-				list[i] = "_x" + ((int) InvalidFileNameChars[i]).ToString(format: "X", CultureInfo.InvariantCulture) + "_";
+				list[i] = "_x" + ((int) InvalidFileNameChars[i]).ToString(format: "X", CultureInfo.InvariantCulture);
 			}
 
 			return list;

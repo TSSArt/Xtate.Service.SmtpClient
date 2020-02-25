@@ -362,19 +362,9 @@ namespace TSSArt.StateMachine
 					await DoOperation(StateBagKey.NotifyExited, NotifyExited).ConfigureAwait(false);
 				}
 
-				if (IsPersistingEnabled)
+				if (IsPersistingEnabled && (exitStatus == StateMachineExitStatus.Completed || exitStatus == StateMachineExitStatus.Destroyed || exitStatus == StateMachineExitStatus.LiveLockAbort))
 				{
-					switch (exitStatus)
-					{
-						case StateMachineExitStatus.Suspended:
-							await PersistExternalEvents().ConfigureAwait(false);
-							break;
-						case StateMachineExitStatus.Completed:
-						case StateMachineExitStatus.Destroyed:
-						case StateMachineExitStatus.LiveLockAbort:
-							await CleanupPersistedData().ConfigureAwait(false);
-							break;
-					}
+					await CleanupPersistedData().ConfigureAwait(false);
 				}
 			}
 
@@ -397,18 +387,6 @@ namespace TSSArt.StateMachine
 			};
 
 			return exitStatus != StateMachineExitStatus.Unknown;
-		}
-
-		private ValueTask PersistExternalEvents()
-		{
-			var externalBufferedQueue = _context.ExternalBufferedQueue;
-
-			while (_eventChannel.TryRead(out var @event))
-			{
-				externalBufferedQueue.Enqueue(@event);
-			}
-
-			return CheckPoint(PersistenceLevel.Event);
 		}
 
 		private async ValueTask CleanupPersistedData()
@@ -555,29 +533,7 @@ namespace TSSArt.StateMachine
 				{
 					_anyToken.ThrowIfCancellationRequested();
 
-					var externalEvent = await ReadExternalEvent().ConfigureAwait(false);
-
-					_logger.ProcessingEvent(externalEvent);
-
-					_context.DataModel.SetInternal(property: "_event", new DataModelDescriptor(DataModelValue.FromEvent(externalEvent), isReadOnly: true));
-
-					foreach (var state in _context.Configuration.ToList1())
-					{
-						foreach (var invoke in state.Invoke)
-						{
-							if (invoke.InvokeUniqueId == externalEvent.InvokeUniqueId)
-							{
-								await ApplyFinalize(invoke).ConfigureAwait(false);
-							}
-
-							if (invoke.AutoForward)
-							{
-								await ForwardEvent(invoke.InvokeId, externalEvent).ConfigureAwait(false);
-							}
-						}
-					}
-
-					var transitions = await SelectTransitions(externalEvent).ConfigureAwait(false);
+					var transitions = await Capture(StateBagKey.ExternalEventTransitions, ExternalEventTransitions).ConfigureAwait(false);
 
 					if (transitions.Count > 0)
 					{
@@ -585,6 +541,8 @@ namespace TSSArt.StateMachine
 
 						await CheckPoint(PersistenceLevel.Event).ConfigureAwait(false);
 					}
+					
+					Complete(StateBagKey.ExternalEventTransitions);
 				}
 
 				Complete(StateBagKey.InternalQueueEmpty);
@@ -597,6 +555,33 @@ namespace TSSArt.StateMachine
 			Complete(StateBagKey.Running2);
 
 			return exit;
+		}
+
+		private async ValueTask<List<TransitionNode>> ExternalEventTransitions()
+		{
+			var externalEvent = await ReadExternalEvent().ConfigureAwait(false);
+
+			_logger.ProcessingEvent(externalEvent);
+
+			_context.DataModel.SetInternal(property: "_event", new DataModelDescriptor(DataModelValue.FromEvent(externalEvent), isReadOnly: true));
+
+			foreach (var state in _context.Configuration)
+			{
+				foreach (var invoke in state.Invoke)
+				{
+					if (invoke.InvokeUniqueId == externalEvent.InvokeUniqueId)
+					{
+						await ApplyFinalize(invoke).ConfigureAwait(false);
+					}
+
+					if (invoke.AutoForward)
+					{
+						await ForwardEvent(invoke.InvokeId, externalEvent).ConfigureAwait(false);
+					}
+				}
+			}
+
+			return await SelectTransitions(externalEvent).ConfigureAwait(false);
 		}
 
 		private async ValueTask CheckPoint(PersistenceLevel level)
@@ -635,33 +620,18 @@ namespace TSSArt.StateMachine
 
 		private async ValueTask<IEvent> ReadExternalEventUnfiltered()
 		{
-			if (IsPersistingEnabled)
+			var valueTask = _eventChannel.ReadAsync(_anyToken);
+
+			if (valueTask.IsCompleted)
 			{
-				var externalBufferedQueue = _context.ExternalBufferedQueue;
-
-				while (_eventChannel.TryRead(out var @event))
-				{
-					externalBufferedQueue.Enqueue(@event);
-				}
-
-				if (externalBufferedQueue.Count > 0)
-				{
-					return externalBufferedQueue.Dequeue();
-				}
-
-				await CheckPoint(PersistenceLevel.StableState).ConfigureAwait(false);
+				return await valueTask;
 			}
-			else
-			{
-				if (_eventChannel.TryRead(out var @event))
-				{
-					return @event;
-				}
-			}
+
+			await CheckPoint(PersistenceLevel.StableState).ConfigureAwait(false);
 
 			await NotifyWaiting().ConfigureAwait(false);
 
-			return await _eventChannel.ReadAsync(_anyToken).ConfigureAwait(false);
+			return await valueTask.ConfigureAwait(false);
 		}
 
 		private async ValueTask ExitInterpreter()
@@ -1017,7 +987,7 @@ namespace TSSArt.StateMachine
 				if (transition.Target != null)
 				{
 					var domain = GetTransitionDomain(transition);
-					foreach (var state in _context.Configuration.ToList1())
+					foreach (var state in _context.Configuration)
 					{
 						if (IsDescendant(state, domain))
 						{
@@ -1490,6 +1460,7 @@ namespace TSSArt.StateMachine
 			InitializeRootDataModel,
 			EarlyInitializeDataModel,
 			ExecuteGlobalScript,
+			ExternalEventTransitions,
 			InitialEnterStates,
 			ExitInterpreter,
 			InternalQueueProcessing,
@@ -1557,6 +1528,8 @@ namespace TSSArt.StateMachine
 				if (_data != null)
 				{
 					ArrayPool<int>.Shared.Return(_data);
+
+					_data = null;
 				}
 			}
 		}

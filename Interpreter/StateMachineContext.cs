@@ -54,8 +54,6 @@ namespace TSSArt.StateMachine
 
 		public IExecutionContext ExecutionContext => this;
 
-		public EntityQueue<IEvent> ExternalBufferedQueue { get; } = new EntityQueue<IEvent>();
-
 		public KeyList<StateEntityNode> HistoryValue { get; } = new KeyList<StateEntityNode>();
 
 		public EntityQueue<IEvent> InternalQueue { get; } = new EntityQueue<IEvent>();
@@ -66,14 +64,7 @@ namespace TSSArt.StateMachine
 
 		public OrderedSet<StateEntityNode> StatesToInvoke { get; } = new OrderedSet<StateEntityNode>();
 
-		public virtual void Dispose() { }
-
-		public virtual ValueTask DisposeAsync()
-		{
-			Dispose();
-
-			return default;
-		}
+		public virtual ValueTask DisposeAsync() => default;
 
 		public virtual IPersistenceContext PersistenceContext => throw new NotSupportedException();
 

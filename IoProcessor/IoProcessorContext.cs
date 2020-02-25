@@ -7,7 +7,7 @@ using System.Xml;
 
 namespace TSSArt.StateMachine
 {
-	internal class IoProcessorContext : IAsyncDisposable, IDisposable
+	internal class IoProcessorContext : IAsyncDisposable
 	{
 		private static readonly Uri ParentTarget = new Uri(uriString: "#_parent", UriKind.Relative);
 
@@ -28,21 +28,9 @@ namespace TSSArt.StateMachine
 			_options = options;
 		}
 
-		public virtual ValueTask DisposeAsync()
-		{
-			Dispose();
+		public virtual ValueTask DisposeAsync() => default;
 
-			return default;
-		}
-
-		public void Dispose()
-		{
-			Dispose(true);
-		}
-
-		protected virtual void Dispose(bool disposing) { }
-
-		public virtual ValueTask Initialize() => default;
+		public virtual ValueTask InitializeAsync() => default;
 
 		private void FillInterpreterOptions(out InterpreterOptions options)
 		{
@@ -70,8 +58,8 @@ namespace TSSArt.StateMachine
 			throw new ApplicationException("Validation failed. Result of operation must be true.");
 		}
 
-		protected virtual StateMachineController CreateStateMachineController(string sessionId, IStateMachine stateMachine, in InterpreterOptions options) =>
-				new StateMachineController(sessionId, stateMachine, _ioProcessor, _options.SuspendIdlePeriod, _options.SynchronousEventProcessing, options);
+		protected virtual StateMachineController CreateStateMachineController(string sessionId, IStateMachineOptions options, IStateMachine stateMachine, in InterpreterOptions defaultOptions) =>
+				new StateMachineController(sessionId, options, stateMachine, _ioProcessor, _options.SuspendIdlePeriod, defaultOptions);
 
 		private static XmlReaderSettings GetXmlReaderSettings(bool useAsync = false) => new XmlReaderSettings { Async = useAsync };
 
@@ -90,31 +78,36 @@ namespace TSSArt.StateMachine
 			{
 				var xmlReader = await _options.ResourceLoader.RequestXmlReader(source, GetXmlReaderSettings(), GetXmlParserContext(), token).ConfigureAwait(false);
 				var scxmlDirector = new ScxmlDirector(xmlReader, GetBuilderFactory());
-			
+
 				return scxmlDirector.ConstructStateMachine();
 			}
-			
-			if(scxml != null)
+
+			if (scxml != null)
 			{
 				using var stringReader = new StringReader(scxml);
 				using var xmlReader = XmlReader.Create(stringReader, GetXmlReaderSettings(), GetXmlParserContext());
 				var scxmlDirector = new ScxmlDirector(xmlReader, GetBuilderFactory());
-				
+
 				return scxmlDirector.ConstructStateMachine();
 			}
 
 			return null;
 		}
 
-		public virtual async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, IStateMachine stateMachine, Uri source, string scxml, 
-																						DataModelValue parameters, CancellationToken token)
+		public virtual async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, IStateMachineOptions options, IStateMachine stateMachine, Uri source,
+																						string scxml, DataModelValue parameters, CancellationToken token)
 		{
-			FillInterpreterOptions(out var options);
-			options.Arguments = parameters;
+			FillInterpreterOptions(out var interpreterOptions);
+			interpreterOptions.Arguments = parameters;
 
 			stateMachine = await GetStateMachine(stateMachine, source, scxml, token).ConfigureAwait(false);
-			
-			var stateMachineController = CreateStateMachineController(sessionId, stateMachine, options);
+
+			if (options == null)
+			{
+				stateMachine.Is(out options);
+			}
+
+			var stateMachineController = CreateStateMachineController(sessionId, options, stateMachine, interpreterOptions);
 			ValidateTrue(_stateMachinesBySessionId.TryAdd(sessionId, stateMachineController));
 			ValidateTrue(_serviceByTarget.TryAdd(new Uri("#_scxml_" + stateMachineController.SessionId, UriKind.Relative), stateMachineController));
 

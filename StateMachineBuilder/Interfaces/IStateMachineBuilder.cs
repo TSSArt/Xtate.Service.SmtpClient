@@ -15,5 +15,8 @@ namespace TSSArt.StateMachine
 		void SetName(string name);
 		void SetDataModelType(string dataModelType);
 		void SetBindingType(BindingType bindingType);
+		void SetPersistenceLevel(PersistenceLevel persistenceLevel);
+		void SetSynchronousEventProcessing(bool value);
+		void SetExternalQueueSize(int size);
 	}
 }

@@ -12,6 +12,7 @@ namespace TSSArt.StateMachine
 		private List<(IMemoryOwner<byte> Owner, int Size)> _buffers;
 		private IMemoryOwner<byte>                         _owner;
 		private SortedSet<Entry>                           _readModel;
+		private bool                                       _disposed;
 
 		public InMemoryStorage(ReadOnlySpan<byte> baseline)
 		{
@@ -51,7 +52,16 @@ namespace TSSArt.StateMachine
 
 		public void Dispose()
 		{
-			Dispose(true);
+			if (_disposed)
+			{
+				return;
+			}
+
+			TruncateLog(true);
+
+			_baselineOwner?.Dispose();
+
+			_disposed = true;
 		}
 
 		public void Add(ReadOnlySpan<byte> key, ReadOnlySpan<byte> value)
@@ -103,16 +113,6 @@ namespace TSSArt.StateMachine
 
 			return false;
 #endif
-		}
-
-		protected virtual void Dispose(bool dispose)
-		{
-			if (dispose)
-			{
-				TruncateLog(true);
-
-				_baselineOwner?.Dispose();
-			}
 		}
 
 		private static SortedSet<Entry> CreateReadModel() => new SortedSet<Entry>();

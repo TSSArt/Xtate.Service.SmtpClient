@@ -2,12 +2,11 @@
 
 namespace TSSArt.StateMachine
 {
-	internal interface IStateMachineContext : IAsyncDisposable, IDisposable
+	internal interface IStateMachineContext : IAsyncDisposable
 	{
 		IPersistenceContext         PersistenceContext     { get; }
 		IExecutionContext           ExecutionContext       { get; }
 		EntityQueue<IEvent>         InternalQueue          { get; }
-		EntityQueue<IEvent>         ExternalBufferedQueue  { get; }
 		DataModelObject             DataModel              { get; }
 		DataModelObject             ConfigurationObject    { get; }
 		DataModelObject             InterpreterObject      { get; }
