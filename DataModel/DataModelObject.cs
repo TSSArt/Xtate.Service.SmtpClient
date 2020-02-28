@@ -295,9 +295,23 @@ namespace TSSArt.StateMachine
 
 			public override bool TryConvert(ConvertBinder binder, out object result)
 			{
-				result = _obj;
+				if (binder.Type == typeof(DataModelObject))
+				{
+					result = _obj;
 
-				return binder.Type == typeof(DataModelObject);
+					return true;
+				}
+
+				if (binder.Type == typeof(DataModelValue))
+				{
+					result = new DataModelValue(_obj);
+
+					return true;
+				}
+
+				result = default;
+
+				return false;
 			}
 
 			public override IEnumerable<string> GetDynamicMemberNames() => _obj.Properties;

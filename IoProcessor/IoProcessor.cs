@@ -1,24 +1,113 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
 	public sealed partial class IoProcessor : IAsyncDisposable
 	{
-		private readonly IoProcessorContext _context;
+		private readonly IoProcessorOptions _options;
 
-		public IoProcessor(in IoProcessorOptions options)
+		private IoProcessorContext _context;
+		private bool               _asyncOperationInProgress;
+		private bool               _disposed;
+
+		public IoProcessor(IoProcessorOptions options)
 		{
-			_context = options.StorageProvider != null
-					? new IoProcessorPersistedContext(this, options)
-					: new IoProcessorContext(this, options);
+			_options = options ?? throw new ArgumentNullException(nameof(options));
 
-			IoProcessorInit(options.EventProcessors, options.ServiceFactories);
+			IoProcessorInit();
 		}
 
-		public ValueTask InitializeAsync() => _context.InitializeAsync();
+		public async ValueTask StartAsync(CancellationToken token = default)
+		{
+			if (_asyncOperationInProgress)
+			{
+				throw new InvalidOperationException("Another asynchronous operation in progress");
+			}
 
-		public ValueTask DisposeAsync() => _context.DisposeAsync();
+			if (_context != null)
+			{
+				return;
+			}
+
+			var context = _options.StorageProvider != null
+					? new IoProcessorPersistedContext(this, _options)
+					: new IoProcessorContext(this, _options);
+
+			try
+			{
+				_asyncOperationInProgress = true;
+
+				await IoProcessorStartAsync(token).ConfigureAwait(false);
+				await context.InitializeAsync(token).ConfigureAwait(false);
+
+				_context = context;
+			}
+			catch (OperationCanceledException ex) when (ex.CancellationToken == token)
+			{
+				context.Stop();
+			}
+			finally
+			{
+				_asyncOperationInProgress = false;
+			}
+		}
+
+		public async ValueTask StopAsync(CancellationToken token = default)
+		{
+			if (_asyncOperationInProgress)
+			{
+				throw new InvalidOperationException("Another asynchronous operation in progress");
+			}
+
+			var context = _context;
+			if (context == null)
+			{
+				return;
+			}
+
+			_asyncOperationInProgress = true;
+			_context = null;
+
+			try
+			{
+				context.Suspend();
+
+				await context.WaitAllAsync(token).ConfigureAwait(false);
+			}
+			catch (OperationCanceledException ex) when (ex.CancellationToken == token)
+			{
+				context.Stop();
+			}
+			finally
+			{
+				await context.DisposeAsync().ConfigureAwait(false);
+				await IoProcessorStopAsync().ConfigureAwait(false);
+
+				_asyncOperationInProgress = false;
+			}
+		}
+
+		public async ValueTask DisposeAsync()
+		{
+			if (_disposed)
+			{
+				_disposed = true;
+			}
+
+			var context = _context;
+			_context = null;
+
+			if (context != null)
+			{
+				await context.DisposeAsync().ConfigureAwait(false);
+			}
+
+			await IoProcessorStopAsync().ConfigureAwait(false);
+
+			_disposed = true;
+		}
 
 		public ValueTask<DataModelValue> Execute(IStateMachine stateMachine, DataModelValue parameters = default)
 		{
@@ -54,7 +143,14 @@ namespace TSSArt.StateMachine
 		{
 			if (sessionId == null) throw new ArgumentNullException(nameof(sessionId));
 
-			var controller = await _context.CreateAndAddStateMachine(sessionId, options: null, stateMachine, source, scxml, parameters, token: default).ConfigureAwait(false);
+			var context = _context;
+
+			if (context == null)
+			{
+				throw new InvalidOperationException("IO Processor has not been started");
+			}
+
+			var controller = await context.CreateAndAddStateMachine(sessionId, options: null, stateMachine, source, scxml, parameters, token: default).ConfigureAwait(false);
 
 			try
 			{
@@ -62,7 +158,7 @@ namespace TSSArt.StateMachine
 			}
 			finally
 			{
-				await _context.DestroyStateMachine(sessionId).ConfigureAwait(false);
+				await context.DestroyStateMachine(sessionId).ConfigureAwait(false);
 			}
 		}
 	}

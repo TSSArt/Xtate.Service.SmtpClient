@@ -21,7 +21,7 @@ namespace TSSArt.StateMachine
 		private readonly CancellationToken                        _anyToken;
 		private readonly DataModelValue                           _arguments;
 		private readonly ImmutableDictionary<string, string>      _configuration;
-		private readonly ImmutableArray<ICustomActionProvider>    _customActionProviders;
+		private readonly ImmutableArray<ICustomActionFactory>    _customActionProviders;
 		private readonly ImmutableArray<IDataModelHandlerFactory> _dataModelHandlerFactories;
 		private readonly CancellationToken                        _destroyToken;
 		private readonly ChannelReader<IEvent>                    _eventChannel;
@@ -47,7 +47,7 @@ namespace TSSArt.StateMachine
 			_suspendToken = options.SuspendToken;
 			_stopToken = options.StopToken;
 			_destroyToken = options.DestroyToken;
-			_anyToken = AnyToken(_suspendToken, _destroyToken, _stopToken);
+			_anyToken = CancellationTokenHelper.Any(_suspendToken, _destroyToken, _stopToken);
 			_resourceLoader = options.ResourceLoader ?? DefaultResourceLoader.Instance;
 			_customActionProviders = options.CustomActionProviders;
 			_dataModelHandlerFactories = options.DataModelHandlerFactories;
@@ -74,23 +74,6 @@ namespace TSSArt.StateMachine
 					_context.PersistenceContext.SetState((int) StateBagKey.Stop, value ? 0 : 1);
 				}
 			}
-		}
-
-		private static CancellationToken AnyToken(CancellationToken token1, CancellationToken token2, CancellationToken token3)
-		{
-			if (!token1.CanBeCanceled)
-			{
-				return token2.CanBeCanceled ? token3.CanBeCanceled ? CancellationTokenSource.CreateLinkedTokenSource(token2, token3).Token : token2 : token3;
-			}
-
-			if (!token2.CanBeCanceled)
-			{
-				return token3.CanBeCanceled ? CancellationTokenSource.CreateLinkedTokenSource(token1, token3).Token : token1;
-			}
-
-			return token3.CanBeCanceled
-					? CancellationTokenSource.CreateLinkedTokenSource(token1, token2, token3).Token
-					: CancellationTokenSource.CreateLinkedTokenSource(token1, token2).Token;
 		}
 
 		public static ValueTask<StateMachineResult> RunAsync(string sessionId, IStateMachine stateMachine, ChannelReader<IEvent> eventChannel, in InterpreterOptions options = default)

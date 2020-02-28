@@ -551,9 +551,23 @@ namespace TSSArt.StateMachine
 
 			public override bool TryConvert(ConvertBinder binder, out object result)
 			{
-				result = _arr;
+				if (binder.Type == typeof(DataModelArray))
+				{
+					result = _arr;
 
-				return binder.Type == typeof(DataModelArray);
+					return true;
+				}
+
+				if (binder.Type == typeof(DataModelValue))
+				{
+					result = new DataModelValue(_arr);
+
+					return true;
+				}
+
+				result = default;
+
+				return false;
 			}
 		}
 	}

@@ -6,7 +6,7 @@ namespace TSSArt.StateMachine
 	public struct InterpreterOptions
 	{
 		public ImmutableArray<IDataModelHandlerFactory> DataModelHandlerFactories { get; set; }
-		public ImmutableArray<ICustomActionProvider>    CustomActionProviders     { get; set; }
+		public ImmutableArray<ICustomActionFactory>    CustomActionProviders     { get; set; }
 		public ImmutableDictionary<string, string>      Configuration             { get; set; }
 		public DataModelValue                           Arguments                 { get; set; }
 		public IExternalCommunication                   ExternalCommunication     { get; set; }

@@ -10,9 +10,10 @@ namespace TSSArt.StateMachine
 	{
 		private static readonly Uri InternalTarget = new Uri(uriString: "#_internal", UriKind.Relative);
 
-		private readonly Dictionary<Uri, IEventProcessor> _eventProcessors  = new Dictionary<Uri, IEventProcessor>(UriComparer.Instance);
 		private readonly Dictionary<Uri, IServiceFactory> _serviceFactories = new Dictionary<Uri, IServiceFactory>(UriComparer.Instance);
-		private          ImmutableArray<IEventProcessor>  _ioProcessors;
+
+		private ImmutableDictionary<Uri, IEventProcessor> _eventProcessors;
+		private ImmutableArray<IEventProcessor>           _ioProcessors;
 
 		ImmutableArray<IEventProcessor> IIoProcessor.GetIoProcessors() => _ioProcessors;
 
@@ -119,63 +120,90 @@ namespace TSSArt.StateMachine
 			return pair.Service?.Send(@event, token) ?? default;
 		}
 
-		private void IoProcessorInit(ImmutableArray<IEventProcessor> eventProcessors, ImmutableArray<IServiceFactory> serviceFactories)
+		private void IoProcessorInit()
 		{
-			var eventProcessorsCount = !eventProcessors.IsDefaultOrEmpty ? eventProcessors.Length + 1 : 1;
-			var ioProcessorsBuilder = ImmutableArray.CreateBuilder<IEventProcessor>(eventProcessorsCount);
-
-			ioProcessorsBuilder.Add(this);
-			AddEventProcessor(this);
-
-			if (!eventProcessors.IsDefaultOrEmpty)
-			{
-				foreach (var eventProcessor in eventProcessors)
-				{
-					ioProcessorsBuilder.Add(eventProcessor);
-					AddEventProcessor(eventProcessor);
-				}
-			}
-
-			_ioProcessors = ioProcessorsBuilder.MoveToImmutable();
-
 			AddServiceFactory(this);
 
-			if (!serviceFactories.IsDefaultOrEmpty)
+			if (!_options.ServiceFactories.IsDefaultOrEmpty)
 			{
-				foreach (var serviceFactory in serviceFactories)
+				foreach (var serviceFactory in _options.ServiceFactories)
 				{
 					AddServiceFactory(serviceFactory);
 				}
 			}
 
-			foreach (var eventProcessor in _ioProcessors)
+			void AddServiceFactory(IServiceFactory serviceFactory)
 			{
-				if (eventProcessor != this)
+				_serviceFactories.Add(serviceFactory.TypeId, serviceFactory);
+
+				var aliasId = serviceFactory.AliasTypeId;
+				if (aliasId != null)
 				{
-					eventProcessor.RegisterEventConsumer(this);
+					_serviceFactories.Add(aliasId, serviceFactory);
 				}
 			}
 		}
 
-		private void AddEventProcessor(IEventProcessor eventProcessor)
+		private async ValueTask IoProcessorStartAsync(CancellationToken token)
 		{
-			_eventProcessors.Add(eventProcessor.Id, eventProcessor);
+			var eventProcessors = ImmutableDictionary.Create<Uri, IEventProcessor>(UriComparer.Instance);
+			var ioProcessors = ImmutableArray<IEventProcessor>.Empty;
 
-			var aliasId = eventProcessor.AliasId;
-			if (aliasId != null)
+			AddEventProcessor(this);
+
+			if (!_options.EventProcessorFactories.IsDefaultOrEmpty)
 			{
-				_eventProcessors.Add(aliasId, eventProcessor);
+				foreach (var eventProcessorFactory in _options.EventProcessorFactories)
+				{
+					AddEventProcessor(await eventProcessorFactory.Create(this, token).ConfigureAwait(false));
+				}
 			}
+
+			void AddEventProcessor(IEventProcessor eventProcessor)
+			{
+				ioProcessors = ioProcessors.Add(eventProcessor);
+
+				eventProcessors = eventProcessors.Add(eventProcessor.Id, eventProcessor);
+
+				var aliasId = eventProcessor.AliasId;
+				if (aliasId != null)
+				{
+					eventProcessors = eventProcessors.Add(aliasId, eventProcessor);
+				}
+			}
+
+			_eventProcessors = eventProcessors;
+			_ioProcessors = ioProcessors;
 		}
 
-		private void AddServiceFactory(IServiceFactory serviceFactory)
+		private async ValueTask IoProcessorStopAsync()
 		{
-			_serviceFactories.Add(serviceFactory.TypeId, serviceFactory);
+			var ioProcessors = _ioProcessors;
+			_eventProcessors = null;
+			_ioProcessors = default;
 
-			var aliasId = serviceFactory.AliasTypeId;
-			if (aliasId != null)
+			if (ioProcessors.IsDefaultOrEmpty)
 			{
-				_serviceFactories.Add(aliasId, serviceFactory);
+				return;
+			}
+
+			foreach (var eventProcessor in ioProcessors)
+			{
+				if (eventProcessor == this)
+				{
+					continue;
+				}
+
+				if (eventProcessor is IAsyncDisposable asyncDisposable)
+				{
+					await asyncDisposable.DisposeAsync().ConfigureAwait(false);
+				}
+
+				// ReSharper disable once SuspiciousTypeConversion.Global
+				else if (eventProcessor is IDisposable disposable)
+				{
+					disposable.Dispose();
+				}
 			}
 		}
 

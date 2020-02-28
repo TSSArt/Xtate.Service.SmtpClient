@@ -12,7 +12,7 @@ namespace TSSArt.StateMachine
 	{
 		private int _counter;
 
-		private ImmutableArray<ICustomActionProvider>             _customActionProviders;
+		private ImmutableArray<ICustomActionFactory>             _customActionFactories;
 		private IDataModelHandler                                 _dataModelHandler;
 		private List<DataModelNode>                               _dataModelNodeList;
 		private int                                               _deepLevel;
@@ -42,12 +42,12 @@ namespace TSSArt.StateMachine
 			_counter = _inParallel ? _counter + saved.counter : _counter > saved.counter ? _counter : saved.counter;
 		}
 
-		public InterpreterModel Build(IStateMachine stateMachine, IDataModelHandler dataModelHandler, ImmutableArray<ICustomActionProvider> customActionProviders)
+		public InterpreterModel Build(IStateMachine stateMachine, IDataModelHandler dataModelHandler, ImmutableArray<ICustomActionFactory> customActionProviders)
 		{
 			if (stateMachine == null) throw new ArgumentNullException(nameof(stateMachine));
 
 			_dataModelHandler = dataModelHandler ?? throw new ArgumentNullException(nameof(dataModelHandler));
-			_customActionProviders = customActionProviders;
+			_customActionFactories = customActionProviders;
 			_idMap = new Dictionary<IIdentifier, StateEntityNode>(IdentifierEqualityComparer.Instance);
 			_entities = new List<IEntity>();
 			_targetMap = new List<TransitionNode>();
@@ -72,7 +72,7 @@ namespace TSSArt.StateMachine
 			return new InterpreterModel((StateMachineNode) stateMachine, _counter, _entityMap, _dataModelNodeList);
 		}
 
-		public async ValueTask<InterpreterModel> Build(IStateMachine stateMachine, IDataModelHandler dataModelHandler, ImmutableArray<ICustomActionProvider> customActionProviders,
+		public async ValueTask<InterpreterModel> Build(IStateMachine stateMachine, IDataModelHandler dataModelHandler, ImmutableArray<ICustomActionFactory> customActionProviders,
 													   IResourceLoader resourceLoader, CancellationToken token)
 		{
 			if (stateMachine == null) throw new ArgumentNullException(nameof(stateMachine));
@@ -359,13 +359,13 @@ namespace TSSArt.StateMachine
 
 			if (customAction.Is<ICustomActionConsumer>(out var consumer))
 			{
-				consumer.SetAction(FindAction(customAction.Xml));
+				consumer.SetExecutor(GetExecutor(customAction.Xml));
 			}
 		}
 
-		private Func<IExecutionContext, CancellationToken, ValueTask> FindAction(string xml)
+		private ICustomActionExecutor GetExecutor(string xml)
 		{
-			if (!_customActionProviders.IsDefaultOrEmpty)
+			if (!_customActionFactories.IsDefaultOrEmpty)
 			{
 				using var stringReader = new StringReader(xml);
 				using var xmlReader = XmlReader.Create(stringReader);
@@ -375,16 +375,16 @@ namespace TSSArt.StateMachine
 				var namespaceUri = xmlReader.NamespaceURI;
 				var name = xmlReader.LocalName;
 
-				foreach (var handler in _customActionProviders)
+				foreach (var handler in _customActionFactories)
 				{
 					if (handler.CanHandle(namespaceUri, name))
 					{
-						return handler.GetAction(xml);
+						return handler.CreateExecutor(xml);
 					}
 				}
 			}
 
-			return (context, token) => throw new NotSupportedException("Custom action does not supported");
+			return CustomActionBase.NoExecutorInstance;
 		}
 
 		protected override void Build(ref IExternalDataExpression externalDataExpression, ref ExternalDataExpression externalDataExpressionProperties)

@@ -19,7 +19,6 @@ namespace TSSArt.StateMachine
 		private readonly SemaphoreSlim                        _lockStateMachines   = new SemaphoreSlim(initialCount: 1, maxCount: 1);
 		private readonly TimeSpan                             _idlePeriod;
 		private readonly IIoProcessor                         _ioProcessor;
-		private readonly CancellationToken                    _stopToken;
 		private readonly IStorageProvider                     _storageProvider;
 
 		private ITransactionalStorage _storage;
@@ -27,20 +26,22 @@ namespace TSSArt.StateMachine
 		private int                   _stateMachineRecordId;
 		private bool                  _disposed;
 
-		public IoProcessorPersistedContext(IIoProcessor ioProcessor, in IoProcessorOptions options) : base(ioProcessor, options)
+		public IoProcessorPersistedContext(IIoProcessor ioProcessor, in IoProcessorOptions options) 
+				: base(ioProcessor, options)
 		{
 			_ioProcessor = ioProcessor;
 			_storageProvider = options.StorageProvider ?? throw new ArgumentNullException(nameof(options.StorageProvider));
 			_idlePeriod = options.SuspendIdlePeriod;
-			_stopToken = options.StopToken;
 		}
 
-		public override async ValueTask InitializeAsync()
+		public override async ValueTask InitializeAsync(CancellationToken token)
 		{
-			_storage = await _storageProvider.GetTransactionalStorage(IoProcessorPartition, ContextKey, _stopToken).ConfigureAwait(false);
+			_storage = await _storageProvider.GetTransactionalStorage(IoProcessorPartition, ContextKey, token).ConfigureAwait(false);
 
-			await LoadStateMachines(_stopToken).ConfigureAwait(false);
-			await LoadInvokedServices(_stopToken).ConfigureAwait(false);
+			await LoadStateMachines(token).ConfigureAwait(false);
+			await LoadInvokedServices(token).ConfigureAwait(false);
+
+			await base.InitializeAsync(token).ConfigureAwait(false);
 		}
 
 		public override async ValueTask DisposeAsync()
@@ -62,7 +63,7 @@ namespace TSSArt.StateMachine
 
 		public override async ValueTask AddService(string sessionId, string invokeId, string invokeUniqueId, IService service)
 		{
-			await _lockInvokedServices.WaitAsync(_stopToken).ConfigureAwait(false);
+			await _lockInvokedServices.WaitAsync(StopToken).ConfigureAwait(false);
 			try
 			{
 				await base.AddService(sessionId, invokeId, invokeUniqueId, service).ConfigureAwait(false);
@@ -78,7 +79,7 @@ namespace TSSArt.StateMachine
 
 				invokedService.Store(bucket.Nested(recordId));
 
-				await _storage.CheckPoint(level: 0, _stopToken).ConfigureAwait(false);
+				await _storage.CheckPoint(level: 0, StopToken).ConfigureAwait(false);
 			}
 			finally
 			{
@@ -98,15 +99,15 @@ namespace TSSArt.StateMachine
 			{
 				bucket.RemoveSubtree(recordId);
 
-				await _storage.CheckPoint(level: 0, _stopToken).ConfigureAwait(false);
+				await _storage.CheckPoint(level: 0, StopToken).ConfigureAwait(false);
 			}
 
-			await ShrinkInvokedServices(_stopToken).ConfigureAwait(false);
+			await ShrinkInvokedServices(StopToken).ConfigureAwait(false);
 		}
 
 		public override async ValueTask<IService> TryRemoveService(string sessionId, string invokeId)
 		{
-			await _lockInvokedServices.WaitAsync(_stopToken).ConfigureAwait(false);
+			await _lockInvokedServices.WaitAsync(StopToken).ConfigureAwait(false);
 			try
 			{
 				await RemoveInvokedService(sessionId, invokeId).ConfigureAwait(false);
@@ -121,7 +122,7 @@ namespace TSSArt.StateMachine
 
 		public override async ValueTask<IService> TryCompleteService(string sessionId, string invokeId)
 		{
-			await _lockInvokedServices.WaitAsync(_stopToken).ConfigureAwait(false);
+			await _lockInvokedServices.WaitAsync(StopToken).ConfigureAwait(false);
 			try
 			{
 				await RemoveInvokedService(sessionId, invokeId).ConfigureAwait(false);
@@ -141,16 +142,6 @@ namespace TSSArt.StateMachine
 					: base.CreateStateMachineController(sessionId, options, stateMachine, in defaultOptions);
 		}
 
-		internal class StateMachineOptions : IStoreSupport
-		{
-			public void Store(Bucket bucket)
-			{
-				throw new NotImplementedException();
-			}
-
-			public bool IsStateMachinePersistable { get; set; }
-		}
-
 		public override async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, IStateMachineOptions options, IStateMachine stateMachine, Uri source,
 																						 string scxml, DataModelValue parameters, CancellationToken token)
 		{
@@ -166,7 +157,7 @@ namespace TSSArt.StateMachine
 				return await base.CreateAndAddStateMachine(sessionId, options, stateMachine, source: null, scxml: null, parameters, token).ConfigureAwait(false);
 			}
 
-			await _lockStateMachines.WaitAsync(_stopToken).ConfigureAwait(false);
+			await _lockStateMachines.WaitAsync(StopToken).ConfigureAwait(false);
 			try
 			{
 				var stateMachineController = await base.CreateAndAddStateMachine(sessionId, options, stateMachine, source: null, scxml: null, parameters, token).ConfigureAwait(false);
@@ -181,7 +172,7 @@ namespace TSSArt.StateMachine
 
 				stateMachineMeta.Store(bucket.Nested(recordId));
 
-				await _storage.CheckPoint(level: 0, _stopToken).ConfigureAwait(false);
+				await _storage.CheckPoint(level: 0, StopToken).ConfigureAwait(false);
 
 				return stateMachineController;
 			}
@@ -193,7 +184,7 @@ namespace TSSArt.StateMachine
 
 		public override async ValueTask DestroyStateMachine(string sessionId)
 		{
-			await _lockStateMachines.WaitAsync(_stopToken).ConfigureAwait(false);
+			await _lockStateMachines.WaitAsync(StopToken).ConfigureAwait(false);
 			try
 			{
 				_stateMachines.Remove(sessionId);
@@ -203,10 +194,10 @@ namespace TSSArt.StateMachine
 				{
 					bucket.RemoveSubtree(recordId);
 
-					await _storage.CheckPoint(level: 0, _stopToken).ConfigureAwait(false);
+					await _storage.CheckPoint(level: 0, StopToken).ConfigureAwait(false);
 				}
 
-				await ShrinkStateMachines(_stopToken).ConfigureAwait(false);
+				await ShrinkStateMachines(StopToken).ConfigureAwait(false);
 
 				await base.DestroyStateMachine(sessionId).ConfigureAwait(false);
 			}

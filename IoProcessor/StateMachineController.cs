@@ -13,7 +13,7 @@ namespace TSSArt.StateMachine
 		private static readonly UnboundedChannelOptions UnboundedSynchronousChannelOptions  = new UnboundedChannelOptions { SingleReader = true, AllowSynchronousContinuations = true };
 		private static readonly UnboundedChannelOptions UnboundedAsynchronousChannelOptions = new UnboundedChannelOptions { SingleReader = true, AllowSynchronousContinuations = false };
 
-		private readonly TaskCompletionSource<object>         _acceptedTcs = new TaskCompletionSource<object>();
+		private readonly TaskCompletionSource<object>         _acceptedTcs  = new TaskCompletionSource<object>();
 		private readonly TaskCompletionSource<DataModelValue> _completedTcs = new TaskCompletionSource<DataModelValue>();
 		private readonly InterpreterOptions                   _defaultOptions;
 		private readonly CancellationTokenSource              _destroyTokenSource = new CancellationTokenSource();
@@ -27,7 +27,7 @@ namespace TSSArt.StateMachine
 		private bool _disposed;
 
 		protected virtual Channel<IEvent> Channel { get; }
-		
+
 		public StateMachineController(string sessionId, IStateMachineOptions options, IStateMachine stateMachine, IIoProcessor ioProcessor, TimeSpan idlePeriod, in InterpreterOptions defaultOptions)
 		{
 			SessionId = sessionId;
@@ -205,18 +205,28 @@ namespace TSSArt.StateMachine
 							_completedTcs.TrySetResult(result.Result);
 							return new StateMachineResult(StateMachineExitStatus.Completed, result.Result);
 
+						case StateMachineExitStatus.Suspended when options.SuspendToken.IsCancellationRequested:
+							var suspendException = new OperationCanceledException(options.SuspendToken);
+							if (throwOnError)
+							{
+								throw suspendException;
+							}
+
+							_completedTcs.TrySetCanceled(options.SuspendToken);
+							return new StateMachineResult(result.Status, suspendException);
+
 						case StateMachineExitStatus.Suspended:
 							break;
 
 						case StateMachineExitStatus.Destroyed:
-							var exception = new OperationCanceledException(options.DestroyToken);
+							var destroyException = new OperationCanceledException(options.DestroyToken);
 							if (throwOnError)
 							{
-								throw exception;
+								throw destroyException;
 							}
 
 							_completedTcs.TrySetCanceled(options.DestroyToken);
-							return new StateMachineResult(result.Status, exception);
+							return new StateMachineResult(result.Status, destroyException);
 
 						case StateMachineExitStatus.QueueClosed:
 						case StateMachineExitStatus.LiveLockAbort:
@@ -231,18 +241,33 @@ namespace TSSArt.StateMachine
 						default: throw new ArgumentOutOfRangeException();
 					}
 
-					if (!await Channel.Reader.WaitToReadAsync().ConfigureAwait(false))
+					var anyToken = CancellationTokenHelper.Any(_defaultOptions.StopToken, _defaultOptions.DestroyToken, _defaultOptions.SuspendToken);
+					if (!await Channel.Reader.WaitToReadAsync(anyToken).ConfigureAwait(false))
 					{
 						exitStatus = StateMachineExitStatus.QueueClosed;
-						await Channel.Reader.ReadAsync().ConfigureAwait(false);
+						await Channel.Reader.ReadAsync(CancellationToken.None).ConfigureAwait(false);
 					}
 				}
 				catch (Exception ex)
 				{
 					if (ex is OperationCanceledException operationCanceledException)
 					{
-						_acceptedTcs.TrySetCanceled(operationCanceledException.CancellationToken);
-						_completedTcs.TrySetCanceled(operationCanceledException.CancellationToken);
+						var token = operationCanceledException.CancellationToken;
+						if (_defaultOptions.StopToken.IsCancellationRequested)
+						{
+							token = _defaultOptions.StopToken;
+						}
+						else if (_defaultOptions.DestroyToken.IsCancellationRequested)
+						{
+							token = _defaultOptions.DestroyToken;
+						}
+						else if (_defaultOptions.SuspendToken.IsCancellationRequested)
+						{
+							token = _defaultOptions.SuspendToken;
+						}
+
+						_acceptedTcs.TrySetCanceled(token);
+						_completedTcs.TrySetCanceled(token);
 					}
 					else
 					{
