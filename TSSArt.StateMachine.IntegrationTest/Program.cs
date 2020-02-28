@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using TSSArt.StateMachine.EcmaScript;
 using TSSArt.StateMachine.Services;
 
@@ -20,8 +17,6 @@ namespace TSSArt.StateMachine.IntegrationTest
 			Trace.Listeners.Add(new ConsoleTraceListener());
 
 			var baseUri = new Uri(args.Length > 0 ? args[0] : "http://localhost:5001/");
-			using var handler = new HttpEventProcessorHandler(baseUri);
-			var httpEventProcessor = handler.CreateEventProcessor(baseUri.AbsolutePath);
 
 			var configurationBuilder = ImmutableDictionary.CreateBuilder<string, string>();
 			configurationBuilder["uiEndpoint"] = "http://localhost:5000/dialog";
@@ -29,46 +24,37 @@ namespace TSSArt.StateMachine.IntegrationTest
 
 			var options = new IoProcessorOptions
 						  {
-								  EventProcessors = ImmutableArray.Create(httpEventProcessor),
+								  EventProcessorFactories = ImmutableArray.Create((IEventProcessorFactory) new HttpEventProcessorFactory(baseUri, path: "/")),
 								  ServiceFactories = ImmutableArray.Create(HttpClientService.Factory, SmtpClientService.Factory),
 								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
-								  CustomActionProviders = ImmutableArray.Create(BasicCustomActionProvider.Instance, MimeCustomActionProvider.Instance, MidCustomActionProvider.Instance),
+								  CustomActionFactories = ImmutableArray.Create(BasicCustomActionFactory.Instance, MimeCustomActionFactory.Instance, MidCustomActionFactory.Instance),
 								  ResourceLoader = new ResourceProvider(),
 								  Configuration = configurationBuilder.ToImmutable()
 						  };
 
 			await using var ioProcessor = new IoProcessor(options);
 
-			var prms = new DataModelObject
-					   {
-							   ["loginUrl"] = "https://test.tssart.com/wp-login.php",
-							   ["username"] = "tadex1",
-							   ["password"] = "123456"
-					   };
+			await ioProcessor.StartAsync().ConfigureAwait(false);
 
-			var task = ioProcessor.Execute(new Uri(uriString: "login", UriKind.Relative), prms);
+			dynamic prms = new DataModelObject();
+			prms.loginUrl = "https://test.tssart.com/wp-login.php";
+			prms.username = "tadex1";
+			prms.password = "123456";
 
-			var webHost = new WebHostBuilder()
-						  .Configure(builder => builder.Run(handler.ProcessRequest))
-						  .UseKestrel(serverOptions => serverOptions.ListenAnyIP(baseUri.Port))
-						  .Build();
+			var task = ioProcessor.Execute(new Uri(uriString: "signup", UriKind.Relative), prms);
 
-			await webHost.StartAsync().ConfigureAwait(false);
 
 			dynamic result = await task.ConfigureAwait(false);
 
-			var prms2 = new DataModelObject
-						{
-								["profileUrl"] = "https://test.tssart.com/wp-admin/profile.php",
-								["cookies"] = result.data.cookies
-						};
+			dynamic prms2 = new DataModelObject();
+			prms2.profileUrl = "https://test.tssart.com/wp-admin/profile.php";
+			prms2.cookies = result.data.cookies;
+
 			var task2 = ioProcessor.Execute(new Uri(uriString: "captureEmail", UriKind.Relative), new DataModelValue(prms2));
 
 			dynamic result2 = await task2.ConfigureAwait(false);
 
-			//Console.WriteLine(DataModelConverter.ToJson(result));
-
-			await webHost.StopAsync().ConfigureAwait(false);
+			await ioProcessor.StopAsync().ConfigureAwait(false);
 		}
 	}
 
@@ -78,8 +64,8 @@ namespace TSSArt.StateMachine.IntegrationTest
 
 		public ValueTask<XmlReader> RequestXmlReader(Uri uri, XmlReaderSettings readerSettings = null, XmlParserContext parserContext = null, CancellationToken token = default)
 		{
-			using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("TSSArt.StateMachine.IntegrationTest." + uri + ".xml");
-			return new ValueTask<XmlReader>(XmlReader.Create(stream));
+			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("TSSArt.StateMachine.IntegrationTest." + uri + ".xml");
+			return new ValueTask<XmlReader>(XmlReader.Create(stream, readerSettings, parserContext));
 		}
 	}
 }

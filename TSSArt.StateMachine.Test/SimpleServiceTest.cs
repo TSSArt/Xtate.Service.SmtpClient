@@ -43,6 +43,7 @@ namespace TSSArt.StateMachine.Test
 
 			await using var ioProcessor = new IoProcessor(options);
 
+			await ioProcessor.StartAsync();
 			// Act
 			dynamic result = await ioProcessor.Execute(stateMachine);
 

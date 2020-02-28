@@ -31,7 +31,7 @@ namespace TSSArt.StateMachine.Services
 			_pattern = xmlReader.GetAttribute("regex");
 		}
 
-		public override ValueTask Action(IExecutionContext context, CancellationToken token)
+		public override ValueTask Execute(IExecutionContext context, CancellationToken token)
 		{
 			if (context == null) throw new ArgumentNullException(nameof(context));
 

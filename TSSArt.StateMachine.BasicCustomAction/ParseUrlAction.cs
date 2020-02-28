@@ -21,7 +21,7 @@ namespace TSSArt.StateMachine
 			_parameter = xmlReader.GetAttribute("parameter");
 		}
 
-		public override ValueTask Action(IExecutionContext context, CancellationToken token)
+		public override ValueTask Execute(IExecutionContext context, CancellationToken token)
 		{
 			if (context == null) throw new ArgumentNullException(nameof(context));
 

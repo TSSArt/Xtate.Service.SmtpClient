@@ -23,14 +23,6 @@ namespace TSSArt.StateMachine
 
 		Uri IEventProcessor.GetTarget(string sessionId) => GetTarget(sessionId);
 
-		void IEventProcessor.RegisterEventConsumer(IEventConsumer eventConsumer)
-		{
-			if (eventConsumer != this)
-			{
-				throw new InvalidOperationException();
-			}
-		}
-
 		ValueTask IEventProcessor.Dispatch(string sessionId, IOutgoingEvent @event, CancellationToken token)
 		{
 			var service = _context.GetService(sessionId, @event.Target);

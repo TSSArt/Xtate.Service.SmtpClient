@@ -8,10 +8,9 @@ namespace TSSArt.StateMachine
 	{
 		Uri Id      { get; }
 		Uri AliasId { get; }
+
 		Uri GetTarget(string sessionId);
 
 		ValueTask Dispatch(string sessionId, IOutgoingEvent @event, CancellationToken token);
-
-		void RegisterEventConsumer(IEventConsumer eventConsumer);
 	}
 }

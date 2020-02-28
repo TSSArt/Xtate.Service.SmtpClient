@@ -18,6 +18,8 @@ namespace TSSArt.StateMachine.Test
 
 			await using var ioProcessor = new IoProcessor(new IoProcessorOptions());
 
+			await ioProcessor.StartAsync();
+
 			// Act
 			var result = await ioProcessor.Execute(stateMachine);
 
@@ -41,6 +43,8 @@ namespace TSSArt.StateMachine.Test
 							   .Build();
 
 			await using var ioProcessor = new IoProcessor(new IoProcessorOptions());
+
+			await ioProcessor.StartAsync();
 
 			// Act
 			var result = await ioProcessor.Execute(stateMachine, new DataModelValue(33));

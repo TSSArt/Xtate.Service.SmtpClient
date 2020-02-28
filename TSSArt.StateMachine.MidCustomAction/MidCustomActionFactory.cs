@@ -1,11 +1,11 @@
 ﻿namespace TSSArt.StateMachine
 {
 	[CustomActionProvider("http://tssart.com/scxml/customaction/mid")]
-	public class MidCustomActionProvider : CustomActionProviderBase
+	public class MidCustomActionFactory : CustomActionFactoryBase
 	{
-		public static readonly ICustomActionProvider Instance = new MidCustomActionProvider();
+		public static readonly ICustomActionFactory Instance = new MidCustomActionFactory();
 
-		private MidCustomActionProvider()
+		private MidCustomActionFactory()
 		{
 			Register(name: "storage", xmlReader => new StorageAction(xmlReader));
 		}

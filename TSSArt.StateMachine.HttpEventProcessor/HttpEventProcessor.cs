@@ -15,7 +15,7 @@ using Microsoft.Extensions.Primitives;
 namespace TSSArt.StateMachine
 {
 	[EventProcessor("http://www.w3.org/TR/scxml/#BasicHTTPEventProcessor", Alias = "http")]
-	public sealed class HttpEventProcessor : EventProcessorBase
+	public sealed class HttpEventProcessor : EventProcessorBase, IAsyncDisposable
 	{
 		private const string MediaTypeTextPlain                 = "text/plain";
 		private const string MediaTypeApplicationJson           = "application/json";
@@ -24,14 +24,19 @@ namespace TSSArt.StateMachine
 
 		private readonly Uri    _baseUri;
 		private readonly string _path;
+		private readonly Func<ValueTask> _onDispose;
 
-		public HttpEventProcessor(Uri baseUri, string path)
+		public HttpEventProcessor(IEventConsumer eventConsumer, Uri baseUri, string path, Func<ValueTask> onDispose) : base(eventConsumer)
 		{
+			if (baseUri == null) throw new ArgumentNullException(nameof(baseUri));
 			if (string.IsNullOrEmpty(path)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(path));
 
 			_baseUri = new Uri(baseUri, path);
 			_path = path;
+			_onDispose = onDispose ?? throw new ArgumentNullException(nameof(onDispose));
 		}
+
+		public ValueTask DisposeAsync() => _onDispose();
 
 		protected override Uri GetTarget(string sessionId) => new Uri(_baseUri, sessionId);
 

@@ -7,11 +7,14 @@ namespace TSSArt.StateMachine
 {
 	public abstract class EventProcessorBase : IEventProcessor
 	{
-		private readonly Uri            _eventProcessorAliasId;
-		private          IEventConsumer _eventConsumer;
+		private readonly Uri _eventProcessorAliasId;
 
-		protected EventProcessorBase()
+		private readonly IEventConsumer _eventConsumer;
+
+		protected EventProcessorBase(IEventConsumer eventConsumer)
 		{
+			_eventConsumer = eventConsumer ?? throw new ArgumentNullException(nameof(eventConsumer));
+
 			var eventProcessorAttribute = GetType().GetCustomAttribute<EventProcessorAttribute>();
 
 			if (eventProcessorAttribute == null)
@@ -32,16 +35,6 @@ namespace TSSArt.StateMachine
 		Uri IEventProcessor.GetTarget(string sessionId) => GetTarget(sessionId);
 
 		ValueTask IEventProcessor.Dispatch(string sessionId, IOutgoingEvent @event, CancellationToken token) => OutgoingEvent(sessionId, @event, token);
-
-		void IEventProcessor.RegisterEventConsumer(IEventConsumer eventConsumer)
-		{
-			if (eventConsumer == null) throw new ArgumentNullException(nameof(eventConsumer));
-
-			if (Interlocked.CompareExchange(ref _eventConsumer, eventConsumer, comparand: null) != null)
-			{
-				throw new InvalidOperationException("Event consumer already has been registered.");
-			}
-		}
 
 		protected abstract Uri GetTarget(string sessionId);
 

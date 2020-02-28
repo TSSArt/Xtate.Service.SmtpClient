@@ -8,12 +8,14 @@ using TSSArt.StateMachine.EcmaScript;
 namespace TSSArt.StateMachine.Test
 {
 	[TestClass]
-	internal class StorageTest
+	public class StorageTest
 	{
-		public static string Dump(InMemoryStorage storage, string delimiter = "", bool hex = false)
+		public static string Dump(IStorage storage, string delimiter = "", bool hex = false)
 		{
-			var logBytes = new byte[storage.GetTransactionLogSize()];
-			storage.WriteTransactionLogToSpan(logBytes, truncateLog: false);
+			var inMemoryStorage = (InMemoryStorage)storage;
+
+			var logBytes = new byte[inMemoryStorage.GetTransactionLogSize()];
+			inMemoryStorage.WriteTransactionLogToSpan(logBytes, truncateLog: false);
 
 			var log = logBytes.AsSpan();
 			var sb = new StringBuilder();
@@ -40,10 +42,12 @@ namespace TSSArt.StateMachine.Test
 			return sb.ToString();
 		}
 
-		public static int GetEntriesCount(InMemoryStorage storage)
+		public static int GetEntriesCount(IStorage storage)
 		{
-			var logBytes = new byte[storage.GetTransactionLogSize()];
-			storage.WriteTransactionLogToSpan(logBytes, truncateLog: false);
+			var inMemoryStorage = (InMemoryStorage)storage;
+
+			var logBytes = new byte[inMemoryStorage.GetTransactionLogSize()];
+			inMemoryStorage.WriteTransactionLogToSpan(logBytes, truncateLog: false);
 
 			var log = logBytes.AsSpan();
 			var count = 0;

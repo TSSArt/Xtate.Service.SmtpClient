@@ -57,6 +57,7 @@ namespace TSSArt.StateMachine.Test
 						  };
 
 			var ioProcessor = new IoProcessor(options);
+			await ioProcessor.StartAsync();
 			var result = await ioProcessor.Execute(new Uri("scxml://a"));
 
 			Assert.AreEqual(expected: 111.0, result.AsNumber());
@@ -170,7 +171,7 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 						  {
 								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
 								  ServiceFactories = ImmutableArray.Create(HttpClientService.Factory, SmtpClientService.Factory /*WebBrowserService.GetFactory<CefSharpWebBrowserService>()*/),
-								  CustomActionProviders = ImmutableArray.Create(BasicCustomActionProvider.Instance, MimeCustomActionProvider.Instance)
+								  CustomActionFactories = ImmutableArray.Create(BasicCustomActionFactory.Instance, MimeCustomActionFactory.Instance)
 						  };
 
 			var ioProcessor = new IoProcessor(options);

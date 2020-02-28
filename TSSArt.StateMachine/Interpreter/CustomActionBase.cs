@@ -1,10 +1,16 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public abstract class CustomActionBase
+	public class CustomActionBase : ICustomActionExecutor
 	{
-		public abstract ValueTask Action(IExecutionContext context, CancellationToken token);
+		internal static readonly ICustomActionExecutor NoExecutorInstance = new CustomActionBase();
+
+		public virtual ValueTask Execute(IExecutionContext context, CancellationToken token)
+		{
+			throw new NotSupportedException("Custom action does not supported");
+		}
 	}
 }

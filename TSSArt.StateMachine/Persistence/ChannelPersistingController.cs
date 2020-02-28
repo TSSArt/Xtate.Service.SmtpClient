@@ -13,7 +13,7 @@ namespace TSSArt.StateMachine
 		private          int                                _headIndex;
 		private          int                                _tailIndex;
 		private          SemaphoreSlim                      _storageLock;
-		private          Func<CancellationToken, ValueTask> _checkPointAction;
+		private          Func<CancellationToken, ValueTask> _postAction;
 
 		public ChannelPersistingController(Channel<T> baseChannel)
 		{
@@ -23,13 +23,13 @@ namespace TSSArt.StateMachine
 			Writer = new ChannelWriter(this);
 		}
 
-		public void Initialize(Bucket bucket, Func<Bucket, T> creator, SemaphoreSlim storageLock, Func<CancellationToken, ValueTask> checkPointAction)
+		public void Initialize(Bucket bucket, Func<Bucket, T> creator, SemaphoreSlim storageLock, Func<CancellationToken, ValueTask> postAction)
 		{
 			if (creator == null) throw new ArgumentNullException(nameof(creator));
 
 			_bucket = bucket;
 			_storageLock = storageLock ?? throw new ArgumentNullException(nameof(storageLock));
-			_checkPointAction = checkPointAction ?? throw new ArgumentNullException(nameof(checkPointAction));
+			_postAction = postAction ?? throw new ArgumentNullException(nameof(postAction));
 
 			bucket.TryGet(Key.Head, out _headIndex);
 			bucket.TryGet(Key.Tail, out _tailIndex);
@@ -45,31 +45,34 @@ namespace TSSArt.StateMachine
 			_initializedTcs.TrySetResult(0);
 		}
 
-		private Task InitializationComplete(CancellationToken token)
-		{
-			var initTask = _initializedTcs.Task;
-
-			if (initTask.IsCompleted || !token.CanBeCanceled)
-			{
-				return initTask;
-			}
-
-			return Task.WhenAny(initTask, Task.Delay(millisecondsDelay: -1, token));
-		}
-
 		private class ChannelReader : ChannelReader<T>
 		{
 			private readonly ChannelPersistingController<T> _parent;
 
 			public ChannelReader(ChannelPersistingController<T> parent) => _parent = parent;
 
+			public override Task Completion => _parent._baseChannel.Reader.Completion;
+
 			public override bool TryRead(out T item) => throw new NotSupportedException("Use ReadAsync() instead");
 
-			public override ValueTask<bool> WaitToReadAsync(CancellationToken token = default) => throw new NotSupportedException("Use ReadAsync() instead");
+			public override async ValueTask<bool> WaitToReadAsync(CancellationToken token = default)
+			{
+				await _parent._initializedTcs.Task.WaitAsync(token).ConfigureAwait(false);
+
+				await _parent._storageLock.WaitAsync(token).ConfigureAwait(false);
+				try
+				{
+					return await _parent._baseChannel.Reader.WaitToReadAsync(token);
+				}
+				finally
+				{
+					_parent._storageLock.Release();
+				}
+			}
 
 			public override async ValueTask<T> ReadAsync(CancellationToken token = default)
 			{
-				await _parent.InitializationComplete(token).ConfigureAwait(false);
+				await _parent._initializedTcs.Task.WaitAsync(token).ConfigureAwait(false);
 
 				await _parent._storageLock.WaitAsync(token).ConfigureAwait(false);
 				try
@@ -78,7 +81,7 @@ namespace TSSArt.StateMachine
 
 					if (_parent._tailIndex > _parent._headIndex)
 					{
-						_parent._bucket.RemoveSubtree(_parent._headIndex ++);
+						_parent._bucket.RemoveSubtree(_parent._headIndex++);
 						_parent._bucket.Add(Key.Head, _parent._headIndex);
 					}
 					else
@@ -87,7 +90,7 @@ namespace TSSArt.StateMachine
 						_parent._headIndex = _parent._tailIndex = 0;
 					}
 
-					await _parent._checkPointAction(token).ConfigureAwait(false);
+					await _parent._postAction(token).ConfigureAwait(false);
 
 					return item;
 				}
@@ -104,24 +107,39 @@ namespace TSSArt.StateMachine
 
 			public ChannelWriter(ChannelPersistingController<T> parent) => _parent = parent;
 
+			public override bool TryComplete(Exception error = null) => _parent._baseChannel.Writer.TryComplete(error);
+
 			public override bool TryWrite(T item) => throw new NotSupportedException("Use WriteAsync() instead");
 
-			public override ValueTask<bool> WaitToWriteAsync(CancellationToken token = default) => throw new NotSupportedException("Use WriteAsync() instead");
+			public override async ValueTask<bool> WaitToWriteAsync(CancellationToken token = default)
+			{
+				await _parent._initializedTcs.Task.WaitAsync(token).ConfigureAwait(false);
+
+				await _parent._storageLock.WaitAsync(token).ConfigureAwait(false);
+				try
+				{
+					return await _parent._baseChannel.Writer.WaitToWriteAsync(token);
+				}
+				finally
+				{
+					_parent._storageLock.Release();
+				}
+			}
 
 			public override async ValueTask WriteAsync(T item, CancellationToken token = default)
 			{
-				await _parent.InitializationComplete(token).ConfigureAwait(false);
+				await _parent._initializedTcs.Task.WaitAsync(token).ConfigureAwait(false);
 
 				await _parent._storageLock.WaitAsync(token).ConfigureAwait(false);
 				try
 				{
 					await _parent._baseChannel.Writer.WriteAsync(item, token);
 
-					var bucket = _parent._bucket.Nested(_parent._tailIndex ++);
+					var bucket = _parent._bucket.Nested(_parent._tailIndex++);
 					_parent._bucket.Add(Key.Tail, _parent._tailIndex);
 					item.As<IStoreSupport>().Store(bucket);
 
-					await _parent._checkPointAction(token).ConfigureAwait(false);
+					await _parent._postAction(token).ConfigureAwait(false);
 				}
 				finally
 				{
@@ -130,10 +148,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public void Dispose()
-		{
-			_initializedTcs.TrySetException(new ObjectDisposedException(nameof(ChannelPersistingController<T>)));
-		}
+		public void Dispose() => _initializedTcs.TrySetResult(0);
 
 		private enum Key
 		{

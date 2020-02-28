@@ -1,11 +1,11 @@
 ﻿namespace TSSArt.StateMachine
 {
 	[CustomActionProvider("http://tssart.com/scxml/customaction/basic")]
-	public class BasicCustomActionProvider : CustomActionProviderBase
+	public class BasicCustomActionFactory : CustomActionFactoryBase
 	{
-		public static readonly ICustomActionProvider Instance = new BasicCustomActionProvider();
+		public static readonly ICustomActionFactory Instance = new BasicCustomActionFactory();
 
-		private BasicCustomActionProvider()
+		private BasicCustomActionFactory()
 		{
 			Register(name: "base64decode", xmlReader => new Base64DecodeAction(xmlReader));
 			Register(name: "parseUrl", xmlReader => new ParseUrlAction(xmlReader));

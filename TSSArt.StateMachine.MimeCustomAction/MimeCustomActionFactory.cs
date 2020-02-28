@@ -1,11 +1,11 @@
 ﻿namespace TSSArt.StateMachine.Services
 {
 	[CustomActionProvider("http://tssart.com/scxml/customaction/mime")]
-	public class MimeCustomActionProvider : CustomActionProviderBase
+	public class MimeCustomActionFactory : CustomActionFactoryBase
 	{
-		public static readonly ICustomActionProvider Instance = new MimeCustomActionProvider();
+		public static readonly ICustomActionFactory Instance = new MimeCustomActionFactory();
 
-		private MimeCustomActionProvider()
+		private MimeCustomActionFactory()
 		{
 			Register(name: "parseEmail", xmlReader => new ParseEmail(xmlReader));
 		}

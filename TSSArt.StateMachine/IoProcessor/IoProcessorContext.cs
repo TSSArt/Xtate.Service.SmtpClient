@@ -11,8 +11,10 @@ namespace TSSArt.StateMachine
 	{
 		private static readonly Uri ParentTarget = new Uri(uriString: "#_parent", UriKind.Relative);
 
-		private readonly IIoProcessor       _ioProcessor;
-		private readonly IoProcessorOptions _options;
+		private readonly IIoProcessor            _ioProcessor;
+		private readonly IoProcessorOptions      _options;
+		private readonly CancellationTokenSource _suspendTokenSource;
+		private readonly CancellationTokenSource _stopTokenSource;
 
 		private readonly ConcurrentDictionary<string, IService> _parentServiceBySessionId = new ConcurrentDictionary<string, IService>();
 
@@ -26,11 +28,15 @@ namespace TSSArt.StateMachine
 		{
 			_ioProcessor = ioProcessor;
 			_options = options;
+			_suspendTokenSource = new CancellationTokenSource();
+			_stopTokenSource = new CancellationTokenSource();
 		}
+
+		protected CancellationToken StopToken => _suspendTokenSource.Token;
 
 		public virtual ValueTask DisposeAsync() => default;
 
-		public virtual ValueTask InitializeAsync() => default;
+		public virtual ValueTask InitializeAsync(CancellationToken token) => default;
 
 		private void FillInterpreterOptions(out InterpreterOptions options)
 		{
@@ -40,9 +46,9 @@ namespace TSSArt.StateMachine
 							  PersistenceLevel = _options.PersistenceLevel,
 							  StorageProvider = _options.StorageProvider,
 							  ResourceLoader = _options.ResourceLoader,
-							  CustomActionProviders = _options.CustomActionProviders,
-							  StopToken = _options.StopToken,
-							  SuspendToken = _options.SuspendToken,
+							  CustomActionProviders = _options.CustomActionFactories,
+							  StopToken = _stopTokenSource.Token,
+							  SuspendToken = _suspendTokenSource.Token,
 							  Logger = _options.Logger,
 							  DataModelHandlerFactories = _options.DataModelHandlerFactories
 					  };
@@ -61,7 +67,7 @@ namespace TSSArt.StateMachine
 		protected virtual StateMachineController CreateStateMachineController(string sessionId, IStateMachineOptions options, IStateMachine stateMachine, in InterpreterOptions defaultOptions) =>
 				new StateMachineController(sessionId, options, stateMachine, _ioProcessor, _options.SuspendIdlePeriod, defaultOptions);
 
-		private static XmlReaderSettings GetXmlReaderSettings(bool useAsync = false) => new XmlReaderSettings { Async = useAsync };
+		private static XmlReaderSettings GetXmlReaderSettings(bool useAsync = false) => new XmlReaderSettings { Async = useAsync, CloseInput = true };
 
 		private static XmlParserContext GetXmlParserContext() => null;
 
@@ -76,7 +82,7 @@ namespace TSSArt.StateMachine
 
 			if (source != null)
 			{
-				var xmlReader = await _options.ResourceLoader.RequestXmlReader(source, GetXmlReaderSettings(), GetXmlParserContext(), token).ConfigureAwait(false);
+				using var xmlReader = await _options.ResourceLoader.RequestXmlReader(source, GetXmlReaderSettings(), GetXmlParserContext(), token).ConfigureAwait(false);
 				var scxmlDirector = new ScxmlDirector(xmlReader, GetBuilderFactory());
 
 				return scxmlDirector.ConstructStateMachine();
@@ -212,5 +218,17 @@ namespace TSSArt.StateMachine
 		}
 
 		private static string ExtractSessionId(Uri target) => Path.GetFileName(target.LocalPath);
+
+		public async ValueTask WaitAllAsync(CancellationToken token)
+		{
+			foreach (var controller in _stateMachinesBySessionId.Values)
+			{
+				await controller.Result.WaitAsync(token).ConfigureAwait(false);
+			}
+		}
+
+		public void Stop() => _stopTokenSource.Cancel();
+
+		public void Suspend() => _suspendTokenSource.Cancel();
 	}
 }

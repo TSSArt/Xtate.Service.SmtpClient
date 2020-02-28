@@ -11,7 +11,7 @@ namespace TSSArt.StateMachine.Test
 			var options = new IoProcessorOptions
 						  {
 								  DataModelHandlerFactories = ImmutableArray<IDataModelHandlerFactory>.Empty,
-								  EventProcessors = ImmutableArray<IEventProcessor>.Empty,
+								  EventProcessorFactories = ImmutableArray<IEventProcessorFactory>.Empty,
 								  ServiceFactories = ImmutableArray<IServiceFactory>.Empty
 						  };
 

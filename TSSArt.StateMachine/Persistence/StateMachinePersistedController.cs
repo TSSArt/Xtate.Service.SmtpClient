@@ -18,9 +18,9 @@ namespace TSSArt.StateMachine
 		private readonly ChannelPersistingController<IEvent> _channelPersistingController;
 		private readonly IStorageProvider                    _storageProvider;
 
-		private bool                                _disposed;
-		private int                                 _recordId;
-		private ITransactionalStorage               _storage;
+		private bool                  _disposed;
+		private int                   _recordId;
+		private ITransactionalStorage _storage;
 
 		public StateMachinePersistedController(string sessionId, IStateMachineOptions options, IStateMachine stateMachine, IIoProcessor ioProcessor,
 											   IStorageProvider storageProvider, TimeSpan idlePeriod, in InterpreterOptions defaultOptions)
@@ -79,16 +79,12 @@ namespace TSSArt.StateMachine
 
 			_storage = await _storageProvider.GetTransactionalStorage(SessionId, ControllerStateKey, _stopToken).ConfigureAwait(false);
 
-			_channelPersistingController.Initialize(new Bucket(_storage).Nested(ExternalEventsKey), EventCreator, _storageLock, CheckPointAction);
+			_channelPersistingController.Initialize(new Bucket(_storage).Nested(ExternalEventsKey), bucket => new EventObject(bucket), _storageLock, token => _storage.CheckPoint(level: 0, token));
 
 			LoadScheduledEvents();
 
 			_storageLock.Release();
 		}
-
-		private ValueTask CheckPointAction(CancellationToken token) => _storage.CheckPoint(level: 0, token);
-
-		private static IEvent EventCreator(Bucket bucket) => new EventObject(bucket);
 
 		protected override async ValueTask ScheduleEvent(IOutgoingEvent @event, CancellationToken token)
 		{
@@ -196,7 +192,7 @@ namespace TSSArt.StateMachine
 				}
 			}
 		}
-		
+
 		private sealed class ScheduledPersistedEvent : ScheduledEvent, IStoreSupport
 		{
 			private readonly long _fireOnUtcTicks;

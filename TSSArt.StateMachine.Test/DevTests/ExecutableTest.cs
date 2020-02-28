@@ -14,10 +14,11 @@ namespace TSSArt.StateMachine.Test
 	[TestClass]
 	public class ExecutableTest
 	{
-		private Mock<ICustomActionProvider>  _customActionProvider;
+		private Mock<ICustomActionFactory>   _customActionProvider;
 		private ChannelReader<IEvent>        _eventChannel;
 		private Mock<IExternalCommunication> _externalCommunication;
 		private Mock<ILogger>                _logger;
+		private Mock<ICustomActionExecutor>  _customeActionExecutor;
 		private InterpreterOptions           _options;
 
 		private IStateMachine GetStateMachine(string scxml)
@@ -46,13 +47,14 @@ namespace TSSArt.StateMachine.Test
 			channel.Writer.Complete();
 			_eventChannel = channel.Reader;
 
-			_customActionProvider = new Mock<ICustomActionProvider>();
-			_customActionProvider.Setup(x => x.GetAction(It.IsAny<string>()))
-								 .Returns((context, token) =>
-										  {
-											  context.Log(label: "Custom");
-											  return default;
-										  });
+			_customeActionExecutor = new Mock<ICustomActionExecutor>();
+
+			_customeActionExecutor.Setup(e => e.Execute(It.IsAny<IExecutionContext>(), It.IsAny<CancellationToken>()))
+								  .Callback((IExecutionContext ctx, CancellationToken tk) => ctx.Log(label: "Custom", arguments: default, tk));
+
+			_customActionProvider = new Mock<ICustomActionFactory>();
+			_customActionProvider.Setup(x => x.CreateExecutor(It.IsAny<string>()))
+								 .Returns(_customeActionExecutor.Object);
 			_customActionProvider.Setup(x => x.CanHandle(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
 
 			_options = new InterpreterOptions
