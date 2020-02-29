@@ -12,7 +12,7 @@ namespace TSSArt.StateMachine
 
 		ValueTask IEventConsumer.Dispatch(string sessionId, IEvent @event, CancellationToken token)
 		{
-			_context.ValidateSessionId(sessionId, out var controller);
+			GetCurrentContext().ValidateSessionId(sessionId, out var controller);
 
 			return controller.Send(@event, token);
 		}
@@ -25,7 +25,7 @@ namespace TSSArt.StateMachine
 
 		ValueTask IEventProcessor.Dispatch(string sessionId, IOutgoingEvent @event, CancellationToken token)
 		{
-			var service = _context.GetService(sessionId, @event.Target);
+			var service = GetCurrentContext().GetService(sessionId, @event.Target);
 
 			var serviceEvent = new EventObject(EventType.External, @event, GetTarget(sessionId), EventProcessorId);
 

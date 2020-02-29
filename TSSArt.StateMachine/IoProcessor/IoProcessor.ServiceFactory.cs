@@ -13,12 +13,14 @@ namespace TSSArt.StateMachine
 
 		Uri IServiceFactory.AliasTypeId => ServiceFactoryAliasTypeId;
 
-		async ValueTask<IService> IServiceFactory.StartService(Uri source, string rawContent, DataModelValue content, DataModelValue parameters, 
+		async ValueTask<IService> IServiceFactory.StartService(Uri source, string rawContent, DataModelValue content, DataModelValue parameters,
 															   IServiceCommunication serviceCommunication, CancellationToken token)
 		{
 			var sessionId = IdGenerator.NewSessionId();
 			var scxml = rawContent ?? content.AsStringOrDefault();
-			var service = await _context.CreateAndAddStateMachine(sessionId, options: null, stateMachine: null, source: source, scxml: scxml, parameters: parameters, token: token).ConfigureAwait(false);
+			var context = GetCurrentContext();
+
+			var service = await context.CreateAndAddStateMachine(sessionId, options: null, stateMachine: null, source, scxml, parameters, token).ConfigureAwait(false);
 
 			await service.StartAsync(token).ConfigureAwait(false);
 
@@ -26,8 +28,14 @@ namespace TSSArt.StateMachine
 
 			async void CompleteAsync()
 			{
-				await service.Result.ConfigureAwait(false);
-				await _context.DestroyStateMachine(sessionId).ConfigureAwait(false);
+				try
+				{
+					await service.Result.ConfigureAwait(false);
+				}
+				finally
+				{
+					await context.DestroyStateMachine(sessionId).ConfigureAwait(false);
+				}
 			}
 
 			return service;

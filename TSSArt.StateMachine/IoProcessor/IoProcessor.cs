@@ -143,12 +143,7 @@ namespace TSSArt.StateMachine
 		{
 			if (sessionId == null) throw new ArgumentNullException(nameof(sessionId));
 
-			var context = _context;
-
-			if (context == null)
-			{
-				throw new InvalidOperationException("IO Processor has not been started");
-			}
+			var context = GetCurrentContext();
 
 			var controller = await context.CreateAndAddStateMachine(sessionId, options: null, stateMachine, source, scxml, parameters, token: default).ConfigureAwait(false);
 
@@ -160,6 +155,15 @@ namespace TSSArt.StateMachine
 			{
 				await context.DestroyStateMachine(sessionId).ConfigureAwait(false);
 			}
+		}
+
+		private IoProcessorContext GetCurrentContext() => _context ?? throw new InvalidOperationException("IO Processor has not been started");
+
+		private bool IsCurrentContextExists(out IoProcessorContext context)
+		{
+			context = _context;
+
+			return context != null;
 		}
 	}
 }
