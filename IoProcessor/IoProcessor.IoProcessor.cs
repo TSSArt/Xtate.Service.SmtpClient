@@ -19,7 +19,9 @@ namespace TSSArt.StateMachine
 
 		async ValueTask IIoProcessor.StartInvoke(string sessionId, InvokeData data, CancellationToken token)
 		{
-			_context.ValidateSessionId(sessionId, out var service);
+			var context = GetCurrentContext();
+
+			context.ValidateSessionId(sessionId, out var service);
 
 			if (!_serviceFactories.TryGetValue(data.Type, out var factory))
 			{
@@ -29,7 +31,7 @@ namespace TSSArt.StateMachine
 			var serviceCommunication = new ServiceCommunication(service, EventProcessorId, data.InvokeId, data.InvokeUniqueId);
 			var invokedService = await factory.StartService(data.Source, data.RawContent, data.Content, data.Parameters, serviceCommunication, token).ConfigureAwait(false);
 
-			await _context.AddService(sessionId, data.InvokeId, data.InvokeUniqueId, invokedService).ConfigureAwait(false);
+			await context.AddService(sessionId, data.InvokeId, data.InvokeUniqueId, invokedService, token).ConfigureAwait(false);
 
 			CompleteAsync();
 
@@ -50,7 +52,7 @@ namespace TSSArt.StateMachine
 				}
 				finally
 				{
-					invokedService = await _context.TryCompleteService(sessionId, data.InvokeId).ConfigureAwait(false);
+					invokedService = await context.TryCompleteService(sessionId, data.InvokeId).ConfigureAwait(false);
 
 					if (invokedService != null)
 					{
@@ -62,9 +64,11 @@ namespace TSSArt.StateMachine
 
 		async ValueTask IIoProcessor.CancelInvoke(string sessionId, string invokeId, CancellationToken token)
 		{
-			_context.ValidateSessionId(sessionId, out _);
+			var context = GetCurrentContext();
 
-			var service = await _context.TryRemoveService(sessionId, invokeId).ConfigureAwait(false);
+			context.ValidateSessionId(sessionId, out _);
+
+			var service = await context.TryRemoveService(sessionId, invokeId).ConfigureAwait(false);
 
 			if (service != null)
 			{
@@ -74,14 +78,18 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		bool IIoProcessor.IsInvokeActive(string sessionId, string invokeId, string invokeUniqueId) =>
-				_context.TryGetService(sessionId, invokeId, out var pair) && pair.InvokeUniqueId == invokeUniqueId;
+		bool IIoProcessor.IsInvokeActive(string sessionId, string invokeId, string invokeUniqueId)
+		{
+			return IsCurrentContextExists(out var context) && context.TryGetService(sessionId, invokeId, out var pair) && pair.InvokeUniqueId == invokeUniqueId;
+		}
 
 		async ValueTask<SendStatus> IIoProcessor.DispatchEvent(string sessionId, IOutgoingEvent @event, bool skipDelay, CancellationToken token)
 		{
 			if (@event == null) throw new ArgumentNullException(nameof(@event));
 
-			_context.ValidateSessionId(sessionId, out _);
+			var context = GetCurrentContext();
+
+			context.ValidateSessionId(sessionId, out _);
 
 			var eventProcessor = GetEventProcessor(@event.Type);
 
@@ -110,9 +118,11 @@ namespace TSSArt.StateMachine
 
 		ValueTask IIoProcessor.ForwardEvent(string sessionId, IEvent @event, string invokeId, CancellationToken token)
 		{
-			_context.ValidateSessionId(sessionId, out _);
+			var context = GetCurrentContext();
 
-			if (!_context.TryGetService(sessionId, invokeId, out var pair))
+			context.ValidateSessionId(sessionId, out _);
+
+			if (!context.TryGetService(sessionId, invokeId, out var pair))
 			{
 				throw new ApplicationException("Invalid InvokeId");
 			}

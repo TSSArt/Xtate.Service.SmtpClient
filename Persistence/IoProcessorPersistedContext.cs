@@ -36,12 +36,21 @@ namespace TSSArt.StateMachine
 
 		public override async ValueTask InitializeAsync(CancellationToken token)
 		{
-			_storage = await _storageProvider.GetTransactionalStorage(IoProcessorPartition, ContextKey, token).ConfigureAwait(false);
+			try
+			{
+				_storage = await _storageProvider.GetTransactionalStorage(IoProcessorPartition, ContextKey, token).ConfigureAwait(false);
 
-			await LoadStateMachines(token).ConfigureAwait(false);
-			await LoadInvokedServices(token).ConfigureAwait(false);
+				await LoadStateMachines(token).ConfigureAwait(false);
+				await LoadInvokedServices(token).ConfigureAwait(false);
 
-			await base.InitializeAsync(token).ConfigureAwait(false);
+				await base.InitializeAsync(token).ConfigureAwait(false);
+			}
+			catch (OperationCanceledException ex) when (ex.CancellationToken == token)
+			{
+				Stop();
+
+				throw;
+			}
 		}
 
 		public override async ValueTask DisposeAsync()
@@ -50,6 +59,8 @@ namespace TSSArt.StateMachine
 			{
 				return;
 			}
+
+			Stop();
 
 			await _storage.DisposeAsync().ConfigureAwait(false);
 
@@ -61,12 +72,12 @@ namespace TSSArt.StateMachine
 			await base.DisposeAsync().ConfigureAwait(false);
 		}
 
-		public override async ValueTask AddService(string sessionId, string invokeId, string invokeUniqueId, IService service)
+		public override async ValueTask AddService(string sessionId, string invokeId, string invokeUniqueId, IService service, CancellationToken token)
 		{
-			await _lockInvokedServices.WaitAsync(StopToken).ConfigureAwait(false);
+			await _lockInvokedServices.WaitAsync(token).ConfigureAwait(false);
 			try
 			{
-				await base.AddService(sessionId, invokeId, invokeUniqueId, service).ConfigureAwait(false);
+				await base.AddService(sessionId, invokeId, invokeUniqueId, service, token).ConfigureAwait(false);
 
 				var bucket = new Bucket(_storage).Nested(InvokedServicesKey);
 				var recordId = _invokedServiceRecordId ++;
@@ -102,7 +113,7 @@ namespace TSSArt.StateMachine
 				await _storage.CheckPoint(level: 0, StopToken).ConfigureAwait(false);
 			}
 
-			await ShrinkInvokedServices(StopToken).ConfigureAwait(false);
+			await ShrinkInvokedServices().ConfigureAwait(false);
 		}
 
 		public override async ValueTask<IService> TryRemoveService(string sessionId, string invokeId)
@@ -157,7 +168,7 @@ namespace TSSArt.StateMachine
 				return await base.CreateAndAddStateMachine(sessionId, options, stateMachine, source: null, scxml: null, parameters, token).ConfigureAwait(false);
 			}
 
-			await _lockStateMachines.WaitAsync(StopToken).ConfigureAwait(false);
+			await _lockStateMachines.WaitAsync(token).ConfigureAwait(false);
 			try
 			{
 				var stateMachineController = await base.CreateAndAddStateMachine(sessionId, options, stateMachine, source: null, scxml: null, parameters, token).ConfigureAwait(false);
@@ -197,7 +208,7 @@ namespace TSSArt.StateMachine
 					await _storage.CheckPoint(level: 0, StopToken).ConfigureAwait(false);
 				}
 
-				await ShrinkStateMachines(StopToken).ConfigureAwait(false);
+				await ShrinkStateMachines().ConfigureAwait(false);
 
 				await base.DestroyStateMachine(sessionId).ConfigureAwait(false);
 			}
@@ -207,7 +218,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private async ValueTask ShrinkStateMachines(CancellationToken token)
+		private async ValueTask ShrinkStateMachines()
 		{
 			if (_stateMachines.Count * 2 > _stateMachineRecordId)
 			{
@@ -229,8 +240,8 @@ namespace TSSArt.StateMachine
 				rootBucket.Add(Bucket.RootKey, _stateMachineRecordId);
 			}
 
-			await _storage.CheckPoint(level: 0, token).ConfigureAwait(false);
-			await _storage.Shrink(token).ConfigureAwait(false);
+			await _storage.CheckPoint(level: 0, StopToken).ConfigureAwait(false);
+			await _storage.Shrink(StopToken).ConfigureAwait(false);
 		}
 
 		private async ValueTask LoadStateMachines(CancellationToken token)
@@ -267,7 +278,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private async ValueTask ShrinkInvokedServices(CancellationToken token)
+		private async ValueTask ShrinkInvokedServices()
 		{
 			if (_invokedServices.Count * 2 > _invokedServiceRecordId)
 			{
@@ -289,8 +300,8 @@ namespace TSSArt.StateMachine
 				rootBucket.Add(Bucket.RootKey, _invokedServiceRecordId);
 			}
 
-			await _storage.CheckPoint(level: 0, token).ConfigureAwait(false);
-			await _storage.Shrink(token).ConfigureAwait(false);
+			await _storage.CheckPoint(level: 0, StopToken).ConfigureAwait(false);
+			await _storage.Shrink(StopToken).ConfigureAwait(false);
 		}
 
 		private async ValueTask LoadInvokedServices(CancellationToken token)
@@ -317,14 +328,14 @@ namespace TSSArt.StateMachine
 						if (invokedService.SessionId != null)
 						{
 							var stateMachine = _stateMachines[invokedService.SessionId];
-							await base.AddService(invokedService.ParentSessionId, invokedService.InvokeId, invokedService.InvokeUniqueId, stateMachine.Controller).ConfigureAwait(false);
+							await base.AddService(invokedService.ParentSessionId, invokedService.InvokeId, invokedService.InvokeUniqueId, stateMachine.Controller, token).ConfigureAwait(false);
 
 							_invokedServices.Add((invokedService.ParentSessionId, invokedService.InvokeId), invokedService);
 						}
 						else if (_stateMachines.TryGetValue(invokedService.ParentSessionId, out var invokingStateMachine))
 						{
 							var @event = new EventObject(EventType.External, EventName.ErrorExecution, data: default, sendId: null, invokedService.InvokeId, invokedService.InvokeUniqueId);
-							await invokingStateMachine.Controller.Send(@event, token: default).ConfigureAwait(false);
+							await invokingStateMachine.Controller.Send(@event, token).ConfigureAwait(false);
 						}
 					}
 				}

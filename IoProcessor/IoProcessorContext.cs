@@ -32,7 +32,7 @@ namespace TSSArt.StateMachine
 			_stopTokenSource = new CancellationTokenSource();
 		}
 
-		protected CancellationToken StopToken => _suspendTokenSource.Token;
+		protected CancellationToken StopToken => _stopTokenSource.Token;
 
 		public virtual ValueTask DisposeAsync() => default;
 
@@ -135,7 +135,7 @@ namespace TSSArt.StateMachine
 			ValidateTrue(_stateMachinesBySessionId.TryGetValue(sessionId, out controller));
 		}
 
-		public virtual ValueTask AddService(string sessionId, string invokeId, string invokeUniqueId, IService service)
+		public virtual ValueTask AddService(string sessionId, string invokeId, string invokeUniqueId, IService service, CancellationToken token)
 		{
 			ValidateTrue(_serviceByInvokeId.TryAdd((sessionId, invokeId), (invokeUniqueId, service)));
 
@@ -223,7 +223,18 @@ namespace TSSArt.StateMachine
 		{
 			foreach (var controller in _stateMachinesBySessionId.Values)
 			{
-				await controller.Result.WaitAsync(token).ConfigureAwait(false);
+				try
+				{
+					await controller.Result.WaitAsync(token).ConfigureAwait(false);
+				}
+				catch (OperationCanceledException ex) when (ex.CancellationToken == token)
+				{
+					throw;
+				}
+				catch
+				{
+					// ignored
+				}
 			}
 		}
 
