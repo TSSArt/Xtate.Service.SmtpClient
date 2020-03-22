@@ -2,6 +2,6 @@
 {
 	public interface IInitial : IEntity
 	{
-		ITransition Transition { get; }
+		ITransition? Transition { get; }
 	}
 }

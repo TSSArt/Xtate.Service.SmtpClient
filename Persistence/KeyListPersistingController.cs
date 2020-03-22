@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	internal sealed class KeyListPersistingController<T> : IDisposable where T : IEntity
+	internal sealed class KeyListPersistingController<T> : IDisposable where T : class
 	{
 		private readonly Bucket               _bucket;
 		private readonly KeyList<T>           _keyList;
 		private readonly Dictionary<int, int> _records = new Dictionary<int, int>();
 
-		public KeyListPersistingController(Bucket bucket, KeyList<T> keyList, Dictionary<int, IEntity> entityMap)
+		public KeyListPersistingController(Bucket bucket, KeyList<T> keyList, ImmutableDictionary<int, IEntity> entityMap)
 		{
 			if (entityMap == null) throw new ArgumentNullException(nameof(entityMap));
 			_bucket = bucket;

@@ -7,19 +7,18 @@ namespace TSSArt.StateMachine
 {
 	public abstract class EventProcessorBase : IEventProcessor
 	{
-		private readonly Uri _eventProcessorAliasId;
-
 		private readonly IEventConsumer _eventConsumer;
+		private readonly Uri?           _eventProcessorAliasId;
 
 		protected EventProcessorBase(IEventConsumer eventConsumer)
 		{
 			_eventConsumer = eventConsumer ?? throw new ArgumentNullException(nameof(eventConsumer));
 
-			var eventProcessorAttribute = GetType().GetCustomAttribute<EventProcessorAttribute>();
+			var eventProcessorAttribute = GetType().GetCustomAttribute<EventProcessorAttribute>(false);
 
 			if (eventProcessorAttribute == null)
 			{
-				throw new InvalidOperationException("EventProcessorAttribute did not provided for type " + GetType());
+				throw new StateMachineInfrastructureException(Res.Format(Resources.Exception_EventProcessorAttributeWasNotProvided, GetType()));
 			}
 
 			EventProcessorId = new Uri(eventProcessorAttribute.Type, UriKind.RelativeOrAbsolute);
@@ -30,16 +29,16 @@ namespace TSSArt.StateMachine
 
 		Uri IEventProcessor.Id => EventProcessorId;
 
-		Uri IEventProcessor.AliasId => _eventProcessorAliasId;
+		Uri? IEventProcessor.AliasId => _eventProcessorAliasId;
 
 		Uri IEventProcessor.GetTarget(string sessionId) => GetTarget(sessionId);
 
-		ValueTask IEventProcessor.Dispatch(string sessionId, IOutgoingEvent @event, CancellationToken token) => OutgoingEvent(sessionId, @event, token);
+		ValueTask IEventProcessor.Dispatch(string sessionId, IOutgoingEvent evt, CancellationToken token) => OutgoingEvent(sessionId, evt, token);
 
 		protected abstract Uri GetTarget(string sessionId);
 
-		protected abstract ValueTask OutgoingEvent(string sessionId, IOutgoingEvent @event, CancellationToken token);
+		protected abstract ValueTask OutgoingEvent(string sessionId, IOutgoingEvent evt, CancellationToken token);
 
-		protected ValueTask IncomingEvent(string sessionId, IEvent @event, CancellationToken token) => _eventConsumer.Dispatch(sessionId, @event, token);
+		protected ValueTask IncomingEvent(string sessionId, IEvent evt, CancellationToken token) => _eventConsumer.Dispatch(sessionId, evt, token);
 	}
 }

@@ -6,18 +6,23 @@ namespace TSSArt.StateMachine
 	{
 		private readonly IEventDescriptor _eventDescriptor;
 
-		public EventDescriptorNode(IEventDescriptor eventDescriptor) => _eventDescriptor = eventDescriptor ?? throw new ArgumentNullException(nameof(eventDescriptor));
+		public EventDescriptorNode(IEventDescriptor eventDescriptor)
+		{
+			Infrastructure.Assert(eventDescriptor != null);
 
-		object IAncestorProvider.Ancestor => _eventDescriptor;
+			_eventDescriptor = eventDescriptor;
+		}
 
-		FormattableString IDebugEntityId.EntityId => $"{_eventDescriptor}";
+		object? IAncestorProvider.Ancestor => _eventDescriptor;
 
-		public bool IsEventMatch(IEvent @event) => _eventDescriptor.IsEventMatch(@event);
+		FormattableString IDebugEntityId.EntityId => @$"{_eventDescriptor}";
+
+		public bool IsEventMatch(IEvent evt) => _eventDescriptor.IsEventMatch(evt);
 
 		void IStoreSupport.Store(Bucket bucket)
 		{
 			bucket.Add(Key.TypeInfo, TypeInfo.EventDescriptorNode);
-			bucket.Add(Key.Id, _eventDescriptor.ToString());
+			bucket.Add(Key.Id, _eventDescriptor.As<string>());
 		}
 	}
 }

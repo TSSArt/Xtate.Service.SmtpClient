@@ -3,11 +3,14 @@ using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public class OnExitBuilder : IOnExitBuilder
+	public class OnExitBuilder : BuilderBase, IOnExitBuilder
 	{
-		private ImmutableArray<IExecutableEntity>.Builder _actions;
+		private ImmutableArray<IExecutableEntity>.Builder? _actions;
 
-		public IOnExit Build() => new OnExit { Action = _actions?.ToImmutable() ?? default };
+		public OnExitBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
+		{ }
+
+		public IOnExit Build() => new OnExitEntity { Ancestor = Ancestor, Action = _actions?.ToImmutable() ?? default };
 
 		public void AddAction(IExecutableEntity action)
 		{

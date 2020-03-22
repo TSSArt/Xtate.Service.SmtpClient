@@ -4,58 +4,49 @@ using System.ComponentModel;
 
 namespace TSSArt.StateMachine
 {
-	public class StateMachineBuilder : IStateMachineBuilder
+	public class StateMachineBuilder : BuilderBase, IStateMachineBuilder
 	{
-		private BindingType                          _bindingType;
-		private IDataModel                           _dataModel;
-		private string                               _dataModelType;
-		private ImmutableArray<IIdentifier>          _initialId;
-		private string                               _name;
-		private IScript                              _script;
-		private ImmutableArray<IStateEntity>.Builder _states;
-		private StateMachineOptions                  _options;
+		private BindingType                           _bindingType;
+		private IDataModel?                           _dataModel;
+		private string?                               _dataModelType;
+		private ImmutableArray<IIdentifier>           _initialId;
+		private bool                                  _injectOptions;
+		private string?                               _name;
+		private StateMachineOptions                   _options;
+		private IScript?                              _script;
+		private ImmutableArray<IStateEntity>.Builder? _states;
+
+		public StateMachineBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
+		{ }
 
 		public IStateMachine Build()
 		{
-			var initial = _initialId != null ? (IInitial) new Initial { Transition = new Transition { Target = _initialId } } : null;
+			var initial = _initialId != null ? (IInitial) new InitialEntity { Transition = new TransitionEntity { Target = _initialId } } : null;
 
-			if (initial != null && _states == null)
-			{
-				throw new InvalidOperationException(message: "Initial state/property cannot be used without any states");
-			}
+			var ancestor = _injectOptions ? new AncestorContainer(_options, Ancestor) : Ancestor;
 
-			IStateMachine stateMachine = new StateMachine
-										 {
-												 Ancestor = _options, Name = _name, Initial = initial, DataModelType = _dataModelType, Binding = _bindingType,
-												 States = _states?.ToImmutable() ?? default, DataModel = _dataModel, Script = _script
-										 };
-
-			NoneDataModelHandler.Validate(stateMachine);
-			RuntimeDataModelHandler.Validate(stateMachine);
-
-			return stateMachine;
+			return new StateMachineEntity
+				   {
+						   Ancestor = ancestor, Name = _name, Initial = initial, DataModelType = _dataModelType,
+						   Binding = _bindingType, States = _states?.ToImmutable() ?? default, DataModel = _dataModel, Script = _script
+				   };
 		}
 
 		public void SetInitial(ImmutableArray<IIdentifier> initialId)
 		{
-			if (initialId.IsDefaultOrEmpty) throw new ArgumentException(message: "Value cannot be empty list.", nameof(initialId));
+			if (initialId.IsDefaultOrEmpty) throw new ArgumentException(Resources.Exception_ValueCannotBeEmptyList, nameof(initialId));
 
 			_initialId = initialId;
 		}
 
 		public void SetName(string name)
 		{
-			if (string.IsNullOrEmpty(name)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(name));
+			if (string.IsNullOrEmpty(name)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(name));
 
 			_name = name;
 		}
 
-		public void SetBindingType(BindingType bindingType)
-		{
-			if (bindingType < BindingType.Early || bindingType > BindingType.Late) throw new InvalidEnumArgumentException(nameof(bindingType), (int) bindingType, typeof(BindingType));
-
-			_bindingType = bindingType;
-		}
+		public void SetBindingType(BindingType bindingType) => _bindingType = bindingType;
 
 		public void AddState(IState state)
 		{
@@ -84,10 +75,26 @@ namespace TSSArt.StateMachine
 
 		public void SetDataModelType(string dataModelType) => _dataModelType = dataModelType ?? throw new ArgumentNullException(nameof(dataModelType));
 
-		public void SetPersistenceLevel(PersistenceLevel persistenceLevel) => _options.PersistenceLevel = persistenceLevel;
+		public void SetPersistenceLevel(PersistenceLevel persistenceLevel)
+		{
+			if (!Enum.IsDefined(typeof(PersistenceLevel), persistenceLevel)) throw new InvalidEnumArgumentException(nameof(persistenceLevel), (int) persistenceLevel, typeof(PersistenceLevel));
 
-		public void SetSynchronousEventProcessing(bool value) => _options.SynchronousEventProcessing = value;
+			_options.PersistenceLevel = persistenceLevel;
+			_injectOptions = true;
+		}
 
-		public void SetExternalQueueSize(int size) => _options.ExternalQueueSize = size;
+		public void SetSynchronousEventProcessing(bool value)
+		{
+			_options.SynchronousEventProcessing = value;
+			_injectOptions = true;
+		}
+
+		public void SetExternalQueueSize(int size)
+		{
+			if (size < 0) throw new ArgumentOutOfRangeException(nameof(size));
+
+			_options.ExternalQueueSize = size;
+			_injectOptions = true;
+		}
 	}
 }

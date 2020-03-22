@@ -9,9 +9,9 @@ namespace TSSArt.StateMachine
 
 		private readonly Dictionary<object, Entry> _objects = new Dictionary<object, Entry>();
 		private readonly Dictionary<int, object>   _refIds  = new Dictionary<int, object>();
+		private          bool                      _disposed;
 
-		private int  _nextRefId;
-		private bool _disposed;
+		private int _nextRefId;
 
 		public DataModelReferenceTracker(Bucket bucket)
 		{
@@ -34,14 +34,11 @@ namespace TSSArt.StateMachine
 			_disposed = true;
 		}
 
-		public object GetValue(int refId, DataModelValueType type, object baseObject)
+		public object GetValue(int refId, DataModelValueType type, object? baseObject)
 		{
 			if (_refIds.TryGetValue(refId, out var obj))
 			{
-				if (baseObject != null && obj != baseObject)
-				{
-					throw new InvalidOperationException("Objects structure mismatch");
-				}
+				Infrastructure.Assert(baseObject == null || baseObject == obj, Resources.Assertion_Objects_structure_mismatch);
 
 				return obj;
 			}
@@ -61,7 +58,7 @@ namespace TSSArt.StateMachine
 					_objects[obj] = new Entry { RefCount = 0, RefId = refId, Controller = ArrayControllerCreator(bucket, obj) };
 					break;
 
-				default: throw new ArgumentOutOfRangeException();
+				default: return Infrastructure.UnexpectedValue<object>();
 			}
 
 			_refIds[refId] = obj;
@@ -90,25 +87,23 @@ namespace TSSArt.StateMachine
 			return entry.RefId;
 		}
 
-		public int GetRefId(DataModelValue value)
-		{
-			switch (value.Type)
-			{
-				case DataModelValueType.Object: return GetRefId(value.AsObject(), ObjectControllerCreator, incrementReference: false);
-				case DataModelValueType.Array: return GetRefId(value.AsArray(), ArrayControllerCreator, incrementReference: false);
-				default: throw new ArgumentOutOfRangeException();
-			}
-		}
+		public int GetRefId(DataModelValue value) =>
+				value.Type switch
+				{
+						DataModelValueType.Object => GetRefId(value.AsObject()!, ObjectControllerCreator, incrementReference: false),
+						DataModelValueType.Array => GetRefId(value.AsArray()!, ArrayControllerCreator, incrementReference: false),
+						_ => Infrastructure.UnexpectedValue<int>()
+				};
 
 		public void AddReference(DataModelValue value)
 		{
 			switch (value.Type)
 			{
 				case DataModelValueType.Object:
-					GetRefId(value.AsObject(), ObjectControllerCreator, incrementReference: true);
+					GetRefId(value.AsObject()!, ObjectControllerCreator, incrementReference: true);
 					break;
 				case DataModelValueType.Array:
-					GetRefId(value.AsArray(), ArrayControllerCreator, incrementReference: true);
+					GetRefId(value.AsArray()!, ArrayControllerCreator, incrementReference: true);
 					break;
 			}
 		}
@@ -121,10 +116,10 @@ namespace TSSArt.StateMachine
 			switch (value.Type)
 			{
 				case DataModelValueType.Object:
-					Remove(value.AsObject());
+					Remove(value.AsObject()!);
 					break;
 				case DataModelValueType.Array:
-					Remove(value.AsArray());
+					Remove(value.AsArray()!);
 					break;
 			}
 

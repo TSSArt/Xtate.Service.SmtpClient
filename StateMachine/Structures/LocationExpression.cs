@@ -2,7 +2,7 @@
 {
 	public struct LocationExpression : ILocationExpression, IVisitorEntity<LocationExpression, ILocationExpression>, IAncestorProvider
 	{
-		public string Expression { get; set; }
+		public string? Expression { get; set; }
 
 		void IVisitorEntity<LocationExpression, ILocationExpression>.Init(ILocationExpression source)
 		{
@@ -12,8 +12,8 @@
 
 		bool IVisitorEntity<LocationExpression, ILocationExpression>.RefEquals(in LocationExpression other) => ReferenceEquals(Expression, other.Expression);
 
-		internal object Ancestor;
+		internal object? Ancestor;
 
-		object IAncestorProvider.Ancestor => Ancestor;
+		object? IAncestorProvider.Ancestor => Ancestor;
 	}
 }

@@ -11,9 +11,9 @@ namespace TSSArt.StateMachine
 
 		private readonly ExternalCommunicationWrapper _externalCommunication;
 		private readonly LoggerWrapper                _logger;
-		private readonly string                       _stateMachineName;
+		private readonly string?                      _stateMachineName;
 
-		public StateMachineContext(string stateMachineName, string sessionId, DataModelValue arguments, LoggerWrapper logger, ExternalCommunicationWrapper externalCommunication)
+		public StateMachineContext(string? stateMachineName, string sessionId, DataModelValue arguments, LoggerWrapper logger, ExternalCommunicationWrapper externalCommunication)
 		{
 			_stateMachineName = stateMachineName;
 			_logger = logger;
@@ -24,21 +24,28 @@ namespace TSSArt.StateMachine
 
 		public bool InState(IIdentifier id)
 		{
-			var baseId = id.Base<IIdentifier>();
-			return Configuration.Some(node => baseId.Equals(node.Id.Base<IIdentifier>()));
+			foreach (var state in Configuration)
+			{
+				if (IdentifierEqualityComparer.Instance.Equals(id, state.Id))
+				{
+					return true;
+				}
+			}
+
+			return false;
 		}
 
-		public async ValueTask Send(IOutgoingEvent @event, CancellationToken token)
+		public async ValueTask Send(IOutgoingEvent evt, CancellationToken token)
 		{
-			if (IsInternalEvent(@event) || await _externalCommunication.TrySendEvent(@event, token).ConfigureAwait(false) == SendStatus.ToInternalQueue)
+			if (IsInternalEvent(evt) || await _externalCommunication.TrySendEvent(evt, token).ConfigureAwait(false) == SendStatus.ToInternalQueue)
 			{
-				InternalQueue.Enqueue(new EventObject(EventType.Internal, @event));
+				InternalQueue.Enqueue(new EventObject(EventType.Internal, evt));
 			}
 		}
 
 		public ValueTask Cancel(string sendId, CancellationToken token) => _externalCommunication.CancelEvent(sendId, token);
 
-		public ValueTask Log(string label, DataModelValue arguments, CancellationToken token) => _logger.Log(_stateMachineName, label, arguments, token);
+		public ValueTask Log(string? label, DataModelValue arguments, CancellationToken token) => _logger.Log(_stateMachineName, label, arguments, token);
 
 		public ValueTask StartInvoke(InvokeData invokeData, CancellationToken token = default) => _externalCommunication.StartInvoke(invokeData, token);
 
@@ -68,39 +75,39 @@ namespace TSSArt.StateMachine
 
 		public virtual IPersistenceContext PersistenceContext => throw new NotSupportedException();
 
-		private static bool IsInternalEvent(IOutgoingEvent @event)
+		private static bool IsInternalEvent(IOutgoingEvent evt)
 		{
-			if (@event.Target != InternalTarget || @event.Type != null)
+			if (evt.Target != InternalTarget || evt.Type != null)
 			{
 				return false;
 			}
 
-			if (@event.DelayMs != 0)
+			if (evt.DelayMs != 0)
 			{
-				throw new ApplicationException("Internal events can't be delayed");
+				throw new StateMachineExecutionException(Resources.Exception_Internal_events_can_t_be_delayed);
 			}
 
 			return true;
 		}
 
-		private DataModelObject CreateDataModel(string stateMachineName, string sessionId, DataModelValue arguments)
+		private DataModelObject CreateDataModel(string? stateMachineName, string sessionId, DataModelValue arguments)
 		{
 			var platform = new DataModelObject
 						   {
-								   ["interpreter"] = new DataModelValue(InterpreterObject),
-								   ["datamodel"] = new DataModelValue(DataModelHandlerObject),
-								   ["configuration"] = new DataModelValue(ConfigurationObject),
-								   ["args"] = arguments
+								   [@"interpreter"] = new DataModelValue(InterpreterObject),
+								   [@"datamodel"] = new DataModelValue(DataModelHandlerObject),
+								   [@"configuration"] = new DataModelValue(ConfigurationObject),
+								   [@"args"] = arguments
 						   };
 			platform.Freeze();
 
 			var dataModel = new DataModelObject();
 
-			dataModel.SetInternal(property: "_name", new DataModelDescriptor(new DataModelValue(stateMachineName), isReadOnly: true));
-			dataModel.SetInternal(property: "_sessionid", new DataModelDescriptor(new DataModelValue(sessionId), isReadOnly: true));
-			dataModel.SetInternal(property: "_event", new DataModelDescriptor(value: default, isReadOnly: true));
-			dataModel.SetInternal(property: "_ioprocessors", new DataModelDescriptor(new DataModelValue(GetIoProcessors()), isReadOnly: true));
-			dataModel.SetInternal(property: "_x", new DataModelDescriptor(new DataModelValue(platform), isReadOnly: true));
+			dataModel.SetInternal(property: @"_name", new DataModelDescriptor(new DataModelValue(stateMachineName), isReadOnly: true));
+			dataModel.SetInternal(property: @"_sessionid", new DataModelDescriptor(new DataModelValue(sessionId), isReadOnly: true));
+			dataModel.SetInternal(property: @"_event", new DataModelDescriptor(value: default, isReadOnly: true));
+			dataModel.SetInternal(property: @"_ioprocessors", new DataModelDescriptor(new DataModelValue(GetIoProcessors()), isReadOnly: true));
+			dataModel.SetInternal(property: @"_x", new DataModelDescriptor(new DataModelValue(platform), isReadOnly: true));
 
 			return dataModel;
 
@@ -114,10 +121,10 @@ namespace TSSArt.StateMachine
 				}
 
 				var ioProcessors = new DataModelObject();
-				
+
 				foreach (var ioProcessor in eventProcessors)
 				{
-					var ioProcessorObject = new DataModelObject { ["location"] = new DataModelValue(ioProcessor.GetTarget(sessionId).ToString()) };
+					var ioProcessorObject = new DataModelObject { [@"location"] = new DataModelValue(ioProcessor.GetTarget(sessionId).ToString()) };
 					ioProcessorObject.Freeze();
 					ioProcessors[ioProcessor.Id.ToString()] = new DataModelValue(ioProcessorObject);
 				}
@@ -132,10 +139,16 @@ namespace TSSArt.StateMachine
 		{
 			private readonly Dictionary<object, object> _items = new Dictionary<object, object>();
 
-			public object this[object key]
+			public object? this[object key]
 			{
 				get => _items.TryGetValue(key, out var value) ? value : null;
-				set => _items[key] = value;
+				set
+				{
+					if (value != null)
+					{
+						_items[key] = value;
+					}
+				}
 			}
 		}
 	}

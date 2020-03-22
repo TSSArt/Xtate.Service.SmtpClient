@@ -12,8 +12,8 @@ namespace TSSArt.StateMachine
 
 		private readonly Dictionary<Uri, IServiceFactory> _serviceFactories = new Dictionary<Uri, IServiceFactory>(UriComparer.Instance);
 
-		private ImmutableDictionary<Uri, IEventProcessor> _eventProcessors;
-		private ImmutableArray<IEventProcessor>           _ioProcessors;
+		private ImmutableDictionary<Uri, IEventProcessor>? _eventProcessors;
+		private ImmutableArray<IEventProcessor>            _ioProcessors;
 
 		ImmutableArray<IEventProcessor> IIoProcessor.GetIoProcessors() => _ioProcessors;
 
@@ -25,7 +25,7 @@ namespace TSSArt.StateMachine
 
 			if (!_serviceFactories.TryGetValue(data.Type, out var factory))
 			{
-				throw new ApplicationException("Invalid type");
+				throw new StateMachineProcessorException(Resources.Exception_Invalid_type);
 			}
 
 			var serviceCommunication = new ServiceCommunication(service, EventProcessorId, data.InvokeId, data.InvokeUniqueId);
@@ -42,21 +42,21 @@ namespace TSSArt.StateMachine
 					var result = await invokedService.Result.ConfigureAwait(false);
 
 					var nameParts = EventName.GetDoneInvokeNameParts(data.InvokeId);
-					var @event = new EventObject(EventType.External, nameParts, result, sendId: null, data.InvokeId, data.InvokeUniqueId);
-					await service.Send(@event, token: default).ConfigureAwait(false);
+					var evt = new EventObject(EventType.External, nameParts, result, sendId: null, data.InvokeId, data.InvokeUniqueId);
+					await service.Send(evt, token: default).ConfigureAwait(false);
 				}
 				catch (Exception ex)
 				{
-					var @event = new EventObject(EventType.External, EventName.ErrorExecution, DataModelValue.FromException(ex), sendId: null, data.InvokeId, data.InvokeUniqueId);
-					await service.Send(@event, token: default).ConfigureAwait(false);
+					var evt = new EventObject(EventType.External, EventName.ErrorExecution, DataModelValue.FromException(ex), sendId: null, data.InvokeId, data.InvokeUniqueId);
+					await service.Send(evt, token: default).ConfigureAwait(false);
 				}
 				finally
 				{
-					invokedService = await context.TryCompleteService(sessionId, data.InvokeId).ConfigureAwait(false);
+					var invokedService2 = await context.TryCompleteService(sessionId, data.InvokeId).ConfigureAwait(false);
 
-					if (invokedService != null)
+					if (invokedService2 != null)
 					{
-						await DisposeInvokedService(invokedService).ConfigureAwait(false);
+						await DisposeInvokedService(invokedService2).ConfigureAwait(false);
 					}
 				}
 			}
@@ -78,45 +78,43 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		bool IIoProcessor.IsInvokeActive(string sessionId, string invokeId, string invokeUniqueId)
-		{
-			return IsCurrentContextExists(out var context) && context.TryGetService(sessionId, invokeId, out var pair) && pair.InvokeUniqueId == invokeUniqueId;
-		}
+		bool IIoProcessor.IsInvokeActive(string sessionId, string invokeId, string invokeUniqueId) =>
+				IsCurrentContextExists(out var context) && context.TryGetService(sessionId, invokeId, out var pair) && pair.InvokeUniqueId == invokeUniqueId;
 
-		async ValueTask<SendStatus> IIoProcessor.DispatchEvent(string sessionId, IOutgoingEvent @event, bool skipDelay, CancellationToken token)
+		async ValueTask<SendStatus> IIoProcessor.DispatchEvent(string sessionId, IOutgoingEvent evt, bool skipDelay, CancellationToken token)
 		{
-			if (@event == null) throw new ArgumentNullException(nameof(@event));
+			if (evt == null) throw new ArgumentNullException(nameof(evt));
 
 			var context = GetCurrentContext();
 
 			context.ValidateSessionId(sessionId, out _);
 
-			var eventProcessor = GetEventProcessor(@event.Type);
+			var eventProcessor = GetEventProcessor(evt.Type);
 
 			if (eventProcessor == this)
 			{
-				if (@event.Target == InternalTarget)
+				if (evt.Target == InternalTarget)
 				{
-					if (@event.DelayMs != 0)
+					if (evt.DelayMs != 0)
 					{
-						throw new ApplicationException("Internal events can't be delayed");
+						throw new StateMachineProcessorException(Resources.Exception_Internal_events_can_t_be_delayed_);
 					}
 
 					return SendStatus.ToInternalQueue;
 				}
 			}
 
-			if (!skipDelay && @event.DelayMs != 0)
+			if (!skipDelay && evt.DelayMs != 0)
 			{
 				return SendStatus.ToSchedule;
 			}
 
-			await eventProcessor.Dispatch(sessionId, @event, token).ConfigureAwait(false);
+			await eventProcessor.Dispatch(sessionId, evt, token).ConfigureAwait(false);
 
 			return SendStatus.Sent;
 		}
 
-		ValueTask IIoProcessor.ForwardEvent(string sessionId, IEvent @event, string invokeId, CancellationToken token)
+		ValueTask IIoProcessor.ForwardEvent(string sessionId, IEvent evt, string invokeId, CancellationToken token)
 		{
 			var context = GetCurrentContext();
 
@@ -124,10 +122,10 @@ namespace TSSArt.StateMachine
 
 			if (!context.TryGetService(sessionId, invokeId, out var pair))
 			{
-				throw new ApplicationException("Invalid InvokeId");
+				throw new StateMachineProcessorException(Resources.Exception_Invalid_InvokeId);
 			}
 
-			return pair.Service?.Send(@event, token) ?? default;
+			return pair.Service?.Send(evt, token) ?? default;
 		}
 
 		private void IoProcessorInit()
@@ -233,11 +231,16 @@ namespace TSSArt.StateMachine
 			return default;
 		}
 
-		private IEventProcessor GetEventProcessor(Uri type)
+		private IEventProcessor GetEventProcessor(Uri? type)
 		{
 			if (type == null)
 			{
 				return this;
+			}
+
+			if (_eventProcessors == null)
+			{
+				throw new StateMachineProcessorException(Resources.Exception_IoProcessor_stopped);
 			}
 
 			if (_eventProcessors.TryGetValue(type, out var eventProcessor))
@@ -245,7 +248,7 @@ namespace TSSArt.StateMachine
 				return eventProcessor;
 			}
 
-			throw new ApplicationException("Invalid Type");
+			throw new StateMachineProcessorException(Resources.Exception_Invalid_type);
 		}
 	}
 }

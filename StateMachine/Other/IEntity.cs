@@ -1,4 +1,5 @@
 ﻿namespace TSSArt.StateMachine
 {
-	public interface IEntity { }
+	public interface IEntity
+	{ }
 }

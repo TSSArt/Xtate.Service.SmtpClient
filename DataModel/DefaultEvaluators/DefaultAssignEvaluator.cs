@@ -1,29 +1,33 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	public class DefaultAssignEvaluator : IAssign, IExecEvaluator, IAncestorProvider
 	{
-		private readonly Assign _assign;
+		private readonly AssignEntity _assign;
 
-		public DefaultAssignEvaluator(in Assign assign)
+		public DefaultAssignEvaluator(in AssignEntity assign)
 		{
 			_assign = assign;
 
+			Infrastructure.Assert(assign.Location != null);
+
 			LocationEvaluator = assign.Location.As<ILocationEvaluator>();
-			ExpressionEvaluator = assign.Expression.As<IObjectEvaluator>();
+			ExpressionEvaluator = assign.Expression?.As<IObjectEvaluator>();
 		}
 
 		public ILocationEvaluator LocationEvaluator   { get; }
-		public IObjectEvaluator   ExpressionEvaluator { get; }
+		public IObjectEvaluator?  ExpressionEvaluator { get; }
 
-		object IAncestorProvider.Ancestor => _assign.Ancestor;
+		object? IAncestorProvider.Ancestor => _assign.Ancestor;
 
-		public ILocationExpression Location      => _assign.Location;
-		public IValueExpression    Expression    => _assign.Expression;
-		public string              InlineContent => _assign.InlineContent;
+		public ILocationExpression Location      => _assign.Location!;
+		public IValueExpression?   Expression    => _assign.Expression;
+		public string?             InlineContent => _assign.InlineContent;
 
 		public virtual async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{

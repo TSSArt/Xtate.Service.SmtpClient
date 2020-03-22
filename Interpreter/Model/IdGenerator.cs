@@ -11,7 +11,7 @@ namespace TSSArt.StateMachine
 
 		public static string NewSendId() => NewGuidString();
 
-		public static string NewInvokeId(string stateId) => stateId + "." + NewGuidString();
+		public static string NewInvokeId(string stateId) => stateId + @"." + NewGuidString();
 
 		public static string NewInvokeUniqueId() => NewGuidString();
 

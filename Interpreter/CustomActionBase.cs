@@ -8,9 +8,6 @@ namespace TSSArt.StateMachine
 	{
 		internal static readonly ICustomActionExecutor NoExecutorInstance = new CustomActionBase();
 
-		public virtual ValueTask Execute(IExecutionContext context, CancellationToken token)
-		{
-			throw new NotSupportedException("Custom action does not supported");
-		}
+		public virtual ValueTask Execute(IExecutionContext context, CancellationToken token) => throw new NotSupportedException(Resources.Exception_CustomActionDoesNotSupported);
 	}
 }

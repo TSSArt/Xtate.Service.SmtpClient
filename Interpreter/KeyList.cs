@@ -2,7 +2,7 @@
 
 namespace TSSArt.StateMachine
 {
-	internal sealed class KeyList<T> where T : IEntity
+	internal sealed class KeyList<T>
 	{
 		public delegate void ChangeHandler(ChangedAction action, IEntity entity, List<T> list);
 
@@ -13,7 +13,7 @@ namespace TSSArt.StateMachine
 
 		private readonly Dictionary<IEntity, List<T>> _dic = new Dictionary<IEntity, List<T>>();
 
-		public event ChangeHandler Changed;
+		public event ChangeHandler? Changed;
 
 		public void Set(IEntity entity, List<T> list)
 		{

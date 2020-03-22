@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace TSSArt.StateMachine
+﻿namespace TSSArt.StateMachine
 {
 	internal sealed class RuntimeDataModelHandler : DataModelHandlerBase
 	{
@@ -8,31 +6,17 @@ namespace TSSArt.StateMachine
 
 		public static readonly IDataModelHandlerFactory Factory = new DataModelHandlerFactory();
 
-		private RuntimeDataModelHandler() { }
+		private RuntimeDataModelHandler(IErrorProcessor errorProcessor) : base(errorProcessor)
+		{ }
 
-		private RuntimeDataModelHandler(StateMachineVisitor masterVisitor) : base(masterVisitor) { }
-
-		protected override void Visit(ref IScript script)       => AddErrorMessage(message: "Scripting not supported in RUNTIME data model.");
-		protected override void Visit(ref IDataModel dataModel) => AddErrorMessage(message: "DataModel not supported in RUNTIME data model.");
+		protected override void Visit(ref IScript script)       => AddErrorMessage(script, Resources.ErrorMessage_ScriptingNotSupportedInRuntimeDataModel);
+		protected override void Visit(ref IDataModel dataModel) => AddErrorMessage(dataModel, Resources.ErrorMessage_DataModelNotSupportedInRuntimeDataModel);
 
 		protected override void Visit(ref IExecutableEntity executableEntity)
 		{
 			if (!(executableEntity is RuntimeAction) && !(executableEntity is RuntimePredicate))
 			{
-				AddErrorMessage(message: "RuntimeAction and RuntimePredicate objects only allowed as action and condition in RUNTIME data model.");
-			}
-		}
-
-		public static void Validate(IStateMachine stateMachine)
-		{
-			if (stateMachine == null) throw new ArgumentNullException(nameof(stateMachine));
-
-			if (stateMachine.DataModelType == DataModelType)
-			{
-				var validator = new RuntimeDataModelHandler();
-				validator.SetRootPath(stateMachine);
-				validator.Visit(ref stateMachine);
-				validator.ThrowIfErrors();
+				AddErrorMessage(executableEntity, Resources.ErrorMessage_RuntimeActionAndPredicateOnlyAllowed);
 			}
 		}
 
@@ -40,7 +24,7 @@ namespace TSSArt.StateMachine
 		{
 			public bool CanHandle(string dataModelType) => dataModelType == DataModelType;
 
-			public IDataModelHandler CreateHandler(StateMachineVisitor masterVisitor) => new RuntimeDataModelHandler(masterVisitor);
+			public IDataModelHandler CreateHandler(IErrorProcessor errorProcessor) => new RuntimeDataModelHandler(errorProcessor);
 		}
 	}
 }

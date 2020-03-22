@@ -2,20 +2,24 @@
 using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	public class DefaultIfEvaluator : IIf, IExecEvaluator, IAncestorProvider
 	{
-		private readonly If _if;
+		private readonly IfEntity _if;
 
-		public DefaultIfEvaluator(in If @if)
+		public DefaultIfEvaluator(in IfEntity @if)
 		{
 			_if = @if;
 
+			Infrastructure.Assert(@if.Condition != null);
+
 			var currentCondition = @if.Condition.As<IBooleanEvaluator>();
 			var currentActions = ImmutableArray.CreateBuilder<IExecEvaluator>();
-			var branchesBuilder = ImmutableArray.CreateBuilder<(IBooleanEvaluator Condition, ImmutableArray<IExecEvaluator> Actions)>();
+			var branchesBuilder = ImmutableArray.CreateBuilder<(IBooleanEvaluator? Condition, ImmutableArray<IExecEvaluator> Actions)>();
 
 			foreach (var op in @if.Action)
 			{
@@ -23,13 +27,14 @@ namespace TSSArt.StateMachine
 				{
 					case IElseIf elseIf:
 						branchesBuilder.Add((currentCondition, currentActions.ToImmutable()));
+						Infrastructure.Assert(elseIf.Condition != null);
 						currentCondition = elseIf.Condition.As<IBooleanEvaluator>();
 						currentActions.Clear();
 						break;
 
 					case IElse _:
 						branchesBuilder.Add((currentCondition, currentActions.ToImmutable()));
-						currentCondition = null;
+						currentCondition = null!;
 						currentActions.Clear();
 						break;
 
@@ -44,9 +49,9 @@ namespace TSSArt.StateMachine
 			Branches = branchesBuilder.ToImmutable();
 		}
 
-		public ImmutableArray<(IBooleanEvaluator Condition, ImmutableArray<IExecEvaluator> Actions)> Branches { get; }
+		public ImmutableArray<(IBooleanEvaluator? Condition, ImmutableArray<IExecEvaluator> Actions)> Branches { get; }
 
-		object IAncestorProvider.Ancestor => _if.Ancestor;
+		object? IAncestorProvider.Ancestor => _if.Ancestor;
 
 		public virtual async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
@@ -67,6 +72,6 @@ namespace TSSArt.StateMachine
 		}
 
 		public ImmutableArray<IExecutableEntity> Action    => _if.Action;
-		public IConditionExpression              Condition => _if.Condition;
+		public IConditionExpression              Condition => _if.Condition!;
 	}
 }

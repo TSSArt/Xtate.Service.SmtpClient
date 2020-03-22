@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
@@ -6,8 +7,8 @@ namespace TSSArt.StateMachine
 	{
 		public static readonly IEqualityComparer<IIdentifier> Instance = new IdentifierEqualityComparer();
 
-		public bool Equals(IIdentifier x, IIdentifier y) => object.Equals(x.Base<IIdentifier>(), y.Base<IIdentifier>());
+		public bool Equals(IIdentifier x, IIdentifier y) => x.As<IEquatable<IIdentifier>>().Equals(y.As<IEquatable<IIdentifier>>());
 
-		public int GetHashCode(IIdentifier obj) => obj.Base<IIdentifier>().GetHashCode();
+		public int GetHashCode(IIdentifier obj) => obj.As<IEquatable<IIdentifier>>().GetHashCode();
 	}
 }

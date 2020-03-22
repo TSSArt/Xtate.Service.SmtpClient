@@ -4,6 +4,6 @@
 	{
 		bool CanHandle(string dataModelType);
 
-		IDataModelHandler CreateHandler(StateMachineVisitor masterVisitor);
+		IDataModelHandler CreateHandler(IErrorProcessor errorProcessor);
 	}
 }

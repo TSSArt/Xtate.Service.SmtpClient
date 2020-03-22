@@ -6,11 +6,16 @@ namespace TSSArt.StateMachine
 	{
 		private readonly ExternalDataExpression _externalDataExpression;
 
-		public ExternalDataExpressionNode(in ExternalDataExpression externalDataExpression) => _externalDataExpression = externalDataExpression;
+		public ExternalDataExpressionNode(in ExternalDataExpression externalDataExpression)
+		{
+			Infrastructure.Assert(externalDataExpression.Uri != null);
 
-		object IAncestorProvider.Ancestor => _externalDataExpression.Ancestor;
+			_externalDataExpression = externalDataExpression;
+		}
 
-		public Uri Uri => _externalDataExpression.Uri;
+		object? IAncestorProvider.Ancestor => _externalDataExpression.Ancestor;
+
+		public Uri Uri => _externalDataExpression.Uri!;
 
 		void IStoreSupport.Store(Bucket bucket)
 		{

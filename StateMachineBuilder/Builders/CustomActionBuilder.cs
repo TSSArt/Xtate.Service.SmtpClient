@@ -2,23 +2,15 @@
 
 namespace TSSArt.StateMachine
 {
-	public class CustomActionBuilder : ICustomActionBuilder
+	public class CustomActionBuilder : BuilderBase, ICustomActionBuilder
 	{
-		private string _xml;
+		private string? _xml;
 
-		public ICustomAction Build()
-		{
-			if (_xml == null)
-			{
-				throw new InvalidOperationException(message: "Xml cannot be null");
-			}
+		public CustomActionBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
+		{ }
 
-			return new CustomAction { Xml = _xml };
-		}
+		public ICustomAction Build() => new CustomAction { Ancestor = Ancestor, Xml = _xml };
 
-		public void SetXml(string xml)
-		{
-			_xml = xml ?? throw new ArgumentNullException(nameof(xml));
-		}
+		public void SetXml(string xml) => _xml = xml ?? throw new ArgumentNullException(nameof(xml));
 	}
 }

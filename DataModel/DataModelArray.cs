@@ -7,11 +7,12 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Security;
 using System.Text;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	[DebuggerTypeProxy(typeof(DebugView))]
 	[DebuggerDisplay(value: "Count = {_list.Count}")]
 	public sealed class DataModelArray : IDynamicMetaObjectProvider, IList<DataModelValue>, IFormattable
@@ -33,9 +34,11 @@ namespace TSSArt.StateMachine
 
 		private State _state;
 
-		public DataModelArray() : this(State.Writable) { }
+		public DataModelArray() : this(State.Writable)
+		{ }
 
-		public DataModelArray(bool isReadOnly) : this(isReadOnly ? State.Readonly : State.Writable) { }
+		public DataModelArray(bool isReadOnly) : this(isReadOnly ? State.Readonly : State.Writable)
+		{ }
 
 		public DataModelArray(int capacity) => _list = new List<DataModelDescriptor>(capacity);
 
@@ -61,7 +64,7 @@ namespace TSSArt.StateMachine
 
 		DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter) => new MetaObject(parameter, this, Dynamic.CreateMetaObject);
 
-		public string ToString(string format, IFormatProvider formatProvider)
+		public string ToString(string? format, IFormatProvider? formatProvider)
 		{
 			var sb = new StringBuilder();
 
@@ -117,6 +120,8 @@ namespace TSSArt.StateMachine
 
 		public void CopyTo(DataModelValue[] array, int arrayIndex)
 		{
+			if (array == null) throw new ArgumentNullException(nameof(array));
+
 			foreach (var descriptor in _list)
 			{
 				array[arrayIndex ++] = descriptor.Value;
@@ -184,7 +189,7 @@ namespace TSSArt.StateMachine
 
 		internal DataModelDescriptor GetDescriptor(int index) => index < _list.Count ? _list[index] : new DataModelDescriptor(DataModelValue.Undefined);
 
-		public event ChangedHandler Changed;
+		public event ChangedHandler? Changed;
 
 		public void Freeze() => _state = State.Readonly;
 
@@ -294,9 +299,14 @@ namespace TSSArt.StateMachine
 			Changed?.Invoke(ChangedAction.Set, index, descriptor);
 		}
 
-		private static Exception ObjectCantBeModifiedException() => new SecurityException("Object can not be modified");
+		private static Exception ObjectCantBeModifiedException() => new InvalidOperationException(Resources.Exception_Object_can_not_be_modified);
 
-		public bool CanAdd(DataModelValue item) => !IsReadOnly;
+		public bool CanAdd(DataModelValue item)
+		{
+			var _ = item;
+
+			return !IsReadOnly;
+		}
 
 		public bool CanClear() => !IsReadOnly && _list.All(i => !i.IsReadOnly);
 
@@ -363,6 +373,8 @@ namespace TSSArt.StateMachine
 		{
 			if (index < 0) throw new ArgumentOutOfRangeException(nameof(index));
 
+			var _ = item;
+
 			return _list.Skip(index).All(i => !i.IsReadOnly);
 		}
 
@@ -381,6 +393,8 @@ namespace TSSArt.StateMachine
 		public bool CanSet(int index, DataModelValue value)
 		{
 			if (index < 0) throw new ArgumentOutOfRangeException(nameof(index));
+
+			var _ = value;
 
 			if (IsReadOnly)
 			{
@@ -456,6 +470,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
+		[PublicAPI]
 		private class DebugView
 		{
 			private readonly DataModelArray _dataModelArray;
@@ -475,7 +490,7 @@ namespace TSSArt.StateMachine
 
 		private class Dynamic : DynamicObject
 		{
-			private static readonly IDynamicMetaObjectProvider Instance = new Dynamic(default);
+			private static readonly IDynamicMetaObjectProvider Instance = new Dynamic(default!);
 
 			private static readonly ConstructorInfo ConstructorInfo = typeof(Dynamic).GetConstructor(new[] { typeof(DataModelArray) });
 
@@ -489,11 +504,11 @@ namespace TSSArt.StateMachine
 				return Instance.GetMetaObject(newExpression);
 			}
 
-			public override bool TryGetMember(GetMemberBinder binder, out object result)
+			public override bool TryGetMember(GetMemberBinder binder, out object? result)
 			{
 				if (binder == null) throw new ArgumentNullException(nameof(binder));
 
-				if (binder.Name == "Length" || binder.Name == "length")
+				if (binder.Name == @"Length" || binder.Name == @"length")
 				{
 					result = _arr.Length;
 
@@ -509,7 +524,7 @@ namespace TSSArt.StateMachine
 			{
 				if (binder == null) throw new ArgumentNullException(nameof(binder));
 
-				if ((binder.Name == "Length" || binder.Name == "length") && value is IConvertible convertible)
+				if ((binder.Name == @"Length" || binder.Name == @"length") && value is IConvertible convertible)
 				{
 					_arr.SetLength(convertible.ToInt32(NumberFormatInfo.InvariantInfo));
 
@@ -519,7 +534,7 @@ namespace TSSArt.StateMachine
 				return false;
 			}
 
-			public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object result)
+			public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object? result)
 			{
 				if (indexes == null) throw new ArgumentNullException(nameof(indexes));
 
@@ -549,7 +564,7 @@ namespace TSSArt.StateMachine
 				return false;
 			}
 
-			public override bool TryConvert(ConvertBinder binder, out object result)
+			public override bool TryConvert(ConvertBinder binder, out object? result)
 			{
 				if (binder.Type == typeof(DataModelArray))
 				{
@@ -565,7 +580,7 @@ namespace TSSArt.StateMachine
 					return true;
 				}
 
-				result = default;
+				result = null;
 
 				return false;
 			}

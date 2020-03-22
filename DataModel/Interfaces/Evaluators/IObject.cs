@@ -2,6 +2,6 @@
 {
 	public interface IObject
 	{
-		object ToObject();
+		object? ToObject();
 	}
 }

@@ -5,19 +5,19 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class AssignNode : ExecutableEntityNode, IAssign, IAncestorProvider, IDebugEntityId
 	{
-		private readonly Assign _entity;
+		private readonly AssignEntity _entity;
 
-		public AssignNode(LinkedListNode<int> documentIdNode, in Assign entity) : base(documentIdNode, (IAssign) entity.Ancestor) => _entity = entity;
+		public AssignNode(LinkedListNode<int> documentIdNode, in AssignEntity entity) : base(documentIdNode, (IAssign?) entity.Ancestor) => _entity = entity;
 
-		object IAncestorProvider.Ancestor => _entity.Ancestor;
+		object? IAncestorProvider.Ancestor => _entity.Ancestor;
 
-		public ILocationExpression Location => _entity.Location;
+		public ILocationExpression? Location => _entity.Location;
 
-		public IValueExpression Expression => _entity.Expression;
+		public IValueExpression? Expression => _entity.Expression;
 
-		public string InlineContent => _entity.InlineContent;
+		public string? InlineContent => _entity.InlineContent;
 
-		FormattableString IDebugEntityId.EntityId => $"(#{DocumentId})";
+		FormattableString IDebugEntityId.EntityId => @$"(#{DocumentId})";
 
 		protected override void Store(Bucket bucket)
 		{

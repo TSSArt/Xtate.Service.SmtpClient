@@ -2,21 +2,16 @@
 
 namespace TSSArt.StateMachine
 {
-	public class AssignBuilder : IAssignBuilder
+	public class AssignBuilder : BuilderBase, IAssignBuilder
 	{
-		private IValueExpression    _expression;
-		private string              _inlineContent;
-		private ILocationExpression _location;
+		private IValueExpression?    _expression;
+		private string?              _inlineContent;
+		private ILocationExpression? _location;
 
-		public IAssign Build()
-		{
-			if (_expression != null && _inlineContent != null)
-			{
-				throw new InvalidOperationException(message: "Expression and Inline content can't be used at the same time in Assign element");
-			}
+		public AssignBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
+		{ }
 
-			return new Assign { Location = _location, Expression = _expression, InlineContent = _inlineContent };
-		}
+		public IAssign Build() => new AssignEntity { Ancestor = Ancestor, Location = _location, Expression = _expression, InlineContent = _inlineContent };
 
 		public void SetLocation(ILocationExpression location) => _location = location ?? throw new ArgumentNullException(nameof(location));
 

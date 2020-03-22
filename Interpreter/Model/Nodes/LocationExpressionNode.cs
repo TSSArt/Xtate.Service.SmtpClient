@@ -4,11 +4,16 @@
 	{
 		private readonly LocationExpression _locationExpression;
 
-		public LocationExpressionNode(in LocationExpression locationExpression) => _locationExpression = locationExpression;
+		public LocationExpressionNode(in LocationExpression locationExpression)
+		{
+			Infrastructure.Assert(locationExpression.Expression != null);
 
-		object IAncestorProvider.Ancestor => _locationExpression.Ancestor;
+			_locationExpression = locationExpression;
+		}
 
-		public string Expression => _locationExpression.Expression;
+		object? IAncestorProvider.Ancestor => _locationExpression.Ancestor;
+
+		public string Expression => _locationExpression.Expression!;
 
 		void IStoreSupport.Store(Bucket bucket)
 		{

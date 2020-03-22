@@ -1,22 +1,24 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	public class DefaultLogEvaluator : ILog, IExecEvaluator, IAncestorProvider
 	{
-		private readonly Log _log;
+		private readonly LogEntity _log;
 
-		public DefaultLogEvaluator(in Log log)
+		public DefaultLogEvaluator(in LogEntity log)
 		{
 			_log = log;
-			ExpressionEvaluator = log.Expression.As<IObjectEvaluator>();
+			ExpressionEvaluator = log.Expression?.As<IObjectEvaluator>();
 		}
 
-		public IObjectEvaluator ExpressionEvaluator { get; }
+		public IObjectEvaluator? ExpressionEvaluator { get; }
 
-		object IAncestorProvider.Ancestor => _log.Ancestor;
+		object? IAncestorProvider.Ancestor => _log.Ancestor;
 
 		public virtual async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
@@ -33,8 +35,8 @@ namespace TSSArt.StateMachine
 			await executionContext.Log(_log.Label, data, token).ConfigureAwait(false);
 		}
 
-		public IValueExpression Expression => _log.Expression;
+		public IValueExpression? Expression => _log.Expression;
 
-		public string Label => _log.Label;
+		public string? Label => _log.Label;
 	}
 }

@@ -10,15 +10,11 @@ namespace TSSArt.StateMachine
 		private readonly LinkedListNode<int> _documentIdNode;
 		private readonly IExecEvaluator      _execEvaluator;
 
-		protected ExecutableEntityNode(LinkedListNode<int> documentIdNode, IExecutableEntity entity)
+		protected ExecutableEntityNode(LinkedListNode<int> documentIdNode, IExecutableEntity? entity)
 		{
+			if (entity == null) throw new ArgumentNullException(nameof(entity));
+
 			_execEvaluator = entity.As<IExecEvaluator>();
-
-			if (_execEvaluator == null)
-			{
-				throw new ArgumentException(message: "Expected IExecEvaluator capable object", nameof(entity));
-			}
-
 			_documentIdNode = documentIdNode;
 		}
 

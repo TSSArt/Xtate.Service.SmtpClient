@@ -5,26 +5,28 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class HistoryNode : StateEntityNode, IHistory, IAncestorProvider, IDebugEntityId
 	{
-		private readonly History _history;
+		private readonly HistoryEntity _history;
 
-		public HistoryNode(LinkedListNode<int> documentIdNode, in History history) : base(documentIdNode, children: null)
+		public HistoryNode(LinkedListNode<int> documentIdNode, in HistoryEntity history) : base(documentIdNode, children: null)
 		{
+			Infrastructure.Assert(history.Transition != null);
+
 			_history = history;
 
+			Id = history.Id ?? new IdentifierNode(new RuntimeIdentifier());
 			Transition = history.Transition.As<TransitionNode>();
-
 			Transition.SetSource(this);
 		}
 
 		public TransitionNode Transition { get; }
 
-		object IAncestorProvider.Ancestor => _history.Ancestor;
+		object? IAncestorProvider.Ancestor => _history.Ancestor;
 
-		FormattableString IDebugEntityId.EntityId => $"{Id}(#{DocumentId})";
+		FormattableString IDebugEntityId.EntityId => @$"{Id}(#{DocumentId})";
 
-		ITransition IHistory.Transition => _history.Transition;
+		ITransition IHistory.Transition => _history.Transition!;
 
-		public override IIdentifier Id   => _history.Id;
+		public override IIdentifier Id   { get; }
 		public          HistoryType Type => _history.Type;
 
 		protected override void Store(Bucket bucket)

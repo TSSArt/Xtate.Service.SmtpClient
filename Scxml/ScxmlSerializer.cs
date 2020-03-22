@@ -1,28 +1,30 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.Xml;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	public class ScxmlSerializer : StateMachineVisitor
 	{
-		private const string ScxmlNs = "http://www.w3.org/2005/07/scxml";
+		private const string ScxmlNs       = "http://www.w3.org/2005/07/scxml";
 		private const string TSSArtScxmlNs = "http://tssart.com/scxml";
-		private const string Space   = " ";
+		private const string Space         = " ";
 
-		private XmlWriter _writer;
+		private readonly XmlWriter _writer;
 
-		public void Serialize(IStateMachine stateMachine, XmlWriter writer)
+		public ScxmlSerializer(XmlWriter writer) => _writer = writer;
+
+		public static void Serialize(IStateMachine stateMachine, XmlWriter writer)
 		{
-			_writer = writer;
-
-			Visit(ref stateMachine);
+			new ScxmlSerializer(writer).Visit(ref stateMachine);
 		}
 
-		protected override void Build(ref IStateMachine entity, ref StateMachine properties)
+		protected override void Build(ref IStateMachine entity, ref StateMachineEntity properties)
 		{
 			_writer.WriteStartElement(prefix: "", localName: "scxml", ScxmlNs);
-			_writer.WriteAttributeString(localName: "version", value: "1.0");
+			_writer.WriteAttributeString(localName: "version", value: @"1.0");
 
 			if (properties.DataModelType != null)
 			{
@@ -33,7 +35,7 @@ namespace TSSArt.StateMachine
 			if (!target.IsDefaultOrEmpty)
 			{
 				_writer.WriteStartAttribute("initial");
-				WriteArray(target, i => i.ToString(), Space);
+				WriteArray(target, i => i.As<string>(), Space);
 				_writer.WriteEndAttribute();
 			}
 
@@ -83,7 +85,7 @@ namespace TSSArt.StateMachine
 
 			if (entity.Id != null)
 			{
-				_writer.WriteAttributeString(localName: "id", entity.Id.ToString());
+				_writer.WriteAttributeString(localName: "id", entity.Id.As<string>());
 			}
 
 			base.Visit(ref entity);
@@ -99,7 +101,7 @@ namespace TSSArt.StateMachine
 
 			if (entity.Id != null)
 			{
-				_writer.WriteAttributeString(localName: "id", entity.Id.ToString());
+				_writer.WriteAttributeString(localName: "id", entity.Id.As<string>());
 			}
 
 			base.Visit(ref entity);
@@ -115,12 +117,12 @@ namespace TSSArt.StateMachine
 
 			if (entity.Id != null)
 			{
-				_writer.WriteAttributeString(localName: "id", entity.Id.ToString());
+				_writer.WriteAttributeString(localName: "id", entity.Id.As<string>());
 			}
 
 			if (entity.Type != HistoryType.Shallow)
 			{
-				_writer.WriteAttributeString(localName: "type", value: "deep");
+				_writer.WriteAttributeString(localName: "type", value: @"deep");
 			}
 
 			base.Visit(ref entity);
@@ -136,7 +138,7 @@ namespace TSSArt.StateMachine
 
 			if (entity.Id != null)
 			{
-				_writer.WriteAttributeString(localName: "id", entity.Id.ToString());
+				_writer.WriteAttributeString(localName: "id", entity.Id.As<string>());
 			}
 
 			base.Visit(ref entity);
@@ -152,25 +154,26 @@ namespace TSSArt.StateMachine
 
 			if (entity.Type != TransitionType.External)
 			{
-				_writer.WriteAttributeString(localName: "type", value: "internal");
+				_writer.WriteAttributeString(localName: "type", value: @"internal");
 			}
 
-			if (!entity.Event.IsDefaultOrEmpty)
+			if (!entity.EventDescriptors.IsDefaultOrEmpty)
 			{
 				_writer.WriteStartAttribute("event");
-				WriteArray(entity.Event, ed => ed.ToString(), Space);
+				WriteArray(entity.EventDescriptors, ed => ed.As<string>(), Space);
 				_writer.WriteEndAttribute();
 			}
 
-			if (entity.Condition != null)
+			var condition = entity.Condition?.As<IConditionExpression>().Expression;
+			if (condition != null)
 			{
-				_writer.WriteAttributeString(localName: "cond", ((IConditionExpression) entity.Condition).Expression);
+				_writer.WriteAttributeString(localName: "cond", condition);
 			}
 
 			if (!entity.Target.IsDefaultOrEmpty)
 			{
 				_writer.WriteStartAttribute("target");
-				WriteArray(entity.Target, i => i.ToString(), Space);
+				WriteArray(entity.Target, i => i.As<string>(), Space);
 				_writer.WriteEndAttribute();
 			}
 
@@ -201,12 +204,12 @@ namespace TSSArt.StateMachine
 
 			_writer.WriteStartElement("send");
 
-			if (entity.Event != null)
+			if (entity.EventName != null)
 			{
-				_writer.WriteAttributeString(localName: "event", entity.Event);
+				_writer.WriteAttributeString(localName: "event", entity.EventName);
 			}
 
-			if (entity.EventExpression != null)
+			if (entity.EventExpression?.Expression != null)
 			{
 				_writer.WriteAttributeString(localName: "eventexpr", entity.EventExpression.Expression);
 			}
@@ -216,7 +219,7 @@ namespace TSSArt.StateMachine
 				_writer.WriteAttributeString(localName: "target", entity.Target.ToString());
 			}
 
-			if (entity.TargetExpression != null)
+			if (entity.TargetExpression?.Expression != null)
 			{
 				_writer.WriteAttributeString(localName: "targetexpr", entity.TargetExpression.Expression);
 			}
@@ -226,7 +229,7 @@ namespace TSSArt.StateMachine
 				_writer.WriteAttributeString(localName: "type", entity.Type.ToString());
 			}
 
-			if (entity.TypeExpression != null)
+			if (entity.TypeExpression?.Expression != null)
 			{
 				_writer.WriteAttributeString(localName: "typeexpr", entity.TypeExpression.Expression);
 			}
@@ -236,17 +239,19 @@ namespace TSSArt.StateMachine
 				_writer.WriteAttributeString(localName: "id", entity.Id);
 			}
 
-			if (entity.IdLocation != null)
+			if (entity.IdLocation?.Expression != null)
 			{
 				_writer.WriteAttributeString(localName: "idlocation", entity.IdLocation.Expression);
 			}
 
 			if (entity.DelayMs != null)
 			{
-				_writer.WriteAttributeString(localName: "delay", entity.DelayMs.Value + "ms");
+				var ms = entity.DelayMs.Value;
+				var delayStr = ms % 1000 == 0 ? ms / 1000 + @"s" : ms + @"ms";
+				_writer.WriteAttributeString(localName: "delay", delayStr);
 			}
 
-			if (entity.DelayExpression != null)
+			if (entity.DelayExpression?.Expression != null)
 			{
 				_writer.WriteAttributeString(localName: "delayexpr", entity.DelayExpression.Expression);
 			}
@@ -254,7 +259,7 @@ namespace TSSArt.StateMachine
 			if (!entity.NameList.IsDefaultOrEmpty)
 			{
 				_writer.WriteStartAttribute("namelist");
-				WriteArray(entity.NameList, le => le.Expression.ToString(), Space);
+				WriteArray(entity.NameList, le => le.Expression ?? string.Empty, Space);
 				_writer.WriteEndAttribute();
 			}
 
@@ -269,12 +274,12 @@ namespace TSSArt.StateMachine
 
 			_writer.WriteStartElement("script");
 
-			if (entity.Source != null)
+			if (entity.Source?.Uri != null)
 			{
 				_writer.WriteAttributeString(localName: "src", entity.Source.Uri.ToString());
 			}
 
-			if (entity.Content != null)
+			if (entity.Content?.Expression != null)
 			{
 				_writer.WriteRaw(entity.Content.Expression);
 			}
@@ -286,7 +291,10 @@ namespace TSSArt.StateMachine
 		{
 			if (entity == null) throw new ArgumentNullException(nameof(entity));
 
-			_writer.WriteRaw(entity.Xml);
+			if (entity.Xml != null)
+			{
+				_writer.WriteRaw(entity.Xml);
+			}
 		}
 
 		protected override void Visit(ref IRaise entity)
@@ -295,9 +303,13 @@ namespace TSSArt.StateMachine
 
 			_writer.WriteStartElement("raise");
 
-			_writer.WriteStartAttribute("event");
-			EventName.WriteXml(_writer, entity.Event.NameParts);
-			_writer.WriteEndAttribute();
+			var nameParts = entity.OutgoingEvent?.NameParts ?? default;
+			if (!nameParts.IsDefaultOrEmpty)
+			{
+				_writer.WriteStartAttribute("event");
+				EventName.WriteXml(_writer, nameParts);
+				_writer.WriteEndAttribute();
+			}
 
 			_writer.WriteEndElement();
 		}
@@ -313,7 +325,7 @@ namespace TSSArt.StateMachine
 				_writer.WriteAttributeString(localName: "label", entity.Label);
 			}
 
-			if (entity.Expression != null)
+			if (entity.Expression?.Expression != null)
 			{
 				_writer.WriteAttributeString(localName: "expr", entity.Expression.Expression);
 			}
@@ -327,7 +339,10 @@ namespace TSSArt.StateMachine
 
 			_writer.WriteStartElement("if");
 
-			_writer.WriteAttributeString(localName: "cond", entity.Condition.Expression);
+			if (entity.Condition?.Expression != null)
+			{
+				_writer.WriteAttributeString(localName: "cond", entity.Condition.Expression);
+			}
 
 			base.Visit(ref entity);
 
@@ -340,11 +355,17 @@ namespace TSSArt.StateMachine
 
 			_writer.WriteStartElement("foreach");
 
-			_writer.WriteAttributeString(localName: "array", entity.Array.Expression);
+			if (entity.Array?.Expression != null)
+			{
+				_writer.WriteAttributeString(localName: "array", entity.Array.Expression);
+			}
 
-			_writer.WriteAttributeString(localName: "item", entity.Item.Expression);
+			if (entity.Item?.Expression != null)
+			{
+				_writer.WriteAttributeString(localName: "item", entity.Item.Expression);
+			}
 
-			if (entity.Index != null)
+			if (entity.Index?.Expression != null)
 			{
 				_writer.WriteAttributeString(localName: "index", entity.Index.Expression);
 			}
@@ -360,7 +381,10 @@ namespace TSSArt.StateMachine
 
 			_writer.WriteStartElement("elseif");
 
-			_writer.WriteAttributeString(localName: "cond", entity.Condition.Expression);
+			if (entity.Condition?.Expression != null)
+			{
+				_writer.WriteAttributeString(localName: "cond", entity.Condition.Expression);
+			}
 
 			_writer.WriteEndElement();
 		}
@@ -382,7 +406,7 @@ namespace TSSArt.StateMachine
 				_writer.WriteAttributeString(localName: "index", entity.SendId);
 			}
 
-			if (entity.SendIdExpression != null)
+			if (entity.SendIdExpression?.Expression != null)
 			{
 				_writer.WriteAttributeString(localName: "index", entity.SendIdExpression.Expression);
 			}
@@ -396,9 +420,12 @@ namespace TSSArt.StateMachine
 
 			_writer.WriteStartElement("assign");
 
-			_writer.WriteAttributeString(localName: "location", entity.Location.Expression);
+			if (entity.Location?.Expression != null)
+			{
+				_writer.WriteAttributeString(localName: "location", entity.Location.Expression);
+			}
 
-			if (entity.Expression != null)
+			if (entity.Expression?.Expression != null)
 			{
 				_writer.WriteAttributeString(localName: "expr", entity.Expression.Expression);
 			}
@@ -444,14 +471,17 @@ namespace TSSArt.StateMachine
 
 			_writer.WriteStartElement("data");
 
-			_writer.WriteAttributeString(localName: "id", entity.Id);
+			if (entity.Id != null)
+			{
+				_writer.WriteAttributeString(localName: "id", entity.Id);
+			}
 
-			if (entity.Source != null)
+			if (entity.Source?.Uri != null)
 			{
 				_writer.WriteAttributeString(localName: "src", entity.Source.Uri.ToString());
 			}
 
-			if (entity.Expression != null)
+			if (entity.Expression?.Expression != null)
 			{
 				_writer.WriteAttributeString(localName: "expr", entity.Expression.Expression);
 			}
@@ -475,7 +505,7 @@ namespace TSSArt.StateMachine
 				_writer.WriteAttributeString(localName: "type", entity.Type.ToString());
 			}
 
-			if (entity.TypeExpression != null)
+			if (entity.TypeExpression?.Expression != null)
 			{
 				_writer.WriteAttributeString(localName: "typeexpr", entity.TypeExpression.Expression);
 			}
@@ -485,7 +515,7 @@ namespace TSSArt.StateMachine
 				_writer.WriteAttributeString(localName: "src", entity.Source.ToString());
 			}
 
-			if (entity.SourceExpression != null)
+			if (entity.SourceExpression?.Expression != null)
 			{
 				_writer.WriteAttributeString(localName: "eventexpr", entity.SourceExpression.Expression);
 			}
@@ -495,7 +525,7 @@ namespace TSSArt.StateMachine
 				_writer.WriteAttributeString(localName: "id", entity.Id);
 			}
 
-			if (entity.IdLocation != null)
+			if (entity.IdLocation?.Expression != null)
 			{
 				_writer.WriteAttributeString(localName: "idlocation", entity.IdLocation.Expression);
 			}
@@ -503,13 +533,13 @@ namespace TSSArt.StateMachine
 			if (!entity.NameList.IsDefaultOrEmpty)
 			{
 				_writer.WriteStartAttribute("namelist");
-				WriteArray(entity.NameList, le => le.Expression.ToString(), Space);
+				WriteArray(entity.NameList, le => le.Expression ?? string.Empty, Space);
 				_writer.WriteEndAttribute();
 			}
 
 			if (entity.AutoForward)
 			{
-				_writer.WriteAttributeString(localName: "autoforward", value: "true");
+				_writer.WriteAttributeString(localName: "autoforward", value: @"true");
 			}
 
 			base.Visit(ref entity);
@@ -534,12 +564,12 @@ namespace TSSArt.StateMachine
 
 			_writer.WriteAttributeString(localName: "name", entity.Name);
 
-			if (entity.Expression != null)
+			if (entity.Expression?.Expression != null)
 			{
 				_writer.WriteAttributeString(localName: "expr", entity.Expression.Expression);
 			}
 
-			if (entity.Location != null)
+			if (entity.Location?.Expression != null)
 			{
 				_writer.WriteAttributeString(localName: "location", entity.Location.Expression);
 			}
@@ -553,7 +583,7 @@ namespace TSSArt.StateMachine
 
 			_writer.WriteStartElement("content");
 
-			if (entity.Expression != null)
+			if (entity.Expression?.Expression != null)
 			{
 				_writer.WriteAttributeString(localName: "expr", entity.Expression.Expression);
 			}

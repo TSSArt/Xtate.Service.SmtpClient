@@ -27,7 +27,7 @@ namespace TSSArt.StateMachine
 
 				switch (operation)
 				{
-					case Key.Set when recordBucket.TryGet(Key.Property, out string property):
+					case Key.Set when recordBucket.TryGet(Key.Property, out string? property):
 					{
 						var dataModelValue = recordBucket.GetDataModelValue(referenceTracker, dataModelObject[property]);
 						recordBucket.TryGet(Key.ReadOnly, out bool isReadOnly);
@@ -36,7 +36,7 @@ namespace TSSArt.StateMachine
 						break;
 					}
 
-					case Key.Remove when recordBucket.TryGet(Key.Property, out string property):
+					case Key.Remove when recordBucket.TryGet(Key.Property, out string? property):
 					{
 						shrink = true;
 						referenceTracker.RemoveReference(dataModelObject[property]);
@@ -44,7 +44,9 @@ namespace TSSArt.StateMachine
 						break;
 					}
 
-					default: throw new ArgumentOutOfRangeException();
+					default:
+						Infrastructure.UnexpectedValue();
+						break;
 				}
 
 				_record ++;

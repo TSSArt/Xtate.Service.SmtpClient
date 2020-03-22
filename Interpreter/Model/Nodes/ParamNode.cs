@@ -6,25 +6,27 @@ namespace TSSArt.StateMachine
 	internal sealed class ParamNode : IParam, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
 		private readonly LinkedListNode<int> _documentIdNode;
-		private readonly Param               _param;
+		private readonly ParamEntity         _param;
 
-		public ParamNode(LinkedListNode<int> documentIdNode, in Param param)
+		public ParamNode(LinkedListNode<int> documentIdNode, in ParamEntity param)
 		{
+			Infrastructure.Assert(param.Name != null);
+
 			_documentIdNode = documentIdNode;
 			_param = param;
 		}
 
-		object IAncestorProvider.Ancestor => _param.Ancestor;
+		object? IAncestorProvider.Ancestor => _param.Ancestor;
 
-		FormattableString IDebugEntityId.EntityId => $"{Name}(#{DocumentId})";
+		FormattableString IDebugEntityId.EntityId => @$"{Name}(#{DocumentId})";
 
 		public int DocumentId => _documentIdNode.Value;
 
-		public string Name => _param.Name;
+		public string Name => _param.Name!;
 
-		public IValueExpression Expression => _param.Expression;
+		public IValueExpression? Expression => _param.Expression;
 
-		public ILocationExpression Location => _param.Location;
+		public ILocationExpression? Location => _param.Location;
 
 		void IStoreSupport.Store(Bucket bucket)
 		{

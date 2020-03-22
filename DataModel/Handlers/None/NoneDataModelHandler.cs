@@ -8,58 +8,43 @@ namespace TSSArt.StateMachine
 
 		public static readonly IDataModelHandlerFactory Factory = new DataModelHandlerFactory();
 
-		private NoneDataModelHandler() { }
+		private NoneDataModelHandler(IErrorProcessor errorProcessor) : base(errorProcessor)
+		{ }
 
-		private NoneDataModelHandler(StateMachineVisitor masterVisitor) : base(masterVisitor) { }
+		protected override void Visit(ref IForEach forEach) => AddErrorMessage(forEach, Resources.ErrorMesasge_ForEach_not_supported_in_NONE_data_model_);
 
-		protected override void Visit(ref IForEach forEach) => AddErrorMessage(message: "ForEach not supported in NONE data model.");
+		protected override void Visit(ref IScript script) => AddErrorMessage(script, Resources.ErrorMesasge_Scripting_not_supported_in_NONE_data_model_);
 
-		protected override void Visit(ref IScript script) => AddErrorMessage(message: "Scripting not supported in NONE data model.");
+		protected override void Visit(ref IDataModel dataModel) => AddErrorMessage(dataModel, Resources.ErrorMesasge_DataModel_not_supported_in_NONE_data_model);
 
-		protected override void Visit(ref IDataModel dataModel) => AddErrorMessage(message: "DataModel not supported in NONE data model.");
+		protected override void Visit(ref IDoneData doneData) => AddErrorMessage(doneData, Resources.ErrorMesasge_DoneData_not_supported_in_NONE_data_model);
 
-		protected override void Visit(ref IDoneData doneData) => AddErrorMessage(message: "DoneData not supported in NONE data model.");
+		protected override void Visit(ref IValueExpression expression) => AddErrorMessage(expression, Resources.ErrorMesasge_Value_expression__not_supported_in_NONE_data_model);
 
-		protected override void Visit(ref IValueExpression expression) => AddErrorMessage(message: "'Value expression' not supported in NONE data model.");
-
-		protected override void Visit(ref ILocationExpression expression) => AddErrorMessage(message: "'Location expression' not supported in NONE data model.");
-
-		public static void Validate(IStateMachine stateMachine)
-		{
-			if (stateMachine == null) throw new ArgumentNullException(nameof(stateMachine));
-
-			if (stateMachine.DataModelType == null || stateMachine.DataModelType == DataModelType)
-			{
-				var validator = new NoneDataModelHandler();
-				validator.SetRootPath(stateMachine);
-				validator.Visit(ref stateMachine);
-				validator.ThrowIfErrors();
-			}
-		}
+		protected override void Visit(ref ILocationExpression expression) => AddErrorMessage(expression, Resources.ErrorMesasge_Location_expression__not_supported_in_NONE_data_model);
 
 		protected override void Build(ref IConditionExpression conditionExpression, ref ConditionExpression properties)
 		{
 			base.Build(ref conditionExpression, ref properties);
 
-			var expression = properties.Expression;
+			var expression = properties.Expression!;
 
-			if (!expression.StartsWith(value: "In(", StringComparison.Ordinal) || !expression.EndsWith(value: ")", StringComparison.Ordinal))
+			if (!expression.StartsWith(value: @"In(", StringComparison.Ordinal) || !expression.EndsWith(value: @")", StringComparison.Ordinal))
 			{
-				AddErrorMessage(message: "Incorrect format of condition expression for NONE data model");
+				AddErrorMessage(conditionExpression, Resources.ErrorMesasge_Incorrect_format_of_condition_expression_for_NONE_data_model);
+
+				return;
 			}
 
 			try
 			{
 				var inState = (Identifier) expression.Substring(startIndex: 3, expression.Length - 4).Trim();
 
-				if (!ValidationOnly)
-				{
-					conditionExpression = new NoneConditionExpressionEvaluator(properties, inState);
-				}
+				conditionExpression = new NoneConditionExpressionEvaluator(properties, inState);
 			}
 			catch (ArgumentException ex)
 			{
-				AddErrorMessage(ex.Message);
+				AddErrorMessage(conditionExpression, Resources.ErrorMesasge_Incorrect_condition_expression, ex);
 			}
 		}
 
@@ -67,7 +52,7 @@ namespace TSSArt.StateMachine
 		{
 			public bool CanHandle(string dataModelType) => dataModelType == DataModelType;
 
-			public IDataModelHandler CreateHandler(StateMachineVisitor masterVisitor) => new NoneDataModelHandler(masterVisitor);
+			public IDataModelHandler CreateHandler(IErrorProcessor errorProcessor) => new NoneDataModelHandler(errorProcessor);
 		}
 	}
 }

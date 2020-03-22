@@ -1,16 +1,19 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	public sealed partial class IoProcessor : IAsyncDisposable
 	{
 		private readonly IoProcessorOptions _options;
+		private          bool               _asyncOperationInProgress;
 
-		private IoProcessorContext _context;
-		private bool               _asyncOperationInProgress;
-		private bool               _disposed;
+		private IoProcessorContext? _context;
+		private bool                _disposed;
 
 		public IoProcessor(IoProcessorOptions options)
 		{
@@ -19,11 +22,31 @@ namespace TSSArt.StateMachine
 			IoProcessorInit();
 		}
 
+		public async ValueTask DisposeAsync()
+		{
+			if (_disposed)
+			{
+				_disposed = true;
+			}
+
+			var context = _context;
+			_context = null;
+
+			if (context != null)
+			{
+				await context.DisposeAsync().ConfigureAwait(false);
+			}
+
+			await IoProcessorStopAsync().ConfigureAwait(false);
+
+			_disposed = true;
+		}
+
 		public async ValueTask StartAsync(CancellationToken token = default)
 		{
 			if (_asyncOperationInProgress)
 			{
-				throw new InvalidOperationException("Another asynchronous operation in progress");
+				throw new InvalidOperationException(Resources.Exception_Another_asynchronous_operation_in_progress);
 			}
 
 			if (_context != null)
@@ -58,7 +81,7 @@ namespace TSSArt.StateMachine
 		{
 			if (_asyncOperationInProgress)
 			{
-				throw new InvalidOperationException("Another asynchronous operation in progress");
+				throw new InvalidOperationException(Resources.Exception_Another_asynchronous_operation_in_progress);
 			}
 
 			var context = _context;
@@ -89,57 +112,21 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public async ValueTask DisposeAsync()
-		{
-			if (_disposed)
-			{
-				_disposed = true;
-			}
+		public ValueTask<DataModelValue> Execute(IStateMachine stateMachine, DataModelValue parameters = default) =>
+				Execute(stateMachine, source: null, scxml: default, IdGenerator.NewSessionId(), parameters);
 
-			var context = _context;
-			_context = null;
+		public ValueTask<DataModelValue> Execute(Uri source, DataModelValue parameters = default) => Execute(stateMachine: null, source, scxml: default, IdGenerator.NewSessionId(), parameters);
 
-			if (context != null)
-			{
-				await context.DisposeAsync().ConfigureAwait(false);
-			}
+		public ValueTask<DataModelValue> Execute(string scxml, DataModelValue parameters = default) => Execute(stateMachine: null, source: null, scxml, IdGenerator.NewSessionId(), parameters);
 
-			await IoProcessorStopAsync().ConfigureAwait(false);
+		public ValueTask<DataModelValue> Execute(string sessionId, IStateMachine stateMachine, DataModelValue parameters = default) =>
+				Execute(stateMachine, source: null, scxml: default, sessionId, parameters);
 
-			_disposed = true;
-		}
+		public ValueTask<DataModelValue> Execute(string sessionId, Uri source, DataModelValue parameters = default) => Execute(stateMachine: null, source, scxml: default, sessionId, parameters);
 
-		public ValueTask<DataModelValue> Execute(IStateMachine stateMachine, DataModelValue parameters = default)
-		{
-			return Execute(stateMachine, source: null, scxml: default, IdGenerator.NewSessionId(), parameters);
-		}
+		public ValueTask<DataModelValue> Execute(string sessionId, string scxml, DataModelValue parameters = default) => Execute(stateMachine: null, source: null, scxml, sessionId, parameters);
 
-		public ValueTask<DataModelValue> Execute(Uri source, DataModelValue parameters = default)
-		{
-			return Execute(stateMachine: null, source, scxml: default, IdGenerator.NewSessionId(), parameters);
-		}
-
-		public ValueTask<DataModelValue> Execute(string scxml, DataModelValue parameters = default)
-		{
-			return Execute(stateMachine: null, source: null, scxml, IdGenerator.NewSessionId(), parameters);
-		}
-
-		public ValueTask<DataModelValue> Execute(string sessionId, IStateMachine stateMachine, DataModelValue parameters = default)
-		{
-			return Execute(stateMachine, source: null, scxml: default, sessionId, parameters);
-		}
-
-		public ValueTask<DataModelValue> Execute(string sessionId, Uri source, DataModelValue parameters = default)
-		{
-			return Execute(stateMachine: null, source, scxml: default, sessionId, parameters);
-		}
-
-		public ValueTask<DataModelValue> Execute(string sessionId, string scxml, DataModelValue parameters = default)
-		{
-			return Execute(stateMachine: null, source: null, scxml, sessionId, parameters);
-		}
-
-		private async ValueTask<DataModelValue> Execute(IStateMachine stateMachine, Uri source, string scxml, string sessionId, DataModelValue parameters)
+		private async ValueTask<DataModelValue> Execute(IStateMachine? stateMachine, Uri? source, string? scxml, string sessionId, DataModelValue parameters)
 		{
 			if (sessionId == null) throw new ArgumentNullException(nameof(sessionId));
 
@@ -157,9 +144,9 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private IoProcessorContext GetCurrentContext() => _context ?? throw new InvalidOperationException("IO Processor has not been started");
+		private IoProcessorContext GetCurrentContext() => _context ?? throw new InvalidOperationException(Resources.Exception_IO_Processor_has_not_been_started);
 
-		private bool IsCurrentContextExists(out IoProcessorContext context)
+		private bool IsCurrentContextExists([NotNullWhen(true)] out IoProcessorContext? context)
 		{
 			context = _context;
 

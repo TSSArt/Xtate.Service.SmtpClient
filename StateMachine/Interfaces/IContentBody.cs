@@ -2,6 +2,6 @@
 {
 	public interface IContentBody : IExecutableEntity
 	{
-		string Value { get; }
+		string? Value { get; }
 	}
 }

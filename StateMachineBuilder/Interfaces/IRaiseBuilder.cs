@@ -4,6 +4,6 @@
 	{
 		IRaise Build();
 
-		void SetEvent(IOutgoingEvent @event);
+		void SetEvent(IOutgoingEvent evt);
 	}
 }

@@ -13,7 +13,7 @@ namespace TSSArt.StateMachine
 
 		Uri IServiceFactory.AliasTypeId => ServiceFactoryAliasTypeId;
 
-		async ValueTask<IService> IServiceFactory.StartService(Uri source, string rawContent, DataModelValue content, DataModelValue parameters,
+		async ValueTask<IService> IServiceFactory.StartService(Uri? source, string? rawContent, DataModelValue content, DataModelValue parameters,
 															   IServiceCommunication serviceCommunication, CancellationToken token)
 		{
 			var sessionId = IdGenerator.NewSessionId();

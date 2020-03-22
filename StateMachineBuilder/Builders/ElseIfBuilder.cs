@@ -2,19 +2,14 @@
 
 namespace TSSArt.StateMachine
 {
-	public class ElseIfBuilder : IElseIfBuilder
+	public class ElseIfBuilder : BuilderBase, IElseIfBuilder
 	{
-		private IConditionExpression _condition;
+		private IConditionExpression? _condition;
 
-		public IElseIf Build()
-		{
-			if (_condition == null)
-			{
-				throw new InvalidOperationException(message: "Condition property required for ElseIf element");
-			}
+		public ElseIfBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
+		{ }
 
-			return new ElseIf { Condition = _condition };
-		}
+		public IElseIf Build() => new ElseIfEntity { Ancestor = Ancestor, Condition = _condition };
 
 		public void SetCondition(IConditionExpression condition) => _condition = condition ?? throw new ArgumentNullException(nameof(condition));
 	}

@@ -2,26 +2,21 @@
 
 namespace TSSArt.StateMachine
 {
-	public class DataBuilder : IDataBuilder
+	public class DataBuilder : BuilderBase, IDataBuilder
 	{
-		private IValueExpression        _expression;
-		private string                  _id;
-		private string                  _inlineContent;
-		private IExternalDataExpression _source;
+		private IValueExpression?        _expression;
+		private string?                  _id;
+		private string?                  _inlineContent;
+		private IExternalDataExpression? _source;
 
-		public IData Build()
-		{
-			if (_inlineContent != null && _expression != null || _inlineContent != null && _source != null || _source != null && _expression != null)
-			{
-				throw new InvalidOperationException(message: "Expression and Source and Inline content can't be used at the same time in Data element");
-			}
+		public DataBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
+		{ }
 
-			return new Data { Id = _id, Source = _source, Expression = _expression, InlineContent = _inlineContent };
-		}
+		public IData Build() => new DataEntity { Ancestor = Ancestor, Id = _id, Source = _source, Expression = _expression, InlineContent = _inlineContent };
 
 		public void SetId(string id)
 		{
-			if (string.IsNullOrEmpty(id)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(id));
+			if (string.IsNullOrEmpty(id)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(id));
 
 			_id = id;
 		}

@@ -7,12 +7,12 @@ namespace TSSArt.StateMachine
 {
 	internal class InMemoryStorage : IStorage
 	{
-		private IMemoryOwner<byte>                         _baselineOwner;
-		private Memory<byte>                               _buffer;
-		private List<(IMemoryOwner<byte> Owner, int Size)> _buffers;
-		private IMemoryOwner<byte>                         _owner;
-		private SortedSet<Entry>                           _readModel;
-		private bool                                       _disposed;
+		private IMemoryOwner<byte>?                         _baselineOwner;
+		private Memory<byte>                                _buffer;
+		private List<(IMemoryOwner<byte> Owner, int Size)>? _buffers;
+		private bool                                        _disposed;
+		private IMemoryOwner<byte>?                         _owner;
+		private SortedSet<Entry>?                           _readModel;
 
 		public InMemoryStorage(ReadOnlySpan<byte> baseline)
 		{
@@ -64,7 +64,7 @@ namespace TSSArt.StateMachine
 			_disposed = true;
 		}
 
-		public void Add(ReadOnlySpan<byte> key, ReadOnlySpan<byte> value)
+		public void Write(ReadOnlySpan<byte> key, ReadOnlySpan<byte> value)
 		{
 			var keyLengthLength = Encode.GetEncodedLength(key.Length);
 			var valueLengthLength = Encode.GetEncodedLength(value.Length);
@@ -84,25 +84,25 @@ namespace TSSArt.StateMachine
 			AddToReadModel(keyMemory, valueMemory);
 		}
 
-		public ReadOnlyMemory<byte> Get(ReadOnlySpan<byte> key)
+		public ReadOnlyMemory<byte> Read(ReadOnlySpan<byte> key)
 		{
 			if (_readModel == null)
 			{
-				throw new InvalidOperationException("Storage not available for read operations");
+				throw new InvalidOperationException(Resources.Exception_Storage_not_available_for_read_operations);
 			}
 
 			var buffer = AllocateBuffer(key.Length, shared: true);
 			key.CopyTo(buffer.Span);
 
-			return ReadModelTryGetValue(new Entry(buffer), out var result) ? result.Value : ReadOnlyMemory<byte>.Empty;
+			return ReadModelTryGetValue(_readModel, new Entry(buffer), out var result) ? result.Value : ReadOnlyMemory<byte>.Empty;
 		}
 
-		private bool ReadModelTryGetValue(Entry equalEntry, out Entry actualEntry)
+		private static bool ReadModelTryGetValue(SortedSet<Entry> readModel, Entry equalEntry, out Entry actualEntry)
 		{
 #if NETSTANDARD2_1
-			return _readModel.TryGetValue(equalEntry, out actualEntry);
+			return readModel.TryGetValue(equalEntry, out actualEntry);
 #else
-			foreach (var entry in _readModel.GetViewBetween(equalEntry, equalEntry))
+			foreach (var entry in readModel.GetViewBetween(equalEntry, equalEntry))
 			{
 				actualEntry = entry;
 
@@ -135,7 +135,7 @@ namespace TSSArt.StateMachine
 					var from = new Entry(value);
 					var to = new Entry(GetTo(value));
 
-					if (ReadModelTryGetValue(to, out var toValue))
+					if (ReadModelTryGetValue(_readModel, to, out var toValue))
 					{
 						_readModel.GetViewBetween(from, to).Clear();
 						_readModel.Add(toValue);
@@ -242,7 +242,7 @@ namespace TSSArt.StateMachine
 		{
 			if (_readModel == null)
 			{
-				throw new InvalidOperationException("Storage not available for read operations");
+				throw new InvalidOperationException(Resources.Exception_Storage_not_available_for_read_operations);
 			}
 
 			return _readModel.Sum(p => Encode.GetEncodedLength(p.Key.Length) + p.Key.Length + Encode.GetEncodedLength(p.Value.Length) + p.Value.Length);
@@ -252,12 +252,12 @@ namespace TSSArt.StateMachine
 		{
 			if (_readModel == null)
 			{
-				throw new InvalidOperationException("Storage not available for read operations");
+				throw new InvalidOperationException(Resources.Exception_Storage_not_available_for_read_operations);
 			}
 
-			IMemoryOwner<byte> newBaselineOwner = null;
+			IMemoryOwner<byte>? newBaselineOwner = null;
 			var newBaseline = Memory<byte>.Empty;
-			SortedSet<Entry> newReadModel = null;
+			SortedSet<Entry>? newReadModel = null;
 			if (shrink)
 			{
 				newBaselineOwner = MemoryPool<byte>.Shared.Rent(_readModel.Sum(p => p.Key.Length + p.Value.Length));
@@ -287,7 +287,7 @@ namespace TSSArt.StateMachine
 					var value = newBaseline.Slice(pair.Key.Length, pair.Value.Length);
 					pair.Key.CopyTo(key);
 					pair.Value.CopyTo(value);
-					newReadModel.Add(new Entry(key, value));
+					newReadModel!.Add(new Entry(key, value));
 					newBaseline = newBaseline.Slice(pair.Key.Length + pair.Value.Length);
 				}
 			}
@@ -296,9 +296,9 @@ namespace TSSArt.StateMachine
 			{
 				TruncateLog(true);
 
-				_readModel = newReadModel;
+				_readModel = newReadModel!;
 				_baselineOwner?.Dispose();
-				_baselineOwner = newBaselineOwner;
+				_baselineOwner = newBaselineOwner!;
 			}
 		}
 

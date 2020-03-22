@@ -4,7 +4,7 @@ namespace TSSArt.StateMachine
 {
 	public interface IIf : IExecutableEntity
 	{
-		IConditionExpression              Condition { get; }
+		IConditionExpression?             Condition { get; }
 		ImmutableArray<IExecutableEntity> Action    { get; }
 	}
 }

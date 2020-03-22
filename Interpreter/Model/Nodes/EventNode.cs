@@ -7,15 +7,20 @@ namespace TSSArt.StateMachine
 	{
 		private readonly IOutgoingEvent _event;
 
-		public EventNode(IOutgoingEvent @event) => _event = @event ?? throw new ArgumentNullException(nameof(@event));
+		public EventNode(IOutgoingEvent evt)
+		{
+			Infrastructure.Assert(evt != null);
 
-		object IAncestorProvider.Ancestor => _event;
+			_event = evt;
+		}
+
+		object? IAncestorProvider.Ancestor => _event;
 
 		public ImmutableArray<IIdentifier> NameParts => _event.NameParts;
-		public string                      SendId    => _event.SendId;
+		public string?                     SendId    => _event.SendId;
 		public DataModelValue              Data      => _event.Data;
-		public Uri                         Target    => _event.Target;
-		public Uri                         Type      => _event.Type;
+		public Uri?                        Target    => _event.Target;
+		public Uri?                        Type      => _event.Type;
 		public int                         DelayMs   => _event.DelayMs;
 
 		void IStoreSupport.Store(Bucket bucket)

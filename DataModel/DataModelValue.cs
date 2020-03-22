@@ -7,6 +7,7 @@ using System.Globalization;
 using System.Linq.Expressions;
 using System.Net.Mime;
 using System.Reflection;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
@@ -22,6 +23,7 @@ namespace TSSArt.StateMachine
 		Boolean
 	}
 
+	[PublicAPI]
 	[DebuggerTypeProxy(typeof(DebugView))]
 	[DebuggerDisplay(value: "{ToObject()} ({Type})")]
 	public readonly struct DataModelValue : IObject, IEquatable<DataModelValue>, IFormattable, IDynamicMetaObjectProvider
@@ -31,22 +33,22 @@ namespace TSSArt.StateMachine
 		private static readonly object DateTimeValue = new object();
 		private static readonly object BooleanValue  = new object();
 
-		private readonly object _value;
-		private readonly long   _int64;
+		private readonly object? _value;
+		private readonly long    _int64;
 
-		public DataModelValue(DataModelObject value)
+		public DataModelValue(DataModelObject? value)
 		{
 			_value = value ?? NullValue;
 			_int64 = 0;
 		}
 
-		public DataModelValue(DataModelArray value)
+		public DataModelValue(DataModelArray? value)
 		{
 			_value = value ?? NullValue;
 			_int64 = 0;
 		}
 
-		public DataModelValue(string value)
+		public DataModelValue(string? value)
 		{
 			_value = value ?? NullValue;
 			_int64 = 0;
@@ -70,19 +72,33 @@ namespace TSSArt.StateMachine
 			_int64 = value ? 1 : 0;
 		}
 
-		public static implicit operator DataModelValue(DataModelObject val) => new DataModelValue(val);
-		public static implicit operator DataModelValue(DataModelArray val)  => new DataModelValue(val);
-		public static implicit operator DataModelValue(string val)          => new DataModelValue(val);
-		public static implicit operator DataModelValue(double val)          => new DataModelValue(val);
-		public static implicit operator DataModelValue(DateTime val)        => new DataModelValue(val);
-		public static implicit operator DataModelValue(bool val)            => new DataModelValue(val);
+		public static implicit operator DataModelValue(DataModelObject? val) => new DataModelValue(val);
+		public static implicit operator DataModelValue(DataModelArray? val)  => new DataModelValue(val);
+		public static implicit operator DataModelValue(string? val)          => new DataModelValue(val);
+		public static implicit operator DataModelValue(double val)           => new DataModelValue(val);
+		public static implicit operator DataModelValue(DateTime val)         => new DataModelValue(val);
+		public static implicit operator DataModelValue(bool val)             => new DataModelValue(val);
 
-		public static explicit operator DataModelObject(DataModelValue val) => val.AsObject();
-		public static explicit operator DataModelArray(DataModelValue val)  => val.AsArray();
-		public static explicit operator string(DataModelValue val)          => val.AsString();
-		public static explicit operator double(DataModelValue val)          => val.AsNumber();
-		public static explicit operator DateTime(DataModelValue val)        => val.AsDateTime();
-		public static explicit operator bool(DataModelValue val)            => val.AsBoolean();
+		public static DataModelValue FromDataModelObject(DataModelObject? val) => new DataModelValue(val);
+		public static DataModelValue FromDataModelArray(DataModelObject? val)  => new DataModelValue(val);
+		public static DataModelValue FromString(DataModelObject? val)          => new DataModelValue(val);
+		public static DataModelValue FromDouble(DataModelObject? val)          => new DataModelValue(val);
+		public static DataModelValue FromDateTime(DataModelObject? val)        => new DataModelValue(val);
+		public static DataModelValue FromBoolean(DataModelObject? val)         => new DataModelValue(val);
+
+		public static explicit operator DataModelObject?(DataModelValue val) => val.AsObject();
+		public static explicit operator DataModelArray?(DataModelValue val)  => val.AsArray();
+		public static explicit operator string?(DataModelValue val)          => val.AsString();
+		public static explicit operator double(DataModelValue val)           => val.AsNumber();
+		public static explicit operator DateTime(DataModelValue val)         => val.AsDateTime();
+		public static explicit operator bool(DataModelValue val)             => val.AsBoolean();
+
+		public static DataModelObject? ToDataModelObject(DataModelValue val) => val.AsObject();
+		public static DataModelArray?  ToDataModelArray(DataModelValue val)  => val.AsArray();
+		public static string?          ToString(DataModelValue val)          => val.AsString();
+		public static double           ToDouble(DataModelValue val)          => val.AsNumber();
+		public static DateTime         ToDateTime(DataModelValue val)        => val.AsDateTime();
+		public static bool             ToBoolean(DataModelValue val)         => val.AsBoolean();
 
 		public DataModelValueType Type =>
 				_value switch
@@ -95,7 +111,7 @@ namespace TSSArt.StateMachine
 						{ } val when val == BooleanValue => DataModelValueType.Boolean,
 						{ } val when val == NullValue => DataModelValueType.Null,
 						null => DataModelValueType.Undefined,
-						_ => throw new ArgumentOutOfRangeException()
+						_ => Infrastructure.UnexpectedValue<DataModelValueType>()
 				};
 
 		public bool Equals(DataModelValue other) => Equals(_value, other._value) && _int64 == other._int64;
@@ -104,7 +120,7 @@ namespace TSSArt.StateMachine
 
 		public bool IsUndefined() => _value == null;
 
-		public object ToObject() =>
+		public object? ToObject() =>
 				_value switch
 				{
 						DataModelObject obj => obj,
@@ -115,47 +131,47 @@ namespace TSSArt.StateMachine
 						{ } val when val == BooleanValue => AsBoolean(),
 						{ } val when val == NullValue => null,
 						null => null,
-						_ => throw new ArgumentOutOfRangeException()
+						_ => Infrastructure.UnexpectedValue<object>()
 				};
 
-		public static readonly DataModelValue Undefined = default;
+		public static readonly DataModelValue Undefined;
 
-		public static readonly DataModelValue Null = new DataModelValue((string) null);
+		public static readonly DataModelValue Null = new DataModelValue((string?) null);
 
-		public DataModelObject AsObject() =>
+		public DataModelObject? AsObject() =>
 				_value switch
 				{
 						DataModelObject obj => obj,
 						{ } val when val == NullValue => null,
-						_ => throw new InvalidOperationException(message: "DataModelValue is not DataModelObject")
+						_ => throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_DataModelObject)
 				};
 
 		public DataModelObject AsObjectOrEmpty() => _value is DataModelObject obj ? obj : DataModelObject.Empty;
 
-		public DataModelArray AsArray() =>
+		public DataModelArray? AsArray() =>
 				_value switch
 				{
 						DataModelArray arr => arr,
 						{ } val when val == NullValue => null,
-						_ => throw new InvalidOperationException(message: "DataModelValue is not DataModelArray")
+						_ => throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_DataModelArray)
 				};
 
 		public DataModelArray AsArrayOrEmpty() => _value is DataModelArray arr ? arr : DataModelArray.Empty;
 
-		public string AsString() =>
+		public string? AsString() =>
 				_value switch
 				{
 						string str => str,
 						{ } val when val == NullValue => null,
-						_ => throw new InvalidOperationException(message: "DataModelValue is not String")
+						_ => throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_String)
 				};
 
-		public string AsStringOrDefault() => _value as string;
+		public string? AsStringOrDefault() => _value as string;
 
 		public double AsNumber() =>
 				_value == NumberValue
 						? BitConverter.Int64BitsToDouble(_int64)
-						: throw new InvalidOperationException(message: "DataModelValue is not Number");
+						: throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_Number);
 
 		public double? AsNumberOrDefault() =>
 				_value == NumberValue
@@ -165,7 +181,7 @@ namespace TSSArt.StateMachine
 		public bool AsBoolean() =>
 				_value == BooleanValue
 						? _int64 != 0
-						: throw new InvalidOperationException(message: "DataModelValue is not Boolean");
+						: throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_Boolean);
 
 		public bool? AsBooleanOrDefault() =>
 				_value == BooleanValue
@@ -175,7 +191,7 @@ namespace TSSArt.StateMachine
 		public DateTime AsDateTime() =>
 				_value == DateTimeValue
 						? new DateTime(_int64 & 0x3FFFFFFFFFFFFFFF, (DateTimeKind) ((_int64 >> 62) & 3))
-						: throw new InvalidOperationException(message: "DataModelValue is not DateTime");
+						: throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_DateTime);
 
 		public DateTime? AsDateTimeOrDefault() =>
 				_value == DateTimeValue
@@ -193,15 +209,15 @@ namespace TSSArt.StateMachine
 		public DataModelValue DeepClone(bool isReadOnly = false) =>
 				_value switch
 				{
-						DataModelObject _ => new DataModelValue(AsObject().DeepClone(isReadOnly)),
-						DataModelArray _ => new DataModelValue(AsArray().DeepClone(isReadOnly)),
+						DataModelObject _ => new DataModelValue(AsObject()!.DeepClone(isReadOnly)),
+						DataModelArray _ => new DataModelValue(AsArray()!.DeepClone(isReadOnly)),
 						string _ => this,
 						{ } val when val == DateTimeValue => this,
 						{ } val when val == NumberValue => this,
 						{ } val when val == BooleanValue => this,
 						{ } val when val == NullValue => this,
 						null => this,
-						_ => throw new ArgumentOutOfRangeException()
+						_ => Infrastructure.UnexpectedValue<DataModelValue>()
 				};
 
 		internal bool IsDeepReadOnly() =>
@@ -215,14 +231,19 @@ namespace TSSArt.StateMachine
 						{ } val when val == BooleanValue => true,
 						{ } val when val == NullValue => true,
 						null => true,
-						_ => throw new ArgumentOutOfRangeException()
+						_ => Infrastructure.UnexpectedValue<bool>()
 				};
 
-		public static DataModelValue FromContent(string content, ContentType contentType) => new DataModelValue(content);
+		public static DataModelValue FromContent(string content, ContentType contentType)
+		{
+			var _ = contentType;
+
+			return new DataModelValue(content);
+		}
 
 		public static DataModelValue FromInlineContent(string content) => new DataModelValue(content);
 
-		public static DataModelValue FromObject(object value)
+		public static DataModelValue FromObject(object? value)
 		{
 			if (value == null)
 			{
@@ -256,7 +277,7 @@ namespace TSSArt.StateMachine
 					return CreateDataModelObject(dictionary);
 				case TypeCode.Object when value is IEnumerable array:
 					return CreateDataModelArray(array);
-				default: throw new ArgumentException(message: "Unsupported object type", nameof(value));
+				default: throw new ArgumentException(Resources.Exception_Unsupported_object_type, nameof(value));
 			}
 		}
 
@@ -284,19 +305,19 @@ namespace TSSArt.StateMachine
 			return new DataModelValue(arr);
 		}
 
-		public static DataModelValue FromEvent(IEvent @event)
+		public static DataModelValue FromEvent(IEvent evt)
 		{
-			if (@event == null) throw new ArgumentNullException(nameof(@event));
+			if (evt == null) throw new ArgumentNullException(nameof(evt));
 
 			var eventObject = new DataModelObject
 							  {
-									  ["name"] = new DataModelValue(EventName.ToName(@event.NameParts)),
-									  ["type"] = new DataModelValue(GetTypeString(@event.Type)),
-									  ["sendid"] = new DataModelValue(@event.SendId),
-									  ["origin"] = new DataModelValue(@event.Origin?.ToString()),
-									  ["origintype"] = new DataModelValue(@event.OriginType?.ToString()),
-									  ["invokeid"] = new DataModelValue(@event.InvokeId),
-									  ["data"] = @event.Data.DeepClone(isReadOnly: true)
+									  [@"name"] = new DataModelValue(EventName.ToName(evt.NameParts)),
+									  [@"type"] = new DataModelValue(GetTypeString(evt.Type)),
+									  [@"sendid"] = new DataModelValue(evt.SendId),
+									  [@"origin"] = new DataModelValue(evt.Origin?.ToString()),
+									  [@"origintype"] = new DataModelValue(evt.OriginType?.ToString()),
+									  [@"invokeid"] = new DataModelValue(evt.InvokeId),
+									  [@"data"] = evt.Data.DeepClone(isReadOnly: true)
 							  };
 
 			eventObject.Freeze();
@@ -305,13 +326,13 @@ namespace TSSArt.StateMachine
 
 			static string GetTypeString(EventType eventType)
 			{
-				switch (eventType)
+				return eventType switch
 				{
-					case EventType.Platform: return "platform";
-					case EventType.Internal: return "internal";
-					case EventType.External: return "external";
-					default: throw new ArgumentOutOfRangeException(nameof(eventType), eventType, message: null);
-				}
+						EventType.Platform => @"platform",
+						EventType.Internal => @"internal",
+						EventType.External => @"external",
+						_ => throw new ArgumentOutOfRangeException(nameof(eventType), eventType, message: null)
+				};
 			}
 		}
 
@@ -321,12 +342,12 @@ namespace TSSArt.StateMachine
 
 			var exceptionData = new DataModelObject
 								{
-										["message"] = new DataModelValue(exception.Message),
-										["typeName"] = new DataModelValue(exception.GetType().Name),
-										["source"] = new DataModelValue(exception.Source),
-										["typeFullName"] = new DataModelValue(exception.GetType().FullName),
-										["stackTrace"] = new DataModelValue(exception.StackTrace),
-										["text"] = new DataModelValue(exception.ToString())
+										[@"message"] = new DataModelValue(exception.Message),
+										[@"typeName"] = new DataModelValue(exception.GetType().Name),
+										[@"source"] = new DataModelValue(exception.Source),
+										[@"typeFullName"] = new DataModelValue(exception.GetType().FullName),
+										[@"stackTrace"] = new DataModelValue(exception.StackTrace),
+										[@"text"] = new DataModelValue(exception.ToString())
 								};
 
 			exceptionData.Freeze();
@@ -336,7 +357,7 @@ namespace TSSArt.StateMachine
 
 		public override string ToString() => ToString(format: null, formatProvider: null);
 
-		public string ToString(string format, IFormatProvider formatProvider)
+		public string ToString(string? format, IFormatProvider? formatProvider)
 		{
 			var obj = ToObject();
 
@@ -358,7 +379,9 @@ namespace TSSArt.StateMachine
 			public DebugView(DataModelValue dataModelValue) => _dataModelValue = dataModelValue;
 
 			[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-			public object Value => _dataModelValue.ToObject();
+
+			// ReSharper disable once UnusedMember.Local
+			public object? Value => _dataModelValue.ToObject();
 		}
 
 		private class Dynamic : DynamicObject
@@ -377,7 +400,7 @@ namespace TSSArt.StateMachine
 				return Instance.GetMetaObject(newExpression);
 			}
 
-			public override bool TryGetMember(GetMemberBinder binder, out object result)
+			public override bool TryGetMember(GetMemberBinder binder, out object? result)
 			{
 				if (_value._value is DataModelObject obj)
 				{
@@ -403,7 +426,7 @@ namespace TSSArt.StateMachine
 				return false;
 			}
 
-			public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object result)
+			public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object? result)
 			{
 				if (indexes.Length == 1 && indexes[0] is string key && _value._value is DataModelObject obj)
 				{
@@ -443,7 +466,7 @@ namespace TSSArt.StateMachine
 				return false;
 			}
 
-			public override bool TryConvert(ConvertBinder binder, out object result)
+			public override bool TryConvert(ConvertBinder binder, out object? result)
 			{
 				var typeCode = System.Type.GetTypeCode(binder.Type);
 				switch (typeCode)

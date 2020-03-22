@@ -3,14 +3,18 @@ using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public class FinalBuilder : IFinalBuilder
+	public class FinalBuilder : BuilderBase, IFinalBuilder
 	{
-		private IDoneData                        _doneData;
-		private IIdentifier                      _id;
-		private ImmutableArray<IOnEntry>.Builder _onEntryList;
-		private ImmutableArray<IOnExit>.Builder  _onExitList;
+		private IDoneData?                        _doneData;
+		private IIdentifier?                      _id;
+		private ImmutableArray<IOnEntry>.Builder? _onEntryList;
+		private ImmutableArray<IOnExit>.Builder?  _onExitList;
 
-		public IFinal Build() => new Final { Id = _id, OnEntry = _onEntryList?.ToImmutable() ?? default, OnExit = _onExitList?.ToImmutable() ?? default, DoneData = _doneData };
+		public FinalBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
+		{ }
+
+		public IFinal Build() =>
+				new FinalEntity { Ancestor = Ancestor, Id = _id, OnEntry = _onEntryList?.ToImmutable() ?? default, OnExit = _onExitList?.ToImmutable() ?? default, DoneData = _doneData };
 
 		public void SetId(IIdentifier id) => _id = id ?? throw new ArgumentNullException(nameof(id));
 

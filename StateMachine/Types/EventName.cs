@@ -9,16 +9,16 @@ namespace TSSArt.StateMachine
 	{
 		private const char Dot = '.';
 
-		private static readonly IIdentifier DoneIdentifier   = (Identifier) "done";
-		private static readonly IIdentifier StateIdentifier  = (Identifier) "state";
-		private static readonly IIdentifier ErrorIdentifier  = (Identifier) "error";
-		private static readonly IIdentifier InvokeIdentifier = (Identifier) "invoke";
+		private static readonly IIdentifier DoneIdentifier   = (Identifier) @"done";
+		private static readonly IIdentifier StateIdentifier  = (Identifier) @"state";
+		private static readonly IIdentifier ErrorIdentifier  = (Identifier) @"error";
+		private static readonly IIdentifier InvokeIdentifier = (Identifier) @"invoke";
 
-		public static readonly ImmutableArray<IIdentifier> ErrorExecution     = ImmutableArray.Create(ErrorIdentifier, (Identifier) "execution");
-		public static readonly ImmutableArray<IIdentifier> ErrorCommunication = ImmutableArray.Create(ErrorIdentifier, (Identifier) "communication");
-		public static readonly ImmutableArray<IIdentifier> ErrorPlatform      = ImmutableArray.Create(ErrorIdentifier, (Identifier) "platform");
+		public static readonly ImmutableArray<IIdentifier> ErrorExecution     = ImmutableArray.Create(ErrorIdentifier, (Identifier) @"execution");
+		public static readonly ImmutableArray<IIdentifier> ErrorCommunication = ImmutableArray.Create(ErrorIdentifier, (Identifier) @"communication");
+		public static readonly ImmutableArray<IIdentifier> ErrorPlatform      = ImmutableArray.Create(ErrorIdentifier, (Identifier) @"platform");
 
-		internal static ImmutableArray<IIdentifier> GetDoneStateNameParts(IIdentifier id) => GetNameParts(DoneIdentifier, StateIdentifier, id.Base<IIdentifier>().ToString());
+		internal static ImmutableArray<IIdentifier> GetDoneStateNameParts(IIdentifier id) => GetNameParts(DoneIdentifier, StateIdentifier, id.As<string>());
 
 		internal static ImmutableArray<IIdentifier> GetDoneInvokeNameParts(string invokeId) => GetNameParts(DoneIdentifier, InvokeIdentifier, invokeId);
 
@@ -78,24 +78,25 @@ namespace TSSArt.StateMachine
 
 		public static string ToName(ImmutableArray<IIdentifier> nameParts)
 		{
-			if (nameParts == null) throw new ArgumentNullException(nameof(nameParts));
+			if (nameParts.IsDefaultOrEmpty) throw new ArgumentException(Resources.Exception_ValueCantBeEmpty, nameof(nameParts));
 
-			return string.Join(separator: ".", nameParts.Select(p => p.Base<IIdentifier>().ToString()));
+			return string.Join(separator: @".", nameParts.Select(p => p.As<string>()));
 		}
 
 		public static void WriteXml(XmlWriter writer, ImmutableArray<IIdentifier> nameParts)
 		{
-			if (nameParts == null) throw new ArgumentNullException(nameof(nameParts));
+			if (writer == null) throw new ArgumentNullException(nameof(writer));
+			if (nameParts.IsDefaultOrEmpty) throw new ArgumentException(Resources.Exception_ValueCantBeEmpty, nameof(nameParts));
 
 			var writeDelimiter = false;
 			foreach (var part in nameParts)
 			{
 				if (writeDelimiter)
 				{
-					writer.WriteString(".");
+					writer.WriteString(@".");
 				}
 
-				writer.WriteString(part.Base<IIdentifier>().ToString());
+				writer.WriteString(part.As<string>());
 
 				writeDelimiter = true;
 			}
@@ -103,11 +104,18 @@ namespace TSSArt.StateMachine
 
 		public static ImmutableArray<IIdentifier> ToParts(string name)
 		{
-			if (string.IsNullOrEmpty(name)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(name));
+			if (string.IsNullOrEmpty(name)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(name));
 
 			if (name == null) throw new ArgumentNullException(nameof(name));
 
-			var parts = new IIdentifier[GetCount(name)];
+			var length = GetCount(name);
+
+			if (length == 0)
+			{
+				throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(name));
+			}
+
+			var parts = new IIdentifier[length];
 
 			SetParts(parts, name);
 

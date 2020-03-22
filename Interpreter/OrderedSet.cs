@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	internal sealed class OrderedSet<T> : List<T>
 	{
-		public delegate void ChangedHandler(ChangedAction action, T item);
+		public delegate void ChangedHandler(ChangedAction action, [AllowNull] T item);
 
 		public enum ChangedAction
 		{
@@ -16,7 +19,7 @@ namespace TSSArt.StateMachine
 
 		public bool IsEmpty => Count == 0;
 
-		public event ChangedHandler Changed;
+		public event ChangedHandler? Changed;
 
 		public void AddIfNotExists(T item)
 		{
@@ -75,10 +78,6 @@ namespace TSSArt.StateMachine
 
 			return false;
 		}
-
-		public bool Some(Predicate<T> predicate) => Exists(predicate);
-
-		public bool Every(Predicate<T> predicate) => TrueForAll(predicate);
 
 		public List<T> ToSortedList(IComparer<T> comparer)
 		{

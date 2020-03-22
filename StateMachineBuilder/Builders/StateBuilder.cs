@@ -3,18 +3,21 @@ using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public class StateBuilder : IStateBuilder
+	public class StateBuilder : BuilderBase, IStateBuilder
 	{
-		private IDataModel                           _dataModel;
-		private ImmutableArray<IHistory>.Builder     _historyStates;
-		private IIdentifier                          _id;
-		private IInitial                             _initial;
-		private ImmutableArray<IIdentifier>          _initialId;
-		private ImmutableArray<IInvoke>.Builder      _invokeList;
-		private ImmutableArray<IOnEntry>.Builder     _onEntryList;
-		private ImmutableArray<IOnExit>.Builder      _onExitList;
-		private ImmutableArray<IStateEntity>.Builder _states;
-		private ImmutableArray<ITransition>.Builder  _transitions;
+		private IDataModel?                           _dataModel;
+		private ImmutableArray<IHistory>.Builder?     _historyStates;
+		private IIdentifier?                          _id;
+		private IInitial?                             _initial;
+		private ImmutableArray<IIdentifier>           _initialId;
+		private ImmutableArray<IInvoke>.Builder?      _invokeList;
+		private ImmutableArray<IOnEntry>.Builder?     _onEntryList;
+		private ImmutableArray<IOnExit>.Builder?      _onExitList;
+		private ImmutableArray<IStateEntity>.Builder? _states;
+		private ImmutableArray<ITransition>.Builder?  _transitions;
+
+		public StateBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
+		{ }
 
 		public IState Build()
 		{
@@ -22,20 +25,15 @@ namespace TSSArt.StateMachine
 			{
 				if (_initial != null)
 				{
-					throw new InvalidOperationException(message: "Initial attribute and Initial state can't be used at the same time in State element");
+					AddError(Resources.ErrorMessage_InitialAttributeAndInitialStateCantBeUsedAtTheSameTimeInStateElement);
 				}
 
-				_initial = new Initial { Transition = new Transition { Target = _initialId } };
+				_initial = new InitialEntity { Transition = new TransitionEntity { Target = _initialId } };
 			}
 
-			if (_initial != null && _states == null)
-			{
-				throw new InvalidOperationException(message: "Initial state/property can be used only in complex (compound) states");
-			}
-
-			return new State
+			return new StateEntity
 				   {
-						   Id = _id, Initial = _initial, States = _states?.ToImmutable() ?? default, HistoryStates = _historyStates?.ToImmutable() ?? default,
+						   Ancestor = Ancestor, Id = _id, Initial = _initial, States = _states?.ToImmutable() ?? default, HistoryStates = _historyStates?.ToImmutable() ?? default,
 						   Transitions = _transitions?.ToImmutable() ?? default, DataModel = _dataModel, OnEntry = _onEntryList?.ToImmutable() ?? default,
 						   OnExit = _onExitList?.ToImmutable() ?? default, Invoke = _invokeList?.ToImmutable() ?? default
 				   };
@@ -45,7 +43,7 @@ namespace TSSArt.StateMachine
 
 		public void SetInitial(ImmutableArray<IIdentifier> initialId)
 		{
-			if (initialId.IsDefaultOrEmpty) throw new ArgumentException(message: "Value cannot be empty list.", nameof(initialId));
+			if (initialId.IsDefaultOrEmpty) throw new ArgumentException(Resources.Exception_ValueCannotBeEmptyList, nameof(initialId));
 
 			_initialId = initialId;
 		}

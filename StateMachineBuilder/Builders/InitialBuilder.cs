@@ -2,19 +2,14 @@
 
 namespace TSSArt.StateMachine
 {
-	public class InitialBuilder : IInitialBuilder
+	public class InitialBuilder : BuilderBase, IInitialBuilder
 	{
-		private ITransition _transition;
+		private ITransition? _transition;
 
-		public IInitial Build()
-		{
-			if (_transition == null)
-			{
-				throw new InvalidOperationException(message: "Transition must be present in Initial element");
-			}
+		public InitialBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
+		{ }
 
-			return new Initial { Transition = _transition };
-		}
+		public IInitial Build() => new InitialEntity { Ancestor = Ancestor, Transition = _transition };
 
 		public void SetTransition(ITransition transition) => _transition = transition ?? throw new ArgumentNullException(nameof(transition));
 	}

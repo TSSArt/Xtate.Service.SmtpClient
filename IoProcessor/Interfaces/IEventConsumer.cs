@@ -5,6 +5,6 @@ namespace TSSArt.StateMachine
 {
 	public interface IEventConsumer
 	{
-		ValueTask Dispatch(string sessionId, IEvent @event, CancellationToken token);
+		ValueTask Dispatch(string sessionId, IEvent evt, CancellationToken token);
 	}
 }

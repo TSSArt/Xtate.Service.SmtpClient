@@ -2,7 +2,7 @@
 {
 	public struct ConditionExpression : IConditionExpression, IVisitorEntity<ConditionExpression, IConditionExpression>, IAncestorProvider
 	{
-		public string Expression { get; set; }
+		public string? Expression { get; set; }
 
 		void IVisitorEntity<ConditionExpression, IConditionExpression>.Init(IConditionExpression source)
 		{
@@ -12,8 +12,8 @@
 
 		bool IVisitorEntity<ConditionExpression, IConditionExpression>.RefEquals(in ConditionExpression other) => ReferenceEquals(Expression, other.Expression);
 
-		internal object Ancestor;
+		internal object? Ancestor;
 
-		object IAncestorProvider.Ancestor => Ancestor;
+		object? IAncestorProvider.Ancestor => Ancestor;
 	}
 }

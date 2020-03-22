@@ -6,11 +6,16 @@ namespace TSSArt.StateMachine
 	{
 		private readonly CustomAction _entity;
 
-		public CustomActionNode(LinkedListNode<int> documentIdNode, in CustomAction entity) : base(documentIdNode, (ICustomAction) entity.Ancestor) => _entity = entity;
+		public CustomActionNode(LinkedListNode<int> documentIdNode, in CustomAction entity) : base(documentIdNode, (ICustomAction?) entity.Ancestor)
+		{
+			Infrastructure.Assert(entity.Xml != null);
 
-		object IAncestorProvider.Ancestor => _entity.Ancestor;
+			_entity = entity;
+		}
 
-		public string Xml => _entity.Xml;
+		object? IAncestorProvider.Ancestor => _entity.Ancestor;
+
+		public string Xml => _entity.Xml!;
 
 		protected override void Store(Bucket bucket)
 		{

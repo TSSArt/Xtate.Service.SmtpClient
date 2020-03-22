@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Immutable;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	internal class InterpreterModel
 	{
-		public InterpreterModel(StateMachineNode root, int maxConfigurationLength, Dictionary<int, IEntity> entityMap, List<DataModelNode> dataModelList)
+		public InterpreterModel(StateMachineNode root, int maxConfigurationLength, ImmutableDictionary<int, IEntity> entityMap, ImmutableArray<DataModelNode> dataModelList)
 		{
 			Root = root;
 			MaxConfigurationLength = maxConfigurationLength;
@@ -16,8 +18,8 @@ namespace TSSArt.StateMachine
 
 		public int MaxConfigurationLength { get; }
 
-		public Dictionary<int, IEntity> EntityMap { get; }
+		public ImmutableDictionary<int, IEntity> EntityMap { get; }
 
-		public List<DataModelNode> DataModelList { get; }
+		public ImmutableArray<DataModelNode> DataModelList { get; }
 	}
 }

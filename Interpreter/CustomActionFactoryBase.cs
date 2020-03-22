@@ -18,7 +18,7 @@ namespace TSSArt.StateMachine
 
 			if (customActionProviderAttribute == null)
 			{
-				throw new InvalidOperationException("CustomActionProviderAttribute did not provided for type " + GetType());
+				throw new StateMachineInfrastructureException(Res.Format(Resources.Exception_CustomActionProviderAttributeWasNotProvided, GetType()));
 			}
 
 			_namespace = customActionProviderAttribute.Namespace;

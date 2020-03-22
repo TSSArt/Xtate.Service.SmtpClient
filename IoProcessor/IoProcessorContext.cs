@@ -11,18 +11,18 @@ namespace TSSArt.StateMachine
 	{
 		private static readonly Uri ParentTarget = new Uri(uriString: "#_parent", UriKind.Relative);
 
-		private readonly IIoProcessor            _ioProcessor;
-		private readonly IoProcessorOptions      _options;
-		private readonly CancellationTokenSource _suspendTokenSource;
-		private readonly CancellationTokenSource _stopTokenSource;
+		private readonly IIoProcessor       _ioProcessor;
+		private readonly IoProcessorOptions _options;
 
 		private readonly ConcurrentDictionary<string, IService> _parentServiceBySessionId = new ConcurrentDictionary<string, IService>();
 
-		private readonly ConcurrentDictionary<(string SessionId, string InvokeId), (string InvokeUniqueId, IService Service)> _serviceByInvokeId =
-				new ConcurrentDictionary<(string SessionId, string InvokeId), (string InvokeUniqueId, IService Service)>();
+		private readonly ConcurrentDictionary<(string SessionId, string InvokeId), (string InvokeUniqueId, IService? Service)> _serviceByInvokeId =
+				new ConcurrentDictionary<(string SessionId, string InvokeId), (string InvokeUniqueId, IService? Service)>();
 
 		private readonly ConcurrentDictionary<Uri, IService>                  _serviceByTarget          = new ConcurrentDictionary<Uri, IService>(UriComparer.Instance);
 		private readonly ConcurrentDictionary<string, StateMachineController> _stateMachinesBySessionId = new ConcurrentDictionary<string, StateMachineController>();
+		private readonly CancellationTokenSource                              _stopTokenSource;
+		private readonly CancellationTokenSource                              _suspendTokenSource;
 
 		public IoProcessorContext(IIoProcessor ioProcessor, in IoProcessorOptions options)
 		{
@@ -34,7 +34,13 @@ namespace TSSArt.StateMachine
 
 		protected CancellationToken StopToken => _stopTokenSource.Token;
 
-		public virtual ValueTask DisposeAsync() => default;
+		public virtual ValueTask DisposeAsync()
+		{
+			_suspendTokenSource.Dispose();
+			_stopTokenSource.Dispose();
+
+			return default;
+		}
 
 		public virtual ValueTask InitializeAsync(CancellationToken token) => default;
 
@@ -50,6 +56,7 @@ namespace TSSArt.StateMachine
 							  StopToken = _stopTokenSource.Token,
 							  SuspendToken = _suspendTokenSource.Token,
 							  Logger = _options.Logger,
+							  ErrorProcessor = _options.VerboseValidation ? new DetailedErrorProcessor() : null,
 							  DataModelHandlerFactories = _options.DataModelHandlerFactories
 					  };
 		}
@@ -61,19 +68,19 @@ namespace TSSArt.StateMachine
 				return;
 			}
 
-			throw new ApplicationException("Validation failed. Result of operation must be true.");
+			Infrastructure.Fail(Resources.Assertion_Validation_failed__Result_of_operation_must_be_true_);
 		}
 
-		protected virtual StateMachineController CreateStateMachineController(string sessionId, IStateMachineOptions options, IStateMachine stateMachine, in InterpreterOptions defaultOptions) =>
+		protected virtual StateMachineController CreateStateMachineController(string sessionId, IStateMachineOptions? options, IStateMachine stateMachine, in InterpreterOptions defaultOptions) =>
 				new StateMachineController(sessionId, options, stateMachine, _ioProcessor, _options.SuspendIdlePeriod, defaultOptions);
 
 		private static XmlReaderSettings GetXmlReaderSettings(bool useAsync = false) => new XmlReaderSettings { Async = useAsync, CloseInput = true };
 
-		private static XmlParserContext GetXmlParserContext() => null;
+		private static XmlParserContext? GetXmlParserContext() => null;
 
-		private static IBuilderFactory GetBuilderFactory() => new BuilderFactory();
+		private static IBuilderFactory GetBuilderFactory() => BuilderFactory.Default;
 
-		protected async ValueTask<IStateMachine> GetStateMachine(IStateMachine stateMachine, Uri source, string scxml, CancellationToken token)
+		protected async ValueTask<IStateMachine> GetStateMachine(IStateMachine? stateMachine, Uri? source, string? scxml, CancellationToken token)
 		{
 			if (stateMachine != null)
 			{
@@ -82,8 +89,15 @@ namespace TSSArt.StateMachine
 
 			if (source != null)
 			{
-				using var xmlReader = await _options.ResourceLoader.RequestXmlReader(source, GetXmlReaderSettings(), GetXmlParserContext(), token).ConfigureAwait(false);
-				var scxmlDirector = new ScxmlDirector(xmlReader, GetBuilderFactory());
+				var resourceLoader = _options.ResourceLoader;
+
+				if (resourceLoader == null)
+				{
+					throw new StateMachineProcessorException(Resources.Exception_ResourceLoader_did_not_specified);
+				}
+
+				using var xmlReader = await resourceLoader.RequestXmlReader(source, GetXmlReaderSettings(), GetXmlParserContext(), token).ConfigureAwait(false);
+				var scxmlDirector = new ScxmlDirector(xmlReader, GetBuilderFactory(), DefaultErrorProcessor.Instance);
 
 				return scxmlDirector.ConstructStateMachine();
 			}
@@ -92,16 +106,16 @@ namespace TSSArt.StateMachine
 			{
 				using var stringReader = new StringReader(scxml);
 				using var xmlReader = XmlReader.Create(stringReader, GetXmlReaderSettings(), GetXmlParserContext());
-				var scxmlDirector = new ScxmlDirector(xmlReader, GetBuilderFactory());
+				var scxmlDirector = new ScxmlDirector(xmlReader, GetBuilderFactory(), DefaultErrorProcessor.Instance);
 
 				return scxmlDirector.ConstructStateMachine();
 			}
 
-			return null;
+			throw new ArgumentException(Resources.Exception_StateMachine_or_Source_or_SCXML_should_be_provided);
 		}
 
-		public virtual async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, IStateMachineOptions options, IStateMachine stateMachine, Uri source,
-																						string scxml, DataModelValue parameters, CancellationToken token)
+		public virtual async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, IStateMachineOptions? options, IStateMachine? stateMachine, Uri? source,
+																						string? scxml, DataModelValue parameters, CancellationToken token)
 		{
 			FillInterpreterOptions(out var interpreterOptions);
 			interpreterOptions.Arguments = parameters;
@@ -152,16 +166,16 @@ namespace TSSArt.StateMachine
 			return default;
 		}
 
-		public virtual ValueTask<IService> TryCompleteService(string sessionId, string invokeId)
+		public virtual ValueTask<IService?> TryCompleteService(string sessionId, string invokeId)
 		{
 			if (!_serviceByInvokeId.TryGetValue((sessionId, invokeId), out var pair))
 			{
-				return new ValueTask<IService>((IService) null);
+				return new ValueTask<IService?>((IService?) null);
 			}
 
 			if (!_serviceByInvokeId.TryUpdate((sessionId, invokeId), (pair.InvokeUniqueId, null), pair))
 			{
-				return new ValueTask<IService>((IService) null);
+				return new ValueTask<IService?>((IService?) null);
 			}
 
 			if (pair.Service is StateMachineController stateMachineController)
@@ -171,14 +185,14 @@ namespace TSSArt.StateMachine
 
 			_serviceByTarget.TryRemove(new Uri("#_" + invokeId, UriKind.Relative), out _);
 
-			return new ValueTask<IService>(pair.Service);
+			return new ValueTask<IService?>(pair.Service);
 		}
 
-		public virtual ValueTask<IService> TryRemoveService(string sessionId, string invokeId)
+		public virtual ValueTask<IService?> TryRemoveService(string sessionId, string invokeId)
 		{
 			if (!_serviceByInvokeId.TryRemove((sessionId, invokeId), out var pair) || pair.Service == null)
 			{
-				return new ValueTask<IService>((IService) null);
+				return new ValueTask<IService?>((IService?) null);
 			}
 
 			if (pair.Service is StateMachineController stateMachineController)
@@ -188,10 +202,10 @@ namespace TSSArt.StateMachine
 
 			_serviceByTarget.TryRemove(new Uri("#_" + invokeId, UriKind.Relative), out _);
 
-			return new ValueTask<IService>(pair.Service);
+			return new ValueTask<IService?>(pair.Service);
 		}
 
-		public bool TryGetService(string sessionId, string invokeId, out (string InvokeUniqueId, IService Service) pair) => _serviceByInvokeId.TryGetValue((sessionId, invokeId), out pair);
+		public bool TryGetService(string sessionId, string invokeId, out (string InvokeUniqueId, IService? Service) pair) => _serviceByInvokeId.TryGetValue((sessionId, invokeId), out pair);
 
 		public IService GetService(string sessionId, Uri target)
 		{
@@ -214,7 +228,7 @@ namespace TSSArt.StateMachine
 				return stateMachineController;
 			}
 
-			throw new ApplicationException("Cannot find target");
+			throw new StateMachineProcessorException(Resources.Exception_Cannot_find_target);
 		}
 
 		private static string ExtractSessionId(Uri target) => Path.GetFileName(target.LocalPath);

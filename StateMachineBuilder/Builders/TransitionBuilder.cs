@@ -1,29 +1,20 @@
-﻿using System;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public class TransitionBuilder : ITransitionBuilder
+	public class TransitionBuilder : BuilderBase, ITransitionBuilder
 	{
-		private ImmutableArray<IExecutableEntity>.Builder _actions;
-		private IExecutableEntity                         _condition;
-		private ImmutableArray<IEventDescriptor>          _eventDescriptors;
-		private ImmutableArray<IIdentifier>               _target;
-		private TransitionType                            _type;
+		private ImmutableArray<IExecutableEntity>.Builder? _actions;
+		private IExecutableEntity?                         _condition;
+		private ImmutableArray<IEventDescriptor>           _eventDescriptors;
+		private ImmutableArray<IIdentifier>                _target;
+		private TransitionType                             _type;
 
-		public ITransition Build()
-		{
-			if (_eventDescriptors.IsDefaultOrEmpty && _condition == null && _target.IsDefaultOrEmpty)
-			{
-				throw new InvalidOperationException(message: "Must be present at least Event or Condition or Target in Transition element");
-			}
+		public TransitionBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
+		{ }
 
-			return new Transition
-				   {
-						   Event = _eventDescriptors, Condition = _condition, Target = _target,
-						   Type = _type, Action = _actions?.ToImmutable() ?? default
-				   };
-		}
+		public ITransition Build() =>
+				new TransitionEntity { Ancestor = Ancestor, EventDescriptors = _eventDescriptors, Condition = _condition, Target = _target, Type = _type, Action = _actions?.ToImmutable() ?? default };
 
 		public void SetCondition(IExecutableEntity condition) => _condition = condition;
 

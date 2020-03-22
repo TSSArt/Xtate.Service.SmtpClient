@@ -7,7 +7,7 @@ namespace TSSArt.StateMachine
 {
 	internal static class DataConverter
 	{
-		public static ValueTask<DataModelValue> GetData(IValueEvaluator contentBodyEvaluator, IObjectEvaluator contentExpressionEvaluator, ImmutableArray<ILocationEvaluator> nameEvaluatorList,
+		public static ValueTask<DataModelValue> GetData(IValueEvaluator? contentBodyEvaluator, IObjectEvaluator? contentExpressionEvaluator, ImmutableArray<ILocationEvaluator> nameEvaluatorList,
 														ImmutableArray<DefaultParam> parameterList, IExecutionContext executionContext, CancellationToken token)
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
@@ -20,7 +20,7 @@ namespace TSSArt.StateMachine
 			return GetParameters(nameEvaluatorList, parameterList, executionContext, token);
 		}
 
-		public static async ValueTask<DataModelValue> GetContent(IValueEvaluator contentBodyEvaluator, IObjectEvaluator contentExpressionEvaluator,
+		public static async ValueTask<DataModelValue> GetContent(IValueEvaluator? contentBodyEvaluator, IObjectEvaluator? contentExpressionEvaluator,
 																 IExecutionContext executionContext, CancellationToken token)
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
@@ -77,7 +77,7 @@ namespace TSSArt.StateMachine
 				foreach (var param in parameterList)
 				{
 					var name = param.Name;
-					object value = null;
+					object? value = null;
 
 					if (param.ExpressionEvaluator != null)
 					{

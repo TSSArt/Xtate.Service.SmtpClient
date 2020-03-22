@@ -7,7 +7,7 @@ namespace TSSArt.StateMachine
 	{
 		ISend Build();
 
-		void SetEvent(string @event);
+		void SetEvent(string evt);
 		void SetEventExpression(IValueExpression eventExpression);
 		void SetTarget(Uri target);
 		void SetTargetExpression(IValueExpression targetExpression);

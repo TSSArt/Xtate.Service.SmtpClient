@@ -2,6 +2,6 @@
 {
 	public interface IEventDescriptor : IEntity
 	{
-		bool IsEventMatch(IEvent @event);
+		bool IsEventMatch(IEvent evt);
 	}
 }

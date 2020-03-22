@@ -20,24 +20,15 @@ namespace TSSArt.StateMachine
 
 		public RuntimeEvaluator(EvaluatorCancellableTask task) => _evaluator = task ?? throw new ArgumentNullException(nameof(task));
 
-		public async ValueTask<IObject> EvaluateObject(IExecutionContext executionContext, CancellationToken token)
-		{
-			switch (_evaluator)
-			{
-				case Evaluator evaluator:
-					return new DefaultObject(evaluator(executionContext));
+		public async ValueTask<IObject> EvaluateObject(IExecutionContext executionContext, CancellationToken token) =>
+				_evaluator switch
+				{
+						Evaluator evaluator => new DefaultObject(evaluator(executionContext)),
+						EvaluatorTask task => new DefaultObject(await task(executionContext).ConfigureAwait(false)),
+						EvaluatorCancellableTask task => new DefaultObject(await task(executionContext, token).ConfigureAwait(false)),
+						_ => Infrastructure.UnexpectedValue<IObject>()
+				};
 
-				case EvaluatorTask task:
-					return new DefaultObject(await task(executionContext).ConfigureAwait(false));
-
-				case EvaluatorCancellableTask task:
-					return new DefaultObject(await task(executionContext, token).ConfigureAwait(false));
-
-				default:
-					throw new ArgumentOutOfRangeException();
-			}
-		}
-
-		public string Expression => null;
+		public string? Expression => null;
 	}
 }

@@ -6,9 +6,9 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class ParallelNode : StateEntityNode, IParallel, IAncestorProvider, IDebugEntityId
 	{
-		private readonly Parallel _parallel;
+		private readonly ParallelEntity _parallel;
 
-		public ParallelNode(LinkedListNode<int> documentIdNode, in Parallel parallel) : base(documentIdNode, GetChildNodes(initial: null, parallel.States, parallel.HistoryStates))
+		public ParallelNode(LinkedListNode<int> documentIdNode, in ParallelEntity parallel) : base(documentIdNode, GetChildNodes(initial: null, parallel.States, parallel.HistoryStates))
 		{
 			_parallel = parallel;
 
@@ -23,7 +23,7 @@ namespace TSSArt.StateMachine
 			OnEntry = parallel.OnEntry.AsArrayOf<IOnEntry, OnEntryNode>(true);
 			OnExit = parallel.OnExit.AsArrayOf<IOnExit, OnExitNode>(true);
 			Invoke = invokeList;
-			DataModel = parallel.DataModel.As<DataModelNode>();
+			DataModel = parallel.DataModel?.As<DataModelNode>();
 
 			foreach (var transition in transitions)
 			{
@@ -43,15 +43,15 @@ namespace TSSArt.StateMachine
 		public override ImmutableArray<StateEntityNode> States        { get; }
 		public override ImmutableArray<OnEntryNode>     OnEntry       { get; }
 		public override ImmutableArray<OnExitNode>      OnExit        { get; }
-		public override DataModelNode                   DataModel     { get; }
+		public override DataModelNode?                  DataModel     { get; }
 
-		object IAncestorProvider.Ancestor => _parallel.Ancestor;
+		object? IAncestorProvider.Ancestor => _parallel.Ancestor;
 
-		FormattableString IDebugEntityId.EntityId => $"{Id}(#{DocumentId})";
+		FormattableString IDebugEntityId.EntityId => @$"{Id}(#{DocumentId})";
 
 		public override IIdentifier Id { get; }
 
-		IDataModel IParallel.                  DataModel     => DataModel;
+		IDataModel? IParallel.                 DataModel     => DataModel;
 		ImmutableArray<IInvoke> IParallel.     Invoke        => ImmutableArray<IInvoke>.CastUp(Invoke);
 		ImmutableArray<IStateEntity> IParallel.States        => ImmutableArray<IStateEntity>.CastUp(States);
 		ImmutableArray<IHistory> IParallel.    HistoryStates => ImmutableArray<IHistory>.CastUp(HistoryStates);

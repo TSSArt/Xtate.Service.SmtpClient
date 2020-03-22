@@ -3,12 +3,15 @@ using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public class DoneDataBuilder : IDoneDataBuilder
+	public class DoneDataBuilder : BuilderBase, IDoneDataBuilder
 	{
-		private IContent                       _content;
-		private ImmutableArray<IParam>.Builder _parameters;
+		private IContent?                       _content;
+		private ImmutableArray<IParam>.Builder? _parameters;
 
-		public IDoneData Build() => new DoneData { Content = _content, Parameters = _parameters?.ToImmutable() ?? default };
+		public DoneDataBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
+		{ }
+
+		public IDoneData Build() => new DoneDataEntity { Ancestor = Ancestor, Content = _content, Parameters = _parameters?.ToImmutable() ?? default };
 
 		public void SetContent(IContent content) => _content = content ?? throw new ArgumentNullException(nameof(content));
 

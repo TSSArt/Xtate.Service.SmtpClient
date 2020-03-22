@@ -2,6 +2,6 @@
 {
 	public interface IConditionExpression : IExecutableEntity
 	{
-		string Expression { get; }
+		string? Expression { get; }
 	}
 }

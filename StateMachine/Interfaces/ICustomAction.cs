@@ -2,6 +2,6 @@
 {
 	public interface ICustomAction : IExecutableEntity
 	{
-		string Xml { get; }
+		string? Xml { get; }
 	}
 }

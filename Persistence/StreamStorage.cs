@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Buffers;
-using System.Data;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,11 +15,11 @@ namespace TSSArt.StateMachine
 
 		private static readonly int MaxInt32Length = Encode.GetEncodedLength(int.MaxValue);
 
-		private readonly Stream          _stream;
-		private readonly bool            _disposeStream;
-		private          bool            _canShrink = true;
-		private          InMemoryStorage _inMemoryStorage;
-		private          bool            _disposed;
+		private readonly Stream           _stream;
+		private readonly bool             _disposeStream;
+		private          bool             _canShrink = true;
+		private          InMemoryStorage? _inMemoryStorage;
+		private          bool             _disposed;
 
 		private StreamStorage(Stream stream, bool disposeStream)
 		{
@@ -29,17 +28,29 @@ namespace TSSArt.StateMachine
 
 			if (!stream.CanRead || !stream.CanWrite || !stream.CanSeek)
 			{
-				throw new ArgumentException(message: "Stream should support Read, Write, Seek operations", nameof(stream));
+				throw new ArgumentException(Resources.Exception_StreamShouldSupportReadWriteSeekOperations, nameof(stream));
 			}
 		}
 
-		public ReadOnlyMemory<byte> Get(ReadOnlySpan<byte> key) => _inMemoryStorage.Get(key);
+		public ReadOnlyMemory<byte> Read(ReadOnlySpan<byte> key)
+		{
+			Infrastructure.Assert(_inMemoryStorage != null);
 
-		public void Add(ReadOnlySpan<byte> key, ReadOnlySpan<byte> value) => _inMemoryStorage.Add(key, value);
+			return _inMemoryStorage.Read(key);
+		}
+
+		public void Write(ReadOnlySpan<byte> key, ReadOnlySpan<byte> value)
+		{
+			Infrastructure.Assert(_inMemoryStorage != null);
+
+			_inMemoryStorage.Write(key, value);
+		}
 
 		public async ValueTask CheckPoint(int level, CancellationToken token)
 		{
 			if (level < 0) throw new ArgumentOutOfRangeException(nameof(level));
+
+			Infrastructure.Assert(_inMemoryStorage != null);
 
 			var transactionLogSize = _inMemoryStorage.GetTransactionLogSize();
 
@@ -83,7 +94,7 @@ namespace TSSArt.StateMachine
 
 #if NETSTANDARD2_1
 		public void Dispose() => DisposeAsync().GetAwaiter().GetResult();
-		
+
 		public async ValueTask DisposeAsync()
 		{
 			if (_disposed)
@@ -141,7 +152,7 @@ namespace TSSArt.StateMachine
 				   };
 		}
 
-		private static async ValueTask<InMemoryStorage> ReadStream(Stream stream, int rollbackLevel, bool shrink, CancellationToken token)
+		private static async ValueTask<InMemoryStorage?> ReadStream(Stream stream, int rollbackLevel, bool shrink, CancellationToken token)
 		{
 			var total = 0;
 			var end = 0;
@@ -333,6 +344,6 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private static Exception GetIncorrectDataFormatException(Exception ex = null) => new DataException(s: "Incorrect data format", ex);
+		private static Exception GetIncorrectDataFormatException(Exception? ex = null) => new StateMachinePersistenceException(Resources.Exception_Incorrect_data_format, ex);
 	}
 }

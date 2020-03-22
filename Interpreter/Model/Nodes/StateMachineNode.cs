@@ -6,32 +6,34 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class StateMachineNode : StateEntityNode, IStateMachine, IAncestorProvider, IDebugEntityId
 	{
-		private readonly StateMachine _stateMachine;
+		private readonly StateMachineEntity _stateMachine;
 
-		public StateMachineNode(LinkedListNode<int> documentIdNode, in StateMachine stateMachine) : base(documentIdNode, GetChildNodes(stateMachine.Initial, stateMachine.States))
+		public StateMachineNode(LinkedListNode<int> documentIdNode, in StateMachineEntity stateMachine) : base(documentIdNode, GetChildNodes(stateMachine.Initial, stateMachine.States))
 		{
+			Infrastructure.Assert(stateMachine.Initial != null);
+
 			_stateMachine = stateMachine;
 			Initial = stateMachine.Initial.As<InitialNode>();
-			ScriptEvaluator = stateMachine.Script.As<ScriptNode>();
-			DataModel = stateMachine.DataModel.As<DataModelNode>();
+			ScriptEvaluator = stateMachine.Script?.As<ScriptNode>();
+			DataModel = stateMachine.DataModel?.As<DataModelNode>();
 		}
 
-		public override DataModelNode DataModel { get; }
+		public override DataModelNode? DataModel { get; }
 
-		public InitialNode    Initial         { get; }
-		public IExecEvaluator ScriptEvaluator { get; }
+		public InitialNode     Initial         { get; }
+		public IExecEvaluator? ScriptEvaluator { get; }
 
-		object IAncestorProvider.Ancestor => _stateMachine.Ancestor;
+		object? IAncestorProvider.Ancestor => _stateMachine.Ancestor;
 
-		FormattableString IDebugEntityId.EntityId => $"{Name}(#{DocumentId})";
+		FormattableString IDebugEntityId.EntityId => @$"{Name}(#{DocumentId})";
 
-		public BindingType                         Binding       => _stateMachine.Binding;
-		public string                              Name          => _stateMachine.Name;
-		public string                              DataModelType => _stateMachine.DataModelType;
-		public IExecutableEntity                   Script        => _stateMachine.Script;
+		public BindingType        Binding       => _stateMachine.Binding;
+		public string?            Name          => _stateMachine.Name;
+		public string?            DataModelType => _stateMachine.DataModelType;
+		public IExecutableEntity? Script        => _stateMachine.Script;
 
-		IDataModel IStateMachine.                  DataModel => _stateMachine.DataModel;
-		IInitial IStateMachine.                    Initial   => _stateMachine.Initial;
+		IDataModel? IStateMachine.                 DataModel => _stateMachine.DataModel;
+		IInitial? IStateMachine.                   Initial   => _stateMachine.Initial;
 		ImmutableArray<IStateEntity> IStateMachine.States    => _stateMachine.States;
 
 		protected override void Store(Bucket bucket)

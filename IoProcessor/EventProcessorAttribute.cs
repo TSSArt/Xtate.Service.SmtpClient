@@ -7,13 +7,13 @@ namespace TSSArt.StateMachine
 	{
 		public EventProcessorAttribute(string type)
 		{
-			if (string.IsNullOrEmpty(type)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(type));
+			if (string.IsNullOrEmpty(type)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(type));
 
 			Type = type;
 		}
 
 		public string Type { get; }
 
-		public string Alias { get; set; }
+		public string? Alias { get; set; }
 	}
 }

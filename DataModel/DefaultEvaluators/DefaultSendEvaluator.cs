@@ -2,40 +2,43 @@
 using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	public class DefaultSendEvaluator : IExecEvaluator, ISend, IAncestorProvider, IDebugEntityId
 	{
-		private readonly Send _send;
+		private readonly SendEntity _send;
 
-		public DefaultSendEvaluator(in Send send)
+		public DefaultSendEvaluator(in SendEntity send)
 		{
 			_send = send;
-			EventExpressionEvaluator = send.EventExpression.As<IStringEvaluator>();
-			TypeExpressionEvaluator = send.TypeExpression.As<IStringEvaluator>();
-			TargetExpressionEvaluator = send.TargetExpression.As<IStringEvaluator>();
-			DelayExpressionEvaluator = send.DelayExpression.As<IIntegerEvaluator>();
-			ContentExpressionEvaluator = send.Content?.Expression.As<IObjectEvaluator>();
-			ContentBodyEvaluator = send.Content?.Body.As<IValueEvaluator>();
-			IdLocationEvaluator = send.IdLocation.As<ILocationEvaluator>();
+
+			EventExpressionEvaluator = send.EventExpression?.As<IStringEvaluator>();
+			TypeExpressionEvaluator = send.TypeExpression?.As<IStringEvaluator>();
+			TargetExpressionEvaluator = send.TargetExpression?.As<IStringEvaluator>();
+			DelayExpressionEvaluator = send.DelayExpression?.As<IIntegerEvaluator>();
+			ContentExpressionEvaluator = send.Content?.Expression?.As<IObjectEvaluator>();
+			ContentBodyEvaluator = send.Content?.Body?.As<IValueEvaluator>();
+			IdLocationEvaluator = send.IdLocation?.As<ILocationEvaluator>();
 			NameEvaluatorList = send.NameList.AsArrayOf<ILocationExpression, ILocationEvaluator>();
 			ParameterList = send.Parameters.AsArrayOf<IParam, DefaultParam>();
 		}
 
-		public IObjectEvaluator                   ContentExpressionEvaluator { get; }
-		public IValueEvaluator                    ContentBodyEvaluator       { get; }
-		public IIntegerEvaluator                  DelayExpressionEvaluator   { get; }
-		public IStringEvaluator                   EventExpressionEvaluator   { get; }
-		public ILocationEvaluator                 IdLocationEvaluator        { get; }
-		public IStringEvaluator                   TargetExpressionEvaluator  { get; }
-		public IStringEvaluator                   TypeExpressionEvaluator    { get; }
+		public IObjectEvaluator?                  ContentExpressionEvaluator { get; }
+		public IValueEvaluator?                   ContentBodyEvaluator       { get; }
+		public IIntegerEvaluator?                 DelayExpressionEvaluator   { get; }
+		public IStringEvaluator?                  EventExpressionEvaluator   { get; }
+		public ILocationEvaluator?                IdLocationEvaluator        { get; }
+		public IStringEvaluator?                  TargetExpressionEvaluator  { get; }
+		public IStringEvaluator?                  TypeExpressionEvaluator    { get; }
 		public ImmutableArray<ILocationEvaluator> NameEvaluatorList          { get; }
 		public ImmutableArray<DefaultParam>       ParameterList              { get; }
 
-		object IAncestorProvider.Ancestor => _send.Ancestor;
+		object? IAncestorProvider.Ancestor => _send.Ancestor;
 
-		public FormattableString EntityId => $"{Id}";
+		public FormattableString EntityId => @$"{Id}";
 
 		public virtual async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
@@ -45,13 +48,13 @@ namespace TSSArt.StateMachine
 
 			IdLocationEvaluator?.SetValue(new DefaultObject(sendId), executionContext);
 
-			var name = EventExpressionEvaluator != null ? await EventExpressionEvaluator.EvaluateString(executionContext, token).ConfigureAwait(false) : _send.Event;
+			var name = EventExpressionEvaluator != null ? await EventExpressionEvaluator.EvaluateString(executionContext, token).ConfigureAwait(false) : _send.EventName;
 			var data = await DataConverter.GetData(ContentBodyEvaluator, ContentExpressionEvaluator, NameEvaluatorList, ParameterList, executionContext, token).ConfigureAwait(false);
 			var type = TypeExpressionEvaluator != null ? ToUri(await TypeExpressionEvaluator.EvaluateString(executionContext, token).ConfigureAwait(false)) : _send.Type;
 			var target = TargetExpressionEvaluator != null ? ToUri(await TargetExpressionEvaluator.EvaluateString(executionContext, token).ConfigureAwait(false)) : _send.Target;
 			var delayMs = DelayExpressionEvaluator != null ? await DelayExpressionEvaluator.EvaluateInteger(executionContext, token).ConfigureAwait(false) : _send.DelayMs ?? 0;
 
-			var eventObject = new Event(name)
+			var eventObject = new EventEntity(name)
 							  {
 									  SendId = sendId,
 									  Type = type,
@@ -68,19 +71,19 @@ namespace TSSArt.StateMachine
 			await executionContext.Send(eventObject, token).ConfigureAwait(false);
 		}
 
-		public IContent                            Content          => _send.Content;
-		public IValueExpression                    DelayExpression  => _send.DelayExpression;
+		public IContent?                           Content          => _send.Content;
+		public IValueExpression?                   DelayExpression  => _send.DelayExpression;
 		public int?                                DelayMs          => _send.DelayMs;
-		public string                              Event            => _send.Event;
-		public IValueExpression                    EventExpression  => _send.EventExpression;
-		public string                              Id               => _send.Id;
-		public ILocationExpression                 IdLocation       => _send.IdLocation;
+		public string?                             EventName        => _send.EventName;
+		public IValueExpression?                   EventExpression  => _send.EventExpression;
+		public string?                             Id               => _send.Id;
+		public ILocationExpression?                IdLocation       => _send.IdLocation;
 		public ImmutableArray<ILocationExpression> NameList         => _send.NameList;
 		public ImmutableArray<IParam>              Parameters       => _send.Parameters;
-		public Uri                                 Target           => _send.Target;
-		public IValueExpression                    TargetExpression => _send.TargetExpression;
-		public Uri                                 Type             => _send.Type;
-		public IValueExpression                    TypeExpression   => _send.TypeExpression;
+		public Uri?                                Target           => _send.Target;
+		public IValueExpression?                   TargetExpression => _send.TargetExpression;
+		public Uri?                                Type             => _send.Type;
+		public IValueExpression?                   TypeExpression   => _send.TypeExpression;
 
 		private static Uri ToUri(string uri) => new Uri(uri, UriKind.RelativeOrAbsolute);
 	}

@@ -20,6 +20,6 @@ namespace TSSArt.StateMachine
 
 		public StateMachineExitStatus Status { get; }
 
-		public Exception Exception { get; }
+		public Exception? Exception { get; }
 	}
 }

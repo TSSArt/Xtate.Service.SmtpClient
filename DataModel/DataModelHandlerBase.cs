@@ -1,16 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
 	public abstract class DataModelHandlerBase : StateMachineVisitor, IDataModelHandler
 	{
-		protected DataModelHandlerBase() : base(trackPath: true) => ValidationOnly = true;
+		private readonly IErrorProcessor _errorProcessor;
 
-		protected DataModelHandlerBase(StateMachineVisitor masterVisitor) : base(masterVisitor) { }
+		protected DataModelHandlerBase(IErrorProcessor errorProcessor) => _errorProcessor = errorProcessor;
 
-		protected bool ValidationOnly { get; }
-
-		public virtual void ExecutionContextCreated(IExecutionContext executionContext, IDictionary<string, string> dataModelVars) { }
+		public virtual void ExecutionContextCreated(IExecutionContext executionContext, IDictionary<string, string> dataModelVars)
+		{ }
 
 		void IDataModelHandler.Process(ref IExecutableEntity executableEntity)
 		{
@@ -32,13 +32,15 @@ namespace TSSArt.StateMachine
 			Visit(ref invoke);
 		}
 
+		protected void AddErrorMessage(object? entity, string message, Exception? exception = null) => _errorProcessor.AddError(GetType(), entity, message, exception);
+
 		protected override void Visit(ref IValueExpression expression)
 		{
 			base.Visit(ref expression);
 
 			if (!(expression is IValueEvaluator))
 			{
-				AddErrorMessage(message: "'Value expression' does not implement IValueEvaluator.");
+				AddErrorMessage(expression, Resources.ErrorMessage_Value_expression__does_not_implement_IValueEvaluator_);
 			}
 		}
 
@@ -48,139 +50,69 @@ namespace TSSArt.StateMachine
 
 			if (!(expression is ILocationEvaluator))
 			{
-				AddErrorMessage(message: "'Location expression' does not implement ILocationEvaluator.");
+				AddErrorMessage(expression, Resources.ErrorMessage_Location_expression__does_not_implement_ILocationEvaluator);
 			}
 		}
 
-		protected override void Build(ref ILog log, ref Log logProperties)
+		protected override void Build(ref ILog log, ref LogEntity logProperties)
 		{
 			base.Build(ref log, ref logProperties);
-
-			if (ValidationOnly)
-			{
-				return;
-			}
 
 			log = new DefaultLogEvaluator(logProperties);
 		}
 
-		protected override void Build(ref ISend send, ref Send sendProperties)
+		protected override void Build(ref ISend send, ref SendEntity sendProperties)
 		{
 			base.Build(ref send, ref sendProperties);
-
-			if (ValidationOnly)
-			{
-				return;
-			}
 
 			send = new DefaultSendEvaluator(sendProperties);
 		}
 
-		protected override void Build(ref IParam param, ref Param paramProperties)
+		protected override void Build(ref IParam param, ref ParamEntity paramProperties)
 		{
 			base.Build(ref param, ref paramProperties);
-
-			if (ValidationOnly)
-			{
-				return;
-			}
 
 			param = new DefaultParam(paramProperties);
 		}
 
-		protected override void Build(ref ICancel cancel, ref Cancel cancelProperties)
+		protected override void Build(ref ICancel cancel, ref CancelEntity cancelProperties)
 		{
 			base.Build(ref cancel, ref cancelProperties);
-
-			if (ValidationOnly)
-			{
-				return;
-			}
 
 			cancel = new DefaultCancelEvaluator(cancelProperties);
 		}
 
-		protected override void Build(ref IIf @if, ref If ifProperties)
+		protected override void Build(ref IIf @if, ref IfEntity ifProperties)
 		{
 			base.Build(ref @if, ref ifProperties);
-
-			var condition = true;
-
-			foreach (var op in @if.Action)
-			{
-				switch (op)
-				{
-					case IElseIf _:
-						if (!condition)
-						{
-							AddErrorMessage(message: "<elseif> can not follow <else>.");
-						}
-
-						break;
-
-					case IElse _:
-						if (!condition)
-						{
-							AddErrorMessage(message: "<else> can be used only once.");
-						}
-
-						condition = false;
-						break;
-				}
-			}
-
-			if (ValidationOnly)
-			{
-				return;
-			}
 
 			@if = new DefaultIfEvaluator(ifProperties);
 		}
 
-		protected override void Build(ref IRaise raise, ref Raise raiseProperties)
+		protected override void Build(ref IRaise raise, ref RaiseEntity raiseProperties)
 		{
 			base.Build(ref raise, ref raiseProperties);
-
-			if (ValidationOnly)
-			{
-				return;
-			}
 
 			raise = new DefaultRaiseEvaluator(raiseProperties);
 		}
 
-		protected override void Build(ref IForEach forEach, ref ForEach forEachProperties)
+		protected override void Build(ref IForEach forEach, ref ForEachEntity forEachProperties)
 		{
 			base.Build(ref forEach, ref forEachProperties);
-
-			if (ValidationOnly)
-			{
-				return;
-			}
 
 			forEach = new DefaultForEachEvaluator(forEachProperties);
 		}
 
-		protected override void Build(ref IAssign assign, ref Assign assignProperties)
+		protected override void Build(ref IAssign assign, ref AssignEntity assignProperties)
 		{
 			base.Build(ref assign, ref assignProperties);
-
-			if (ValidationOnly)
-			{
-				return;
-			}
 
 			assign = new DefaultAssignEvaluator(assignProperties);
 		}
 
-		protected override void Build(ref IScript script, ref Script scriptProperties)
+		protected override void Build(ref IScript script, ref ScriptEntity scriptProperties)
 		{
 			base.Build(ref script, ref scriptProperties);
-
-			if (ValidationOnly)
-			{
-				return;
-			}
 
 			script = new DefaultScriptEvaluator(scriptProperties);
 		}
@@ -189,22 +121,12 @@ namespace TSSArt.StateMachine
 		{
 			base.Build(ref customAction, ref customActionProperties);
 
-			if (ValidationOnly)
-			{
-				return;
-			}
-
 			customAction = new DefaultCustomActionEvaluator(customActionProperties);
 		}
 
-		protected override void Build(ref IInvoke invoke, ref Invoke invokeProperties)
+		protected override void Build(ref IInvoke invoke, ref InvokeEntity invokeProperties)
 		{
 			base.Build(ref invoke, ref invokeProperties);
-
-			if (ValidationOnly)
-			{
-				return;
-			}
 
 			invoke = new DefaultInvokeEvaluator(invokeProperties);
 		}
@@ -212,11 +134,6 @@ namespace TSSArt.StateMachine
 		protected override void Build(ref IContentBody contentBody, ref ContentBody contentBodyProperties)
 		{
 			base.Build(ref contentBody, ref contentBodyProperties);
-
-			if (ValidationOnly)
-			{
-				return;
-			}
 
 			contentBody = new DefaultContentBodyEvaluator(contentBodyProperties);
 		}

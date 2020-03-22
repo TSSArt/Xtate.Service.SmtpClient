@@ -2,8 +2,8 @@
 {
 	public interface IAssign : IExecutableEntity
 	{
-		ILocationExpression Location      { get; }
-		IValueExpression    Expression    { get; }
-		string              InlineContent { get; }
+		ILocationExpression? Location      { get; }
+		IValueExpression?    Expression    { get; }
+		string?              InlineContent { get; }
 	}
 }

@@ -6,15 +6,15 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class IfNode : ExecutableEntityNode, IIf, IAncestorProvider, IDebugEntityId
 	{
-		private readonly If _entity;
+		private readonly IfEntity _entity;
 
-		public IfNode(LinkedListNode<int> documentIdNode, in If entity) : base(documentIdNode, (IIf) entity.Ancestor) => _entity = entity;
+		public IfNode(LinkedListNode<int> documentIdNode, in IfEntity entity) : base(documentIdNode, (IIf?) entity.Ancestor) => _entity = entity;
 
-		object IAncestorProvider.Ancestor => _entity.Ancestor;
+		object? IAncestorProvider.Ancestor => _entity.Ancestor;
 
-		FormattableString IDebugEntityId.EntityId => $"(#{DocumentId})";
+		FormattableString IDebugEntityId.EntityId => @$"(#{DocumentId})";
 
-		public IConditionExpression Condition => _entity.Condition;
+		public IConditionExpression? Condition => _entity.Condition;
 
 		public ImmutableArray<IExecutableEntity> Action => _entity.Action;
 

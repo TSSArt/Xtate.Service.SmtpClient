@@ -20,22 +20,13 @@ namespace TSSArt.StateMachine
 
 		public RuntimePredicate(PredicateCancellableTask task) => _predicate = task ?? throw new ArgumentNullException(nameof(task));
 
-		public async ValueTask<bool> EvaluateBoolean(IExecutionContext executionContext, CancellationToken token)
-		{
-			switch (_predicate)
-			{
-				case Predicate predicate:
-					return predicate(executionContext);
-
-				case PredicateTask task:
-					return await task(executionContext).ConfigureAwait(false);
-
-				case PredicateCancellableTask task:
-					return await task(executionContext, token).ConfigureAwait(false);
-
-				default:
-					throw new ArgumentOutOfRangeException();
-			}
-		}
+		public async ValueTask<bool> EvaluateBoolean(IExecutionContext executionContext, CancellationToken token) =>
+				_predicate switch
+				{
+						Predicate predicate => predicate(executionContext),
+						PredicateTask task => await task(executionContext).ConfigureAwait(false),
+						PredicateCancellableTask task => await task(executionContext, token).ConfigureAwait(false),
+						_ => Infrastructure.UnexpectedValue<bool>()
+				};
 	}
 }

@@ -1,15 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	internal sealed class OrderedSetPersistingController<TEntity> : IDisposable where TEntity : IEntity
+	internal sealed class OrderedSetPersistingController<T> : IDisposable where T : class
 	{
-		private readonly Bucket              _bucket;
-		private readonly OrderedSet<TEntity> _orderedSet;
-		private          int                 _record;
+		private readonly Bucket        _bucket;
+		private readonly OrderedSet<T> _orderedSet;
+		private          int           _record;
 
-		public OrderedSetPersistingController(Bucket bucket, OrderedSet<TEntity> orderedSet, Dictionary<int, IEntity> entityMap)
+		public OrderedSetPersistingController(Bucket bucket, OrderedSet<T> orderedSet, ImmutableDictionary<int, IEntity> entityMap)
 		{
 			if (entityMap == null) throw new ArgumentNullException(nameof(entityMap));
 			_bucket = bucket;
@@ -29,11 +29,11 @@ namespace TSSArt.StateMachine
 				switch (operation)
 				{
 					case Keys.Added:
-						orderedSet.Add(entityMap[documentId].As<TEntity>());
+						orderedSet.Add(entityMap[documentId].As<T>());
 						break;
 
 					case Keys.Deleted:
-						orderedSet.Delete(entityMap[documentId].As<TEntity>());
+						orderedSet.Delete(entityMap[documentId].As<T>());
 						shrink = true;
 						break;
 				}
@@ -61,12 +61,12 @@ namespace TSSArt.StateMachine
 		{
 			_orderedSet.Changed -= OnChanged;
 		}
-		
-		private void OnChanged(OrderedSet<TEntity>.ChangedAction action, TEntity item)
+
+		private void OnChanged(OrderedSet<T>.ChangedAction action, T item)
 		{
 			switch (action)
 			{
-				case OrderedSet<TEntity>.ChangedAction.Add:
+				case OrderedSet<T>.ChangedAction.Add:
 				{
 					var bucket = _bucket.Nested(_record ++);
 					bucket.Add(Keys.DocumentId, item.As<IDocumentId>().DocumentId);
@@ -74,12 +74,12 @@ namespace TSSArt.StateMachine
 					break;
 				}
 
-				case OrderedSet<TEntity>.ChangedAction.Clear:
+				case OrderedSet<T>.ChangedAction.Clear:
 					_record = 0;
 					_bucket.RemoveSubtree(Bucket.RootKey);
 					break;
 
-				case OrderedSet<TEntity>.ChangedAction.Delete:
+				case OrderedSet<T>.ChangedAction.Delete:
 					if (_orderedSet.IsEmpty)
 					{
 						_record = 0;
