@@ -1,9 +1,13 @@
-﻿namespace TSSArt.StateMachine
-{
-	internal sealed class RuntimeIdentifier : IIdentifier
-	{
-		private string _val;
+﻿using System;
 
-		public override string ToString() => _val ??= IdGenerator.NewUniqueStateId();
+namespace TSSArt.StateMachine
+{
+	internal sealed class RuntimeIdentifier : IIdentifier, IEquatable<IIdentifier>, IAncestorProvider
+	{
+		private string? _val;
+
+		object IAncestorProvider.Ancestor => _val ??= IdGenerator.NewUniqueStateId();
+
+		public bool Equals(IIdentifier other) => ReferenceEquals(this, other);
 	}
 }

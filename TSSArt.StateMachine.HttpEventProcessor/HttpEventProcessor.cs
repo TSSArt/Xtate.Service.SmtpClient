@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
+using TSSArt.StateMachine.Properties;
 
 namespace TSSArt.StateMachine
 {
@@ -22,14 +23,14 @@ namespace TSSArt.StateMachine
 		private const string MediaTypeApplicationFormUrlEncoded = "application/x-www-form-urlencoded";
 		private const string EventNameParameterName             = "_scxmleventname";
 
-		private readonly Uri    _baseUri;
-		private readonly string _path;
+		private readonly Uri             _baseUri;
 		private readonly Func<ValueTask> _onDispose;
+		private readonly string          _path;
 
 		public HttpEventProcessor(IEventConsumer eventConsumer, Uri baseUri, string path, Func<ValueTask> onDispose) : base(eventConsumer)
 		{
 			if (baseUri == null) throw new ArgumentNullException(nameof(baseUri));
-			if (string.IsNullOrEmpty(path)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(path));
+			if (string.IsNullOrEmpty(path)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(path));
 
 			_baseUri = new Uri(baseUri, path);
 			_path = path;
@@ -40,39 +41,44 @@ namespace TSSArt.StateMachine
 
 		protected override Uri GetTarget(string sessionId) => new Uri(_baseUri, sessionId);
 
-		protected override async ValueTask OutgoingEvent(string sessionId, IOutgoingEvent @event, CancellationToken token)
+		protected override async ValueTask OutgoingEvent(string sessionId, IOutgoingEvent evt, CancellationToken token)
 		{
-			if (@event == null) throw new ArgumentNullException(nameof(@event));
+			if (evt == null) throw new ArgumentNullException(nameof(evt));
 
 			using var client = new HttpClient();
 
-			var targetUri = @event.Target.ToString();
-
-			var content = GetContent(@event, out var eventNameInContent);
-			if (@event.NameParts != null && !eventNameInContent)
+			if (evt.Target == null)
 			{
-				targetUri = QueryHelpers.AddQueryString(targetUri, EventNameParameterName, EventName.ToName(@event.NameParts));
+				throw new ArgumentException(Resources.Exception_Target_is_not_defined, nameof(evt));
+			}
+
+			var targetUri = evt.Target.ToString();
+
+			var content = GetContent(evt, out var eventNameInContent);
+			if (evt.NameParts != null && !eventNameInContent)
+			{
+				targetUri = QueryHelpers.AddQueryString(targetUri, EventNameParameterName, EventName.ToName(evt.NameParts));
 			}
 
 			using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, targetUri)
 										   {
 												   Content = content,
-												   Headers = { { "Origin", GetTarget(sessionId).ToString() } }
+												   Headers = { { @"Origin", GetTarget(sessionId).ToString() } }
 										   };
 
 			var httpResponseMessage = await client.SendAsync(httpRequestMessage, token).ConfigureAwait(false);
 			httpResponseMessage.EnsureSuccessStatusCode();
 		}
 
-		private static HttpContent GetContent(IOutgoingEvent @event, out bool eventNameInContent)
+		private static HttpContent? GetContent(IOutgoingEvent evt, out bool eventNameInContent)
 		{
-			var data = @event.Data;
+			var data = evt.Data;
 			var dataType = data.Type;
 
 			if (dataType == DataModelValueType.Undefined || dataType == DataModelValueType.Null)
 			{
-				eventNameInContent = @event.NameParts != null;
-				return eventNameInContent ? new FormUrlEncodedContent(GetParameters(@event.NameParts, dataModelObject: null)) : null;
+				eventNameInContent = evt.NameParts != null;
+				return eventNameInContent ? new FormUrlEncodedContent(GetParameters(evt.NameParts, dataModelObject: null)) : null;
 			}
 
 			if (dataType == DataModelValueType.String)
@@ -83,12 +89,12 @@ namespace TSSArt.StateMachine
 
 			if (dataType == DataModelValueType.Object)
 			{
-				var dataModelObject = data.AsObject();
+				var dataModelObject = data.AsObject()!;
 
 				if (IsStringDictionary(dataModelObject))
 				{
 					eventNameInContent = true;
-					return new FormUrlEncodedContent(GetParameters(@event.NameParts, dataModelObject));
+					return new FormUrlEncodedContent(GetParameters(evt.NameParts, dataModelObject));
 				}
 
 				eventNameInContent = false;
@@ -101,7 +107,7 @@ namespace TSSArt.StateMachine
 				return new StringContent(DataModelConverter.ToJson(data), Encoding.UTF8, MediaTypeApplicationJson);
 			}
 
-			throw new NotSupportedException("Data format not supported");
+			throw new NotSupportedException(Resources.Exception_Data_format_not_supported);
 		}
 
 		private static bool IsStringDictionary(DataModelObject dataModelObject)
@@ -122,14 +128,16 @@ namespace TSSArt.StateMachine
 					case DataModelValueType.String:
 						break;
 
-					default: throw new ArgumentOutOfRangeException();
+					default:
+						Infrastructure.UnexpectedValue();
+						break;
 				}
 			}
 
 			return true;
 		}
 
-		private static IEnumerable<KeyValuePair<string, string>> GetParameters(ImmutableArray<IIdentifier> eventNameParts, DataModelObject dataModelObject)
+		private static IEnumerable<KeyValuePair<string, string>> GetParameters(ImmutableArray<IIdentifier> eventNameParts, DataModelObject? dataModelObject)
 		{
 			if (eventNameParts != null)
 			{
@@ -152,7 +160,7 @@ namespace TSSArt.StateMachine
 
 			string sessionId;
 
-			if (_path == "/")
+			if (_path == @"/")
 			{
 				sessionId = Path.GetFileName(request.Path);
 			}
@@ -165,8 +173,8 @@ namespace TSSArt.StateMachine
 				return false;
 			}
 
-			var @event = await CreateEvent(request).ConfigureAwait(false);
-			await IncomingEvent(sessionId, @event, token: default).ConfigureAwait(false);
+			var evt = await CreateEvent(request).ConfigureAwait(false);
+			await IncomingEvent(sessionId, evt, token: default).ConfigureAwait(false);
 
 			return true;
 		}
@@ -182,7 +190,7 @@ namespace TSSArt.StateMachine
 				body = await streamReader.ReadToEndAsync().ConfigureAwait(false);
 			}
 
-			var origin = new Uri(request.Headers["Origin"].ToString());
+			var origin = new Uri(request.Headers[@"Origin"].ToString());
 
 			var data = CreateData(contentType.MediaType, body, out var eventNameInContent);
 
@@ -194,7 +202,7 @@ namespace TSSArt.StateMachine
 			return new EventObject(eventName, origin, EventProcessorId, data);
 		}
 
-		private DataModelValue CreateData(string mediaType, string body, out string eventName)
+		private static DataModelValue CreateData(string mediaType, string body, out string? eventName)
 		{
 			eventName = null;
 

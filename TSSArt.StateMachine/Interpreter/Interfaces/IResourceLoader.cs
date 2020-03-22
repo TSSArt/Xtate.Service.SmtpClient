@@ -7,7 +7,7 @@ namespace TSSArt.StateMachine
 {
 	public interface IResourceLoader
 	{
-		ValueTask<Resource> Request(Uri uri, CancellationToken token);
-		ValueTask<XmlReader> RequestXmlReader(Uri uri, XmlReaderSettings readerSettings = null, XmlParserContext parserContext = null, CancellationToken token = default);
+		ValueTask<Resource>  Request(Uri uri, CancellationToken token);
+		ValueTask<XmlReader> RequestXmlReader(Uri uri, XmlReaderSettings? readerSettings = null, XmlParserContext? parserContext = null, CancellationToken token = default);
 	}
 }

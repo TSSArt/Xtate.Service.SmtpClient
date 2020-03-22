@@ -7,9 +7,9 @@ namespace TSSArt.StateMachine
 	internal sealed class OnEntryNode : IOnEntry, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
 		private readonly LinkedListNode<int> _documentIdNode;
-		private readonly OnEntry             _onEntry;
+		private readonly OnEntryEntity       _onEntry;
 
-		public OnEntryNode(LinkedListNode<int> documentIdNode, in OnEntry onEntry)
+		public OnEntryNode(LinkedListNode<int> documentIdNode, in OnEntryEntity onEntry)
 		{
 			_onEntry = onEntry;
 			_documentIdNode = documentIdNode;
@@ -18,9 +18,9 @@ namespace TSSArt.StateMachine
 
 		public ImmutableArray<IExecEvaluator> ActionEvaluators { get; }
 
-		object IAncestorProvider.Ancestor => _onEntry.Ancestor;
+		object? IAncestorProvider.Ancestor => _onEntry.Ancestor;
 
-		FormattableString IDebugEntityId.EntityId => $"(#{DocumentId})";
+		FormattableString IDebugEntityId.EntityId => @$"(#{DocumentId})";
 
 		public int DocumentId => _documentIdNode.Value;
 

@@ -4,6 +4,6 @@ namespace TSSArt.StateMachine
 {
 	public interface IDebugEntityId
 	{
-		FormattableString EntityId { get; }
+		FormattableString? EntityId { get; }
 	}
 }

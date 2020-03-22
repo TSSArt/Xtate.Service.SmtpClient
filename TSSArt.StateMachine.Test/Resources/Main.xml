@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="us-ascii"?>
 
+<!-- ReSharper disable MarkupAttributeTypo -->
+<!-- ReSharper disable CommentTypo -->
+
 <!-- A wrapper state that contains all other states in this file
 - it represents the complete state machine -->
 <scxml xmlns="http://www.w3.org/2005/07/scxml"

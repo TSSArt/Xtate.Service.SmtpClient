@@ -2,6 +2,6 @@
 {
 	public interface ILocationExpression : IEntity
 	{
-		string Expression { get; }
+		string? Expression { get; }
 	}
 }

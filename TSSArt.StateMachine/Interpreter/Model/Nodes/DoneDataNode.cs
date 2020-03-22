@@ -6,22 +6,22 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class DoneDataNode : IDoneData, IStoreSupport, IAncestorProvider
 	{
-		private readonly IValueEvaluator              _contentBodyEvaluator;
-		private readonly IObjectEvaluator             _contentExpressionEvaluator;
-		private readonly DoneData                     _doneData;
+		private readonly IValueEvaluator?             _contentBodyEvaluator;
+		private readonly IObjectEvaluator?            _contentExpressionEvaluator;
+		private readonly DoneDataEntity               _doneData;
 		private readonly ImmutableArray<DefaultParam> _parameterList;
 
-		public DoneDataNode(in DoneData doneData)
+		public DoneDataNode(in DoneDataEntity doneData)
 		{
 			_doneData = doneData;
-			_contentExpressionEvaluator = doneData.Content?.Expression.As<IObjectEvaluator>();
-			_contentBodyEvaluator = doneData.Content?.Body.As<IValueEvaluator>();
+			_contentExpressionEvaluator = doneData.Content?.Expression?.As<IObjectEvaluator>();
+			_contentBodyEvaluator = doneData.Content?.Body?.As<IValueEvaluator>();
 			_parameterList = doneData.Parameters.AsArrayOf<IParam, DefaultParam>();
 		}
 
-		object IAncestorProvider.Ancestor => _doneData.Ancestor;
+		object? IAncestorProvider.Ancestor => _doneData.Ancestor;
 
-		public IContent Content => _doneData.Content;
+		public IContent? Content => _doneData.Content;
 
 		public ImmutableArray<IParam> Parameters => _doneData.Parameters;
 

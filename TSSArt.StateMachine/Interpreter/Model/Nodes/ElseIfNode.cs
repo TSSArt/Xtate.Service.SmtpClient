@@ -6,21 +6,23 @@ namespace TSSArt.StateMachine
 	internal sealed class ElseIfNode : IElseIf, IAncestorProvider, IStoreSupport, IDocumentId, IDebugEntityId
 	{
 		private readonly LinkedListNode<int> _documentIdNode;
-		private readonly ElseIf              _entity;
+		private readonly ElseIfEntity        _entity;
 
-		public ElseIfNode(LinkedListNode<int> documentIdNode, in ElseIf entity)
+		public ElseIfNode(LinkedListNode<int> documentIdNode, in ElseIfEntity entity)
 		{
+			Infrastructure.Assert(entity.Condition != null);
+
 			_documentIdNode = documentIdNode;
 			_entity = entity;
 		}
 
-		object IAncestorProvider.Ancestor => _entity.Ancestor;
+		object? IAncestorProvider.Ancestor => _entity.Ancestor;
 
-		FormattableString IDebugEntityId.EntityId => $"(#{DocumentId})";
+		FormattableString IDebugEntityId.EntityId => @$"(#{DocumentId})";
 
 		public int DocumentId => _documentIdNode.Value;
 
-		public IConditionExpression Condition => _entity.Condition;
+		public IConditionExpression Condition => _entity.Condition!;
 
 		void IStoreSupport.Store(Bucket bucket)
 		{

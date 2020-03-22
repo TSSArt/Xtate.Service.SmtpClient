@@ -15,9 +15,9 @@ namespace TSSArt.StateMachine
 
 		public DataModelValue Data { get; }
 
-		public string InvokeId => null;
+		public string? InvokeId => null;
 
-		public string InvokeUniqueId => null;
+		public string? InvokeUniqueId => null;
 
 		public ImmutableArray<IIdentifier> NameParts { get; }
 
@@ -25,7 +25,7 @@ namespace TSSArt.StateMachine
 
 		public Uri OriginType { get; }
 
-		public string SendId => null;
+		public string? SendId => null;
 
 		public EventType Type => EventType.External;
 	}

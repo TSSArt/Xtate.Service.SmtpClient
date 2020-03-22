@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Reflection;
+using System.Resources;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
@@ -22,7 +23,7 @@ namespace TSSArt.StateMachine.Core.Host
 
 			var options = new IoProcessorOptions
 						  {
-								  EventProcessorFactories = ImmutableArray.Create((IEventProcessorFactory)new HttpEventProcessorFactory(baseUri, path: "/")),
+								  EventProcessorFactories = ImmutableArray.Create((IEventProcessorFactory) new HttpEventProcessorFactory(baseUri, path: "/")),
 								  ServiceFactories = ImmutableArray.Create(WebBrowserService.GetFactory<CefSharpWebBrowserService>(), InputService.Factory),
 								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory)
 						  };
@@ -57,8 +58,8 @@ namespace TSSArt.StateMachine.Core.Host
 		private static IStateMachine GetStateMachine(string name)
 		{
 			using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name);
-			using var xmlReader = XmlReader.Create(stream);
-			return new ScxmlDirector(xmlReader, new BuilderFactory()).ConstructStateMachine();
+			using var xmlReader = XmlReader.Create(stream ?? throw new MissingManifestResourceException());
+			return new ScxmlDirector(xmlReader, BuilderFactory.Default, DefaultErrorProcessor.Instance).ConstructStateMachine();
 		}
 	}
 }

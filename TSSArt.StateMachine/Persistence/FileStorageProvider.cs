@@ -12,18 +12,18 @@ namespace TSSArt.StateMachine
 		private static readonly char[]   InvalidFileNameChars   = Path.GetInvalidFileNameChars();
 		private static readonly string[] InvalidCharReplacement = GetInvalidCharReplacement();
 
-		private readonly string _extension;
-		private readonly string _path;
+		private readonly string? _extension;
+		private readonly string  _path;
 
-		public FileStorageProvider(string path, string extension = null)
+		public FileStorageProvider(string path, string? extension = null)
 		{
 			_path = path ?? throw new ArgumentNullException(nameof(path));
 			_extension = extension;
 		}
 
-		public async ValueTask<ITransactionalStorage> GetTransactionalStorage(string partition, string key, CancellationToken token)
+		public async ValueTask<ITransactionalStorage> GetTransactionalStorage(string? partition, string key, CancellationToken token)
 		{
-			if (string.IsNullOrEmpty(key)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(key));
+			if (string.IsNullOrEmpty(key)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(key));
 
 			var dir = !string.IsNullOrEmpty(partition) ? Path.Combine(_path, Escape(partition)) : _path;
 
@@ -39,9 +39,9 @@ namespace TSSArt.StateMachine
 			return streamStorage;
 		}
 
-		public ValueTask RemoveTransactionalStorage(string partition, string key, CancellationToken token)
+		public ValueTask RemoveTransactionalStorage(string? partition, string key, CancellationToken token)
 		{
-			if (string.IsNullOrEmpty(key)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(key));
+			if (string.IsNullOrEmpty(key)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(key));
 
 			var dir = !string.IsNullOrEmpty(partition) ? Path.Combine(_path, Escape(partition)) : _path;
 			var path = Path.Combine(dir, Escape(key) + _extension);
@@ -50,12 +50,13 @@ namespace TSSArt.StateMachine
 			{
 				File.Delete(path);
 			}
-			catch (IOException) { }
+			catch (IOException)
+			{ }
 
 			return default;
 		}
 
-		public ValueTask RemoveAllTransactionalStorage(string partition, CancellationToken token)
+		public ValueTask RemoveAllTransactionalStorage(string? partition, CancellationToken token)
 		{
 			var path = !string.IsNullOrEmpty(partition) ? Path.Combine(_path, Escape(partition)) : _path;
 
@@ -63,7 +64,8 @@ namespace TSSArt.StateMachine
 			{
 				Directory.Delete(path, recursive: true);
 			}
-			catch (IOException) { }
+			catch (IOException)
+			{ }
 
 			return default;
 		}
@@ -74,7 +76,7 @@ namespace TSSArt.StateMachine
 
 			for (var i = 0; i < list.Length; i ++)
 			{
-				list[i] = "_x" + ((int) InvalidFileNameChars[i]).ToString(format: "X", CultureInfo.InvariantCulture);
+				list[i] = @"_x" + ((int) InvalidFileNameChars[i]).ToString(format: @"X", CultureInfo.InvariantCulture);
 			}
 
 			return list;

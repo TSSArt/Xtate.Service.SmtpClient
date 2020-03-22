@@ -15,7 +15,8 @@ namespace TSSArt.StateMachine.EcmaScript
 
 		private readonly JavaScriptParser _parser = new JavaScriptParser();
 
-		private EcmaScriptDataModelHandler(StateMachineVisitor masterVisitor) : base(masterVisitor) { }
+		private EcmaScriptDataModelHandler(IErrorProcessor errorProcessor) : base(errorProcessor)
+		{ }
 
 		public override void ExecutionContextCreated(IExecutionContext executionContext, IDictionary<string, string> dataModelVars)
 		{
@@ -31,32 +32,31 @@ namespace TSSArt.StateMachine.EcmaScript
 
 		private Program Parse(string source) => _parser.Parse(source, ParserOptions);
 
-		private string GetErrorMessage(ParserException ex) => $"{ex.Message} ({ex.Description}). Line: {ex.LineNumber}. Column: {ex.Column}.";
+		private string GetErrorMessage(ParserException ex) => @$"{ex.Message} ({ex.Description}). Ln: {ex.LineNumber}. Col: {ex.Column}.";
 
-		protected override void Build(ref IForEach forEach, ref ForEach forEachProperties)
+		protected override void Build(ref IForEach forEach, ref ForEachEntity forEachProperties)
 		{
 			base.Build(ref forEach, ref forEachProperties);
-
-			if (ValidationOnly)
-			{
-				return;
-			}
 
 			forEach = new EcmaScriptForEachEvaluator(forEachProperties);
 		}
 
 		protected override void Build(ref IValueExpression valueExpression, ref ValueExpression valueExpressionProperties)
 		{
-			var program = Parse(valueExpressionProperties.Expression);
-
-			foreach (var parserException in program.Errors)
+			if (valueExpressionProperties.Expression != null)
 			{
-				AddErrorMessage(GetErrorMessage(parserException));
-			}
+				var program = Parse(valueExpressionProperties.Expression);
 
-			if (!ValidationOnly)
-			{
+				foreach (var parserException in program.Errors)
+				{
+					AddErrorMessage(valueExpression, GetErrorMessage(parserException));
+				}
+
 				valueExpression = new EcmaScriptValueExpressionEvaluator(valueExpressionProperties, program);
+			}
+			else
+			{
+				AddErrorMessage(valueExpression, Resources.ErrorMessage_Value_Expression_must_be_present);
 			}
 
 			base.Build(ref valueExpression, ref valueExpressionProperties);
@@ -64,16 +64,20 @@ namespace TSSArt.StateMachine.EcmaScript
 
 		protected override void Build(ref IConditionExpression conditionExpression, ref ConditionExpression conditionExpressionProperties)
 		{
-			var program = Parse(conditionExpressionProperties.Expression);
-
-			foreach (var parserException in program.Errors)
+			if (conditionExpressionProperties.Expression != null)
 			{
-				AddErrorMessage(GetErrorMessage(parserException));
-			}
+				var program = Parse(conditionExpressionProperties.Expression);
 
-			if (!ValidationOnly)
-			{
+				foreach (var parserException in program.Errors)
+				{
+					AddErrorMessage(conditionExpression, GetErrorMessage(parserException));
+				}
+
 				conditionExpression = new EcmaScriptConditionExpressionEvaluator(conditionExpressionProperties, program);
+			}
+			else
+			{
+				AddErrorMessage(conditionExpression, Resources.ErrorMessage_Condition_Expression_must_be_present);
 			}
 
 			base.Build(ref conditionExpression, ref conditionExpressionProperties);
@@ -81,23 +85,29 @@ namespace TSSArt.StateMachine.EcmaScript
 
 		protected override void Build(ref ILocationExpression locationExpression, ref LocationExpression locationExpressionProperties)
 		{
-			var program = Parse(locationExpressionProperties.Expression);
-
-			foreach (var parserException in program.Errors)
+			if (locationExpressionProperties.Expression != null)
 			{
-				AddErrorMessage(GetErrorMessage(parserException));
+				var program = Parse(locationExpressionProperties.Expression);
+
+				foreach (var parserException in program.Errors)
+				{
+					AddErrorMessage(locationExpression, GetErrorMessage(parserException));
+				}
+
+				var leftExpression = EcmaScriptLocationExpressionEvaluator.GetLeftExpression(program);
+
+				if (leftExpression != null)
+				{
+					locationExpression = new EcmaScriptLocationExpressionEvaluator(locationExpressionProperties, program, leftExpression);
+				}
+				else
+				{
+					AddErrorMessage(locationExpression, Resources.ErrorMessage_InvalidLocationExpression);
+				}
 			}
-
-			var leftExpression = EcmaScriptLocationExpressionEvaluator.GetLeftExpression(program);
-
-			if (leftExpression == null)
+			else
 			{
-				AddErrorMessage(Resources.Error_InvalidLocationExpression);
-			}
-
-			if (!ValidationOnly)
-			{
-				locationExpression = new EcmaScriptLocationExpressionEvaluator(locationExpressionProperties, program, leftExpression);
+				AddErrorMessage(locationExpression, Resources.ErrorMessage_Location_Expression_must_be_present);
 			}
 
 			base.Build(ref locationExpression, ref locationExpressionProperties);
@@ -105,37 +115,37 @@ namespace TSSArt.StateMachine.EcmaScript
 
 		protected override void Build(ref IScriptExpression scriptExpression, ref ScriptExpression scriptExpressionProperties)
 		{
-			var program = Parse(scriptExpressionProperties.Expression);
-
-			foreach (var parserException in program.Errors)
+			if (scriptExpressionProperties.Expression != null)
 			{
-				AddErrorMessage(GetErrorMessage(parserException));
-			}
+				var program = Parse(scriptExpressionProperties.Expression);
 
-			if (!ValidationOnly)
-			{
+				foreach (var parserException in program.Errors)
+				{
+					AddErrorMessage(scriptExpression, GetErrorMessage(parserException));
+				}
+
 				scriptExpression = new EcmaScriptScriptExpressionEvaluator(scriptExpressionProperties, program);
+			}
+			else
+			{
+				AddErrorMessage(scriptExpression, Resources.ErrorMessage_Script_Expression_must_be_present);
 			}
 
 			base.Build(ref scriptExpression, ref scriptExpressionProperties);
 		}
 
+		// ReSharper disable once RedundantAssignment
 		protected override void Build(ref IExternalScriptExpression externalScriptExpression, ref ExternalScriptExpression externalScriptExpressionProperties)
 		{
-			if (!ValidationOnly)
-			{
-				externalScriptExpression = new EcmaScriptExternalScriptExpressionEvaluator(externalScriptExpressionProperties);
-			}
+			externalScriptExpression = new EcmaScriptExternalScriptExpressionEvaluator(externalScriptExpressionProperties);
 
 			base.Build(ref externalScriptExpression, ref externalScriptExpressionProperties);
 		}
 
+		// ReSharper disable once RedundantAssignment
 		protected override void Build(ref IContentBody contentBody, ref ContentBody contentBodyProperties)
 		{
-			if (!ValidationOnly)
-			{
-				contentBody = new EcmaScriptContentBodyEvaluator(contentBodyProperties);
-			}
+			contentBody = new EcmaScriptContentBodyEvaluator(contentBodyProperties);
 
 			base.Build(ref contentBody, ref contentBodyProperties);
 		}
@@ -144,7 +154,7 @@ namespace TSSArt.StateMachine.EcmaScript
 		{
 			public bool CanHandle(string dataModelType) => dataModelType == DataModelType || dataModelType == DataModelTypeAlias;
 
-			public IDataModelHandler CreateHandler(StateMachineVisitor masterVisitor) => new EcmaScriptDataModelHandler(masterVisitor);
+			public IDataModelHandler CreateHandler(IErrorProcessor errorProcessor) => new EcmaScriptDataModelHandler(errorProcessor);
 		}
 	}
 }

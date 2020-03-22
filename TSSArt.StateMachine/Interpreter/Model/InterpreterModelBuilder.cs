@@ -10,21 +10,32 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class InterpreterModelBuilder : StateMachineVisitor
 	{
-		private int _counter;
+		private readonly ImmutableArray<ICustomActionFactory>     _customActionFactories;
+		private readonly IDataModelHandler                        _dataModelHandler;
+		private readonly LinkedList<int>                          _documentIdList;
+		private readonly List<IEntity>                            _entities;
+		private readonly IErrorProcessor                          _errorProcessor;
+		private readonly Dictionary<IIdentifier, StateEntityNode> _idMap;
+		private readonly IStateMachine                            _stateMachine;
+		private readonly List<TransitionNode>                     _targetMap;
+		private          int                                      _counter;
+		private          ImmutableArray<DataModelNode>.Builder?   _dataModelNodeArray;
+		private          int                                      _deepLevel;
 
-		private ImmutableArray<ICustomActionFactory>             _customActionFactories;
-		private IDataModelHandler                                 _dataModelHandler;
-		private List<DataModelNode>                               _dataModelNodeList;
-		private int                                               _deepLevel;
-		private LinkedList<int>                                   _documentIdList;
-		private List<IEntity>                                     _entities;
-		private Dictionary<int, IEntity>                          _entityMap;
-		private List<(Uri Uri, IExternalScriptConsumer Consumer)> _externalScriptList;
-		private Dictionary<IIdentifier, StateEntityNode>          _idMap;
-		private bool                                              _inParallel;
-		private List<TransitionNode>                              _targetMap;
+		private List<(Uri Uri, IExternalScriptConsumer Consumer)>? _externalScriptList;
+		private bool                                               _inParallel;
 
-		public InterpreterModelBuilder() : base(trackPath: true) { }
+		public InterpreterModelBuilder(IStateMachine stateMachine, IDataModelHandler dataModelHandler, ImmutableArray<ICustomActionFactory> customActionProviders, IErrorProcessor errorProcessor)
+		{
+			_stateMachine = stateMachine ?? throw new ArgumentNullException(nameof(stateMachine));
+			_dataModelHandler = dataModelHandler ?? throw new ArgumentNullException(nameof(dataModelHandler));
+			_customActionFactories = customActionProviders;
+			_errorProcessor = errorProcessor;
+			_idMap = new Dictionary<IIdentifier, StateEntityNode>(IdentifierEqualityComparer.Instance);
+			_entities = new List<IEntity>();
+			_targetMap = new List<TransitionNode>();
+			_documentIdList = new LinkedList<int>();
+		}
 
 		private void CounterBefore(bool inParallel, out (int counter, bool inParallel) saved)
 		{
@@ -42,53 +53,52 @@ namespace TSSArt.StateMachine
 			_counter = _inParallel ? _counter + saved.counter : _counter > saved.counter ? _counter : saved.counter;
 		}
 
-		public InterpreterModel Build(IStateMachine stateMachine, IDataModelHandler dataModelHandler, ImmutableArray<ICustomActionFactory> customActionProviders)
+		public InterpreterModel Build()
 		{
-			if (stateMachine == null) throw new ArgumentNullException(nameof(stateMachine));
-
-			_dataModelHandler = dataModelHandler ?? throw new ArgumentNullException(nameof(dataModelHandler));
-			_customActionFactories = customActionProviders;
-			_idMap = new Dictionary<IIdentifier, StateEntityNode>(IdentifierEqualityComparer.Instance);
-			_entities = new List<IEntity>();
-			_targetMap = new List<TransitionNode>();
-			_dataModelNodeList = new List<DataModelNode>();
-			_documentIdList = new LinkedList<int>();
+			_idMap.Clear();
+			_entities.Clear();
+			_targetMap.Clear();
+			_documentIdList.Clear();
+			_dataModelNodeArray = null;
 			_externalScriptList = null;
 			_inParallel = false;
 			_deepLevel = 0;
 			_counter = 0;
 
+			var stateMachine = _stateMachine;
+
 			Visit(ref stateMachine);
-
-			ThrowIfErrors();
-
-			CreateEntityMap();
 
 			foreach (var transition in _targetMap)
 			{
-				transition.MapTarget(_idMap);
+				try
+				{
+					transition.MapTarget(_idMap);
+				}
+				catch (KeyNotFoundException ex)
+				{
+					_errorProcessor.AddError<InterpreterModelBuilder>(entity: null, Resources.ErrorMessage_Target_Id_does_not_exists, ex);
+				}
 			}
 
-			return new InterpreterModel((StateMachineNode) stateMachine, _counter, _entityMap, _dataModelNodeList);
+			return new InterpreterModel(stateMachine.As<StateMachineNode>(), _counter, CreateEntityMap(), _dataModelNodeArray?.ToImmutable() ?? default);
 		}
 
-		public async ValueTask<InterpreterModel> Build(IStateMachine stateMachine, IDataModelHandler dataModelHandler, ImmutableArray<ICustomActionFactory> customActionProviders,
-													   IResourceLoader resourceLoader, CancellationToken token)
+		public async ValueTask<InterpreterModel> Build(IResourceLoader resourceLoader, CancellationToken token)
 		{
-			if (stateMachine == null) throw new ArgumentNullException(nameof(stateMachine));
 			if (resourceLoader == null) throw new ArgumentNullException(nameof(resourceLoader));
 
-			var model = Build(stateMachine, dataModelHandler, customActionProviders);
+			var model = Build();
 
 			if (_externalScriptList != null)
 			{
-				await SetExternalResources(resourceLoader, token).ConfigureAwait(false);
+				await SetExternalResources(_externalScriptList, resourceLoader, token).ConfigureAwait(false);
 			}
 
 			return model;
 		}
 
-		private void CreateEntityMap()
+		private ImmutableDictionary<int, IEntity> CreateEntityMap()
 		{
 			var id = 0;
 			for (var node = _documentIdList.First; node != null; node = node.Next)
@@ -96,20 +106,24 @@ namespace TSSArt.StateMachine
 				node.Value = id ++;
 			}
 
-			_entityMap = new Dictionary<int, IEntity>();
+			var entityMap = ImmutableDictionary.CreateBuilder<int, IEntity>();
 			foreach (var entity in _entities)
 			{
 				if (entity.Is<IDocumentId>(out var autoDocId))
 				{
-					_entityMap.Add(autoDocId.DocumentId, entity);
+					entityMap.Add(autoDocId.DocumentId, entity);
 				}
 			}
+
+			return entityMap.ToImmutable();
 		}
 
-		private async ValueTask SetExternalResources(IResourceLoader resourceLoader, CancellationToken token)
+		private static async ValueTask SetExternalResources(List<(Uri Uri, IExternalScriptConsumer Consumer)> externalScriptList, IResourceLoader resourceLoader, CancellationToken token)
 		{
-			foreach (var (uri, consumer) in _externalScriptList)
+			foreach (var (uri, consumer) in externalScriptList)
 			{
+				token.ThrowIfCancellationRequested();
+
 				var resource = await resourceLoader.Request(uri, token).ConfigureAwait(false);
 				consumer.SetContent(resource.Content);
 			}
@@ -121,7 +135,7 @@ namespace TSSArt.StateMachine
 
 		private LinkedListNode<int> NewDocumentIdAfter(LinkedListNode<int> node) => _documentIdList.AddAfter(node, value: -1);
 
-		protected override void Build(ref IStateMachine stateMachine, ref StateMachine stateMachineProperties)
+		protected override void Build(ref IStateMachine stateMachine, ref StateMachineEntity stateMachineProperties)
 		{
 			var documentId = NewDocumentId();
 
@@ -136,13 +150,17 @@ namespace TSSArt.StateMachine
 			}
 
 			var stateMachineNode = new StateMachineNode(documentId, stateMachineProperties);
-			_dataModelNodeList.Remove(stateMachineNode.DataModel);
+
+			if (_dataModelNodeArray != null && stateMachineNode.DataModel != null)
+			{
+				_dataModelNodeArray.Remove(stateMachineNode.DataModel);
+			}
 
 			stateMachine = stateMachineNode;
 			RegisterEntity(stateMachine);
 		}
 
-		protected override void Build(ref IState state, ref State stateProperties)
+		protected override void Build(ref IState state, ref StateEntity stateProperties)
 		{
 			var documentId = NewDocumentId();
 
@@ -178,7 +196,7 @@ namespace TSSArt.StateMachine
 			RegisterEntity(state);
 		}
 
-		protected override void Build(ref IParallel parallel, ref Parallel parallelProperties)
+		protected override void Build(ref IParallel parallel, ref ParallelEntity parallelProperties)
 		{
 			var documentId = NewDocumentId();
 
@@ -196,7 +214,7 @@ namespace TSSArt.StateMachine
 			RegisterEntity(parallel);
 		}
 
-		protected override void Build(ref IFinal final, ref Final finalProperties)
+		protected override void Build(ref IFinal final, ref FinalEntity finalProperties)
 		{
 			var documentId = NewDocumentId();
 
@@ -214,7 +232,7 @@ namespace TSSArt.StateMachine
 			RegisterEntity(final);
 		}
 
-		protected override void Build(ref IHistory history, ref History historyProperties)
+		protected override void Build(ref IHistory history, ref HistoryEntity historyProperties)
 		{
 			var documentId = NewDocumentId();
 
@@ -230,7 +248,7 @@ namespace TSSArt.StateMachine
 			RegisterEntity(history);
 		}
 
-		protected override void Build(ref IInitial initial, ref Initial initialProperties)
+		protected override void Build(ref IInitial initial, ref InitialEntity initialProperties)
 		{
 			var documentId = NewDocumentId();
 
@@ -240,7 +258,7 @@ namespace TSSArt.StateMachine
 			RegisterEntity(initial);
 		}
 
-		protected override void Build(ref ITransition transition, ref Transition transitionProperties)
+		protected override void Build(ref ITransition transition, ref TransitionEntity transitionProperties)
 		{
 			var documentId = NewDocumentId();
 
@@ -257,7 +275,7 @@ namespace TSSArt.StateMachine
 			RegisterEntity(transition);
 		}
 
-		protected override void Build(ref IOnEntry onEntry, ref OnEntry onEntryProperties)
+		protected override void Build(ref IOnEntry onEntry, ref OnEntryEntity onEntryProperties)
 		{
 			var documentId = NewDocumentId();
 
@@ -267,7 +285,7 @@ namespace TSSArt.StateMachine
 			RegisterEntity(onEntry);
 		}
 
-		protected override void Build(ref IOnExit onExit, ref OnExit onExitProperties)
+		protected override void Build(ref IOnExit onExit, ref OnExitEntity onExitProperties)
 		{
 			var documentId = NewDocumentId();
 
@@ -277,7 +295,7 @@ namespace TSSArt.StateMachine
 			RegisterEntity(onExit);
 		}
 
-		protected override void Build(ref IDataModel dataModel, ref DataModel dataModelProperties)
+		protected override void Build(ref IDataModel dataModel, ref DataModelEntity dataModelProperties)
 		{
 			var documentId = NewDocumentId();
 
@@ -285,13 +303,13 @@ namespace TSSArt.StateMachine
 
 			var dataModelNode = new DataModelNode(documentId, dataModelProperties);
 
-			_dataModelNodeList.Add(dataModelNode);
+			(_dataModelNodeArray ??= ImmutableArray.CreateBuilder<DataModelNode>()).Add(dataModelNode);
 
 			dataModel = dataModelNode;
 			RegisterEntity(dataModel);
 		}
 
-		protected override void Build(ref IData data, ref Data dataProperties)
+		protected override void Build(ref IData data, ref DataEntity dataProperties)
 		{
 			var documentId = NewDocumentId();
 
@@ -301,7 +319,7 @@ namespace TSSArt.StateMachine
 			RegisterEntity(data);
 		}
 
-		protected override void Build(ref IInvoke invoke, ref Invoke invokeProperties)
+		protected override void Build(ref IInvoke invoke, ref InvokeEntity invokeProperties)
 		{
 			var documentId = NewDocumentId();
 
@@ -327,7 +345,9 @@ namespace TSSArt.StateMachine
 
 			base.Build(ref externalScriptExpression, ref externalScriptExpressionProperties);
 
-			externalScriptExpression = new ExternalScriptExpressionNode(externalScriptExpressionProperties);
+			var externalScriptExpressionNode = new ExternalScriptExpressionNode(externalScriptExpressionProperties);
+			externalScriptExpression = externalScriptExpressionNode;
+
 			RegisterEntity(externalScriptExpression);
 
 			if (externalScriptExpression.Is<IExternalScriptConsumer>(out var consumer))
@@ -343,7 +363,7 @@ namespace TSSArt.StateMachine
 						_externalScriptList = new List<(Uri Uri, IExternalScriptConsumer Consumer)>();
 					}
 
-					_externalScriptList.Add((externalScriptExpressionProperties.Uri, consumer));
+					_externalScriptList.Add((externalScriptExpressionNode.Uri, consumer));
 				}
 			}
 		}
@@ -354,12 +374,14 @@ namespace TSSArt.StateMachine
 
 			base.Build(ref customAction, ref customActionProperties);
 
-			customAction = new CustomActionNode(documentId, customActionProperties);
+			var customActionNode = new CustomActionNode(documentId, customActionProperties);
+			customAction = customActionNode;
+
 			RegisterEntity(customAction);
 
 			if (customAction.Is<ICustomActionConsumer>(out var consumer))
 			{
-				consumer.SetExecutor(GetExecutor(customAction.Xml));
+				consumer.SetExecutor(GetExecutor(customActionNode.Xml));
 			}
 		}
 
@@ -427,7 +449,7 @@ namespace TSSArt.StateMachine
 			RegisterEntity(conditionExpression);
 		}
 
-		protected override void Build(ref IDoneData doneData, ref DoneData doneDataProperties)
+		protected override void Build(ref IDoneData doneData, ref DoneDataEntity doneDataProperties)
 		{
 			NewDocumentId();
 
@@ -437,7 +459,7 @@ namespace TSSArt.StateMachine
 			RegisterEntity(doneData);
 		}
 
-		protected override void Build(ref IContent content, ref Content contentProperties)
+		protected override void Build(ref IContent content, ref ContentEntity contentProperties)
 		{
 			NewDocumentId();
 
@@ -447,7 +469,7 @@ namespace TSSArt.StateMachine
 			RegisterEntity(content);
 		}
 
-		protected override void Build(ref IFinalize finalize, ref Finalize finalizeProperties)
+		protected override void Build(ref IFinalize finalize, ref FinalizeEntity finalizeProperties)
 		{
 			NewDocumentId();
 
@@ -457,7 +479,7 @@ namespace TSSArt.StateMachine
 			RegisterEntity(finalize);
 		}
 
-		protected override void Build(ref IParam param, ref Param paramProperties)
+		protected override void Build(ref IParam param, ref ParamEntity paramProperties)
 		{
 			NewDocumentId();
 
@@ -499,7 +521,7 @@ namespace TSSArt.StateMachine
 			RegisterEntity(entity);
 		}
 
-		protected override void Build(ref ICancel cancel, ref Cancel cancelProperties)
+		protected override void Build(ref ICancel cancel, ref CancelEntity cancelProperties)
 		{
 			var documentId = NewDocumentId();
 
@@ -509,7 +531,7 @@ namespace TSSArt.StateMachine
 			RegisterEntity(cancel);
 		}
 
-		protected override void Build(ref IAssign assign, ref Assign assignProperties)
+		protected override void Build(ref IAssign assign, ref AssignEntity assignProperties)
 		{
 			var documentId = NewDocumentId();
 
@@ -519,7 +541,7 @@ namespace TSSArt.StateMachine
 			RegisterEntity(assign);
 		}
 
-		protected override void Build(ref IForEach forEach, ref ForEach forEachProperties)
+		protected override void Build(ref IForEach forEach, ref ForEachEntity forEachProperties)
 		{
 			var documentId = NewDocumentId();
 
@@ -529,7 +551,7 @@ namespace TSSArt.StateMachine
 			RegisterEntity(forEachProperties);
 		}
 
-		protected override void Build(ref IIf @if, ref If ifProperties)
+		protected override void Build(ref IIf @if, ref IfEntity ifProperties)
 		{
 			var documentId = NewDocumentId();
 
@@ -539,7 +561,7 @@ namespace TSSArt.StateMachine
 			RegisterEntity(@if);
 		}
 
-		protected override void Build(ref IElseIf elseIf, ref ElseIf elseIfProperties)
+		protected override void Build(ref IElseIf elseIf, ref ElseIfEntity elseIfProperties)
 		{
 			var documentId = NewDocumentId();
 
@@ -549,7 +571,7 @@ namespace TSSArt.StateMachine
 			RegisterEntity(elseIf);
 		}
 
-		protected override void Build(ref IElse @else, ref Else elseProperties)
+		protected override void Build(ref IElse @else, ref ElseEntity elseProperties)
 		{
 			var documentId = NewDocumentId();
 
@@ -559,7 +581,7 @@ namespace TSSArt.StateMachine
 			RegisterEntity(@else);
 		}
 
-		protected override void Build(ref ILog log, ref Log logProperties)
+		protected override void Build(ref ILog log, ref LogEntity logProperties)
 		{
 			var documentId = NewDocumentId();
 
@@ -569,7 +591,7 @@ namespace TSSArt.StateMachine
 			RegisterEntity(log);
 		}
 
-		protected override void Build(ref IRaise raise, ref Raise raiseProperties)
+		protected override void Build(ref IRaise raise, ref RaiseEntity raiseProperties)
 		{
 			var documentId = NewDocumentId();
 
@@ -579,7 +601,7 @@ namespace TSSArt.StateMachine
 			RegisterEntity(raise);
 		}
 
-		protected override void Build(ref ISend send, ref Send sendProperties)
+		protected override void Build(ref ISend send, ref SendEntity sendProperties)
 		{
 			var documentId = NewDocumentId();
 
@@ -589,7 +611,7 @@ namespace TSSArt.StateMachine
 			RegisterEntity(send);
 		}
 
-		protected override void Build(ref IScript script, ref Script scriptProperties)
+		protected override void Build(ref IScript script, ref ScriptEntity scriptProperties)
 		{
 			var documentId = NewDocumentId();
 

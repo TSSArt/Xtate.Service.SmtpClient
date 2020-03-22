@@ -185,12 +185,17 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 
 	public class StateMachineProvider : IResourceLoader
 	{
+		public ValueTask<Resource> Request(Uri uri, CancellationToken token) => throw new NotSupportedException();
+
+		public ValueTask<XmlReader> RequestXmlReader(Uri uri, XmlReaderSettings readerSettings = null, XmlParserContext parserContext = null, CancellationToken token = default) =>
+				new ValueTask<XmlReader>(XmlReader.Create(uri.ToString(), readerSettings, parserContext));
+
 		public ValueTask<IStateMachine> GetStateMachine(Uri source)
 		{
 			using var stream = new FileStream(source.AbsolutePath, FileMode.Open);
 			var xmlReader = XmlReader.Create(stream);
 
-			var director = new ScxmlDirector(xmlReader, new BuilderFactory());
+			var director = new ScxmlDirector(xmlReader, BuilderFactory.Default, DefaultErrorProcessor.Instance);
 
 			return new ValueTask<IStateMachine>(director.ConstructStateMachine());
 		}
@@ -200,16 +205,9 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 			var reader = new StringReader(scxml);
 			var xmlReader = XmlReader.Create(reader);
 
-			var director = new ScxmlDirector(xmlReader, new BuilderFactory());
+			var director = new ScxmlDirector(xmlReader, BuilderFactory.Default, DefaultErrorProcessor.Instance);
 
 			return new ValueTask<IStateMachine>(director.ConstructStateMachine());
-		}
-
-		public ValueTask<Resource> Request(Uri uri, CancellationToken token) => throw new NotSupportedException();
-
-		public ValueTask<XmlReader> RequestXmlReader(Uri uri, XmlReaderSettings readerSettings = null, XmlParserContext parserContext = null, CancellationToken token = default)
-		{
-			return new ValueTask<XmlReader>(XmlReader.Create(uri.ToString(), readerSettings, parserContext));
 		}
 	}
 }

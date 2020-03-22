@@ -9,22 +9,19 @@ namespace TSSArt.StateMachine
 	{
 		public static readonly ILogger Instance = new DefaultLogger();
 
-		private DefaultLogger() { }
+		private DefaultLogger()
+		{ }
 
-		public ValueTask Log(string sessionId, string stateMachineName, string label, DataModelValue data, CancellationToken token)
+		public ValueTask LogInfo(string sessionId, string? stateMachineName, string? label, DataModelValue data, CancellationToken token)
 		{
-			FormattableString formattableString = $"Name: [{stateMachineName}]. SessionId: [{sessionId}]. Label: \"{label}\". Data: {data}";
-
-			Trace.TraceInformation(formattableString.Format, formattableString.GetArguments());
+			Trace.TraceInformation(Resources.DefaultLogger_LogInfo, stateMachineName, sessionId, label, data);
 
 			return default;
 		}
 
-		public ValueTask Error(ErrorType errorType, string sessionId, string stateMachineName, string sourceEntityId, Exception exception, CancellationToken token)
+		public ValueTask LogError(ErrorType errorType, string sessionId, string? stateMachineName, string? sourceEntityId, Exception exception, CancellationToken token)
 		{
-			FormattableString formattableString = $"Type: [{errorType}]. Name: [{stateMachineName}]. SessionId: [{sessionId}]. SourceEntityId: [{sourceEntityId}]. Exception: {exception}";
-
-			Trace.TraceError(formattableString.Format, formattableString.GetArguments());
+			Trace.TraceError(Resources.DefaultLogger_LogError, errorType, stateMachineName, sessionId, sourceEntityId, exception);
 
 			return default;
 		}
@@ -37,31 +34,22 @@ namespace TSSArt.StateMachine
 
 		public void TraceEnteringState(string sessionId, string stateId)
 		{
-			FormattableString formattableString = $"Entering to state: [{stateId}]. SessionId: [{sessionId}].";
-
-			Trace.TraceInformation(formattableString.Format, formattableString.GetArguments());
+			Trace.TraceInformation(Resources.DefaultLogger_TraceEnteringState, stateId, sessionId);
 		}
 
 		public void TraceExitingState(string sessionId, string stateId)
 		{
-			FormattableString formattableString = $"Exiting from state: [{stateId}]. SessionId: [{sessionId}].";
-
-			Trace.TraceInformation(formattableString.Format, formattableString.GetArguments());
+			Trace.TraceInformation(Resources.DefaultLogger_TraceExitingState, stateId, sessionId);
 		}
 
-		public void TracePerformingTransition(string sessionId, string type, string @event, string target)
+		public void TracePerformingTransition(string sessionId, string type, string? evt, string? target)
 		{
-			FormattableString formattableString = $"Performing {type} transition to: [{target}]. Event: [{@event}]. SessionId: [{sessionId}].";
-
-			Trace.TraceInformation(formattableString.Format, formattableString.GetArguments());
+			Trace.TraceInformation(Resources.DefaultLogger_TracePerformingTransition, type, target, evt, sessionId);
 		}
 
-		public void TraceProcessingEvent(string sessionId, EventType eventType, string name, string sendId, string invokeId, DataModelValue data, string originType, string origin)
+		public void TraceProcessingEvent(string sessionId, EventType eventType, string name, string? sendId, string? invokeId, DataModelValue data, string? originType, string? origin)
 		{
-			FormattableString formattableString =
-					$"Processing {eventType} event [{name}]. SendId: [{sendId}]. InvokeId: [{invokeId}]. Data: [{data}]. OriginType: [{originType}]. Origin: [{origin}]. SessionId: [{sessionId}].";
-
-			Trace.TraceInformation(formattableString.Format, formattableString.GetArguments());
+			Trace.TraceInformation(Resources.DefaultLogger_TraceProcessingEvent, eventType, name, sendId, invokeId, data, originType, origin, sessionId);
 		}
 	}
 }

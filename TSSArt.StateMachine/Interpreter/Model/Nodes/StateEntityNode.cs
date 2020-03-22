@@ -11,7 +11,7 @@ namespace TSSArt.StateMachine
 
 		private readonly LinkedListNode<int> _documentIdNode;
 
-		protected StateEntityNode(LinkedListNode<int> documentIdNode, IEnumerable<StateEntityNode> children)
+		protected StateEntityNode(LinkedListNode<int> documentIdNode, IEnumerable<StateEntityNode>? children)
 		{
 			_documentIdNode = documentIdNode;
 
@@ -24,7 +24,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public StateEntityNode Parent { get; private set; }
+		public StateEntityNode? Parent { get; private set; }
 
 		public virtual bool                            IsAtomicState => throw GetNotSupportedException();
 		public virtual IIdentifier                     Id            => throw GetNotSupportedException();
@@ -34,21 +34,19 @@ namespace TSSArt.StateMachine
 		public virtual ImmutableArray<InvokeNode>      Invoke        => throw GetNotSupportedException();
 		public virtual ImmutableArray<StateEntityNode> States        => throw GetNotSupportedException();
 		public virtual ImmutableArray<HistoryNode>     HistoryStates => throw GetNotSupportedException();
-		public virtual DataModelNode                   DataModel     => throw GetNotSupportedException();
+		public virtual DataModelNode?                  DataModel     => throw GetNotSupportedException();
 
 		public int DocumentId => _documentIdNode.Value;
 
 		void IStoreSupport.Store(Bucket bucket) => Store(bucket);
 
-		private NotSupportedException GetNotSupportedException() => new NotSupportedException("Specified method is not supported in type " + GetType().Name);
+		private NotSupportedException GetNotSupportedException() => new NotSupportedException(Res.Format(Resources.Exception_Specified_method_is_not_supported_in_type, GetType().Name));
 
-		protected static IEnumerable<StateEntityNode> GetChildNodes(IInitial initial, ImmutableArray<IStateEntity> states, ImmutableArray<IHistory> historyStates = default)
+		protected static IEnumerable<StateEntityNode> GetChildNodes(IInitial? initial, ImmutableArray<IStateEntity> states, ImmutableArray<IHistory> historyStates = default)
 		{
-			var initialNode = initial.As<InitialNode>();
-
-			if (initialNode != null)
+			if (initial != null)
 			{
-				yield return initialNode;
+				yield return initial.As<InitialNode>();
 			}
 
 			if (states != null)

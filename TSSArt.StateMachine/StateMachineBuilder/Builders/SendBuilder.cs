@@ -3,77 +3,38 @@ using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public class SendBuilder : ISendBuilder
+	public class SendBuilder : BuilderBase, ISendBuilder
 	{
-		private IContent                            _content;
-		private IValueExpression                    _delayExpression;
+		private IContent?                           _content;
+		private IValueExpression?                   _delayExpression;
 		private int?                                _delayMs;
-		private string                              _event;
-		private IValueExpression                    _eventExpression;
-		private string                              _id;
-		private ILocationExpression                 _idLocation;
+		private string?                             _event;
+		private IValueExpression?                   _eventExpression;
+		private string?                             _id;
+		private ILocationExpression?                _idLocation;
 		private ImmutableArray<ILocationExpression> _nameList;
-		private ImmutableArray<IParam>.Builder      _parameters;
-		private Uri                                 _target;
-		private IValueExpression                    _targetExpression;
-		private Uri                                 _type;
-		private IValueExpression                    _typeExpression;
+		private ImmutableArray<IParam>.Builder?     _parameters;
+		private Uri?                                _target;
+		private IValueExpression?                   _targetExpression;
+		private Uri?                                _type;
+		private IValueExpression?                   _typeExpression;
 
-		public ISend Build()
+		public SendBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
+		{ }
+
+		public ISend Build() =>
+				new SendEntity
+				{
+						Ancestor = Ancestor, EventName = _event, EventExpression = _eventExpression, Target = _target, TargetExpression = _targetExpression,
+						Type = _type, TypeExpression = _typeExpression, Id = _id, IdLocation = _idLocation, DelayMs = _delayMs,
+						DelayExpression = _delayExpression, NameList = _nameList, Parameters = _parameters?.ToImmutable() ?? default, Content = _content
+				};
+
+		public void SetEvent(string evt)
 		{
-			if (_event != null && _eventExpression != null || _event != null && _content != null || _eventExpression != null && _content != null)
-			{
-				throw new InvalidOperationException(message: "Event, EventExpression and Content can't be used at the same time in Send element");
-			}
+			if (string.IsNullOrEmpty(evt)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(evt));
 
-			if (_target != null && _targetExpression != null)
-			{
-				throw new InvalidOperationException(message: "Target and TargetExpression can't be used at the same time in Send element");
-			}
-
-			if (_type != null && _typeExpression != null)
-			{
-				throw new InvalidOperationException(message: "Type and TypeExpression can't be used at the same time in Send element");
-			}
-
-			if (_id != null && _idLocation != null)
-			{
-				throw new InvalidOperationException(message: "Id and IdLocation can't be used at the same time in Send element");
-			}
-
-			if (_delayMs != null && _delayExpression != null)
-			{
-				throw new InvalidOperationException(message: "Event and EventExpression can't be used at the same time in Send element");
-			}
-
-			if (_nameList != null && _content != null)
-			{
-				throw new InvalidOperationException(message: "NameList and Content can't be used at the same time in Send element");
-			}
-
-			if (_parameters != null && _content != null)
-			{
-				throw new InvalidOperationException(message: "Parameters and Content can't be used at the same time in Send element");
-			}
-
-			if (_event == null && _eventExpression == null && _content == null)
-			{
-				throw new InvalidOperationException(message: "Must be present Event or EventExpression or Content in Send element");
-			}
-
-			return new Send
-				   {
-						   Event = _event, EventExpression = _eventExpression, Target = _target, TargetExpression = _targetExpression,
-						   Type = _type, TypeExpression = _typeExpression, Id = _id, IdLocation = _idLocation, DelayMs = _delayMs,
-						   DelayExpression = _delayExpression, NameList = _nameList, Parameters = _parameters?.ToImmutable() ?? default, Content = _content
-				   };
-		}
-
-		public void SetEvent(string @event)
-		{
-			if (string.IsNullOrEmpty(@event)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(@event));
-
-			_event = @event;
+			_event = evt;
 		}
 
 		public void SetEventExpression(IValueExpression eventExpression) => _eventExpression = eventExpression ?? throw new ArgumentNullException(nameof(eventExpression));
@@ -88,7 +49,7 @@ namespace TSSArt.StateMachine
 
 		public void SetId(string id)
 		{
-			if (string.IsNullOrEmpty(id)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(id));
+			if (string.IsNullOrEmpty(id)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(id));
 
 			_id = id;
 		}
@@ -106,7 +67,7 @@ namespace TSSArt.StateMachine
 
 		public void SetNameList(ImmutableArray<ILocationExpression> nameList)
 		{
-			if (nameList.IsDefaultOrEmpty) throw new ArgumentException(message: "Value cannot be empty list.", nameof(nameList));
+			if (nameList.IsDefaultOrEmpty) throw new ArgumentException(Resources.Exception_ValueCannotBeEmptyList, nameof(nameList));
 
 			_nameList = nameList;
 		}

@@ -24,7 +24,14 @@ namespace TSSArt.StateMachine
 			return new Resource(uri, contentType, content);
 		}
 
-		public ValueTask<XmlReader> RequestXmlReader(Uri uri, XmlReaderSettings readerSettings = null, XmlParserContext parserContext = null, CancellationToken token = default) =>
-				new ValueTask<XmlReader>(XmlReader.Create(uri.ToString(), readerSettings, parserContext));
+		public ValueTask<XmlReader> RequestXmlReader(Uri uri, XmlReaderSettings? readerSettings = null, XmlParserContext? parserContext = null, CancellationToken token = default)
+		{
+			if (readerSettings?.CloseInput ?? false)
+			{
+				throw new ArgumentException(Resources.Exception_CloseInput_of_readerSetting_must_be_set_to_true, nameof(readerSettings));
+			}
+
+			return new ValueTask<XmlReader>(XmlReader.Create(uri.ToString(), readerSettings, parserContext));
+		}
 	}
 }

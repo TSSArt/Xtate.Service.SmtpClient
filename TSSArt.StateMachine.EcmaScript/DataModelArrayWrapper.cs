@@ -17,7 +17,7 @@ namespace TSSArt.StateMachine.EcmaScript
 
 			Extensible = !array.IsReadOnly;
 
-			base.SetOwnProperty(propertyName: "length", new PropertyDescriptor((uint) _array.Length, !array.IsReadOnly, enumerable: false, configurable: false));
+			base.SetOwnProperty(propertyName: @"length", new PropertyDescriptor((uint) _array.Length, !array.IsReadOnly, enumerable: false, configurable: false));
 		}
 
 		public object Target => _array;
@@ -47,7 +47,7 @@ namespace TSSArt.StateMachine.EcmaScript
 
 		protected override void SetOwnProperty(string property, PropertyDescriptor descriptor)
 		{
-			if (property == "length" && descriptor.Value.IsNumber())
+			if (property == @"length" && descriptor.Value.IsNumber())
 			{
 				_array.SetLength((int) descriptor.Value.AsNumber());
 			}

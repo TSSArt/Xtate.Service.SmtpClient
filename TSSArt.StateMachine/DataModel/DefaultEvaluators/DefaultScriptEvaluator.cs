@@ -1,34 +1,40 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	public class DefaultScriptEvaluator : IScript, IExecEvaluator, IAncestorProvider
 	{
-		private readonly Script _script;
+		private readonly ScriptEntity _script;
 
-		public DefaultScriptEvaluator(in Script script)
+		public DefaultScriptEvaluator(in ScriptEntity script)
 		{
 			_script = script;
-			ContentEvaluator = script.Content.As<IExecEvaluator>();
-			SourceEvaluator = script.Source.As<IExecEvaluator>();
+
+			Infrastructure.Assert(script.Content != null || script.Source != null);
+
+			ContentEvaluator = script.Content?.As<IExecEvaluator>();
+			SourceEvaluator = script.Source?.As<IExecEvaluator>();
 		}
 
-		public IExecEvaluator ContentEvaluator { get; }
-		public IExecEvaluator SourceEvaluator  { get; }
+		public IExecEvaluator? ContentEvaluator { get; }
+		public IExecEvaluator? SourceEvaluator  { get; }
 
-		object IAncestorProvider.Ancestor => _script.Ancestor;
+		object? IAncestorProvider.Ancestor => _script.Ancestor;
 
 		public virtual ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
 
-			return (ContentEvaluator ?? SourceEvaluator).Execute(executionContext, token);
+			var evaluator = ContentEvaluator ?? SourceEvaluator;
+			return evaluator!.Execute(executionContext, token);
 		}
 
-		public IScriptExpression Content => _script.Content;
+		public IScriptExpression? Content => _script.Content;
 
-		public IExternalScriptExpression Source => _script.Source;
+		public IExternalScriptExpression? Source => _script.Source;
 	}
 }

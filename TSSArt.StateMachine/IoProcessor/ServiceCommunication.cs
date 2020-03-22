@@ -10,7 +10,7 @@ namespace TSSArt.StateMachine
 		private readonly string                 _invokeId;
 		private readonly string                 _invokeUniqueId;
 		private readonly Uri                    _originType;
-		private          Uri                    _origin;
+		private          Uri?                   _origin;
 
 		public ServiceCommunication(StateMachineController creator, Uri originType, string invokeId, string invokeUniqueId)
 		{
@@ -20,21 +20,21 @@ namespace TSSArt.StateMachine
 			_invokeUniqueId = invokeUniqueId;
 		}
 
-		public ValueTask SendToCreator(IOutgoingEvent @event, CancellationToken token)
+		public ValueTask SendToCreator(IOutgoingEvent evt, CancellationToken token)
 		{
-			if (@event.Type != null || @event.SendId != null || @event.DelayMs != 0)
+			if (evt.Type != null || evt.SendId != null || evt.DelayMs != 0)
 			{
-				throw new InvalidOperationException("Type, SendId, DelayMs can't be specified for this event");
+				throw new StateMachineProcessorException(Resources.Exception_Type__SendId__DelayMs_can_t_be_specified_for_this_event);
 			}
 
-			if (@event.Target != Event.ParentTarget && @event.Target != null)
+			if (evt.Target != EventEntity.ParentTarget && evt.Target != null)
 			{
-				throw new InvalidOperationException("Target should be equal to '_parent' or null");
+				throw new StateMachineProcessorException(Resources.Exception_Target_should_be_equal_to___parent__or_null);
 			}
 
 			_origin ??= new Uri("#_" + _invokeId);
 
-			var eventObject = new EventObject(EventType.External, @event, _origin, _originType, _invokeId, _invokeUniqueId);
+			var eventObject = new EventObject(EventType.External, evt, _origin, _originType, _invokeId, _invokeUniqueId);
 
 			return _creator.Send(eventObject, token);
 		}

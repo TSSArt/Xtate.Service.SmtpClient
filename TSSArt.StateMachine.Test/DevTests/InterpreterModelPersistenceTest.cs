@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Reflection;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -9,28 +10,28 @@ namespace TSSArt.StateMachine.Test
 	[TestClass]
 	public class InterpreterModelPersistenceTest
 	{
-		private IStateMachine           _allStateMachine;
-		private IDataModelHandler       _dataModelHandler;
-		private InterpreterModelBuilder _imBuilder;
+		private IStateMachine     _allStateMachine;
+		private IDataModelHandler _dataModelHandler;
 
 		[TestInitialize]
 		public void Initialize()
 		{
 			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("TSSArt.StateMachine.Test.Resources.All.xml");
+			Debug.Assert(stream != null);
+
 			var xmlReader = XmlReader.Create(stream);
 
-			var director = new ScxmlDirector(xmlReader, new BuilderFactory());
+			var director = new ScxmlDirector(xmlReader, BuilderFactory.Default, DefaultErrorProcessor.Instance);
 
 			_allStateMachine = director.ConstructStateMachine();
 
-			_imBuilder = new InterpreterModelBuilder();
-			_dataModelHandler = EcmaScriptDataModelHandler.Factory.CreateHandler(_imBuilder);
+			_dataModelHandler = EcmaScriptDataModelHandler.Factory.CreateHandler(DefaultErrorProcessor.Instance);
 		}
 
 		[TestMethod]
 		public void SaveInterpreterModelTest()
 		{
-			var model = _imBuilder.Build(_allStateMachine, _dataModelHandler, customActionProviders: default);
+			var model = new InterpreterModelBuilder(_allStateMachine, _dataModelHandler, customActionProviders: default, errorProcessor: default).Build();
 			var storeSupport = model.Root.As<IStoreSupport>();
 
 			var storage = new InMemoryStorage(false);
@@ -42,7 +43,7 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public void SaveRestoreInterpreterModelWithStorageRecreateTest()
 		{
-			var model = _imBuilder.Build(_allStateMachine, _dataModelHandler, customActionProviders: default);
+			var model = new InterpreterModelBuilder(_allStateMachine, _dataModelHandler, customActionProviders: default, errorProcessor: default).Build();
 			var storeSupport = model.Root.As<IStoreSupport>();
 
 			byte[] transactionLog;
@@ -61,20 +62,20 @@ namespace TSSArt.StateMachine.Test
 				restoredStateMachine = new StateMachineReader().Build(new Bucket(newStorage));
 			}
 
-			_imBuilder.Build(restoredStateMachine, _dataModelHandler, customActionProviders: default);
+			new InterpreterModelBuilder(restoredStateMachine, _dataModelHandler, customActionProviders: default, errorProcessor: default).Build();
 		}
 
 		[TestMethod]
 		public void SaveRestoreInterpreterModelRuntimeModelTest()
 		{
-			var stateMachine = new StateMachineFluentBuilder(new BuilderFactory())
-							   .BeginState((Identifier) "a")
-							   .AddTransition(context => true, (Identifier) "a")
-							   .AddOnEntry(context => Console.WriteLine("OnEntry"))
-							   .EndState()
-							   .Build();
+			var _ = new StateMachineFluentBuilder(BuilderFactory.Default)
+					.BeginState((Identifier) "a")
+					.AddTransition(context => true, (Identifier) "a")
+					.AddOnEntry(context => Console.WriteLine("OnEntry"))
+					.EndState()
+					.Build();
 
-			var model = _imBuilder.Build(stateMachine, _dataModelHandler, customActionProviders: default);
+			var model = new InterpreterModelBuilder(_allStateMachine, _dataModelHandler, customActionProviders: default, errorProcessor: default).Build();
 			var storeSupport = model.Root.As<IStoreSupport>();
 
 			byte[] transactionLog;
@@ -91,7 +92,7 @@ namespace TSSArt.StateMachine.Test
 				restoredStateMachine = new StateMachineReader().Build(new Bucket(newStorage), model.EntityMap);
 			}
 
-			_imBuilder.Build(restoredStateMachine, _dataModelHandler, customActionProviders: default);
+			new InterpreterModelBuilder(restoredStateMachine, _dataModelHandler, customActionProviders: default, errorProcessor: default).Build();
 		}
 	}
 }

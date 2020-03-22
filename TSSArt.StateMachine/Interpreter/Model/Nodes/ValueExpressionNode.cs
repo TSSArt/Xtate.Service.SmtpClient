@@ -6,7 +6,7 @@
 
 		public ValueExpressionNode(in ValueExpression valueExpression) => _valueExpression = valueExpression;
 
-		object IAncestorProvider.Ancestor => _valueExpression.Ancestor;
+		object? IAncestorProvider.Ancestor => _valueExpression.Ancestor;
 
 		void IStoreSupport.Store(Bucket bucket)
 		{
@@ -14,6 +14,6 @@
 			bucket.Add(Key.Expression, Expression);
 		}
 
-		public string Expression => _valueExpression.Expression;
+		public string? Expression => _valueExpression.Expression;
 	}
 }

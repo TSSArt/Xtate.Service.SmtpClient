@@ -1,59 +1,69 @@
-﻿namespace TSSArt.StateMachine
+﻿using System;
+using JetBrains.Annotations;
+
+namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	public class BuilderFactory : IBuilderFactory
 	{
-		public IStateMachineBuilder CreateStateMachineBuilder() => new StateMachineBuilder();
+		public static readonly IBuilderFactory Default = new BuilderFactory(DefaultErrorProcessor.Instance);
 
-		public IStateBuilder CreateStateBuilder() => new StateBuilder();
+		private readonly IErrorProcessor _errorProcessor;
 
-		public IParallelBuilder CreateParallelBuilder() => new ParallelBuilder();
+		public BuilderFactory(IErrorProcessor errorProcessor) => _errorProcessor = errorProcessor ?? throw new ArgumentNullException(nameof(errorProcessor));
 
-		public IHistoryBuilder CreateHistoryBuilder() => new HistoryBuilder();
+		public virtual IStateMachineBuilder CreateStateMachineBuilder(object? ancestor) => new StateMachineBuilder(_errorProcessor, ancestor);
 
-		public IInitialBuilder CreateInitialBuilder() => new InitialBuilder();
+		public virtual IStateBuilder CreateStateBuilder(object? ancestor) => new StateBuilder(_errorProcessor, ancestor);
 
-		public IFinalBuilder CreateFinalBuilder() => new FinalBuilder();
+		public virtual IParallelBuilder CreateParallelBuilder(object? ancestor) => new ParallelBuilder(_errorProcessor, ancestor);
 
-		public ITransitionBuilder CreateTransitionBuilder() => new TransitionBuilder();
+		public virtual IHistoryBuilder CreateHistoryBuilder(object? ancestor) => new HistoryBuilder(_errorProcessor, ancestor);
 
-		public ILogBuilder CreateLogBuilder() => new LogBuilder();
+		public virtual IInitialBuilder CreateInitialBuilder(object? ancestor) => new InitialBuilder(_errorProcessor, ancestor);
 
-		public ISendBuilder CreateSendBuilder() => new SendBuilder();
+		public virtual IFinalBuilder CreateFinalBuilder(object? ancestor) => new FinalBuilder(_errorProcessor, ancestor);
 
-		public IParamBuilder CreateParamBuilder() => new ParamBuilder();
+		public virtual ITransitionBuilder CreateTransitionBuilder(object? ancestor) => new TransitionBuilder(_errorProcessor, ancestor);
 
-		public IContentBuilder CreateContentBuilder() => new ContentBuilder();
+		public virtual ILogBuilder CreateLogBuilder(object? ancestor) => new LogBuilder(_errorProcessor, ancestor);
 
-		public IOnEntryBuilder CreateOnEntryBuilder() => new OnEntryBuilder();
+		public virtual ISendBuilder CreateSendBuilder(object? ancestor) => new SendBuilder(_errorProcessor, ancestor);
 
-		public IOnExitBuilder CreateOnExitBuilder() => new OnExitBuilder();
+		public virtual IParamBuilder CreateParamBuilder(object? ancestor) => new ParamBuilder(_errorProcessor, ancestor);
 
-		public IInvokeBuilder CreateInvokeBuilder() => new InvokeBuilder();
+		public virtual IContentBuilder CreateContentBuilder(object? ancestor) => new ContentBuilder(_errorProcessor, ancestor);
 
-		public IFinalizeBuilder CreateFinalizeBuilder() => new FinalizeBuilder();
+		public virtual IOnEntryBuilder CreateOnEntryBuilder(object? ancestor) => new OnEntryBuilder(_errorProcessor, ancestor);
 
-		public IScriptBuilder CreateScriptBuilder() => new ScriptBuilder();
+		public virtual IOnExitBuilder CreateOnExitBuilder(object? ancestor) => new OnExitBuilder(_errorProcessor, ancestor);
 
-		public ICustomActionBuilder CreateCustomActionBuilder() => new CustomActionBuilder();
+		public virtual IInvokeBuilder CreateInvokeBuilder(object? ancestor) => new InvokeBuilder(_errorProcessor, ancestor);
 
-		public IDataModelBuilder CreateDataModelBuilder() => new DataModelBuilder();
+		public virtual IFinalizeBuilder CreateFinalizeBuilder(object? ancestor) => new FinalizeBuilder(_errorProcessor, ancestor);
 
-		public IDataBuilder CreateDataBuilder() => new DataBuilder();
+		public virtual IScriptBuilder CreateScriptBuilder(object? ancestor) => new ScriptBuilder(_errorProcessor, ancestor);
 
-		public IDoneDataBuilder CreateDoneDataBuilder() => new DoneDataBuilder();
+		public virtual ICustomActionBuilder CreateCustomActionBuilder(object? ancestor) => new CustomActionBuilder(_errorProcessor, ancestor);
 
-		public IAssignBuilder CreateAssignBuilder() => new AssignBuilder();
+		public virtual IDataModelBuilder CreateDataModelBuilder(object? ancestor) => new DataModelBuilder(_errorProcessor, ancestor);
 
-		public IRaiseBuilder CreateRaiseBuilder() => new RaiseBuilder();
+		public virtual IDataBuilder CreateDataBuilder(object? ancestor) => new DataBuilder(_errorProcessor, ancestor);
 
-		public ICancelBuilder CreateCancelBuilder() => new CancelBuilder();
+		public virtual IDoneDataBuilder CreateDoneDataBuilder(object? ancestor) => new DoneDataBuilder(_errorProcessor, ancestor);
 
-		public IForEachBuilder CreateForeachBuilder() => new ForEachBuilder();
+		public virtual IAssignBuilder CreateAssignBuilder(object? ancestor) => new AssignBuilder(_errorProcessor, ancestor);
 
-		public IIfBuilder CreateIfBuilder() => new IfBuilder();
+		public virtual IRaiseBuilder CreateRaiseBuilder(object? ancestor) => new RaiseBuilder(_errorProcessor, ancestor);
 
-		public IElseBuilder CreateElseBuilder() => new ElseBuilder();
+		public virtual ICancelBuilder CreateCancelBuilder(object? ancestor) => new CancelBuilder(_errorProcessor, ancestor);
 
-		public IElseIfBuilder CreateElseIfBuilder() => new ElseIfBuilder();
+		public virtual IForEachBuilder CreateForEachBuilder(object? ancestor) => new ForEachBuilder(_errorProcessor, ancestor);
+
+		public virtual IIfBuilder CreateIfBuilder(object? ancestor) => new IfBuilder(_errorProcessor, ancestor);
+
+		public virtual IElseBuilder CreateElseBuilder(object? ancestor) => new ElseBuilder(_errorProcessor, ancestor);
+
+		public virtual IElseIfBuilder CreateElseIfBuilder(object? ancestor) => new ElseIfBuilder(_errorProcessor, ancestor);
 	}
 }

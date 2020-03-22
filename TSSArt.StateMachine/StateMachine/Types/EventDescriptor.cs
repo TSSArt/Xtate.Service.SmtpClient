@@ -1,25 +1,25 @@
 ﻿using System;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
-	public sealed class EventDescriptor : IEventDescriptor
+	[PublicAPI]
+	public sealed class EventDescriptor : IEventDescriptor, IAncestorProvider
 	{
-		private static readonly char[]        Dot = { '.' };
-		private readonly        IIdentifier[] _parts;
-		private readonly        string        _val;
+		private static readonly char[] Dot = { '.' };
+
+		private readonly IIdentifier[] _parts;
+		private readonly string        _val;
 
 		private EventDescriptor(string val)
 		{
-			_val = val ?? throw new ArgumentNullException(nameof(val));
+			if (string.IsNullOrEmpty(val)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(val));
 
-			if (val.Length == 0)
-			{
-				throw new ArgumentException(message: "Event cannot be empty", nameof(val));
-			}
+			_val = val;
 
 			var parts = val.Split(Dot, StringSplitOptions.None);
 			var length = parts.Length;
-			if (length > 0 && parts[length - 1] == "*")
+			if (length > 0 && parts[length - 1] == @"*")
 			{
 				length --;
 			}
@@ -32,18 +32,20 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public bool IsEventMatch(IEvent @event)
-		{
-			if (@event == null) throw new ArgumentNullException(nameof(@event));
+		object IAncestorProvider.Ancestor => _val;
 
-			if (@event.NameParts.Length < _parts.Length)
+		public bool IsEventMatch(IEvent evt)
+		{
+			if (evt == null) throw new ArgumentNullException(nameof(evt));
+
+			if (evt.NameParts.Length < _parts.Length)
 			{
 				return false;
 			}
 
 			for (var i = 0; i < _parts.Length; i ++)
 			{
-				if (!Equals(@event.NameParts[i], _parts[i]))
+				if (!Equals(evt.NameParts[i], _parts[i]))
 				{
 					return false;
 				}
@@ -54,6 +56,6 @@ namespace TSSArt.StateMachine
 
 		public static explicit operator EventDescriptor(string val) => new EventDescriptor(val);
 
-		public override string ToString() => _val;
+		public static EventDescriptor FromString(string val) => new EventDescriptor(val);
 	}
 }

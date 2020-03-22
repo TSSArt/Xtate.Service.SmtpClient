@@ -3,11 +3,14 @@ using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public class DataModelBuilder : IDataModelBuilder
+	public class DataModelBuilder : BuilderBase, IDataModelBuilder
 	{
-		private ImmutableArray<IData>.Builder _dataList;
+		private ImmutableArray<IData>.Builder? _dataList;
 
-		public IDataModel Build() => new DataModel { Data = _dataList?.ToImmutable() ?? default };
+		public DataModelBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
+		{ }
+
+		public IDataModel Build() => new DataModelEntity { Ancestor = Ancestor, Data = _dataList?.ToImmutable() ?? default };
 
 		public void AddData(IData data)
 		{

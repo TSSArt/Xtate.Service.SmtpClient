@@ -2,20 +2,15 @@
 
 namespace TSSArt.StateMachine
 {
-	public class ScriptBuilder : IScriptBuilder
+	public class ScriptBuilder : BuilderBase, IScriptBuilder
 	{
-		private IScriptExpression         _body;
-		private IExternalScriptExpression _source;
+		private IScriptExpression?         _body;
+		private IExternalScriptExpression? _source;
 
-		public IScript Build()
-		{
-			if (_source != null && _body != null)
-			{
-				throw new InvalidOperationException(message: "Source and Body can't be used at the same time in Assign element");
-			}
+		public ScriptBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
+		{ }
 
-			return new Script { Source = _source, Content = _body };
-		}
+		public IScript Build() => new ScriptEntity { Ancestor = Ancestor, Source = _source, Content = _body };
 
 		public void SetSource(IExternalScriptExpression source) => _source = source ?? throw new ArgumentNullException(nameof(source));
 

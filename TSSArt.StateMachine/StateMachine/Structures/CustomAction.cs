@@ -2,7 +2,7 @@
 {
 	public struct CustomAction : ICustomAction, IVisitorEntity<CustomAction, ICustomAction>, IAncestorProvider
 	{
-		public string Xml { get; set; }
+		public string? Xml { get; set; }
 
 		void IVisitorEntity<CustomAction, ICustomAction>.Init(ICustomAction source)
 		{
@@ -12,8 +12,8 @@
 
 		bool IVisitorEntity<CustomAction, ICustomAction>.RefEquals(in CustomAction other) => ReferenceEquals(Xml, other.Xml);
 
-		internal object Ancestor;
+		internal object? Ancestor;
 
-		object IAncestorProvider.Ancestor => Ancestor;
+		object? IAncestorProvider.Ancestor => Ancestor;
 	}
 }

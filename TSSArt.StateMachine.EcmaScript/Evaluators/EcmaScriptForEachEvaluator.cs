@@ -5,7 +5,8 @@ namespace TSSArt.StateMachine.EcmaScript
 {
 	internal class EcmaScriptForEachEvaluator : DefaultForEachEvaluator
 	{
-		public EcmaScriptForEachEvaluator(in ForEach forEach) : base(forEach) { }
+		public EcmaScriptForEachEvaluator(in ForEachEntity forEach) : base(forEach)
+		{ }
 
 		public override async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{

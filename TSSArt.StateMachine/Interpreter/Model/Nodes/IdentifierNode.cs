@@ -4,17 +4,18 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class IdentifierNode : IIdentifier, IStoreSupport, IAncestorProvider, IDebugEntityId
 	{
-		public IdentifierNode(IIdentifier id) => Identifier = id ?? throw new ArgumentNullException(nameof(id));
-		public IIdentifier Identifier { get; }
+		private readonly IIdentifier _identifier;
 
-		object IAncestorProvider.Ancestor => Identifier;
+		public IdentifierNode(IIdentifier id) => _identifier = id ?? throw new ArgumentNullException(nameof(id));
 
-		FormattableString IDebugEntityId.EntityId => $"{Identifier}";
+		object? IAncestorProvider.Ancestor => _identifier;
+
+		FormattableString IDebugEntityId.EntityId => @$"{_identifier}";
 
 		void IStoreSupport.Store(Bucket bucket)
 		{
 			bucket.Add(Key.TypeInfo, TypeInfo.IdentifierNode);
-			bucket.Add(Key.Id, Identifier?.ToString());
+			bucket.Add(Key.Id, _identifier.As<string>());
 		}
 	}
 }

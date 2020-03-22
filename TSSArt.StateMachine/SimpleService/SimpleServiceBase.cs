@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	public abstract class SimpleServiceBase : IService, IAsyncDisposable
 	{
 		private readonly TaskCompletionSource<DataModelValue> _completedTcs = new TaskCompletionSource<DataModelValue>();
@@ -11,8 +13,15 @@ namespace TSSArt.StateMachine
 
 		private bool _disposed;
 
-		protected Uri                   Source               { get; private set; }
-		protected string                RawContent           { get; private set; }
+		protected SimpleServiceBase()
+		{
+			Source = null!;
+			RawContent = null!;
+			ServiceCommunication = null!;
+		}
+
+		protected Uri?                  Source               { get; private set; }
+		protected string?               RawContent           { get; private set; }
 		protected DataModelValue        Content              { get; private set; }
 		protected DataModelValue        Parameters           { get; private set; }
 		protected IServiceCommunication ServiceCommunication { get; private set; }
@@ -21,11 +30,10 @@ namespace TSSArt.StateMachine
 
 		public async ValueTask DisposeAsync()
 		{
-			await DisposeAsync(true);
-			GC.SuppressFinalize(this);
+			await DisposeAsync(true).ConfigureAwait(false);
 		}
 
-		ValueTask IService.Send(IEvent @event, CancellationToken token) => default;
+		ValueTask IService.Send(IEvent evt, CancellationToken token) => default;
 
 		ValueTask IService.Destroy(CancellationToken token)
 		{
@@ -37,7 +45,7 @@ namespace TSSArt.StateMachine
 
 		ValueTask<DataModelValue> IService.Result => new ValueTask<DataModelValue>(_completedTcs.Task);
 
-		internal void Start(Uri source, string rawContent, DataModelValue content, DataModelValue parameters, IServiceCommunication serviceCommunication)
+		internal void Start(Uri? source, string? rawContent, DataModelValue content, DataModelValue parameters, IServiceCommunication serviceCommunication)
 		{
 			Source = source;
 			RawContent = rawContent;

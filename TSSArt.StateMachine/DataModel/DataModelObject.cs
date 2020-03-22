@@ -5,11 +5,12 @@ using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Security;
 using System.Text;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	[DebuggerTypeProxy(typeof(DebugView))]
 	[DebuggerDisplay(value: "Count = {_properties.Count}")]
 	public sealed class DataModelObject : IDynamicMetaObjectProvider, IFormattable
@@ -28,9 +29,11 @@ namespace TSSArt.StateMachine
 
 		private State _state;
 
-		public DataModelObject() : this(State.Writable) { }
+		public DataModelObject() : this(State.Writable)
+		{ }
 
-		public DataModelObject(bool isReadOnly) : this(isReadOnly ? State.Readonly : State.Writable) { }
+		public DataModelObject(bool isReadOnly) : this(isReadOnly ? State.Readonly : State.Writable)
+		{ }
 
 		private DataModelObject(State state) => _state = state;
 
@@ -61,7 +64,7 @@ namespace TSSArt.StateMachine
 
 		DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter) => new MetaObject(parameter, this, Dynamic.CreateMetaObject);
 
-		public string ToString(string format, IFormatProvider formatProvider)
+		public string ToString(string? format, IFormatProvider? formatProvider)
 		{
 			var sb = new StringBuilder();
 
@@ -81,11 +84,11 @@ namespace TSSArt.StateMachine
 			return sb.ToString();
 		}
 
-		public event ChangedHandler Changed;
+		public event ChangedHandler? Changed;
 
 		public void Freeze() => _state = State.Readonly;
 
-		private static Exception ObjectCantBeModifiedException() => new SecurityException("Object can not be modified");
+		private static Exception ObjectCantBeModifiedException() => new InvalidOperationException(Resources.Exception_Object_can_not_be_modified);
 
 		internal DataModelDescriptor GetDescriptor(string property) => _properties.TryGetValue(property, out var descriptor) ? descriptor : new DataModelDescriptor(DataModelValue.Undefined);
 
@@ -212,6 +215,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
+		[PublicAPI]
 		private class DebugView
 		{
 			private readonly DataModelObject _dataModelObject;
@@ -235,7 +239,7 @@ namespace TSSArt.StateMachine
 
 		private class Dynamic : DynamicObject
 		{
-			private static readonly IDynamicMetaObjectProvider Instance = new Dynamic(default);
+			private static readonly IDynamicMetaObjectProvider Instance = new Dynamic(default!);
 
 			private static readonly ConstructorInfo ConstructorInfo = typeof(Dynamic).GetConstructor(new[] { typeof(DataModelObject) });
 
@@ -249,7 +253,7 @@ namespace TSSArt.StateMachine
 				return Instance.GetMetaObject(newExpression);
 			}
 
-			public override bool TryGetMember(GetMemberBinder binder, out object result)
+			public override bool TryGetMember(GetMemberBinder binder, out object? result)
 			{
 				if (binder == null) throw new ArgumentNullException(nameof(binder));
 
@@ -267,7 +271,7 @@ namespace TSSArt.StateMachine
 				return true;
 			}
 
-			public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object result)
+			public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object? result)
 			{
 				if (indexes.Length == 1 && indexes[0] is string key)
 				{
@@ -293,7 +297,7 @@ namespace TSSArt.StateMachine
 				return false;
 			}
 
-			public override bool TryConvert(ConvertBinder binder, out object result)
+			public override bool TryConvert(ConvertBinder binder, out object? result)
 			{
 				if (binder.Type == typeof(DataModelObject))
 				{

@@ -34,11 +34,11 @@ namespace TSSArt.StateMachine
 			return false;
 		}
 
-		public ValueTask Log(string stateMachineName, string label, DataModelValue data, CancellationToken token)
+		public ValueTask Log(string? stateMachineName, string? label, DataModelValue data, CancellationToken token)
 		{
 			try
 			{
-				return _logger.Log(_sessionId, stateMachineName, label, data, token);
+				return _logger.LogInfo(_sessionId, stateMachineName, label, data, token);
 			}
 			catch (Exception ex)
 			{
@@ -48,11 +48,11 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public ValueTask Error(ErrorType errorType, string stateMachineName, string sourceEntityId, Exception exception, CancellationToken token)
+		public ValueTask Error(ErrorType errorType, string? stateMachineName, string? sourceEntityId, Exception exception, CancellationToken token)
 		{
 			try
 			{
-				return _logger.Error(errorType, _sessionId, stateMachineName, sourceEntityId, exception, token);
+				return _logger.LogError(errorType, _sessionId, stateMachineName, sourceEntityId, exception, token);
 			}
 			catch (Exception ex)
 			{
@@ -68,14 +68,14 @@ namespace TSSArt.StateMachine
 			exception.Data[SessionIdKey] = _sessionId;
 		}
 
-		public void ProcessingEvent(IEvent @event)
+		public void ProcessingEvent(IEvent evt)
 		{
 			if (_logger.IsTracingEnabled)
 			{
-				if (@event == null) throw new ArgumentNullException(nameof(@event));
+				if (evt == null) throw new ArgumentNullException(nameof(evt));
 
-				_logger.TraceProcessingEvent(_sessionId, @event.Type, EventName.ToName(@event.NameParts), @event.SendId, @event.InvokeId,
-											 @event.Data, @event.OriginType?.ToString(), @event.Origin?.ToString());
+				_logger.TraceProcessingEvent(_sessionId, evt.Type, EventName.ToName(evt.NameParts), evt.SendId, evt.InvokeId,
+											 evt.Data, evt.OriginType?.ToString(), evt.Origin?.ToString());
 			}
 		}
 
@@ -85,7 +85,7 @@ namespace TSSArt.StateMachine
 			{
 				if (state == null) throw new ArgumentNullException(nameof(state));
 
-				_logger.TraceEnteringState(_sessionId, state.Id.Base<IIdentifier>().ToString());
+				_logger.TraceEnteringState(_sessionId, state.Id.As<string>());
 			}
 		}
 
@@ -95,7 +95,7 @@ namespace TSSArt.StateMachine
 			{
 				if (state == null) throw new ArgumentNullException(nameof(state));
 
-				_logger.TraceExitingState(_sessionId, state.Id.Base<IIdentifier>().ToString());
+				_logger.TraceExitingState(_sessionId, state.Id.As<string>());
 			}
 		}
 
@@ -105,28 +105,28 @@ namespace TSSArt.StateMachine
 			{
 				if (transition == null) throw new ArgumentNullException(nameof(transition));
 
-				_logger.TracePerformingTransition(_sessionId, transition.Type.ToString(), ToString(transition.Event), ToString(transition.Target));
+				_logger.TracePerformingTransition(_sessionId, transition.Type.ToString(), ToString(transition.EventDescriptors), ToString(transition.Target));
 			}
 		}
 
-		private static string ToString(ImmutableArray<IIdentifier> list)
+		private static string? ToString(ImmutableArray<IIdentifier> list)
 		{
-			if (list == null)
+			if (list.IsDefault)
 			{
 				return null;
 			}
 
-			return string.Join(separator: " ", list.Select(id => id.Base<IIdentifier>().ToString()));
+			return string.Join(separator: @" ", list.Select(id => id.As<string>()));
 		}
 
-		private static string ToString(ImmutableArray<IEventDescriptor> list)
+		private static string? ToString(ImmutableArray<IEventDescriptor> list)
 		{
-			if (list == null)
+			if (list.IsDefault)
 			{
 				return null;
 			}
 
-			return string.Join(separator: " ", list.Select(id => id.Base<IEventDescriptor>().ToString()));
+			return string.Join(separator: @" ", list.Select(id => id.As<string>()));
 		}
 	}
 }

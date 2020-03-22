@@ -1,19 +1,26 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	public class DefaultCustomActionEvaluator : ICustomAction, IExecEvaluator, IAncestorProvider, ICustomActionConsumer
 	{
-		private readonly CustomAction          _customAction;
-		private          ICustomActionExecutor _executor;
+		private readonly CustomAction           _customAction;
+		private          ICustomActionExecutor? _executor;
 
-		public DefaultCustomActionEvaluator(in CustomAction customAction) => _customAction = customAction;
+		public DefaultCustomActionEvaluator(in CustomAction customAction)
+		{
+			Infrastructure.Assert(customAction.Xml != null);
 
-		object IAncestorProvider.Ancestor => _customAction.Ancestor;
+			_customAction = customAction;
+		}
 
-		public string Xml => _customAction.Xml;
+		object? IAncestorProvider.Ancestor => _customAction.Ancestor;
+
+		public string Xml => _customAction.Xml!;
 
 		public void SetExecutor(ICustomActionExecutor executor) => _executor = executor;
 
@@ -21,10 +28,7 @@ namespace TSSArt.StateMachine
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
 
-			if (_executor == null)
-			{
-				throw new InvalidOperationException("Custom action does not configured");
-			}
+			Infrastructure.Assert(_executor != null, Resources.Assertion_Custom_action_does_not_configured);
 
 			return _executor.Execute(executionContext, token);
 		}

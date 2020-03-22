@@ -297,7 +297,7 @@
     <datamodel>
 
     </datamodel>
-    <invoke>
+    <invoke type="tmp">
 
     </invoke>
   </parallel>

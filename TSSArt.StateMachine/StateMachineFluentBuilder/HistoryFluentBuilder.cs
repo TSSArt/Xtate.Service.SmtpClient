@@ -1,8 +1,10 @@
 ﻿using System;
 using System.ComponentModel;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	public class HistoryFluentBuilder<TOuterBuilder>
 	{
 		private readonly IHistoryBuilder  _builder;
@@ -13,7 +15,7 @@ namespace TSSArt.StateMachine
 		public HistoryFluentBuilder(IBuilderFactory factory, TOuterBuilder outerBuilder, Action<IHistory> builtAction)
 		{
 			_factory = factory ?? throw new ArgumentNullException(nameof(factory));
-			_builder = factory.CreateHistoryBuilder();
+			_builder = factory.CreateHistoryBuilder(null);
 			_outerBuilder = outerBuilder;
 			_builtAction = builtAction;
 		}
@@ -21,6 +23,7 @@ namespace TSSArt.StateMachine
 		public TOuterBuilder EndHistory()
 		{
 			_builtAction(_builder.Build());
+
 			return _outerBuilder;
 		}
 
@@ -31,6 +34,7 @@ namespace TSSArt.StateMachine
 			if (id == null) throw new ArgumentNullException(nameof(id));
 
 			_builder.SetId(id);
+
 			return this;
 		}
 
@@ -39,6 +43,7 @@ namespace TSSArt.StateMachine
 			if (type < HistoryType.Shallow || type > HistoryType.Deep) throw new InvalidEnumArgumentException(nameof(type), (int) type, typeof(HistoryType));
 
 			_builder.SetType(type);
+
 			return this;
 		}
 

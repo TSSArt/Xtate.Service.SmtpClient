@@ -7,9 +7,9 @@ namespace TSSArt.StateMachine
 	internal sealed class OnExitNode : IOnExit, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
 		private readonly LinkedListNode<int> _documentIdNode;
-		private readonly OnExit              _onExit;
+		private readonly OnExitEntity        _onExit;
 
-		public OnExitNode(LinkedListNode<int> documentIdNode, in OnExit onExit)
+		public OnExitNode(LinkedListNode<int> documentIdNode, in OnExitEntity onExit)
 		{
 			_onExit = onExit;
 			_documentIdNode = documentIdNode;
@@ -18,9 +18,9 @@ namespace TSSArt.StateMachine
 
 		public ImmutableArray<IExecEvaluator> ActionEvaluators { get; }
 
-		object IAncestorProvider.Ancestor => _onExit.Ancestor;
+		object? IAncestorProvider.Ancestor => _onExit.Ancestor;
 
-		FormattableString IDebugEntityId.EntityId => $"(#{DocumentId})";
+		FormattableString IDebugEntityId.EntityId => @$"(#{DocumentId})";
 
 		public int DocumentId => _documentIdNode.Value;
 

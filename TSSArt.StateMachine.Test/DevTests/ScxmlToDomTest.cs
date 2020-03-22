@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -10,11 +9,9 @@ namespace TSSArt.StateMachine.Test
 	{
 		private IStateMachine GetStateMachine(string scxml)
 		{
-			using (var textReader = new StringReader(scxml))
-			using (var reader = XmlReader.Create(textReader))
-			{
-				return new ScxmlDirector(reader, new BuilderFactory()).ConstructStateMachine();
-			}
+			using var textReader = new StringReader(scxml);
+			using var reader = XmlReader.Create(textReader);
+			return new ScxmlDirector(reader, BuilderFactory.Default, DefaultErrorProcessor.Instance).ConstructStateMachine();
 		}
 
 		private IStateMachine GetStateMachineWithRoot(string xml) => GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0'>" + xml + "</scxml>");
@@ -46,14 +43,14 @@ namespace TSSArt.StateMachine.Test
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(XmlException))]
+		[ExpectedException(typeof(StateMachineValidationException))]
 		public void RootElementNameFailTest()
 		{
 			GetStateMachine("<no-scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0'/>");
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(XmlException))]
+		[ExpectedException(typeof(StateMachineValidationException))]
 		public void RootElementVersionFailTest()
 		{
 			GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='0.2'/>");
@@ -90,28 +87,28 @@ namespace TSSArt.StateMachine.Test
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(XmlException))]
+		[ExpectedException(typeof(StateMachineValidationException))]
 		public void RootElementInvalidEmptyBindingTest()
 		{
 			GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' binding=''/>");
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(XmlException))]
+		[ExpectedException(typeof(StateMachineValidationException))]
 		public void RootElementInvalidWrongNameBindingTest()
 		{
 			GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' binding='invalid-binding'/>");
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(XmlException))]
+		[ExpectedException(typeof(StateMachineValidationException))]
 		public void RootElementInvalidUpperCaseBindingTest()
 		{
 			GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' binding='Late'/>");
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(XmlException))]
+		[ExpectedException(typeof(StateMachineValidationException))]
 		public void RootElementEmptyNameFailTest()
 		{
 			var sm = GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' name=''/>");
@@ -126,21 +123,21 @@ namespace TSSArt.StateMachine.Test
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(XmlException))]
+		[ExpectedException(typeof(StateMachineValidationException))]
 		public void RootElementEmptyInitialTest()
 		{
 			GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' initial=''/>");
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(XmlException))]
+		[ExpectedException(typeof(StateMachineValidationException))]
 		public void RootElementSpaceInitialTest()
 		{
 			GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' initial=' '/>");
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(InvalidOperationException))]
+		[ExpectedException(typeof(StateMachineValidationException))]
 		public void RootElementInitialFailTest()
 		{
 			GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' initial=' trg2  trg1 '/>");
@@ -164,7 +161,7 @@ namespace TSSArt.StateMachine.Test
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(AggregateException))]
+		[ExpectedException(typeof(StateMachineValidationException))]
 		public void IncorrectXmlTest()
 		{
 			GetStateMachineWithRoot("<datamodel><data id='a'/><data id='b'></data><data id='c' src='c-src/><data id='d' expr='d-expr'/><data id='e'>e-body</data></datamodel>");
@@ -199,42 +196,42 @@ namespace TSSArt.StateMachine.Test
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(XmlException))]
+		[ExpectedException(typeof(StateMachineValidationException))]
 		public void TwoDataModelTest()
 		{
 			GetStateMachineXyzDataModel("<datamodel/><datamodel/>");
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(XmlException))]
+		[ExpectedException(typeof(StateMachineValidationException))]
 		public void DataNoIdTest()
 		{
 			GetStateMachineXyzDataModel("<datamodel><data></data></datamodel>");
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(XmlException))]
+		[ExpectedException(typeof(StateMachineValidationException))]
 		public void DataSrcAndExprFailTest()
 		{
 			GetStateMachineXyzDataModel("<datamodel><data id='a' src='domain' expr='some-expr'/></datamodel>");
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(XmlException))]
+		[ExpectedException(typeof(StateMachineValidationException))]
 		public void DataSrcAndBodyFailTest()
 		{
 			GetStateMachineXyzDataModel("<datamodel><data id='a' src='domain'>123</data></datamodel>");
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(XmlException))]
+		[ExpectedException(typeof(StateMachineValidationException))]
 		public void DataBodyAndExprFailTest()
 		{
 			GetStateMachineXyzDataModel("<datamodel><data id='a' expr='some-expr'>123</data></datamodel>");
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(XmlException))]
+		[ExpectedException(typeof(StateMachineValidationException))]
 		public void DataSrcAndBodyAndExprFailTest()
 		{
 			GetStateMachineXyzDataModel("<datamodel><data id='a' src='s-src' expr='some-expr'>123</data></datamodel>");
@@ -275,14 +272,14 @@ namespace TSSArt.StateMachine.Test
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(XmlException))]
+		[ExpectedException(typeof(StateMachineValidationException))]
 		public void GlobalScriptSrcAndBodyFailTest()
 		{
 			GetStateMachineXyzDataModel("<script src='s-src'>body</script>");
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(XmlException))]
+		[ExpectedException(typeof(StateMachineValidationException))]
 		public void MultipleGlobalScriptFailTest()
 		{
 			GetStateMachineXyzDataModel("<script/><script/>");
@@ -316,7 +313,7 @@ namespace TSSArt.StateMachine.Test
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(XmlException))]
+		[ExpectedException(typeof(StateMachineValidationException))]
 		public void StateIdFailTest()
 		{
 			var sm = GetStateMachineWithRoot("<state id='a b'/>");
@@ -324,7 +321,7 @@ namespace TSSArt.StateMachine.Test
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(XmlException))]
+		[ExpectedException(typeof(StateMachineValidationException))]
 		public void StateInitialFailForAtomicStateTest()
 		{
 			GetStateMachineWithRoot("<state initial='id id2'/>");
@@ -375,7 +372,7 @@ namespace TSSArt.StateMachine.Test
 		[DataRow("onexit")]
 		[DataRow("invoke")]
 		[DataRow("transition")]
-		[ExpectedException(typeof(XmlException))]
+		[ExpectedException(typeof(StateMachineValidationException))]
 		public void UnknownElementTest(string element)
 		{
 			GetStateMachineWithRoot($"<{element}/>");
@@ -384,7 +381,7 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public void AtomicStateTest()
 		{
-			var sm = GetStateMachineWithRoot("<state><onentry/><onexit/><transition event='e'/><invoke/></state>");
+			var sm = GetStateMachineWithRoot("<state><onentry/><onexit/><transition event='e'/><invoke type='tmp'/></state>");
 
 			var state = (IState) sm.States[0];
 			Assert.IsNull(state.Id);

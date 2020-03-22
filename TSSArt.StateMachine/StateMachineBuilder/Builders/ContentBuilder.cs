@@ -2,20 +2,15 @@
 
 namespace TSSArt.StateMachine
 {
-	public class ContentBuilder : IContentBuilder
+	public class ContentBuilder : BuilderBase, IContentBuilder
 	{
-		private IContentBody     _body;
-		private IValueExpression _expression;
+		private IContentBody?     _body;
+		private IValueExpression? _expression;
 
-		public IContent Build()
-		{
-			if (_expression != null && _body != null)
-			{
-				throw new InvalidOperationException(message: "Expression and Body can't be used at the same time in Content element");
-			}
+		public ContentBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
+		{ }
 
-			return new Content { Expression = _expression, Body = _body };
-		}
+		public IContent Build() => new ContentEntity { Ancestor = Ancestor, Expression = _expression, Body = _body };
 
 		public void SetExpression(IValueExpression expression) => _expression = expression ?? throw new ArgumentNullException(nameof(expression));
 

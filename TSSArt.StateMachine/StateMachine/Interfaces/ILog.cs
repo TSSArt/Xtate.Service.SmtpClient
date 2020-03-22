@@ -2,7 +2,7 @@
 {
 	public interface ILog : IExecutableEntity
 	{
-		string           Label      { get; }
-		IValueExpression Expression { get; }
+		string?           Label      { get; }
+		IValueExpression? Expression { get; }
 	}
 }

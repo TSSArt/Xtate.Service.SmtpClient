@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TSSArt.StateMachine.Test
@@ -7,7 +8,7 @@ namespace TSSArt.StateMachine.Test
 	public class PersistedOrderedSetTest
 	{
 		private Bucket                               _bucket;
-		private Dictionary<int, IEntity>             _map;
+		private ImmutableDictionary<int, IEntity>    _map;
 		private Node                                 _node1;
 		private Node                                 _node2;
 		private Node                                 _node3;
@@ -24,12 +25,12 @@ namespace TSSArt.StateMachine.Test
 			_node1 = new Node(1);
 			_node2 = new Node(2);
 			_node3 = new Node(3);
-			_map = new Dictionary<int, IEntity>
-				   {
-						   { 1, _node1 },
-						   { 2, _node2 },
-						   { 3, _node3 }
-				   };
+			_map = ImmutableDictionary.CreateRange(new Dictionary<int, IEntity>
+												   {
+														   { 1, _node1 },
+														   { 2, _node2 },
+														   { 3, _node3 }
+												   });
 
 			_sourceSet = new OrderedSet<Node>();
 			_restoredOrderedSet = new OrderedSet<Node>();

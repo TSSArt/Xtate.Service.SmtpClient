@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Immutable;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	public class StateMachineFluentBuilder
 	{
 		private readonly IStateMachineBuilder _builder;
@@ -11,8 +13,8 @@ namespace TSSArt.StateMachine
 		public StateMachineFluentBuilder(IBuilderFactory factory)
 		{
 			_factory = factory ?? throw new ArgumentNullException(nameof(factory));
-			_builder = factory.CreateStateMachineBuilder();
-			_builder.SetDataModelType("runtime");
+			_builder = factory.CreateStateMachineBuilder(null);
+			_builder.SetDataModelType(@"runtime");
 		}
 
 		public IStateMachine Build() => _builder.Build();
@@ -20,7 +22,7 @@ namespace TSSArt.StateMachine
 		public StateMachineFluentBuilder SetInitial(params string[] initial)
 		{
 			if (initial == null) throw new ArgumentNullException(nameof(initial));
-			if (initial.Length == 0) throw new ArgumentException(message: "Value cannot be an empty collection.", nameof(initial));
+			if (initial.Length == 0) throw new ArgumentException(Resources.Exception_ValueCannotBeAnEmptyCollection, nameof(initial));
 
 			var builder = ImmutableArray.CreateBuilder<IIdentifier>(initial.Length);
 
@@ -37,7 +39,7 @@ namespace TSSArt.StateMachine
 		public StateMachineFluentBuilder SetInitial(params IIdentifier[] initial)
 		{
 			if (initial == null) throw new ArgumentNullException(nameof(initial));
-			if (initial.Length == 0) throw new ArgumentException(message: "Value cannot be an empty collection.", nameof(initial));
+			if (initial.Length == 0) throw new ArgumentException(Resources.Exception_ValueCannotBeAnEmptyCollection, nameof(initial));
 
 			_builder.SetInitial(initial.ToImmutableArray());
 
@@ -46,7 +48,7 @@ namespace TSSArt.StateMachine
 
 		public StateMachineFluentBuilder SetInitial(ImmutableArray<string> initial)
 		{
-			if (initial.IsDefaultOrEmpty) throw new ArgumentException(message: "Value cannot be an empty list.", nameof(initial));
+			if (initial.IsDefaultOrEmpty) throw new ArgumentException(Resources.Exception_ValueCannotBeAnEmptyList, nameof(initial));
 
 			_builder.SetInitial(ImmutableArray.CreateRange<string, IIdentifier>(initial, id => (Identifier) id));
 
@@ -55,7 +57,7 @@ namespace TSSArt.StateMachine
 
 		public StateMachineFluentBuilder SetInitial(ImmutableArray<IIdentifier> initial)
 		{
-			if (initial.IsDefaultOrEmpty) throw new ArgumentException(message: "Value cannot be an empty list.", nameof(initial));
+			if (initial.IsDefaultOrEmpty) throw new ArgumentException(Resources.Exception_ValueCannotBeAnEmptyList, nameof(initial));
 
 			_builder.SetInitial(initial);
 

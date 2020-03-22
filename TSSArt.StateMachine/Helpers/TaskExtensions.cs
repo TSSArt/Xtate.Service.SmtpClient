@@ -25,7 +25,7 @@ namespace TSSArt.StateMachine
 			await Task.WhenAny(task, Task.Delay(millisecondsDelay: -1, token)).ConfigureAwait(false);
 
 			token.ThrowIfCancellationRequested();
-			
+
 			return await task.ConfigureAwait(false);
 		}
 
@@ -49,7 +49,7 @@ namespace TSSArt.StateMachine
 			await Task.WhenAny(task.AsTask(), Task.Delay(millisecondsDelay: -1, token)).ConfigureAwait(false);
 
 			token.ThrowIfCancellationRequested();
-			
+
 			return await task.ConfigureAwait(false);
 		}
 	}

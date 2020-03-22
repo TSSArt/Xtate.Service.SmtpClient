@@ -6,17 +6,17 @@ namespace TSSArt.StateMachine
 	internal sealed class ElseNode : IElse, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
 		private readonly LinkedListNode<int> _documentIdNode;
-		private readonly Else                _entity;
+		private readonly ElseEntity          _entity;
 
-		public ElseNode(LinkedListNode<int> documentIdNode, in Else entity)
+		public ElseNode(LinkedListNode<int> documentIdNode, in ElseEntity entity)
 		{
 			_documentIdNode = documentIdNode;
 			_entity = entity;
 		}
 
-		object IAncestorProvider.Ancestor => _entity.Ancestor;
+		object? IAncestorProvider.Ancestor => _entity.Ancestor;
 
-		FormattableString IDebugEntityId.EntityId => $"(#{DocumentId})";
+		FormattableString IDebugEntityId.EntityId => @$"(#{DocumentId})";
 
 		public int DocumentId => _documentIdNode.Value;
 

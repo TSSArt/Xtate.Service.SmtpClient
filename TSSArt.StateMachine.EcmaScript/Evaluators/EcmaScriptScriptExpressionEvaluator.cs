@@ -15,7 +15,7 @@ namespace TSSArt.StateMachine.EcmaScript
 			_program = program;
 		}
 
-		object IAncestorProvider.Ancestor => _scriptExpression;
+		object? IAncestorProvider.Ancestor => _scriptExpression;
 
 		public ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
@@ -24,6 +24,6 @@ namespace TSSArt.StateMachine.EcmaScript
 			return default;
 		}
 
-		public string Expression => _scriptExpression.Expression;
+		public string? Expression => _scriptExpression.Expression;
 	}
 }

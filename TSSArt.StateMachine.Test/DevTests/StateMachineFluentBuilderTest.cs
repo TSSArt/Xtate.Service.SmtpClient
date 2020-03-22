@@ -11,7 +11,7 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public void EmptyStateMachineTest()
 		{
-			var builder = new StateMachineFluentBuilder(new BuilderFactory());
+			var builder = new StateMachineFluentBuilder(BuilderFactory.Default);
 
 			var stateMachine = builder.Build();
 
@@ -22,7 +22,7 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public void InitialAttributeStateMachineTest()
 		{
-			var builder = new StateMachineFluentBuilder(new BuilderFactory());
+			var builder = new StateMachineFluentBuilder(BuilderFactory.Default);
 
 			builder
 					.SetInitial((Identifier) "S1")
@@ -40,7 +40,7 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public void RootStatesStateMachineTest()
 		{
-			var builder = new StateMachineFluentBuilder(new BuilderFactory());
+			var builder = new StateMachineFluentBuilder(BuilderFactory.Default);
 
 			builder
 					.BeginState((Identifier) "S1").EndState()
@@ -62,7 +62,7 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public async Task DataModelTest()
 		{
-			var builder = new StateMachineFluentBuilder(new BuilderFactory());
+			var builder = new StateMachineFluentBuilder(BuilderFactory.Default);
 
 			builder
 					.BeginState((Identifier) "S1")
@@ -78,7 +78,7 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public async Task LiveLockErrorConditionTest()
 		{
-			var builder = new StateMachineFluentBuilder(new BuilderFactory());
+			var builder = new StateMachineFluentBuilder(BuilderFactory.Default);
 
 			builder
 					.BeginState((Identifier) "S1")
@@ -98,7 +98,7 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public async Task LiveLockPingPongTest()
 		{
-			var builder = new StateMachineFluentBuilder(new BuilderFactory());
+			var builder = new StateMachineFluentBuilder(BuilderFactory.Default);
 
 			builder
 					.BeginState((Identifier) "S1")

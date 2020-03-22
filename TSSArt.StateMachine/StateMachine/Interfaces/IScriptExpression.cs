@@ -2,6 +2,6 @@
 {
 	public interface IScriptExpression : IExecutableEntity
 	{
-		string Expression { get; }
+		string? Expression { get; }
 	}
 }

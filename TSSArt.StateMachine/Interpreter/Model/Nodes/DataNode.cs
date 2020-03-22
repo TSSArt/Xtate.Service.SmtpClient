@@ -5,26 +5,29 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class DataNode : IData, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
-		private readonly Data                _data;
+		private readonly DataEntity          _data;
 		private readonly LinkedListNode<int> _documentIdNode;
 
-		public DataNode(LinkedListNode<int> documentIdNode, in Data data)
+		public DataNode(LinkedListNode<int> documentIdNode, in DataEntity data)
 		{
+			Infrastructure.Assert(data.Id != null);
+
 			_documentIdNode = documentIdNode;
 			_data = data;
-			ExpressionEvaluator = data.Expression.As<IObjectEvaluator>();
+
+			ExpressionEvaluator = data.Expression?.As<IObjectEvaluator>();
 		}
 
-		public IObjectEvaluator ExpressionEvaluator { get; }
+		public IObjectEvaluator? ExpressionEvaluator { get; }
 
-		object IAncestorProvider.Ancestor => _data.Ancestor;
+		object? IAncestorProvider.Ancestor => _data.Ancestor;
 
-		public IValueExpression        Expression    => _data.Expression;
-		public IExternalDataExpression Source        => _data.Source;
-		public string                  Id            => _data.Id;
-		public string                  InlineContent => _data.InlineContent;
+		public IValueExpression?        Expression    => _data.Expression;
+		public IExternalDataExpression? Source        => _data.Source;
+		public string                   Id            => _data.Id!;
+		public string?                  InlineContent => _data.InlineContent;
 
-		FormattableString IDebugEntityId.EntityId => $"{Id}(#{DocumentId})";
+		FormattableString IDebugEntityId.EntityId => @$"{Id}(#{DocumentId})";
 
 		public int DocumentId => _documentIdNode.Value;
 

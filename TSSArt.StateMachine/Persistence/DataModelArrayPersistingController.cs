@@ -65,7 +65,9 @@ namespace TSSArt.StateMachine
 						break;
 					}
 
-					default: throw new ArgumentOutOfRangeException();
+					default:
+						Infrastructure.UnexpectedValue();
+						break;
 				}
 
 				_record ++;

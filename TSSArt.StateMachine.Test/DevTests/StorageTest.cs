@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 using System.Xml;
@@ -12,7 +13,7 @@ namespace TSSArt.StateMachine.Test
 	{
 		public static string Dump(IStorage storage, string delimiter = "", bool hex = false)
 		{
-			var inMemoryStorage = (InMemoryStorage)storage;
+			var inMemoryStorage = (InMemoryStorage) storage;
 
 			var logBytes = new byte[inMemoryStorage.GetTransactionLogSize()];
 			inMemoryStorage.WriteTransactionLogToSpan(logBytes, truncateLog: false);
@@ -44,7 +45,7 @@ namespace TSSArt.StateMachine.Test
 
 		public static int GetEntriesCount(IStorage storage)
 		{
-			var inMemoryStorage = (InMemoryStorage)storage;
+			var inMemoryStorage = (InMemoryStorage) storage;
 
 			var logBytes = new byte[inMemoryStorage.GetTransactionLogSize()];
 			inMemoryStorage.WriteTransactionLogToSpan(logBytes, truncateLog: false);
@@ -245,15 +246,18 @@ namespace TSSArt.StateMachine.Test
 		public void StoreWithStorageTest()
 		{
 			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("TSSArt.StateMachine.Test.Resources.All.xml");
+
+			Debug.Assert(stream != null);
+
 			var xmlReader = XmlReader.Create(stream);
 
-			var director = new ScxmlDirector(xmlReader, new BuilderFactory());
+			var director = new ScxmlDirector(xmlReader, BuilderFactory.Default, DefaultErrorProcessor.Instance);
 
 			var stateMachine = director.ConstructStateMachine();
 
-			var imBuilder = new InterpreterModelBuilder();
-			var dataModelHandler = EcmaScriptDataModelHandler.Factory.CreateHandler(imBuilder);
-			var model = imBuilder.Build(stateMachine, dataModelHandler, customActionProviders: default);
+			var dataModelHandler = EcmaScriptDataModelHandler.Factory.CreateHandler(DefaultErrorProcessor.Instance);
+			var imBuilder = new InterpreterModelBuilder(stateMachine, dataModelHandler, customActionProviders: default, errorProcessor: default);
+			var model = imBuilder.Build();
 			var storeSupport = model.Root.As<IStoreSupport>();
 
 			var storage = new InMemoryStorage();
@@ -488,6 +492,8 @@ namespace TSSArt.StateMachine.Test
 		{
 			var storage = new InMemoryStorage(false);
 			var bucket = new Bucket(storage);
+
+			// ReSharper disable once StringLiteralTypo
 			var s = "aeiouçéüß";
 			bucket.Add(s, s);
 			var flag = bucket.TryGet(s, out string val);
@@ -557,7 +563,7 @@ namespace TSSArt.StateMachine.Test
 			var bucket = new Bucket(storage);
 			bucket.Add(key: "f", value: "f");
 
-			storage.Add(ReadOnlySpan<byte>.Empty, ReadOnlySpan<byte>.Empty);
+			storage.Write(ReadOnlySpan<byte>.Empty, ReadOnlySpan<byte>.Empty);
 
 			Assert.IsFalse(bucket.TryGet(key: "f", out string _));
 		}
@@ -567,17 +573,17 @@ namespace TSSArt.StateMachine.Test
 		{
 			var storage = new InMemoryStorage(false);
 
-			storage.Add(new byte[] { 1 }, new byte[] { 55 });
-			storage.Add(new byte[] { 10 }, new byte[] { 55 });
-			storage.Add(new byte[] { 10, 11 }, new byte[] { 55 });
-			storage.Add(new byte[] { 20 }, new byte[] { 55 });
+			storage.Write(new byte[] { 1 }, new byte[] { 55 });
+			storage.Write(new byte[] { 10 }, new byte[] { 55 });
+			storage.Write(new byte[] { 10, 11 }, new byte[] { 55 });
+			storage.Write(new byte[] { 20 }, new byte[] { 55 });
 
-			storage.Add(new byte[] { }, new byte[] { 10 });
+			storage.Write(new byte[] { }, new byte[] { 10 });
 
-			Assert.IsFalse(storage.Get(new byte[] { 1 }).IsEmpty);
-			Assert.IsTrue(storage.Get(new byte[] { 10 }).IsEmpty);
-			Assert.IsTrue(storage.Get(new byte[] { 10, 11 }).IsEmpty);
-			Assert.IsFalse(storage.Get(new byte[] { 20 }).IsEmpty);
+			Assert.IsFalse(storage.Read(new byte[] { 1 }).IsEmpty);
+			Assert.IsTrue(storage.Read(new byte[] { 10 }).IsEmpty);
+			Assert.IsTrue(storage.Read(new byte[] { 10, 11 }).IsEmpty);
+			Assert.IsFalse(storage.Read(new byte[] { 20 }).IsEmpty);
 		}
 
 		[TestMethod]
@@ -585,19 +591,19 @@ namespace TSSArt.StateMachine.Test
 		{
 			var storage = new InMemoryStorage(false);
 
-			storage.Add(new byte[] { 1 }, new byte[] { 55 });
-			storage.Add(new byte[] { 10 }, new byte[] { 55 });
-			storage.Add(new byte[] { 10, 11 }, new byte[] { 55 });
-			storage.Add(new byte[] { 11 }, new byte[] { 55 });
-			storage.Add(new byte[] { 20 }, new byte[] { 55 });
+			storage.Write(new byte[] { 1 }, new byte[] { 55 });
+			storage.Write(new byte[] { 10 }, new byte[] { 55 });
+			storage.Write(new byte[] { 10, 11 }, new byte[] { 55 });
+			storage.Write(new byte[] { 11 }, new byte[] { 55 });
+			storage.Write(new byte[] { 20 }, new byte[] { 55 });
 
-			storage.Add(new byte[] { }, new byte[] { 10 });
+			storage.Write(new byte[] { }, new byte[] { 10 });
 
-			Assert.IsFalse(storage.Get(new byte[] { 1 }).IsEmpty);
-			Assert.IsTrue(storage.Get(new byte[] { 10 }).IsEmpty);
-			Assert.IsTrue(storage.Get(new byte[] { 10, 11 }).IsEmpty);
-			Assert.IsFalse(storage.Get(new byte[] { 11 }).IsEmpty);
-			Assert.IsFalse(storage.Get(new byte[] { 20 }).IsEmpty);
+			Assert.IsFalse(storage.Read(new byte[] { 1 }).IsEmpty);
+			Assert.IsTrue(storage.Read(new byte[] { 10 }).IsEmpty);
+			Assert.IsTrue(storage.Read(new byte[] { 10, 11 }).IsEmpty);
+			Assert.IsFalse(storage.Read(new byte[] { 11 }).IsEmpty);
+			Assert.IsFalse(storage.Read(new byte[] { 20 }).IsEmpty);
 		}
 
 		[TestMethod]
@@ -605,19 +611,19 @@ namespace TSSArt.StateMachine.Test
 		{
 			var storage = new InMemoryStorage(false);
 
-			storage.Add(new byte[] { 1 }, new byte[] { 55 });
-			storage.Add(new byte[] { 10, 255 }, new byte[] { 55 });
-			storage.Add(new byte[] { 10, 255, 11 }, new byte[] { 55 });
-			storage.Add(new byte[] { 11 }, new byte[] { 55 });
-			storage.Add(new byte[] { 20 }, new byte[] { 55 });
+			storage.Write(new byte[] { 1 }, new byte[] { 55 });
+			storage.Write(new byte[] { 10, 255 }, new byte[] { 55 });
+			storage.Write(new byte[] { 10, 255, 11 }, new byte[] { 55 });
+			storage.Write(new byte[] { 11 }, new byte[] { 55 });
+			storage.Write(new byte[] { 20 }, new byte[] { 55 });
 
-			storage.Add(new byte[] { }, new byte[] { 10, 255 });
+			storage.Write(new byte[] { }, new byte[] { 10, 255 });
 
-			Assert.IsFalse(storage.Get(new byte[] { 1 }).IsEmpty);
-			Assert.IsTrue(storage.Get(new byte[] { 10, 255 }).IsEmpty);
-			Assert.IsTrue(storage.Get(new byte[] { 10, 255, 11 }).IsEmpty);
-			Assert.IsFalse(storage.Get(new byte[] { 11 }).IsEmpty);
-			Assert.IsFalse(storage.Get(new byte[] { 20 }).IsEmpty);
+			Assert.IsFalse(storage.Read(new byte[] { 1 }).IsEmpty);
+			Assert.IsTrue(storage.Read(new byte[] { 10, 255 }).IsEmpty);
+			Assert.IsTrue(storage.Read(new byte[] { 10, 255, 11 }).IsEmpty);
+			Assert.IsFalse(storage.Read(new byte[] { 11 }).IsEmpty);
+			Assert.IsFalse(storage.Read(new byte[] { 20 }).IsEmpty);
 		}
 
 		[TestMethod]
@@ -625,15 +631,15 @@ namespace TSSArt.StateMachine.Test
 		{
 			var storage = new InMemoryStorage(false);
 
-			storage.Add(new byte[] { 1 }, new byte[] { 55 });
-			storage.Add(new byte[] { 255 }, new byte[] { 55 });
-			storage.Add(new byte[] { 255, 11 }, new byte[] { 55 });
+			storage.Write(new byte[] { 1 }, new byte[] { 55 });
+			storage.Write(new byte[] { 255 }, new byte[] { 55 });
+			storage.Write(new byte[] { 255, 11 }, new byte[] { 55 });
 
-			storage.Add(new byte[] { }, new byte[] { 255 });
+			storage.Write(new byte[] { }, new byte[] { 255 });
 
-			Assert.IsFalse(storage.Get(new byte[] { 1 }).IsEmpty);
-			Assert.IsTrue(storage.Get(new byte[] { 255 }).IsEmpty);
-			Assert.IsTrue(storage.Get(new byte[] { 255, 11 }).IsEmpty);
+			Assert.IsFalse(storage.Read(new byte[] { 1 }).IsEmpty);
+			Assert.IsTrue(storage.Read(new byte[] { 255 }).IsEmpty);
+			Assert.IsTrue(storage.Read(new byte[] { 255, 11 }).IsEmpty);
 		}
 
 		[TestMethod]

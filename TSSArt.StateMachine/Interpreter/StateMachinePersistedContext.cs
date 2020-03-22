@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,8 +17,8 @@ namespace TSSArt.StateMachine
 
 		private bool _disposed;
 
-		public StateMachinePersistedContext(string stateMachineName, string sessionId, DataModelValue arguments, ITransactionalStorage storage,
-											Dictionary<int, IEntity> entityMap, LoggerWrapper logger, ExternalCommunicationWrapper externalCommunication)
+		public StateMachinePersistedContext(string? stateMachineName, string sessionId, DataModelValue arguments, ITransactionalStorage storage,
+											ImmutableDictionary<int, IEntity> entityMap, LoggerWrapper logger, ExternalCommunicationWrapper externalCommunication)
 				: base(stateMachineName, sessionId, arguments, logger, externalCommunication)
 		{
 			_storage = storage;
@@ -66,7 +66,7 @@ namespace TSSArt.StateMachine
 			_dataModelReferenceTracker.Dispose();
 			_statesToInvokeController.Dispose();
 			_configurationController.Dispose();
-	
+
 			_disposed = true;
 
 			await base.DisposeAsync().ConfigureAwait(false);

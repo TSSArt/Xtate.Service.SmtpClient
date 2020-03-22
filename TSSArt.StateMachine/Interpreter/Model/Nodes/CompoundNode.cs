@@ -5,13 +5,16 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class CompoundNode : StateNode, IStoreSupport, IDebugEntityId
 	{
-		public CompoundNode(LinkedListNode<int> documentIdNode, in State state) : base(documentIdNode, state) { }
+		public CompoundNode(LinkedListNode<int> documentIdNode, in StateEntity state) : base(documentIdNode, state)
+		{
+			Infrastructure.Assert(base.Initial != null);
+		}
 
-		public new InitialNode Initial => base.Initial;
+		public new InitialNode Initial => base.Initial!;
 
 		public override bool IsAtomicState => false;
 
-		FormattableString IDebugEntityId.EntityId => $"{Id}(#{DocumentId})";
+		FormattableString IDebugEntityId.EntityId => @$"{Id}(#{DocumentId})";
 
 		void IStoreSupport.Store(Bucket bucket)
 		{

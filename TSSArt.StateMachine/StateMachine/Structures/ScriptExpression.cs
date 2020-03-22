@@ -2,7 +2,7 @@
 {
 	public struct ScriptExpression : IScriptExpression, IVisitorEntity<ScriptExpression, IScriptExpression>, IAncestorProvider
 	{
-		public string Expression { get; set; }
+		public string? Expression { get; set; }
 
 		void IVisitorEntity<ScriptExpression, IScriptExpression>.Init(IScriptExpression source)
 		{
@@ -12,8 +12,8 @@
 
 		bool IVisitorEntity<ScriptExpression, IScriptExpression>.RefEquals(in ScriptExpression other) => ReferenceEquals(Expression, other.Expression);
 
-		internal object Ancestor;
+		internal object? Ancestor;
 
-		object IAncestorProvider.Ancestor => Ancestor;
+		object? IAncestorProvider.Ancestor => Ancestor;
 	}
 }

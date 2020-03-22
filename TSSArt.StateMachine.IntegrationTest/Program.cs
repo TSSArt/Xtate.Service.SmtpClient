@@ -10,7 +10,7 @@ using TSSArt.StateMachine.Services;
 
 namespace TSSArt.StateMachine.IntegrationTest
 {
-	internal class Program
+	internal static class Program
 	{
 		private static async Task Main(string[] args)
 		{
@@ -44,7 +44,7 @@ namespace TSSArt.StateMachine.IntegrationTest
 			var task = ioProcessor.Execute(new Uri(uriString: "signup", UriKind.Relative), prms);
 
 
-			dynamic result = await task.ConfigureAwait(false);
+			var result = await task.ConfigureAwait(false);
 
 			dynamic prms2 = new DataModelObject();
 			prms2.profileUrl = "https://test.tssart.com/wp-admin/profile.php";
@@ -52,7 +52,7 @@ namespace TSSArt.StateMachine.IntegrationTest
 
 			var task2 = ioProcessor.Execute(new Uri(uriString: "captureEmail", UriKind.Relative), new DataModelValue(prms2));
 
-			dynamic result2 = await task2.ConfigureAwait(false);
+			dynamic _ = await task2.ConfigureAwait(false);
 
 			await ioProcessor.StopAsync().ConfigureAwait(false);
 		}

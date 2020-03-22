@@ -196,7 +196,8 @@ namespace TSSArt.StateMachine.Test
 				await streamStorage.Shrink(token: default);
 				Assert.Fail();
 			}
-			catch (ApplicationException) { }
+			catch (ApplicationException)
+			{ }
 
 			var proxyMemoryStream = new ProxyMemoryStream(_streamCaptureMock2.Object, _stream);
 			Assert.AreEqual(expected: 18, proxyMemoryStream.Length);
@@ -223,7 +224,8 @@ namespace TSSArt.StateMachine.Test
 				await streamStorage.Shrink(token: default);
 				Assert.Fail();
 			}
-			catch (ApplicationException) { }
+			catch (ApplicationException)
+			{ }
 
 			var proxyMemoryStream = new ProxyMemoryStream(_streamCaptureMock2.Object, _stream);
 			Assert.AreEqual(expected: 28, proxyMemoryStream.Length);
@@ -250,7 +252,8 @@ namespace TSSArt.StateMachine.Test
 				await streamStorage.Shrink(token: default);
 				Assert.Fail();
 			}
-			catch (ApplicationException) { }
+			catch (ApplicationException)
+			{ }
 
 			var proxyMemoryStream = new ProxyMemoryStream(_streamCaptureMock2.Object, _stream);
 			Assert.AreEqual(expected: 28, proxyMemoryStream.Length);
@@ -277,7 +280,8 @@ namespace TSSArt.StateMachine.Test
 				await streamStorage.Shrink(token: default);
 				Assert.Fail();
 			}
-			catch (ApplicationException) { }
+			catch (ApplicationException)
+			{ }
 
 			var proxyMemoryStream = new ProxyMemoryStream(_streamCaptureMock2.Object, _stream);
 			Assert.AreEqual(expected: 28, proxyMemoryStream.Length);
@@ -328,7 +332,8 @@ namespace TSSArt.StateMachine.Test
 				await streamStorage.Shrink(token: default);
 				Assert.Fail();
 			}
-			catch (ApplicationException) { }
+			catch (ApplicationException)
+			{ }
 
 			var proxyMemoryStream = new ProxyMemoryStream(_streamCaptureMock2.Object, _stream);
 			await using var streamStorage2 = await StreamStorage.CreateAsync(proxyMemoryStream);

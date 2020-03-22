@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace TSSArt.StateMachine
 {
 	internal sealed class EntityQueue<T>
 	{
-		public delegate void ChangeHandler(ChangedAction action, T entity);
+		public delegate void ChangeHandler(ChangedAction action, [AllowNull] T entity);
 
 		public enum ChangedAction
 		{
@@ -16,7 +17,7 @@ namespace TSSArt.StateMachine
 
 		public int Count => _queue.Count;
 
-		public event ChangeHandler Changed;
+		public event ChangeHandler? Changed;
 
 		public T Dequeue()
 		{

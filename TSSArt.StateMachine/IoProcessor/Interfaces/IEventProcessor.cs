@@ -6,11 +6,11 @@ namespace TSSArt.StateMachine
 {
 	public interface IEventProcessor
 	{
-		Uri Id      { get; }
-		Uri AliasId { get; }
+		Uri  Id      { get; }
+		Uri? AliasId { get; }
 
 		Uri GetTarget(string sessionId);
 
-		ValueTask Dispatch(string sessionId, IOutgoingEvent @event, CancellationToken token);
+		ValueTask Dispatch(string sessionId, IOutgoingEvent evt, CancellationToken token);
 	}
 }

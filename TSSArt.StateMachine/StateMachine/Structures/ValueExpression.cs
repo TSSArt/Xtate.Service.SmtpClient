@@ -2,7 +2,7 @@
 {
 	public struct ValueExpression : IValueExpression, IVisitorEntity<ValueExpression, IValueExpression>, IAncestorProvider
 	{
-		public string Expression { get; set; }
+		public string? Expression { get; set; }
 
 		void IVisitorEntity<ValueExpression, IValueExpression>.Init(IValueExpression source)
 		{
@@ -12,8 +12,8 @@
 
 		bool IVisitorEntity<ValueExpression, IValueExpression>.RefEquals(in ValueExpression other) => ReferenceEquals(Expression, other.Expression);
 
-		internal object Ancestor;
+		internal object? Ancestor;
 
-		object IAncestorProvider.Ancestor => Ancestor;
+		object? IAncestorProvider.Ancestor => Ancestor;
 	}
 }

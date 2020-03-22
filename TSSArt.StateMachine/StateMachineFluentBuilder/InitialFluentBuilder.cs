@@ -1,7 +1,9 @@
 ﻿using System;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	public class InitialFluentBuilder<TOuterBuilder>
 	{
 		private readonly IInitialBuilder  _builder;
@@ -12,7 +14,7 @@ namespace TSSArt.StateMachine
 		public InitialFluentBuilder(IBuilderFactory factory, TOuterBuilder outerBuilder, Action<IInitial> builtAction)
 		{
 			_factory = factory ?? throw new ArgumentNullException(nameof(factory));
-			_builder = factory.CreateInitialBuilder();
+			_builder = factory.CreateInitialBuilder(null);
 			_outerBuilder = outerBuilder;
 			_builtAction = builtAction;
 		}
@@ -20,6 +22,7 @@ namespace TSSArt.StateMachine
 		public TOuterBuilder EndInitial()
 		{
 			_builtAction(_builder.Build());
+
 			return _outerBuilder;
 		}
 

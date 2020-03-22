@@ -2,29 +2,34 @@
 using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	public class DefaultForEachEvaluator : IForEach, IExecEvaluator, IAncestorProvider
 	{
-		private readonly ForEach _forEach;
+		private readonly ForEachEntity _forEach;
 
-		public DefaultForEachEvaluator(in ForEach forEach)
+		public DefaultForEachEvaluator(in ForEachEntity forEach)
 		{
 			_forEach = forEach;
 
+			Infrastructure.Assert(forEach.Array != null);
+			Infrastructure.Assert(forEach.Item != null);
+
 			ArrayEvaluator = forEach.Array.As<IArrayEvaluator>();
 			ItemEvaluator = forEach.Item.As<ILocationEvaluator>();
-			IndexEvaluator = forEach.Index.As<ILocationEvaluator>();
+			IndexEvaluator = forEach.Index?.As<ILocationEvaluator>();
 			ActionEvaluatorList = forEach.Action.AsArrayOf<IExecutableEntity, IExecEvaluator>();
 		}
 
 		public IArrayEvaluator                ArrayEvaluator      { get; }
 		public ILocationEvaluator             ItemEvaluator       { get; }
-		public ILocationEvaluator             IndexEvaluator      { get; }
+		public ILocationEvaluator?            IndexEvaluator      { get; }
 		public ImmutableArray<IExecEvaluator> ActionEvaluatorList { get; }
 
-		object IAncestorProvider.Ancestor => _forEach.Ancestor;
+		object? IAncestorProvider.Ancestor => _forEach.Ancestor;
 
 		public virtual async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
@@ -47,9 +52,9 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public IValueExpression                  Array  => _forEach.Array;
-		public ILocationExpression               Item   => _forEach.Item;
-		public ILocationExpression               Index  => _forEach.Index;
+		public IValueExpression                  Array  => _forEach.Array!;
+		public ILocationExpression               Item   => _forEach.Item!;
+		public ILocationExpression?              Index  => _forEach.Index;
 		public ImmutableArray<IExecutableEntity> Action => _forEach.Action;
 	}
 }

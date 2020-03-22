@@ -15,7 +15,7 @@ namespace TSSArt.StateMachine.Test
     ""status"": ""ok"",   
     ""status1"": ""ok1"",
     ""parameters"": {
-		""response"": ""03DOLTBLQ08""
+		""response"": ""0378658708""
     }
   }
 }";

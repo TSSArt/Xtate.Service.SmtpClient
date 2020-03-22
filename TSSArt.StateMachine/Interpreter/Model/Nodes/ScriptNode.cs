@@ -4,15 +4,15 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class ScriptNode : ExecutableEntityNode, IScript, IAncestorProvider
 	{
-		private readonly Script _entity;
+		private readonly ScriptEntity _entity;
 
-		public ScriptNode(LinkedListNode<int> documentIdNode, in Script entity) : base(documentIdNode, (IScript) entity.Ancestor) => _entity = entity;
+		public ScriptNode(LinkedListNode<int> documentIdNode, in ScriptEntity entity) : base(documentIdNode, (IScript?) entity.Ancestor) => _entity = entity;
 
-		object IAncestorProvider.Ancestor => _entity.Ancestor;
+		object? IAncestorProvider.Ancestor => _entity.Ancestor;
 
-		public IScriptExpression Content => _entity.Content;
+		public IScriptExpression? Content => _entity.Content;
 
-		public IExternalScriptExpression Source => _entity.Source;
+		public IExternalScriptExpression? Source => _entity.Source;
 
 		protected override void Store(Bucket bucket)
 		{

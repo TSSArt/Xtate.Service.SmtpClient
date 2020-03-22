@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
 using System.Net.Mime;
 using System.Reflection;
@@ -24,9 +25,11 @@ namespace TSSArt.StateMachine.Test
 		public void Initialize()
 		{
 			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("TSSArt.StateMachine.Test.Resources.All.xml");
+			Debug.Assert(stream != null);
+
 			var xmlReader = XmlReader.Create(stream);
 
-			var director = new ScxmlDirector(xmlReader, new BuilderFactory());
+			var director = new ScxmlDirector(xmlReader, BuilderFactory.Default, DefaultErrorProcessor.Instance);
 
 			_allStateMachine = director.ConstructStateMachine();
 

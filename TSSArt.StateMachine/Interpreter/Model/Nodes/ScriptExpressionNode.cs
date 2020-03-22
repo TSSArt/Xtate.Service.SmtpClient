@@ -4,11 +4,16 @@
 	{
 		private readonly ScriptExpression _scriptExpression;
 
-		public ScriptExpressionNode(in ScriptExpression scriptExpression) => _scriptExpression = scriptExpression;
+		public ScriptExpressionNode(in ScriptExpression scriptExpression)
+		{
+			Infrastructure.Assert(scriptExpression.Expression != null);
 
-		object IAncestorProvider.Ancestor => _scriptExpression.Ancestor;
+			_scriptExpression = scriptExpression;
+		}
 
-		public string Expression => _scriptExpression.Expression;
+		object? IAncestorProvider.Ancestor => _scriptExpression.Ancestor;
+
+		public string Expression => _scriptExpression.Expression!;
 
 		void IStoreSupport.Store(Bucket bucket)
 		{

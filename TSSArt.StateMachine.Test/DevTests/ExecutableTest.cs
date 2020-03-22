@@ -14,20 +14,18 @@ namespace TSSArt.StateMachine.Test
 	[TestClass]
 	public class ExecutableTest
 	{
+		private Mock<ICustomActionExecutor>  _customActionExecutor;
 		private Mock<ICustomActionFactory>   _customActionProvider;
 		private ChannelReader<IEvent>        _eventChannel;
 		private Mock<IExternalCommunication> _externalCommunication;
 		private Mock<ILogger>                _logger;
-		private Mock<ICustomActionExecutor>  _customeActionExecutor;
 		private InterpreterOptions           _options;
 
 		private IStateMachine GetStateMachine(string scxml)
 		{
-			using (var textReader = new StringReader(scxml))
-			using (var reader = XmlReader.Create(textReader))
-			{
-				return new ScxmlDirector(reader, new BuilderFactory()).ConstructStateMachine();
-			}
+			using var textReader = new StringReader(scxml);
+			using var reader = XmlReader.Create(textReader);
+			return new ScxmlDirector(reader, BuilderFactory.Default, DefaultErrorProcessor.Instance).ConstructStateMachine();
 		}
 
 		private IStateMachine NoneDataModel(string xml) => GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' datamodel='none'>" + xml + "</scxml>");
@@ -47,14 +45,14 @@ namespace TSSArt.StateMachine.Test
 			channel.Writer.Complete();
 			_eventChannel = channel.Reader;
 
-			_customeActionExecutor = new Mock<ICustomActionExecutor>();
+			_customActionExecutor = new Mock<ICustomActionExecutor>();
 
-			_customeActionExecutor.Setup(e => e.Execute(It.IsAny<IExecutionContext>(), It.IsAny<CancellationToken>()))
-								  .Callback((IExecutionContext ctx, CancellationToken tk) => ctx.Log(label: "Custom", arguments: default, tk));
+			_customActionExecutor.Setup(e => e.Execute(It.IsAny<IExecutionContext>(), It.IsAny<CancellationToken>()))
+								 .Callback((IExecutionContext ctx, CancellationToken tk) => ctx.Log(label: "Custom", arguments: default, tk));
 
 			_customActionProvider = new Mock<ICustomActionFactory>();
 			_customActionProvider.Setup(x => x.CreateExecutor(It.IsAny<string>()))
-								 .Returns(_customeActionExecutor.Object);
+								 .Returns(_customActionExecutor.Object);
 			_customActionProvider.Setup(x => x.CanHandle(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
 
 			_options = new InterpreterOptions
@@ -76,7 +74,7 @@ namespace TSSArt.StateMachine.Test
 								  innerXml:
 								  "<state id='s1'><onentry><raise event='my'/></onentry><transition event='my' target='s2'/></state><state id='s2'><onentry><log label='Hello'/></onentry></state>");
 
-			_logger.Verify(l => l.Log(It.IsAny<string>(), It.IsAny<string>(), "Hello", default, default), Times.Once);
+			_logger.Verify(l => l.LogInfo(It.IsAny<string>(), It.IsAny<string>(), "Hello", default, default), Times.Once);
 		}
 
 		[TestMethod]
@@ -86,7 +84,7 @@ namespace TSSArt.StateMachine.Test
 								  innerXml:
 								  "<state id='s1'><onentry><send event='my' target='_internal'/></onentry><transition event='my' target='s2'/></state><state id='s2'><onentry><log label='Hello'/></onentry></state>");
 
-			_logger.Verify(l => l.Log(It.IsAny<string>(), It.IsAny<string>(), "Hello", default, default), Times.Once);
+			_logger.Verify(l => l.LogInfo(It.IsAny<string>(), It.IsAny<string>(), "Hello", default, default), Times.Once);
 		}
 
 		[TestMethod]
@@ -96,7 +94,7 @@ namespace TSSArt.StateMachine.Test
 								  innerXml:
 								  "<state id='s1'><onentry><raise event='my.suffix'/></onentry><transition event='my' target='s2'/></state><state id='s2'><onentry><log label='Hello'/></onentry></state>");
 
-			_logger.Verify(l => l.Log(It.IsAny<string>(), It.IsAny<string>(), "Hello", default, default), Times.Once);
+			_logger.Verify(l => l.LogInfo(It.IsAny<string>(), It.IsAny<string>(), "Hello", default, default), Times.Once);
 		}
 
 		[TestMethod]
@@ -106,7 +104,7 @@ namespace TSSArt.StateMachine.Test
 								  innerXml:
 								  "<state id='s1'><onentry><raise event='my.suffix'/></onentry><transition event='my.*' target='s2'/></state><state id='s2'><onentry><log label='Hello'/></onentry></state>");
 
-			_logger.Verify(l => l.Log(It.IsAny<string>(), It.IsAny<string>(), "Hello", default, default), Times.Once);
+			_logger.Verify(l => l.LogInfo(It.IsAny<string>(), It.IsAny<string>(), "Hello", default, default), Times.Once);
 		}
 
 		[TestMethod]
@@ -116,7 +114,7 @@ namespace TSSArt.StateMachine.Test
 								  innerXml:
 								  "<state id='s1'><onentry><custom my='name'/></onentry></state>");
 
-			_logger.Verify(l => l.Log(It.IsAny<string>(), It.IsAny<string>(), "Custom", default, default), Times.Once);
+			_logger.Verify(l => l.LogInfo(It.IsAny<string>(), It.IsAny<string>(), "Custom", default, default), Times.Once);
 		}
 
 		[TestMethod]

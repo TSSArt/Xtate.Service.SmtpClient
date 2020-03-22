@@ -3,21 +3,24 @@ using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public class ParallelBuilder : IParallelBuilder
+	public class ParallelBuilder : BuilderBase, IParallelBuilder
 	{
-		private IDataModel                           _dataModel;
-		private ImmutableArray<IHistory>.Builder     _historyStates;
-		private IIdentifier                          _id;
-		private ImmutableArray<IInvoke>.Builder      _invokeList;
-		private ImmutableArray<IOnEntry>.Builder     _onEntryList;
-		private ImmutableArray<IOnExit>.Builder      _onExitList;
-		private ImmutableArray<IStateEntity>.Builder _states;
-		private ImmutableArray<ITransition>.Builder  _transitions;
+		private IDataModel?                           _dataModel;
+		private ImmutableArray<IHistory>.Builder?     _historyStates;
+		private IIdentifier?                          _id;
+		private ImmutableArray<IInvoke>.Builder?      _invokeList;
+		private ImmutableArray<IOnEntry>.Builder?     _onEntryList;
+		private ImmutableArray<IOnExit>.Builder?      _onExitList;
+		private ImmutableArray<IStateEntity>.Builder? _states;
+		private ImmutableArray<ITransition>.Builder?  _transitions;
+
+		public ParallelBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
+		{ }
 
 		public IParallel Build() =>
-				new Parallel
+				new ParallelEntity
 				{
-						Id = _id, States = _states?.ToImmutable() ?? default, HistoryStates = _historyStates?.ToImmutable() ?? default,
+						Ancestor = Ancestor, Id = _id, States = _states?.ToImmutable() ?? default, HistoryStates = _historyStates?.ToImmutable() ?? default,
 						Transitions = _transitions?.ToImmutable() ?? default, DataModel = _dataModel, OnEntry = _onEntryList?.ToImmutable() ?? default,
 						OnExit = _onExitList?.ToImmutable() ?? default, Invoke = _invokeList?.ToImmutable() ?? default
 				};

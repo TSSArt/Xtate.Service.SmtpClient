@@ -12,10 +12,10 @@ namespace TSSArt.StateMachine
 		private const string SessionIdKey   = "SessionId";
 		private const string SendIdKey      = "SendId";
 
-		private readonly IExternalCommunication _externalCommunication;
-		private readonly string                 _sessionId;
+		private readonly IExternalCommunication? _externalCommunication;
+		private readonly string                  _sessionId;
 
-		public ExternalCommunicationWrapper(IExternalCommunication externalCommunication, string sessionId)
+		public ExternalCommunicationWrapper(IExternalCommunication? externalCommunication, string sessionId)
 		{
 			_externalCommunication = externalCommunication;
 			_sessionId = sessionId;
@@ -23,7 +23,7 @@ namespace TSSArt.StateMachine
 
 		public ImmutableArray<IEventProcessor> GetIoProcessors() => _externalCommunication?.GetIoProcessors() ?? default;
 
-		public bool IsCommunicationError(Exception exception, out string sendId)
+		public bool IsCommunicationError(Exception exception, out string? sendId)
 		{
 			for (; exception != null; exception = exception.InnerException)
 			{
@@ -40,7 +40,7 @@ namespace TSSArt.StateMachine
 			return false;
 		}
 
-		private void MarkAsCommunicationError(Exception exception, string sendId = null)
+		private void MarkAsCommunicationError(Exception exception, string? sendId = null)
 		{
 			exception.Data[ErrorTypeKey] = ErrorTypeValue;
 			exception.Data[SessionIdKey] = _sessionId;
@@ -55,7 +55,10 @@ namespace TSSArt.StateMachine
 		{
 			try
 			{
-				ThrowIfNoExternalCommunication();
+				if (_externalCommunication == null)
+				{
+					throw NoExternalCommunication();
+				}
 
 				await _externalCommunication.StartInvoke(invokeData, token).ConfigureAwait(false);
 			}
@@ -70,7 +73,10 @@ namespace TSSArt.StateMachine
 		{
 			try
 			{
-				ThrowIfNoExternalCommunication();
+				if (_externalCommunication == null)
+				{
+					throw NoExternalCommunication();
+				}
 
 				await _externalCommunication.CancelInvoke(invokeId, token).ConfigureAwait(false);
 			}
@@ -83,30 +89,36 @@ namespace TSSArt.StateMachine
 
 		public bool IsInvokeActive(string invokeId, string invokeUniqueId) => _externalCommunication?.IsInvokeActive(invokeId, invokeUniqueId) == true;
 
-		public async ValueTask<SendStatus> TrySendEvent(IOutgoingEvent @event, CancellationToken token)
+		public async ValueTask<SendStatus> TrySendEvent(IOutgoingEvent evt, CancellationToken token)
 		{
-			if (@event == null) throw new ArgumentNullException(nameof(@event));
+			if (evt == null) throw new ArgumentNullException(nameof(evt));
 
 			try
 			{
-				ThrowIfNoExternalCommunication();
+				if (_externalCommunication == null)
+				{
+					throw NoExternalCommunication();
+				}
 
-				return await _externalCommunication.TrySendEvent(@event, token).ConfigureAwait(false);
+				return await _externalCommunication.TrySendEvent(evt, token).ConfigureAwait(false);
 			}
 			catch (Exception ex)
 			{
-				MarkAsCommunicationError(ex, @event.SendId);
+				MarkAsCommunicationError(ex, evt.SendId);
 				throw;
 			}
 		}
 
-		public async ValueTask ForwardEvent(IEvent @event, string invokeId, CancellationToken token)
+		public async ValueTask ForwardEvent(IEvent evt, string invokeId, CancellationToken token)
 		{
 			try
 			{
-				ThrowIfNoExternalCommunication();
+				if (_externalCommunication == null)
+				{
+					throw NoExternalCommunication();
+				}
 
-				await _externalCommunication.ForwardEvent(@event, invokeId, token).ConfigureAwait(false);
+				await _externalCommunication.ForwardEvent(evt, invokeId, token).ConfigureAwait(false);
 			}
 			catch (Exception ex)
 			{
@@ -119,7 +131,10 @@ namespace TSSArt.StateMachine
 		{
 			try
 			{
-				ThrowIfNoExternalCommunication();
+				if (_externalCommunication == null)
+				{
+					throw NoExternalCommunication();
+				}
 
 				await _externalCommunication.CancelEvent(sendId, token).ConfigureAwait(false);
 			}
@@ -130,12 +145,6 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private void ThrowIfNoExternalCommunication()
-		{
-			if (_externalCommunication == null)
-			{
-				throw new NotSupportedException("External communication does not configured for state machine interpreter");
-			}
-		}
+		private static Exception NoExternalCommunication() => new NotSupportedException(Resources.Exception_External_communication_does_not_configured_for_state_machine_interpreter);
 	}
 }

@@ -2,25 +2,20 @@
 
 namespace TSSArt.StateMachine
 {
-	public class ParamBuilder : IParamBuilder
+	public class ParamBuilder : BuilderBase, IParamBuilder
 	{
-		private IValueExpression    _expression;
-		private ILocationExpression _location;
-		private string              _name;
+		private IValueExpression?    _expression;
+		private ILocationExpression? _location;
+		private string?              _name;
 
-		public IParam Build()
-		{
-			if (_expression != null && _location != null)
-			{
-				throw new InvalidOperationException(message: "Expression and Location can't be used at the same time in Param element");
-			}
+		public ParamBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
+		{ }
 
-			return new Param { Name = _name, Expression = _expression, Location = _location };
-		}
+		public IParam Build() => new ParamEntity { Ancestor = Ancestor, Name = _name, Expression = _expression, Location = _location };
 
 		public void SetName(string name)
 		{
-			if (string.IsNullOrEmpty(name)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(name));
+			if (string.IsNullOrEmpty(name)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(name));
 
 			_name = name;
 		}

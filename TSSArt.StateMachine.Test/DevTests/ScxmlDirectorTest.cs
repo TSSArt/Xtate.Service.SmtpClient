@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -20,9 +21,11 @@ namespace TSSArt.StateMachine.Test
 		public void Initialize()
 		{
 			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("TSSArt.StateMachine.Test.Resources.Main.xml");
+			Debug.Assert(stream != null);
+
 			var xmlReader = XmlReader.Create(stream);
 
-			var director = new ScxmlDirector(xmlReader, new BuilderFactory());
+			var director = new ScxmlDirector(xmlReader, BuilderFactory.Default, DefaultErrorProcessor.Instance);
 
 			_stateMachine = director.ConstructStateMachine();
 		}
@@ -59,14 +62,13 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public void ScxmlSerializerTest()
 		{
-			var interpreterModelBuilder = new InterpreterModelBuilder();
-			var dataModelHandler = EcmaScriptDataModelHandler.Factory.CreateHandler(interpreterModelBuilder);
-			var interpreterModel = interpreterModelBuilder.Build(_stateMachine, dataModelHandler, customActionProviders: default);
-			var serializer = new ScxmlSerializer();
+			var dataModelHandler = EcmaScriptDataModelHandler.Factory.CreateHandler(DefaultErrorProcessor.Instance);
+			var interpreterModelBuilder = new InterpreterModelBuilder(_stateMachine, dataModelHandler, customActionProviders: default, errorProcessor: default);
+			var interpreterModel = interpreterModelBuilder.Build();
 			var text = new StringWriter();
 			using (var xmlWriter = XmlWriter.Create(text, new XmlWriterSettings { Encoding = Encoding.UTF8, Indent = true }))
 			{
-				serializer.Serialize(interpreterModel.Root, xmlWriter);
+				ScxmlSerializer.Serialize(interpreterModel.Root, xmlWriter);
 			}
 
 			Console.WriteLine(text);

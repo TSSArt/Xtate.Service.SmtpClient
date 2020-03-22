@@ -15,12 +15,12 @@ namespace TSSArt.StateMachine
 			_inState = inState;
 		}
 
-		object IAncestorProvider.Ancestor => _conditionExpression.Ancestor;
+		object? IAncestorProvider.Ancestor => _conditionExpression.Ancestor;
 
 		ValueTask<bool> IBooleanEvaluator.EvaluateBoolean(IExecutionContext executionContext, CancellationToken token) => new ValueTask<bool>(executionContext.InState(_inState));
 
-		public string Expression => _conditionExpression.Expression;
+		public string? Expression => _conditionExpression.Expression;
 
-		FormattableString IDebugEntityId.EntityId => $"{_inState}";
+		FormattableString IDebugEntityId.EntityId => @$"{_inState}";
 	}
 }

@@ -5,17 +5,17 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class CancelNode : ExecutableEntityNode, ICancel, IAncestorProvider, IDebugEntityId
 	{
-		private readonly Cancel _entity;
+		private readonly CancelEntity _entity;
 
-		public CancelNode(LinkedListNode<int> documentIdNode, in Cancel entity) : base(documentIdNode, (ICancel) entity.Ancestor) => _entity = entity;
+		public CancelNode(LinkedListNode<int> documentIdNode, in CancelEntity entity) : base(documentIdNode, (ICancel?) entity.Ancestor) => _entity = entity;
 
-		object IAncestorProvider.Ancestor => _entity.Ancestor;
+		object? IAncestorProvider.Ancestor => _entity.Ancestor;
 
-		public string SendId => _entity.SendId;
+		public string? SendId => _entity.SendId;
 
-		public IValueExpression SendIdExpression => _entity.SendIdExpression;
+		public IValueExpression? SendIdExpression => _entity.SendIdExpression;
 
-		FormattableString IDebugEntityId.EntityId => $"(#{DocumentId})";
+		FormattableString IDebugEntityId.EntityId => @$"(#{DocumentId})";
 
 		protected override void Store(Bucket bucket)
 		{

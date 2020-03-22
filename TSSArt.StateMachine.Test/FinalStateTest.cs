@@ -1,3 +1,4 @@
+#nullable enable
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -10,7 +11,7 @@ namespace TSSArt.StateMachine.Test
 		public async Task Final_state_with_number_as_done_data_Should_return_same_value()
 		{
 			// Arrange
-			var stateMachine = new StateMachineFluentBuilder(new BuilderFactory())
+			var stateMachine = new StateMachineFluentBuilder(BuilderFactory.Default)
 							   .BeginFinal()
 							   .SetDoneData(ctx => new DataModelValue(22))
 							   .EndFinal()
@@ -31,7 +32,7 @@ namespace TSSArt.StateMachine.Test
 		public async Task Input_argument_Should_be_passed_as_return_value()
 		{
 			// Arrange
-			var stateMachine = new StateMachineFluentBuilder(new BuilderFactory())
+			var stateMachine = new StateMachineFluentBuilder(BuilderFactory.Default)
 							   .BeginFinal()
 							   .SetDoneData(ctx =>
 											{

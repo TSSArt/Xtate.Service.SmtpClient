@@ -2,6 +2,6 @@
 {
 	public interface IAncestorProvider
 	{
-		object Ancestor { get; }
+		object? Ancestor { get; }
 	}
 }

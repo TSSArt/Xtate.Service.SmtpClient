@@ -10,11 +10,11 @@ namespace TSSArt.StateMachine
 		private static readonly Uri EventProcessorId      = new Uri("http://www.w3.org/TR/scxml/#SCXMLEventProcessor");
 		private static readonly Uri EventProcessorAliasId = new Uri(uriString: "scxml", UriKind.Relative);
 
-		ValueTask IEventConsumer.Dispatch(string sessionId, IEvent @event, CancellationToken token)
+		ValueTask IEventConsumer.Dispatch(string sessionId, IEvent evt, CancellationToken token)
 		{
 			GetCurrentContext().ValidateSessionId(sessionId, out var controller);
 
-			return controller.Send(@event, token);
+			return controller.Send(evt, token);
 		}
 
 		Uri IEventProcessor.Id => EventProcessorId;
@@ -23,11 +23,16 @@ namespace TSSArt.StateMachine
 
 		Uri IEventProcessor.GetTarget(string sessionId) => GetTarget(sessionId);
 
-		ValueTask IEventProcessor.Dispatch(string sessionId, IOutgoingEvent @event, CancellationToken token)
+		ValueTask IEventProcessor.Dispatch(string sessionId, IOutgoingEvent evt, CancellationToken token)
 		{
-			var service = GetCurrentContext().GetService(sessionId, @event.Target);
+			if (evt.Target == null)
+			{
+				throw new StateMachineProcessorException(Resources.Exception_Event_Target_did_not_specified);
+			}
 
-			var serviceEvent = new EventObject(EventType.External, @event, GetTarget(sessionId), EventProcessorId);
+			var service = GetCurrentContext().GetService(sessionId, evt.Target);
+
+			var serviceEvent = new EventObject(EventType.External, evt, GetTarget(sessionId), EventProcessorId);
 
 			return service.Send(serviceEvent, token);
 		}

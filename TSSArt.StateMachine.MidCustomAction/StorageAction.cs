@@ -10,10 +10,10 @@ namespace TSSArt.StateMachine
 {
 	public class StorageAction : CustomActionBase
 	{
-		private readonly string _location;
-		private readonly string _operation;
-		private readonly string _rule;
-		private readonly string _template;
+		private readonly string  _location;
+		private readonly string? _operation;
+		private readonly string? _rule;
+		private readonly string? _template;
 
 		public StorageAction(XmlReader xmlReader)
 		{
@@ -38,7 +38,7 @@ namespace TSSArt.StateMachine
 			if (_operation == "CREATE")
 			{
 				var locationValue = context.DataModel[_location];
-				var lastValue = locationValue.Type == DataModelValueType.String ? locationValue.AsString() : string.Empty;
+				var lastValue = locationValue.AsStringOrDefault() ?? string.Empty;
 				var value = CreateValue(lastValue);
 				context.DataModel[_location] = new DataModelValue(value);
 
@@ -77,7 +77,7 @@ namespace TSSArt.StateMachine
 				return result;
 			}
 
-			throw new InvalidOperationException("Can't generate value.");
+			throw new InvalidOperationException(@"Can't generate value.");
 		}
 
 		private IEnumerable<string> EnumeratePredefinedValues()
@@ -104,13 +104,11 @@ namespace TSSArt.StateMachine
 
 		private string[] GetPredefinedValues()
 		{
-			switch (_template)
+			return _template switch
 			{
-				case "USERID":
-					return new[] { "tadex", "xtadex" };
-			}
-
-			return Array.Empty<string>();
+					"USERID" => new[] { "tadex", "xtadex" },
+					_ => Array.Empty<string>()
+			};
 		}
 
 		private bool TryGenerate(string value, int index, bool random, out string result)

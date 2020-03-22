@@ -5,17 +5,17 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class LogNode : ExecutableEntityNode, ILog, IAncestorProvider, IDebugEntityId
 	{
-		private readonly Log _entity;
+		private readonly LogEntity _entity;
 
-		public LogNode(LinkedListNode<int> documentIdNode, in Log entity) : base(documentIdNode, (ILog) entity.Ancestor) => _entity = entity;
+		public LogNode(LinkedListNode<int> documentIdNode, in LogEntity entity) : base(documentIdNode, (ILog?) entity.Ancestor) => _entity = entity;
 
-		object IAncestorProvider.Ancestor => _entity.Ancestor;
+		object? IAncestorProvider.Ancestor => _entity.Ancestor;
 
-		FormattableString IDebugEntityId.EntityId => $"(#{DocumentId})";
+		FormattableString IDebugEntityId.EntityId => @$"(#{DocumentId})";
 
-		public string Label => _entity.Label;
+		public string? Label => _entity.Label;
 
-		public IValueExpression Expression => _entity.Expression;
+		public IValueExpression? Expression => _entity.Expression;
 
 		protected override void Store(Bucket bucket)
 		{

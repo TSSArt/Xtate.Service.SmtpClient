@@ -6,7 +6,7 @@ namespace TSSArt.StateMachine
 	public interface IService
 	{
 		ValueTask<DataModelValue> Result { get; }
-		ValueTask                 Send(IEvent @event, CancellationToken token);
+		ValueTask                 Send(IEvent evt, CancellationToken token);
 		ValueTask                 Destroy(CancellationToken token);
 	}
 }

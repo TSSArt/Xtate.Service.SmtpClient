@@ -43,6 +43,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			_tracker.Dispose();
 			_objectController.Dispose();
+			_arrayController.Dispose();
 		}
 
 		[TestMethod]
@@ -117,7 +118,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			_dataModelArray[0] = new DataModelValue("qq");
 
-			var controller = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
+			var _ = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
 			Assert.AreEqual(expected: 1, _restoredDataModelArray.Length);
 			Assert.AreEqual(expected: "qq", _restoredDataModelArray[0].AsString());
@@ -131,7 +132,7 @@ namespace TSSArt.StateMachine.Test
 
 			_dataModelArray.RemoveAt(1);
 
-			var controller = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
+			var _ = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
 			Assert.AreEqual(expected: 1, _restoredDataModelArray.Length);
 			Assert.AreEqual(expected: "qq", _restoredDataModelArray[0].AsString());
@@ -146,7 +147,7 @@ namespace TSSArt.StateMachine.Test
 			_dataModelArray.RemoveAt(0);
 			_dataModelArray.RemoveAt(0);
 
-			var controller = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
+			var _ = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
 			Assert.AreEqual(expected: 0, _restoredDataModelArray.Length);
 		}
@@ -158,7 +159,7 @@ namespace TSSArt.StateMachine.Test
 
 			_dataModelArray.RemoveAt(1);
 
-			var controller = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
+			var _ = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
 			Assert.AreEqual(expected: 1, _restoredDataModelArray.Length);
 			Assert.AreEqual(expected: 1.2, _restoredDataModelArray[0].AsNumber());
@@ -171,7 +172,7 @@ namespace TSSArt.StateMachine.Test
 
 			_dataModelArray.RemoveAt(1);
 
-			var controller = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
+			var _ = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
 			Assert.AreEqual(expected: 1, _restoredDataModelArray.Length);
 			Assert.AreEqual(new DateTime(year: 2000, month: 1, day: 1), _restoredDataModelArray[0].AsDateTime());
@@ -184,7 +185,7 @@ namespace TSSArt.StateMachine.Test
 
 			_dataModelArray.RemoveAt(1);
 
-			var controller = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
+			var _ = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
 			Assert.AreEqual(expected: 1, _restoredDataModelArray.Length);
 			Assert.AreEqual(expected: true, _restoredDataModelArray[0].AsBoolean());
@@ -197,7 +198,7 @@ namespace TSSArt.StateMachine.Test
 
 			_dataModelArray.RemoveAt(1);
 
-			var controller = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
+			var _ = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
 			Assert.AreEqual(expected: 1, _restoredDataModelArray.Length);
 			Assert.AreEqual(expected: "test", _restoredDataModelArray[0].AsString());
@@ -213,7 +214,7 @@ namespace TSSArt.StateMachine.Test
 
 			_dataModelArray[0] = new DataModelValue(obj);
 
-			var controller = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
+			var _ = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
 			Assert.AreEqual(expected: 1, _restoredDataModelArray.Length);
 			Assert.AreEqual(expected: "value", _restoredDataModelArray[0].AsObject()["prop"].AsString());
@@ -229,7 +230,7 @@ namespace TSSArt.StateMachine.Test
 
 			_dataModelArray[0] = new DataModelValue(obj);
 
-			var controller = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
+			var _ = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
 			Assert.AreEqual(expected: 1, _restoredDataModelArray.Length);
 			Assert.AreEqual(expected: "value", _restoredDataModelArray[0].AsArray()[0].AsString());
@@ -241,7 +242,7 @@ namespace TSSArt.StateMachine.Test
 			_dataModelArray.Add(new DataModelValue(5));
 			_dataModelArray.Clear();
 
-			var controller = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
+			var _ = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
 			Assert.AreEqual(expected: 0, _restoredDataModelArray.Length);
 		}
@@ -252,7 +253,7 @@ namespace TSSArt.StateMachine.Test
 			_dataModelArray.Add(new DataModelValue(5));
 			_dataModelArray.Insert(index: 0, new DataModelValue(4));
 
-			var controller = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
+			var _ = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
 			Assert.AreEqual(expected: 2, _restoredDataModelArray.Length);
 			Assert.AreEqual(expected: 4, _restoredDataModelArray[0].AsNumber());
@@ -265,7 +266,7 @@ namespace TSSArt.StateMachine.Test
 			_dataModelArray.Add(new DataModelValue(5));
 			_dataModelArray.SetLength(5);
 
-			var controller = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
+			var _ = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
 			Assert.AreEqual(expected: 5, _restoredDataModelArray.Length);
 			Assert.AreEqual(expected: 5, _restoredDataModelArray[0].AsNumber());
@@ -351,7 +352,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			var obj1 = new DataModelObject { ["prop1-rw"] = new DataModelValue("val1") };
 			var root = new DataModelObject { ["obj1"] = new DataModelValue(obj1) };
-			var controller = new DataModelObjectPersistingController(_bucket, _restoredTracker, root);
+			var _ = new DataModelObjectPersistingController(_bucket, _restoredTracker, root);
 		}
 
 		[TestMethod]
@@ -392,7 +393,7 @@ namespace TSSArt.StateMachine.Test
 			Assert.AreEqual(expected: "val-extra2", _dataModelObject["obj2a"].AsObject()["extra2"].AsString());
 			Assert.AreEqual(expected: "val-extra2", _dataModelObject["obj2b"].AsObject()["extra2"].AsString());
 
-			var controller = new DataModelObjectPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
+			var _ = new DataModelObjectPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
 			Assert.AreSame(_restoredDataModelObject["obj1a"].AsObject(), _restoredDataModelObject["obj1b"].AsObject());
 			Assert.AreSame(_restoredDataModelObject["obj2a"].AsObject(), _restoredDataModelObject["obj2b"].AsObject());
@@ -439,7 +440,7 @@ namespace TSSArt.StateMachine.Test
 			Assert.AreEqual(expected: "val-extra2", _dataModelArray[4].AsArray()[3].AsString());
 			Assert.AreEqual(expected: "val-extra2", _dataModelArray[5].AsArray()[3].AsString());
 
-			var controller = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
+			var _ = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
 			Assert.AreSame(_restoredDataModelArray[2].AsArray(), _restoredDataModelArray[3].AsArray());
 			Assert.AreSame(_restoredDataModelArray[4].AsArray(), _restoredDataModelArray[5].AsArray());
@@ -457,9 +458,9 @@ namespace TSSArt.StateMachine.Test
 			_dataModelObject["obj1a"] = new DataModelValue(obj1);
 
 			Assert.AreEqual(expected: "prop1-rw", new Bucket(_storage).Nested("refs").Nested(0).Nested(0).GetString(Key.Property));
-			Assert.IsTrue(new Bucket(_storage).Nested("refs").Nested(0).Nested(0).TryGet(Key.Property, out string val1));
+			Assert.IsTrue(new Bucket(_storage).Nested("refs").Nested(0).Nested(0).TryGet(Key.Property, out string _));
 			_dataModelObject["obj1a"] = DataModelValue.Undefined;
-			Assert.IsFalse(new Bucket(_storage).Nested("refs").Nested(0).Nested(0).TryGet(Key.Property, out string val3));
+			Assert.IsFalse(new Bucket(_storage).Nested("refs").Nested(0).Nested(0).TryGet(Key.Property, out string _));
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
 		}
 	}

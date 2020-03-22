@@ -6,19 +6,19 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class ForEachNode : ExecutableEntityNode, IForEach, IAncestorProvider, IDebugEntityId
 	{
-		private readonly ForEach _entity;
+		private readonly ForEachEntity _entity;
 
-		public ForEachNode(LinkedListNode<int> documentIdNode, in ForEach entity) : base(documentIdNode, (IForEach) entity.Ancestor) => _entity = entity;
+		public ForEachNode(LinkedListNode<int> documentIdNode, in ForEachEntity entity) : base(documentIdNode, (IForEach?) entity.Ancestor) => _entity = entity;
 
-		object IAncestorProvider.Ancestor => _entity.Ancestor;
+		object? IAncestorProvider.Ancestor => _entity.Ancestor;
 
-		FormattableString IDebugEntityId.EntityId => $"(#{DocumentId})";
+		FormattableString IDebugEntityId.EntityId => @$"(#{DocumentId})";
 
-		public IValueExpression Array => _entity.Array;
+		public IValueExpression? Array => _entity.Array;
 
-		public ILocationExpression Item => _entity.Item;
+		public ILocationExpression? Item => _entity.Item;
 
-		public ILocationExpression Index => _entity.Index;
+		public ILocationExpression? Index => _entity.Index;
 
 		public ImmutableArray<IExecutableEntity> Action => _entity.Action;
 

@@ -1,7 +1,10 @@
 ﻿namespace TSSArt.StateMachine
 {
-	public class ElseBuilder : IElseBuilder
+	public class ElseBuilder : BuilderBase, IElseBuilder
 	{
-		public IElse Build() => new Else();
+		public ElseBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
+		{ }
+
+		public IElse Build() => new ElseEntity { Ancestor = Ancestor };
 	}
 }

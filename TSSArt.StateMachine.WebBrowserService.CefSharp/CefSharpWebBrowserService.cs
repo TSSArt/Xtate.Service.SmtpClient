@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -5,14 +6,8 @@ namespace TSSArt.StateMachine.Services
 {
 	public class CefSharpWebBrowserService : WebBrowserService
 	{
-		private string _content;
-		private string _url;
-
 		protected override ValueTask<DataModelValue> Execute()
 		{
-			_url = Source?.ToString();
-			_content = RawContent ?? Content.AsStringOrDefault();
-
 			var task = Task.Factory.StartNew(Show, StopToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
 
 			return new ValueTask<DataModelValue>(task);
@@ -20,7 +15,12 @@ namespace TSSArt.StateMachine.Services
 
 		private DataModelValue Show()
 		{
-			using var form = new BrowserForm(_url, _content);
+			var url = Source?.ToString();
+			var content = RawContent ?? Content.AsStringOrDefault();
+
+			using var form = new BrowserForm(url != null ? new Uri(url) : null, content);
+
+			// ReSharper disable once AccessToDisposedClosure
 			using var registration = StopToken.Register(() => form.Close(DialogResult.Abort, result: default));
 
 			form.Closed += (sender, args) => Application.ExitThread();
@@ -34,9 +34,12 @@ namespace TSSArt.StateMachine.Services
 				result["status"] = new DataModelValue("ok");
 
 				var parameters = new DataModelObject();
-				foreach (var pair in form.Result)
+				if (form.Result != null)
 				{
-					parameters[pair.Key] = new DataModelValue(pair.Value);
+					foreach (var pair in form.Result)
+					{
+						parameters[pair.Key] = new DataModelValue(pair.Value);
+					}
 				}
 
 				parameters.Freeze();

@@ -13,38 +13,119 @@ namespace TSSArt.StateMachine
 		private static readonly UnboundedChannelOptions UnboundedSynchronousChannelOptions  = new UnboundedChannelOptions { SingleReader = true, AllowSynchronousContinuations = true };
 		private static readonly UnboundedChannelOptions UnboundedAsynchronousChannelOptions = new UnboundedChannelOptions { SingleReader = true, AllowSynchronousContinuations = false };
 
-		private readonly TaskCompletionSource<object>         _acceptedTcs  = new TaskCompletionSource<object>();
+		private readonly TaskCompletionSource<int>            _acceptedTcs  = new TaskCompletionSource<int>();
 		private readonly TaskCompletionSource<DataModelValue> _completedTcs = new TaskCompletionSource<DataModelValue>();
 		private readonly InterpreterOptions                   _defaultOptions;
-		private readonly CancellationTokenSource              _destroyTokenSource = new CancellationTokenSource();
+		private readonly CancellationTokenSource              _destroyTokenSource;
 		private readonly TimeSpan                             _idlePeriod;
 		private readonly IIoProcessor                         _ioProcessor;
+		private readonly ILogger                              _logger;
 		private readonly HashSet<ScheduledEvent>              _scheduledEvents = new HashSet<ScheduledEvent>();
 		private readonly IStateMachine                        _stateMachine;
 		private readonly ConcurrentQueue<ScheduledEvent>      _toDelete = new ConcurrentQueue<ScheduledEvent>();
-		private          CancellationTokenSource              _suspendOnIdleTokenSource;
 
-		private bool _disposed;
+		private bool                     _disposed;
+		private CancellationTokenSource? _suspendOnIdleTokenSource;
+		private CancellationTokenSource? _suspendTokenSource;
 
-		protected virtual Channel<IEvent> Channel { get; }
-
-		public StateMachineController(string sessionId, IStateMachineOptions options, IStateMachine stateMachine, IIoProcessor ioProcessor, TimeSpan idlePeriod, in InterpreterOptions defaultOptions)
+		public StateMachineController(string sessionId, IStateMachineOptions? options, IStateMachine stateMachine, IIoProcessor ioProcessor, TimeSpan idlePeriod, in InterpreterOptions defaultOptions)
 		{
 			SessionId = sessionId;
 			_stateMachine = stateMachine;
 			_ioProcessor = ioProcessor;
 			_defaultOptions = defaultOptions;
 			_idlePeriod = idlePeriod;
+			_logger = _defaultOptions.Logger ?? DefaultLogger.Instance;
+
+			_destroyTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_defaultOptions.DestroyToken, token2: default);
+			_defaultOptions.DestroyToken = _destroyTokenSource.Token;
 
 			Channel = CreateChannel(options);
-
-			if (_defaultOptions.Logger == null)
-			{
-				_defaultOptions.Logger = DefaultLogger.Instance;
-			}
 		}
 
-		private static Channel<IEvent> CreateChannel(IStateMachineOptions options)
+		protected virtual Channel<IEvent> Channel { get; }
+
+		public string SessionId { get; }
+
+		public virtual ValueTask DisposeAsync()
+		{
+			if (_disposed)
+			{
+				return default;
+			}
+
+			_destroyTokenSource.Dispose();
+			_suspendTokenSource?.Dispose();
+			_suspendOnIdleTokenSource?.Dispose();
+
+			_disposed = true;
+
+			return default;
+		}
+
+		ImmutableArray<IEventProcessor> IExternalCommunication.GetIoProcessors() => _ioProcessor.GetIoProcessors();
+
+		async ValueTask<SendStatus> IExternalCommunication.TrySendEvent(IOutgoingEvent evt, CancellationToken token)
+		{
+			var sendStatus = await _ioProcessor.DispatchEvent(SessionId, evt, skipDelay: false, token).ConfigureAwait(false);
+
+			if (sendStatus == SendStatus.ToSchedule)
+			{
+				await ScheduleEvent(evt, token).ConfigureAwait(false);
+
+				return SendStatus.Sent;
+			}
+
+			return sendStatus;
+		}
+
+		async ValueTask IExternalCommunication.CancelEvent(string sendId, CancellationToken token)
+		{
+			foreach (var evt in _scheduledEvents)
+			{
+				if (evt.Event.SendId == sendId)
+				{
+					await DisposeEvent(evt, token).ConfigureAwait(false);
+				}
+			}
+
+			CleanScheduledEvents();
+		}
+
+		ValueTask IExternalCommunication.StartInvoke(InvokeData invokeData, CancellationToken token) => _ioProcessor.StartInvoke(SessionId, invokeData, token);
+
+		ValueTask IExternalCommunication.CancelInvoke(string invokeId, CancellationToken token) => _ioProcessor.CancelInvoke(SessionId, invokeId, token);
+
+		bool IExternalCommunication.IsInvokeActive(string invokeId, string invokeUniqueId) => _ioProcessor.IsInvokeActive(SessionId, invokeId, invokeUniqueId);
+
+		ValueTask IExternalCommunication.ForwardEvent(IEvent evt, string invokeId, CancellationToken token) => _ioProcessor.ForwardEvent(SessionId, evt, invokeId, token);
+
+		ValueTask INotifyStateChanged.OnChanged(StateMachineInterpreterState state)
+		{
+			if (state == StateMachineInterpreterState.Accepted)
+			{
+				_acceptedTcs.TrySetResult(0);
+			}
+			else if (state == StateMachineInterpreterState.Waiting)
+			{
+				_suspendOnIdleTokenSource?.CancelAfter(_idlePeriod);
+			}
+
+			return default;
+		}
+
+		public ValueTask Send(IEvent evt, CancellationToken token) => Channel.Writer.WriteAsync(evt, token);
+
+		ValueTask IService.Destroy(CancellationToken token)
+		{
+			_destroyTokenSource.Cancel();
+			Channel.Writer.Complete();
+			return default;
+		}
+
+		public ValueTask<DataModelValue> Result => new ValueTask<DataModelValue>(_completedTcs.Task);
+
+		private static Channel<IEvent> CreateChannel(IStateMachineOptions? options)
 		{
 			if (options == null)
 			{
@@ -63,85 +144,6 @@ namespace TSSArt.StateMachine
 
 			return System.Threading.Channels.Channel.CreateBounded<IEvent>(channelOptions);
 		}
-
-		public string SessionId { get; }
-
-		public virtual ValueTask DisposeAsync()
-		{
-			if (_disposed)
-			{
-				return default;
-			}
-
-			_destroyTokenSource.Dispose();
-			_suspendOnIdleTokenSource?.Dispose();
-
-			_disposed = true;
-
-			return default;
-		}
-
-		ImmutableArray<IEventProcessor> IExternalCommunication.GetIoProcessors() => _ioProcessor.GetIoProcessors();
-
-		async ValueTask<SendStatus> IExternalCommunication.TrySendEvent(IOutgoingEvent @event, CancellationToken token)
-		{
-			var sendStatus = await _ioProcessor.DispatchEvent(SessionId, @event, skipDelay: false, token).ConfigureAwait(false);
-
-			if (sendStatus == SendStatus.ToSchedule)
-			{
-				await ScheduleEvent(@event, token).ConfigureAwait(false);
-
-				return SendStatus.Sent;
-			}
-
-			return sendStatus;
-		}
-
-		async ValueTask IExternalCommunication.CancelEvent(string sendId, CancellationToken token)
-		{
-			foreach (var @event in _scheduledEvents)
-			{
-				if (@event.Event.SendId == sendId)
-				{
-					await DisposeEvent(@event, token).ConfigureAwait(false);
-				}
-			}
-
-			CleanScheduledEvents();
-		}
-
-		ValueTask IExternalCommunication.StartInvoke(InvokeData invokeData, CancellationToken token) => _ioProcessor.StartInvoke(SessionId, invokeData, token);
-
-		ValueTask IExternalCommunication.CancelInvoke(string invokeId, CancellationToken token) => _ioProcessor.CancelInvoke(SessionId, invokeId, token);
-
-		bool IExternalCommunication.IsInvokeActive(string invokeId, string invokeUniqueId) => _ioProcessor.IsInvokeActive(SessionId, invokeId, invokeUniqueId);
-
-		ValueTask IExternalCommunication.ForwardEvent(IEvent @event, string invokeId, CancellationToken token) => _ioProcessor.ForwardEvent(SessionId, @event, invokeId, token);
-
-		ValueTask INotifyStateChanged.OnChanged(StateMachineInterpreterState state)
-		{
-			if (state == StateMachineInterpreterState.Accepted)
-			{
-				_acceptedTcs.TrySetResult(null);
-			}
-			else if (state == StateMachineInterpreterState.Waiting)
-			{
-				_suspendOnIdleTokenSource?.CancelAfter(_idlePeriod);
-			}
-
-			return default;
-		}
-
-		public ValueTask Send(IEvent @event, CancellationToken token) => Channel.Writer.WriteAsync(@event, token);
-
-		ValueTask IService.Destroy(CancellationToken token)
-		{
-			_destroyTokenSource.Cancel();
-			Channel.Writer.Complete();
-			return default;
-		}
-
-		public ValueTask<DataModelValue> Result => new ValueTask<DataModelValue>(_completedTcs.Task);
 
 		public ValueTask StartAsync(CancellationToken token)
 		{
@@ -162,16 +164,17 @@ namespace TSSArt.StateMachine
 
 			if (_idlePeriod > TimeSpan.Zero)
 			{
+				_suspendTokenSource?.Dispose();
+				_suspendOnIdleTokenSource?.Dispose();
+
 				_suspendOnIdleTokenSource = new CancellationTokenSource(_idlePeriod);
 
-				options.SuspendToken = options.SuspendToken.CanBeCanceled
-						? CancellationTokenSource.CreateLinkedTokenSource(options.SuspendToken, _suspendOnIdleTokenSource.Token).Token
-						: _suspendOnIdleTokenSource.Token;
-			}
+				_suspendTokenSource = options.SuspendToken.CanBeCanceled
+						? CancellationTokenSource.CreateLinkedTokenSource(options.SuspendToken, _suspendOnIdleTokenSource.Token)
+						: _suspendOnIdleTokenSource;
 
-			options.DestroyToken = options.DestroyToken.CanBeCanceled
-					? CancellationTokenSource.CreateLinkedTokenSource(options.DestroyToken, _destroyTokenSource.Token).Token
-					: _destroyTokenSource.Token;
+				options.SuspendToken = _suspendTokenSource.Token;
+			}
 		}
 
 		public async ValueTask<DataModelValue> ExecuteAsync() => (await RunAsync(true).ConfigureAwait(false)).Result;
@@ -197,7 +200,7 @@ namespace TSSArt.StateMachine
 					var result = await StateMachineInterpreter.RunAsync(SessionId, _stateMachine, Channel.Reader, options).ConfigureAwait(false);
 					exitStatus = result.Status;
 
-					_acceptedTcs.TrySetResult(null);
+					_acceptedTcs.TrySetResult(0);
 
 					switch (result.Status)
 					{
@@ -205,14 +208,14 @@ namespace TSSArt.StateMachine
 							_completedTcs.TrySetResult(result.Result);
 							return new StateMachineResult(StateMachineExitStatus.Completed, result.Result);
 
-						case StateMachineExitStatus.Suspended when options.SuspendToken.IsCancellationRequested:
-							var suspendException = new OperationCanceledException(options.SuspendToken);
+						case StateMachineExitStatus.Suspended when _defaultOptions.SuspendToken.IsCancellationRequested:
+							var suspendException = new OperationCanceledException(_defaultOptions.SuspendToken);
 							if (throwOnError)
 							{
 								throw suspendException;
 							}
 
-							_completedTcs.TrySetCanceled(options.SuspendToken);
+							_completedTcs.TrySetCanceled(_defaultOptions.SuspendToken);
 							return new StateMachineResult(result.Status, suspendException);
 
 						case StateMachineExitStatus.Suspended:
@@ -232,20 +235,28 @@ namespace TSSArt.StateMachine
 						case StateMachineExitStatus.LiveLockAbort:
 							if (throwOnError)
 							{
-								throw result.Exception;
+								throw result.Exception!;
 							}
 
 							_completedTcs.TrySetException(result.Exception);
-							return new StateMachineResult(result.Status, result.Exception);
+							return new StateMachineResult(result.Status, result.Exception!);
 
-						default: throw new ArgumentOutOfRangeException();
+						default:
+							return Infrastructure.UnexpectedValue<StateMachineResult>();
 					}
 
-					var anyToken = CancellationTokenHelper.Any(_defaultOptions.StopToken, _defaultOptions.DestroyToken, _defaultOptions.SuspendToken);
-					if (!await Channel.Reader.WaitToReadAsync(anyToken).ConfigureAwait(false))
+					var anyTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_defaultOptions.StopToken, _defaultOptions.DestroyToken, _defaultOptions.SuspendToken);
+					try
 					{
-						exitStatus = StateMachineExitStatus.QueueClosed;
-						await Channel.Reader.ReadAsync(CancellationToken.None).ConfigureAwait(false);
+						if (!await Channel.Reader.WaitToReadAsync(anyTokenSource.Token).ConfigureAwait(false))
+						{
+							exitStatus = StateMachineExitStatus.QueueClosed;
+							await Channel.Reader.ReadAsync(CancellationToken.None).ConfigureAwait(false);
+						}
+					}
+					finally
+					{
+						anyTokenSource.Dispose();
 					}
 				}
 				catch (Exception ex)
@@ -285,15 +296,15 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual ValueTask ScheduleEvent(IOutgoingEvent @event, CancellationToken token)
+		protected virtual ValueTask ScheduleEvent(IOutgoingEvent evt, CancellationToken token)
 		{
-			if (@event == null) throw new ArgumentNullException(nameof(@event));
+			if (evt == null) throw new ArgumentNullException(nameof(evt));
 
-			var scheduledEvent = new ScheduledEvent(@event);
+			var scheduledEvent = new ScheduledEvent(evt);
 
 			_scheduledEvents.Add(scheduledEvent);
 
-			var _ = DelayedFire(scheduledEvent, @event.DelayMs);
+			var _ = DelayedFire(scheduledEvent, evt.DelayMs);
 
 			CleanScheduledEvents();
 
@@ -327,7 +338,7 @@ namespace TSSArt.StateMachine
 			}
 			catch (Exception ex)
 			{
-				await _defaultOptions.Logger.Error(ErrorType.Communication, SessionId, _stateMachine?.Name, scheduledEvent.Event.SendId, ex, token: default).ConfigureAwait(false);
+				await _logger.LogError(ErrorType.Communication, SessionId, _stateMachine.Name, scheduledEvent.Event.SendId, ex, token: default).ConfigureAwait(false);
 			}
 		}
 
@@ -343,7 +354,7 @@ namespace TSSArt.StateMachine
 
 		protected class ScheduledEvent
 		{
-			public ScheduledEvent(IOutgoingEvent @event) => Event = @event;
+			public ScheduledEvent(IOutgoingEvent evt) => Event = evt;
 
 			public IOutgoingEvent Event { get; }
 

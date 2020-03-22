@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Immutable;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	public class StateFluentBuilder<TOuterBuilder>
 	{
 		private readonly IStateBuilder   _builder;
@@ -13,7 +15,7 @@ namespace TSSArt.StateMachine
 		public StateFluentBuilder(IBuilderFactory factory, TOuterBuilder outerBuilder, Action<IState> builtAction)
 		{
 			_factory = factory ?? throw new ArgumentNullException(nameof(factory));
-			_builder = factory.CreateStateBuilder();
+			_builder = factory.CreateStateBuilder(null);
 			_outerBuilder = outerBuilder;
 			_builtAction = builtAction;
 		}
@@ -39,7 +41,7 @@ namespace TSSArt.StateMachine
 		public StateFluentBuilder<TOuterBuilder> SetInitial(params string[] initial)
 		{
 			if (initial == null) throw new ArgumentNullException(nameof(initial));
-			if (initial.Length == 0) throw new ArgumentException(message: "Value cannot be an empty collection.", nameof(initial));
+			if (initial.Length == 0) throw new ArgumentException(Resources.Exception_ValueCannotBeAnEmptyCollection, nameof(initial));
 
 			var builder = ImmutableArray.CreateBuilder<IIdentifier>(initial.Length);
 
@@ -56,7 +58,7 @@ namespace TSSArt.StateMachine
 		public StateFluentBuilder<TOuterBuilder> SetInitial(params IIdentifier[] initial)
 		{
 			if (initial == null) throw new ArgumentNullException(nameof(initial));
-			if (initial.Length == 0) throw new ArgumentException(message: "Value cannot be an empty collection.", nameof(initial));
+			if (initial.Length == 0) throw new ArgumentException(Resources.Exception_ValueCannotBeAnEmptyCollection, nameof(initial));
 
 			_builder.SetInitial(initial.ToImmutableArray());
 
@@ -65,7 +67,7 @@ namespace TSSArt.StateMachine
 
 		public StateFluentBuilder<TOuterBuilder> SetInitial(ImmutableArray<string> initial)
 		{
-			if (initial.IsDefaultOrEmpty) throw new ArgumentException(message: "Value cannot be an empty list.", nameof(initial));
+			if (initial.IsDefaultOrEmpty) throw new ArgumentException(Resources.Exception_ValueCannotBeAnEmptyList, nameof(initial));
 
 			_builder.SetInitial(ImmutableArray.CreateRange<string, IIdentifier>(initial, id => (Identifier) id));
 
@@ -74,7 +76,7 @@ namespace TSSArt.StateMachine
 
 		public StateFluentBuilder<TOuterBuilder> SetInitial(ImmutableArray<IIdentifier> initial)
 		{
-			if (initial.IsDefaultOrEmpty) throw new ArgumentException(message: "Value cannot be an empty list.", nameof(initial));
+			if (initial.IsDefaultOrEmpty) throw new ArgumentException(Resources.Exception_ValueCannotBeAnEmptyList, nameof(initial));
 
 			_builder.SetInitial(initial);
 
@@ -83,7 +85,7 @@ namespace TSSArt.StateMachine
 
 		private StateFluentBuilder<TOuterBuilder> AddOnEntry(RuntimeAction action)
 		{
-			_builder.AddOnEntry(new OnEntry { Action = ImmutableArray.Create<IExecutableEntity>(action) });
+			_builder.AddOnEntry(new OnEntryEntity { Action = ImmutableArray.Create<IExecutableEntity>(action) });
 
 			return this;
 		}
@@ -96,16 +98,16 @@ namespace TSSArt.StateMachine
 
 		private StateFluentBuilder<TOuterBuilder> AddOnExit(RuntimeAction action)
 		{
-			_builder.AddOnExit(new OnExit { Action = ImmutableArray.Create<IExecutableEntity>(action) });
+			_builder.AddOnExit(new OnExitEntity { Action = ImmutableArray.Create<IExecutableEntity>(action) });
 
 			return this;
 		}
 
-		public StateFluentBuilder<TOuterBuilder> AddOnExit(ExecutableAction action) => AddOnEntry(new RuntimeAction(action));
+		public StateFluentBuilder<TOuterBuilder> AddOnExit(ExecutableAction action) => AddOnExit(new RuntimeAction(action));
 
-		public StateFluentBuilder<TOuterBuilder> AddOnExit(ExecutableTask task) => AddOnEntry(new RuntimeAction(task));
+		public StateFluentBuilder<TOuterBuilder> AddOnExit(ExecutableTask task) => AddOnExit(new RuntimeAction(task));
 
-		public StateFluentBuilder<TOuterBuilder> AddOnExit(ExecutableCancellableTask task) => AddOnEntry(new RuntimeAction(task));
+		public StateFluentBuilder<TOuterBuilder> AddOnExit(ExecutableCancellableTask task) => AddOnExit(new RuntimeAction(task));
 
 		public InitialFluentBuilder<StateFluentBuilder<TOuterBuilder>> BeginInitial() => new InitialFluentBuilder<StateFluentBuilder<TOuterBuilder>>(_factory, this, _builder.SetInitial);
 

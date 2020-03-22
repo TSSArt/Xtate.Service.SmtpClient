@@ -55,16 +55,16 @@ namespace TSSArt.StateMachine.Services
 										  Regex = capture["regex"].AsStringOrDefault()
 								  };
 
-			static string[] GetArray(DataModelValue val)
+			static string[]? GetArray(DataModelValue val)
 			{
 				if (val.Type == DataModelValueType.Array)
 				{
-					return val.AsArray().Select(p => p.AsStringOrDefault()).Where(s => !string.IsNullOrEmpty(s)).ToArray();
+					return val.AsArray().Select(p => p.AsStringOrDefault()!).Where(s => !string.IsNullOrEmpty(s)).ToArray();
 				}
 
 				var str = val.AsStringOrDefault();
 
-				return !string.IsNullOrEmpty(str) ? new[] { str } : null;
+				return !string.IsNullOrEmpty(str) ? new[] { str! } : null;
 			}
 
 			var response = await DoRequest(Source, method, accept, autoRedirect, contentType, headers, cookies, captures.ToArray(), Content, StopToken).ConfigureAwait(false);
@@ -167,7 +167,7 @@ namespace TSSArt.StateMachine.Services
 			return new ValueTask<DataModelValue>(CaptureData(htmlDocument, captures));
 		}
 
-		private static async ValueTask<Response> DoRequest(Uri requestUri, string method, string accept, bool autoRedirect, string contentType,
+		private static async ValueTask<Response> DoRequest(Uri? requestUri, string method, string? accept, bool autoRedirect, string? contentType,
 														   IEnumerable<KeyValuePair<string, string>> headers, IEnumerable<Cookie> cookies,
 														   Capture[] captures, DataModelValue content, CancellationToken token)
 		{
@@ -242,7 +242,7 @@ namespace TSSArt.StateMachine.Services
 			return result;
 		}
 
-		private static void AppendCookies(Uri uri, CookieContainer cookieContainer, HttpWebResponse response)
+		private static void AppendCookies(Uri? uri, CookieContainer cookieContainer, HttpWebResponse response)
 		{
 			var list = response.Headers.GetValues("Set-Cookie");
 
@@ -263,7 +263,7 @@ namespace TSSArt.StateMachine.Services
 				}
 			}
 
-			IEnumerable<string> GetPaths(string header)
+			static IEnumerable<string> GetPaths(string header)
 			{
 				const string pathPrefix = "path=";
 
@@ -281,7 +281,7 @@ namespace TSSArt.StateMachine.Services
 			}
 		}
 
-		private static async ValueTask WriteContent(WebRequest request, string contentType, DataModelValue content)
+		private static async ValueTask WriteContent(WebRequest request, string? contentType, DataModelValue content)
 		{
 			if (contentType == null)
 			{
@@ -332,7 +332,7 @@ namespace TSSArt.StateMachine.Services
 			return new DataModelValue(obj);
 		}
 
-		private static DataModelValue CaptureEntry(HtmlDocument htmlDocument, string[] xpaths, string[] attrs, string pattern)
+		private static DataModelValue CaptureEntry(HtmlDocument htmlDocument, string[]? xpaths, string[]? attrs, string? pattern)
 		{
 			if (xpaths == null)
 			{
@@ -366,7 +366,7 @@ namespace TSSArt.StateMachine.Services
 			return new DataModelValue(array);
 		}
 
-		private static DataModelValue CaptureInNode(HtmlNode node, string[] attrs, string pattern)
+		private static DataModelValue CaptureInNode(HtmlNode node, string[]? attrs, string? pattern)
 		{
 			if (attrs == null)
 			{
@@ -392,14 +392,14 @@ namespace TSSArt.StateMachine.Services
 			return new DataModelValue(obj);
 		}
 
-		private static string GetSpecialAttributeValue(HtmlNode node, string attr) =>
+		private static string? GetSpecialAttributeValue(HtmlNode node, string attr) =>
 				attr switch
 				{
 						"::value" => GetHtmlValue(node),
 						_ => null
 				};
 
-		private static string GetHtmlValue(HtmlNode node) =>
+		private static string? GetHtmlValue(HtmlNode node) =>
 				node.Name switch
 				{
 						"input" => GetInputValue(node),
@@ -408,7 +408,7 @@ namespace TSSArt.StateMachine.Services
 						_ => null
 				};
 
-		private static string GetSelectValue(HtmlNode node)
+		private static string? GetSelectValue(HtmlNode node)
 		{
 			var selected = node.ChildNodes.FirstOrDefault(n => n.Name == "option" && n.Attributes.Contains("selected"))
 						   ?? node.ChildNodes.FirstOrDefault(n => n.Name == "option");
@@ -416,7 +416,7 @@ namespace TSSArt.StateMachine.Services
 			return selected != null ? GetValue(selected, check: false) : null;
 		}
 
-		private static string GetInputValue(HtmlNode node) =>
+		private static string? GetInputValue(HtmlNode node) =>
 				node.GetAttributeValue(name: "type", def: null) switch
 				{
 						"radio" => GetValue(node, check: true),
@@ -424,7 +424,7 @@ namespace TSSArt.StateMachine.Services
 						_ => GetValue(node, check: false)
 				};
 
-		private static string GetValue(HtmlNode node, bool check)
+		private static string? GetValue(HtmlNode node, bool check)
 		{
 			if (check && !node.Attributes.Contains("checked"))
 			{
@@ -434,7 +434,7 @@ namespace TSSArt.StateMachine.Services
 			return node.GetAttributeValue(name: "value", def: null) ?? node.InnerText;
 		}
 
-		private static DataModelValue CaptureInText(string text, string pattern)
+		private static DataModelValue CaptureInText(string text, string? pattern)
 		{
 			if (pattern == null)
 			{
@@ -478,10 +478,10 @@ namespace TSSArt.StateMachine.Services
 
 		private struct Capture
 		{
-			public string   Name       { get; set; }
-			public string[] XPaths     { get; set; }
-			public string[] Attributes { get; set; }
-			public string   Regex      { get; set; }
+			public string    Name       { get; set; }
+			public string[]? XPaths     { get; set; }
+			public string[]? Attributes { get; set; }
+			public string?   Regex      { get; set; }
 		}
 	}
 }

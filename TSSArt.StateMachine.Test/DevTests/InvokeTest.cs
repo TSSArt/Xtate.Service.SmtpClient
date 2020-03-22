@@ -14,49 +14,49 @@ namespace TSSArt.StateMachine.Test
 		private Mock<IExternalCommunication> _externalCommunicationMock;
 		private Mock<ILogger>                _loggerMock;
 		private InterpreterOptions           _options;
-		private StateMachine                 _stateMachine;
+		private StateMachineEntity           _stateMachine;
 
 		[TestInitialize]
 		public void Initialize()
 		{
-			_stateMachine = new StateMachine
+			_stateMachine = new StateMachineEntity
 							{
-									States = ImmutableArray.Create<IStateEntity>(new State
+									States = ImmutableArray.Create<IStateEntity>(new StateEntity
 																				 {
 																						 Id = (Identifier) "S1",
-																						 Invoke = ImmutableArray.Create<IInvoke>(new Invoke
+																						 Invoke = ImmutableArray.Create<IInvoke>(new InvokeEntity
 																																 {
 																																		 Id = "invoke_id",
 																																		 Source = new Uri("proto://src"),
 																																		 Type = new Uri("proto://type"),
-																																		 Content = new Content
+																																		 Content = new ContentEntity
 																																				   {
 																																						   Body =
 																																								   new ContentBody
 																																								   { Value = "content" }
 																																				   },
-																																		 Finalize = new Finalize
+																																		 Finalize = new FinalizeEntity
 																																					{
 																																							Action =
 																																									ImmutableArray
 																																											.Create<IExecutableEntity>(
-																																													new Log
+																																													new LogEntity
 																																													{
 																																															Label =
 																																																	"FinalizeExecuted"
 																																													})
 																																					}
 																																 }),
-																						 Transitions = ImmutableArray.Create<ITransition>(new Transition
+																						 Transitions = ImmutableArray.Create<ITransition>(new TransitionEntity
 																																		  {
-																																				  Event =
+																																				  EventDescriptors =
 																																						  ImmutableArray.Create<IEventDescriptor>(
 																																								  (EventDescriptor) "ToF"),
 																																				  Target = ImmutableArray.Create<IIdentifier>(
 																																						  (Identifier) "F")
 																																		  })
 																				 },
-																				 new Final
+																				 new FinalEntity
 																				 {
 																						 Id = (Identifier) "F"
 																				 })
@@ -103,7 +103,7 @@ namespace TSSArt.StateMachine.Test
 			_externalCommunicationMock.Verify(l => l.IsInvokeActive("invoke_id", invokeUniqueId));
 			_externalCommunicationMock.VerifyNoOtherCalls();
 
-			_loggerMock.Verify(l => l.Log(It.IsAny<string>(), null, "FinalizeExecuted", default, default));
+			_loggerMock.Verify(l => l.LogInfo(It.IsAny<string>(), null, "FinalizeExecuted", default, default));
 			_loggerMock.VerifyGet(l => l.IsTracingEnabled);
 			_loggerMock.VerifyNoOtherCalls();
 		}

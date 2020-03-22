@@ -5,16 +5,19 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class EventObject : IEvent, IStoreSupport
 	{
-		public EventObject(string name, string invokeId = null, string invokeUniqueId = null) :
-				this(EventType.External, EventName.ToParts(name), data: default, sendId: null, invokeId, invokeUniqueId) { }
+		public EventObject(string name, string? invokeId = null, string? invokeUniqueId = null) :
+				this(EventType.External, EventName.ToParts(name), data: default, sendId: null, invokeId, invokeUniqueId)
+		{ }
 
-		public EventObject(EventType type, IOutgoingEvent @event, Uri origin = null, Uri originType = null, string invokeId = null, string invokeUniqueId = null)
-				: this(type, @event.SendId, @event.NameParts, invokeId, invokeUniqueId, origin, originType, @event.Data) { }
+		public EventObject(EventType type, IOutgoingEvent evt, Uri? origin = null, Uri? originType = null, string? invokeId = null, string? invokeUniqueId = null)
+				: this(type, evt.SendId, evt.NameParts, invokeId, invokeUniqueId, origin, originType, evt.Data)
+		{ }
 
-		public EventObject(EventType type, ImmutableArray<IIdentifier> nameParts, DataModelValue data = default, string sendId = null, string invokeId = null, string invokeUniqueId = null)
-				: this(type, sendId, nameParts, invokeId, invokeUniqueId, origin: null, originType: null, data) { }
+		public EventObject(EventType type, ImmutableArray<IIdentifier> nameParts, DataModelValue data = default, string? sendId = null, string? invokeId = null, string? invokeUniqueId = null)
+				: this(type, sendId, nameParts, invokeId, invokeUniqueId, origin: null, originType: null, data)
+		{ }
 
-		public EventObject(EventType type, string sendId, ImmutableArray<IIdentifier> nameParts, string invokeId, string invokeUniqueId, Uri origin, Uri originType, DataModelValue data)
+		private EventObject(EventType type, string? sendId, ImmutableArray<IIdentifier> nameParts, string? invokeId, string? invokeUniqueId, Uri? origin, Uri? originType, DataModelValue data)
 		{
 			Type = type;
 			SendId = sendId;
@@ -30,11 +33,11 @@ namespace TSSArt.StateMachine
 		{
 			if (!bucket.TryGet(Key.TypeInfo, out TypeInfo storedTypeInfo) || storedTypeInfo != TypeInfo.EventObject)
 			{
-				throw new ArgumentException("Invalid TypeInfo value");
+				throw new ArgumentException(Resources.Exception_Invalid_TypeInfo_value);
 			}
 
 			var name = bucket.GetString(Key.Name);
-			NameParts = EventName.ToParts(name);
+			NameParts = name != null ? EventName.ToParts(name) : default;
 			Type = bucket.Get<EventType>(Key.Type);
 			SendId = bucket.GetString(Key.SendId);
 			Origin = bucket.GetUri(Key.Origin);
@@ -50,17 +53,17 @@ namespace TSSArt.StateMachine
 
 		public DataModelValue Data { get; }
 
-		public string InvokeId { get; }
+		public string? InvokeId { get; }
 
-		public string InvokeUniqueId { get; }
+		public string? InvokeUniqueId { get; }
 
 		public ImmutableArray<IIdentifier> NameParts { get; }
 
-		public Uri Origin { get; }
+		public Uri? Origin { get; }
 
-		public Uri OriginType { get; }
+		public Uri? OriginType { get; }
 
-		public string SendId { get; }
+		public string? SendId { get; }
 
 		public EventType Type { get; }
 

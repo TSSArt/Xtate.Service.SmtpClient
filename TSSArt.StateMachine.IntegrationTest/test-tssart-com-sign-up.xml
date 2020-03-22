@@ -1,4 +1,6 @@
-﻿<scxml xmlns="http://www.w3.org/2005/07/scxml" xmlns:mid="http://tssart.com/scxml/customaction/mid" version="1.0"
+﻿<!-- ReSharper disable MarkupAttributeTypo -->
+<!-- ReSharper disable CommentTypo -->
+<scxml xmlns="http://www.w3.org/2005/07/scxml" xmlns:mid="http://tssart.com/scxml/customaction/mid" version="1.0"
        datamodel="ecmascript">
   <datamodel>
     <data id="siteUrl" expr="'https://test.tssart.com/'" />

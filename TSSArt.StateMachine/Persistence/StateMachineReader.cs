@@ -1,17 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	internal sealed class StateMachineReader
 	{
-		private Dictionary<int, IEntity> _forwardEntities;
+		private ImmutableDictionary<int, IEntity>? _forwardEntities;
 
-		public IStateMachine Build(Bucket bucket, Dictionary<int, IEntity> forwardEntities = null)
+		public IStateMachine Build(Bucket bucket, ImmutableDictionary<int, IEntity>? forwardEntities = null)
 		{
 			_forwardEntities = forwardEntities;
 
-			return RestoreStateMachine(bucket);
+			return RestoreStateMachine(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element);
 		}
 
 		private static bool Exist(Bucket bucket, TypeInfo typeInfo)
@@ -20,7 +20,7 @@ namespace TSSArt.StateMachine
 			{
 				if (storedTypeInfo != typeInfo)
 				{
-					throw new ArgumentException("Unexpected TypeInfo value");
+					throw new StateMachinePersistenceException(Resources.Exception_Unexpected_TypeInfo_value);
 				}
 
 				return true;
@@ -35,25 +35,25 @@ namespace TSSArt.StateMachine
 
 			if (_forwardEntities == null)
 			{
-				throw new InvalidOperationException("Forward entities required to restore state machine");
+				throw new StateMachinePersistenceException(Resources.Exception_Forward_entities_required_to_restore_state_machine);
 			}
 
 			if (!_forwardEntities.TryGetValue(documentId, out var entity))
 			{
-				throw new InvalidOperationException("Forward entity can not be found");
+				throw new StateMachinePersistenceException(Resources.Exception_Forward_entity_can_not_be_found);
 			}
 
 			if (!(entity is IExecutableEntity executableEntity))
 			{
-				throw new InvalidOperationException("Forward entity has incorrect type");
+				throw new StateMachinePersistenceException(Resources.Exception_Forward_entity_has_incorrect_type);
 			}
 
 			return executableEntity;
 		}
 
-		private IStateMachine RestoreStateMachine(Bucket bucket) =>
+		private IStateMachine? RestoreStateMachine(Bucket bucket) =>
 				Exist(bucket, TypeInfo.StateMachineNode)
-						? new StateMachine
+						? new StateMachineEntity
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Name = bucket.GetString(Key.Name),
@@ -64,63 +64,63 @@ namespace TSSArt.StateMachine
 								  Initial = RestoreInitial(bucket.Nested(Key.Initial)),
 								  States = bucket.RestoreList(Key.States, RestoreStateEntity)
 						  }
-						: (IStateMachine) null;
+						: (IStateMachine?) null;
 
-		private static IDataModel RestoreDataModel(Bucket bucket) =>
+		private static IDataModel? RestoreDataModel(Bucket bucket) =>
 				Exist(bucket, TypeInfo.DataModelNode)
-						? new DataModel
+						? new DataModelEntity
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Data = bucket.RestoreList(Key.DataList, RestoreData)
 						  }
-						: (IDataModel) null;
+						: (IDataModel?) null;
 
-		private IInitial RestoreInitial(Bucket bucket) =>
+		private IInitial? RestoreInitial(Bucket bucket) =>
 				Exist(bucket, TypeInfo.InitialNode)
-						? new Initial
+						? new InitialEntity
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Transition = RestoreTransition(bucket.Nested(Key.Transition))
 						  }
-						: (IInitial) null;
+						: (IInitial?) null;
 
-		private ITransition RestoreTransition(Bucket bucket) =>
+		private ITransition? RestoreTransition(Bucket bucket) =>
 				Exist(bucket, TypeInfo.TransitionNode)
-						? new Transition
+						? new TransitionEntity
 						  {
 								  Ancestor = new EntityData(bucket),
-								  Event = bucket.RestoreList(Key.Event, RestoreEventDescriptor),
+								  EventDescriptors = bucket.RestoreList(Key.Event, RestoreEventDescriptor),
 								  Condition = RestoreCondition(bucket.Nested(Key.Condition)),
 								  Target = bucket.RestoreList(Key.Target, RestoreIdentifier),
 								  Type = bucket.Get<TransitionType>(Key.TransitionType),
 								  Action = bucket.RestoreList(Key.Action, RestoreExecutableEntity)
 						  }
-						: (ITransition) null;
+						: (ITransition?) null;
 
-		private static IAssign RestoreAssign(Bucket bucket) =>
+		private static IAssign? RestoreAssign(Bucket bucket) =>
 				Exist(bucket, TypeInfo.AssignNode)
-						? new Assign
+						? new AssignEntity
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Location = RestoreLocationExpression(bucket.Nested(Key.Location)),
 								  Expression = RestoreValueExpression(bucket.Nested(Key.Expression)),
 								  InlineContent = bucket.GetString(Key.InlineContent)
 						  }
-						: (IAssign) null;
+						: (IAssign?) null;
 
-		private static ICancel RestoreCancel(Bucket bucket) =>
+		private static ICancel? RestoreCancel(Bucket bucket) =>
 				Exist(bucket, TypeInfo.CancelNode)
-						? new Cancel
+						? new CancelEntity
 						  {
 								  Ancestor = new EntityData(bucket),
 								  SendId = bucket.GetString(Key.SendId),
 								  SendIdExpression = RestoreValueExpression(bucket.Nested(Key.SendIdExpression))
 						  }
-						: (ICancel) null;
+						: (ICancel?) null;
 
-		private IState RestoreCompound(Bucket bucket) =>
+		private IState? RestoreCompound(Bucket bucket) =>
 				Exist(bucket, TypeInfo.CompoundNode)
-						? new State
+						? new StateEntity
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Id = RestoreIdentifier(bucket.Nested(Key.Id)),
@@ -133,45 +133,45 @@ namespace TSSArt.StateMachine
 								  OnExit = bucket.RestoreList(Key.OnExit, RestoreOnExit),
 								  Invoke = bucket.RestoreList(Key.Invoke, RestoreInvoke)
 						  }
-						: (IState) null;
+						: (IState?) null;
 
-		private IExecutableEntity RestoreCondition(Bucket bucket)
+		private IExecutableEntity? RestoreCondition(Bucket bucket)
 		{
 			if (!bucket.TryGet(Key.TypeInfo, out TypeInfo typeInfo))
 			{
 				return null;
 			}
 
-			switch (typeInfo)
+			return typeInfo switch
 			{
-				case TypeInfo.ConditionExpressionNode: return RestoreConditionExpression(bucket);
-				case TypeInfo.RuntimeExecNode: return ForwardExecEntity(bucket);
-				default: throw new ArgumentOutOfRangeException(nameof(typeInfo), typeInfo, message: "Unknown Condition type");
-			}
+					TypeInfo.ConditionExpressionNode => (RestoreConditionExpression(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element)),
+					TypeInfo.RuntimeExecNode => ForwardExecEntity(bucket),
+					_ => throw new StateMachinePersistenceException(Resources.Exception_Unknown_Condition_type)
+			};
 		}
 
-		private static IConditionExpression RestoreConditionExpression(Bucket bucket) =>
+		private static IConditionExpression? RestoreConditionExpression(Bucket bucket) =>
 				Exist(bucket, TypeInfo.ConditionExpressionNode)
 						? new ConditionExpression
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Expression = bucket.GetString(Key.Expression)
 						  }
-						: (IConditionExpression) null;
+						: (IConditionExpression?) null;
 
-		private static IContent RestoreContent(Bucket bucket) =>
+		private static IContent? RestoreContent(Bucket bucket) =>
 				Exist(bucket, TypeInfo.ContentNode)
-						? new Content
+						? new ContentEntity
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Expression = RestoreValueExpression(bucket.Nested(Key.Expression)),
-								  Body = bucket.TryGet(Key.Body, out string body) ? new ContentBody { Value = body } : (IContentBody) null
+								  Body = bucket.TryGet(Key.Body, out string? body) ? new ContentBody { Value = body } : (IContentBody?) null
 						  }
-						: (IContent) null;
+						: (IContent?) null;
 
-		private static IData RestoreData(Bucket bucket) =>
+		private static IData? RestoreData(Bucket bucket) =>
 				Exist(bucket, TypeInfo.DataNode)
-						? new Data
+						? new DataEntity
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Id = bucket.GetString(Key.Id),
@@ -179,106 +179,111 @@ namespace TSSArt.StateMachine
 								  Expression = RestoreValueExpression(bucket.Nested(Key.Expression)),
 								  InlineContent = bucket.GetString(Key.InlineContent)
 						  }
-						: (IData) null;
+						: (IData?) null;
 
-		private static IDoneData RestoreDoneData(Bucket bucket) =>
+		private static IDoneData? RestoreDoneData(Bucket bucket) =>
 				Exist(bucket, TypeInfo.DoneDataNode)
-						? new DoneData
+						? new DoneDataEntity
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Content = RestoreContent(bucket.Nested(Key.Source)),
 								  Parameters = bucket.RestoreList(Key.Parameters, RestoreParam)
 						  }
-						: (IDoneData) null;
+						: (IDoneData?) null;
 
-		private static IElseIf RestoreElseIf(Bucket bucket) =>
+		private static IElseIf? RestoreElseIf(Bucket bucket) =>
 				Exist(bucket, TypeInfo.ElseIfNode)
-						? new ElseIf
+						? new ElseIfEntity
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Condition = RestoreConditionExpression(bucket.Nested(Key.Condition))
 						  }
-						: (IElseIf) null;
+						: (IElseIf?) null;
 
-		private static IElse RestoreElse(Bucket bucket) =>
+		private static IElse? RestoreElse(Bucket bucket) =>
 				Exist(bucket, TypeInfo.ElseNode)
-						? new Else
+						? new ElseEntity
 						  {
 								  Ancestor = new EntityData(bucket)
 						  }
-						: (IElse) null;
+						: (IElse?) null;
 
-		private static IEventDescriptor RestoreEventDescriptor(Bucket bucket) => (EventDescriptor) bucket.GetString(Key.Id);
+		private static IEventDescriptor? RestoreEventDescriptor(Bucket bucket)
+		{
+			var val = bucket.GetString(Key.Id);
 
-		private static IOutgoingEvent RestoreEvent(Bucket bucket) => new Event(bucket.GetString(Key.Id)) { Target = Event.InternalTarget };
+			return val != null ? (EventDescriptor) val : null;
+		}
+
+		private static IOutgoingEvent RestoreEvent(Bucket bucket) => new EventEntity(bucket.GetString(Key.Id)) { Target = EventEntity.InternalTarget };
 
 		private IExecutableEntity RestoreExecutableEntity(Bucket bucket)
 		{
 			var typeInfo = bucket.Get<TypeInfo>(Key.TypeInfo);
-			switch (typeInfo)
+			return typeInfo switch
 			{
-				case TypeInfo.AssignNode: return RestoreAssign(bucket);
-				case TypeInfo.CancelNode: return RestoreCancel(bucket);
-				case TypeInfo.CustomActionNode: return RestoreCustomAction(bucket);
-				case TypeInfo.ForEachNode: return RestoreForEach(bucket);
-				case TypeInfo.IfNode: return RestoreIf(bucket);
-				case TypeInfo.ElseIfNode: return RestoreElseIf(bucket);
-				case TypeInfo.ElseNode: return RestoreElse(bucket);
-				case TypeInfo.LogNode: return RestoreLog(bucket);
-				case TypeInfo.RaiseNode: return RestoreRaise(bucket);
-				case TypeInfo.ScriptNode: return RestoreScript(bucket);
-				case TypeInfo.SendNode: return RestoreSend(bucket);
-				case TypeInfo.RuntimeExecNode: return ForwardExecEntity(bucket);
-				default: throw new ArgumentOutOfRangeException(nameof(typeInfo), typeInfo, message: "Unknown Executable Entity type");
-			}
+					TypeInfo.AssignNode => (RestoreAssign(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element)),
+					TypeInfo.CancelNode => (RestoreCancel(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element)),
+					TypeInfo.CustomActionNode => (RestoreCustomAction(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element)),
+					TypeInfo.ForEachNode => (RestoreForEach(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element)),
+					TypeInfo.IfNode => (RestoreIf(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element)),
+					TypeInfo.ElseIfNode => (RestoreElseIf(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element)),
+					TypeInfo.ElseNode => (RestoreElse(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element)),
+					TypeInfo.LogNode => (RestoreLog(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element)),
+					TypeInfo.RaiseNode => (RestoreRaise(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element)),
+					TypeInfo.ScriptNode => (RestoreScript(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element)),
+					TypeInfo.SendNode => (RestoreSend(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element)),
+					TypeInfo.RuntimeExecNode => ForwardExecEntity(bucket),
+					_ => throw new StateMachinePersistenceException(Resources.Exception_Unknown_Executable_Entity_type)
+			};
 		}
 
-		private static ILog RestoreLog(Bucket bucket) =>
+		private static ILog? RestoreLog(Bucket bucket) =>
 				Exist(bucket, TypeInfo.LogNode)
-						? new Log
+						? new LogEntity
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Label = bucket.GetString(Key.Label),
 								  Expression = RestoreValueExpression(bucket.Nested(Key.Expression))
 						  }
-						: (ILog) null;
+						: (ILog?) null;
 
-		private static IRaise RestoreRaise(Bucket bucket) =>
+		private static IRaise? RestoreRaise(Bucket bucket) =>
 				Exist(bucket, TypeInfo.RaiseNode)
-						? new Raise
+						? new RaiseEntity
 						  {
 								  Ancestor = new EntityData(bucket),
-								  Event = RestoreEvent(bucket.Nested(Key.Event))
+								  OutgoingEvent = RestoreEvent(bucket.Nested(Key.Event))
 						  }
-						: (IRaise) null;
+						: (IRaise?) null;
 
-		private static IScript RestoreScript(Bucket bucket) =>
+		private static IScript? RestoreScript(Bucket bucket) =>
 				Exist(bucket, TypeInfo.ScriptNode)
-						? new Script
+						? new ScriptEntity
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Source = RestoreExternalScriptExpression(bucket.Nested(Key.Source)),
 								  Content = RestoreScriptExpression(bucket.Nested(Key.Content))
 						  }
-						: (IScript) null;
+						: (IScript?) null;
 
-		private static ICustomAction RestoreCustomAction(Bucket bucket) =>
+		private static ICustomAction? RestoreCustomAction(Bucket bucket) =>
 				Exist(bucket, TypeInfo.CustomActionNode)
 						? new CustomAction
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Xml = bucket.GetString(Key.Content)
 						  }
-						: (ICustomAction) null;
+						: (ICustomAction?) null;
 
-		private static ISend RestoreSend(Bucket bucket) =>
+		private static ISend? RestoreSend(Bucket bucket) =>
 				Exist(bucket, TypeInfo.SendNode)
-						? new Send
+						? new SendEntity
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Id = bucket.GetString(Key.Id),
 								  Type = bucket.GetUri(Key.Type),
-								  Event = bucket.GetString(Key.Event),
+								  EventName = bucket.GetString(Key.Event),
 								  Target = bucket.GetUri(Key.Target),
 								  DelayMs = bucket.GetInt32(Key.DelayMs),
 								  TypeExpression = RestoreValueExpression(bucket.Nested(Key.TypeExpression)),
@@ -290,18 +295,18 @@ namespace TSSArt.StateMachine
 								  Parameters = bucket.RestoreList(Key.Parameters, RestoreParam),
 								  Content = RestoreContent(bucket.Nested(Key.Content))
 						  }
-						: (ISend) null;
+						: (ISend?) null;
 
-		private static IExternalDataExpression RestoreExternalDataExpression(Bucket bucket) =>
+		private static IExternalDataExpression? RestoreExternalDataExpression(Bucket bucket) =>
 				Exist(bucket, TypeInfo.ExternalDataExpressionNode)
 						? new ExternalDataExpression
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Uri = bucket.GetUri(Key.Uri)
 						  }
-						: (IExternalDataExpression) null;
+						: (IExternalDataExpression?) null;
 
-		private static IExternalScriptExpression RestoreExternalScriptExpression(Bucket bucket)
+		private static IExternalScriptExpression? RestoreExternalScriptExpression(Bucket bucket)
 		{
 			if (!Exist(bucket, TypeInfo.ExternalScriptExpressionNode))
 			{
@@ -321,18 +326,18 @@ namespace TSSArt.StateMachine
 			return new ExternalScriptExpressionWithContent(new EntityData(bucket), bucket.GetUri(Key.Uri), content);
 		}
 
-		private IFinalize RestoreFinalize(Bucket bucket) =>
+		private IFinalize? RestoreFinalize(Bucket bucket) =>
 				Exist(bucket, TypeInfo.FinalizeNode)
-						? new Finalize
+						? new FinalizeEntity
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Action = bucket.RestoreList(Key.Parameters, RestoreExecutableEntity)
 						  }
-						: (IFinalize) null;
+						: (IFinalize?) null;
 
-		private IFinal RestoreFinal(Bucket bucket) =>
+		private IFinal? RestoreFinal(Bucket bucket) =>
 				Exist(bucket, TypeInfo.FinalNode)
-						? new Final
+						? new FinalEntity
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Id = RestoreIdentifier(bucket.Nested(Key.Id)),
@@ -340,11 +345,11 @@ namespace TSSArt.StateMachine
 								  OnExit = bucket.RestoreList(Key.OnExit, RestoreOnExit),
 								  DoneData = RestoreDoneData(bucket.Nested(Key.DoneData))
 						  }
-						: (IFinal) null;
+						: (IFinal?) null;
 
-		private IForEach RestoreForEach(Bucket bucket) =>
+		private IForEach? RestoreForEach(Bucket bucket) =>
 				Exist(bucket, TypeInfo.ForEachNode)
-						? new ForEach
+						? new ForEachEntity
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Array = RestoreValueExpression(bucket.Nested(Key.Array)),
@@ -352,38 +357,38 @@ namespace TSSArt.StateMachine
 								  Index = RestoreLocationExpression(bucket.Nested(Key.Index)),
 								  Action = bucket.RestoreList(Key.Action, RestoreExecutableEntity)
 						  }
-						: (IForEach) null;
+						: (IForEach?) null;
 
-		private IHistory RestoreHistory(Bucket bucket) =>
+		private IHistory? RestoreHistory(Bucket bucket) =>
 				Exist(bucket, TypeInfo.HistoryNode)
-						? new History
+						? new HistoryEntity
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Id = RestoreIdentifier(bucket.Nested(Key.Id)),
 								  Type = bucket.Get<HistoryType>(Key.HistoryType),
 								  Transition = RestoreTransition(bucket.Nested(Key.Transition))
 						  }
-						: (IHistory) null;
+						: (IHistory?) null;
 
-		private static IIdentifier RestoreIdentifier(Bucket bucket)
+		private static IIdentifier? RestoreIdentifier(Bucket bucket)
 		{
 			var id = bucket.GetString(Key.Id);
 			return id != null ? (Identifier) id : null;
 		}
 
-		private IIf RestoreIf(Bucket bucket) =>
+		private IIf? RestoreIf(Bucket bucket) =>
 				Exist(bucket, TypeInfo.IfNode)
-						? new If
+						? new IfEntity
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Condition = RestoreConditionExpression(bucket.Nested(Key.Condition)),
 								  Action = bucket.RestoreList(Key.Action, RestoreExecutableEntity)
 						  }
-						: (IIf) null;
+						: (IIf?) null;
 
-		private IInvoke RestoreInvoke(Bucket bucket) =>
+		private IInvoke? RestoreInvoke(Bucket bucket) =>
 				Exist(bucket, TypeInfo.InvokeNode)
-						? new Invoke
+						? new InvokeEntity
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Id = bucket.GetString(Key.Id),
@@ -398,38 +403,38 @@ namespace TSSArt.StateMachine
 								  Finalize = RestoreFinalize(bucket.Nested(Key.Finalize)),
 								  Content = RestoreContent(bucket.Nested(Key.Content))
 						  }
-						: (IInvoke) null;
+						: (IInvoke?) null;
 
-		private static ILocationExpression RestoreLocationExpression(Bucket bucket) =>
+		private static ILocationExpression? RestoreLocationExpression(Bucket bucket) =>
 				Exist(bucket, TypeInfo.LocationExpressionNode)
 						? new LocationExpression
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Expression = bucket.GetString(Key.Expression)
 						  }
-						: (ILocationExpression) null;
+						: (ILocationExpression?) null;
 
-		private IOnEntry RestoreOnEntry(Bucket bucket) =>
+		private IOnEntry? RestoreOnEntry(Bucket bucket) =>
 				Exist(bucket, TypeInfo.OnEntryNode)
-						? new OnEntry
+						? new OnEntryEntity
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Action = bucket.RestoreList(Key.Action, RestoreExecutableEntity)
 						  }
-						: (IOnEntry) null;
+						: (IOnEntry?) null;
 
-		private IOnExit RestoreOnExit(Bucket bucket) =>
+		private IOnExit? RestoreOnExit(Bucket bucket) =>
 				Exist(bucket, TypeInfo.OnExitNode)
-						? new OnExit
+						? new OnExitEntity
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Action = bucket.RestoreList(Key.Action, RestoreExecutableEntity)
 						  }
-						: (IOnExit) null;
+						: (IOnExit?) null;
 
-		private IParallel RestoreParallel(Bucket bucket) =>
+		private IParallel? RestoreParallel(Bucket bucket) =>
 				Exist(bucket, TypeInfo.ParallelNode)
-						? new Parallel
+						? new ParallelEntity
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Id = RestoreIdentifier(bucket.Nested(Key.Id)),
@@ -441,44 +446,44 @@ namespace TSSArt.StateMachine
 								  OnExit = bucket.RestoreList(Key.OnExit, RestoreOnExit),
 								  Invoke = bucket.RestoreList(Key.Invoke, RestoreInvoke)
 						  }
-						: (IParallel) null;
+						: (IParallel?) null;
 
-		private static IParam RestoreParam(Bucket bucket) =>
+		private static IParam? RestoreParam(Bucket bucket) =>
 				Exist(bucket, TypeInfo.ParamNode)
-						? new Param
+						? new ParamEntity
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Name = bucket.GetString(Key.Name),
 								  Expression = RestoreValueExpression(bucket.Nested(Key.Expression)),
 								  Location = RestoreLocationExpression(bucket.Nested(Key.Location))
 						  }
-						: (IParam) null;
+						: (IParam?) null;
 
-		private static IScriptExpression RestoreScriptExpression(Bucket bucket) =>
+		private static IScriptExpression? RestoreScriptExpression(Bucket bucket) =>
 				Exist(bucket, TypeInfo.ScriptExpressionNode)
 						? new ScriptExpression
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Expression = bucket.GetString(Key.Expression)
 						  }
-						: (IScriptExpression) null;
+						: (IScriptExpression?) null;
 
 		private IStateEntity RestoreStateEntity(Bucket bucket)
 		{
 			var typeInfo = bucket.Get<TypeInfo>(Key.TypeInfo);
-			switch (typeInfo)
+			return typeInfo switch
 			{
-				case TypeInfo.CompoundNode: return RestoreCompound(bucket);
-				case TypeInfo.FinalNode: return RestoreFinal(bucket);
-				case TypeInfo.ParallelNode: return RestoreParallel(bucket);
-				case TypeInfo.StateNode: return RestoreState(bucket);
-				default: throw new ArgumentOutOfRangeException(nameof(typeInfo), typeInfo, message: "Unknown State Entity type");
-			}
+					TypeInfo.CompoundNode => (RestoreCompound(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element)),
+					TypeInfo.FinalNode => (RestoreFinal(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element)),
+					TypeInfo.ParallelNode => (RestoreParallel(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element)),
+					TypeInfo.StateNode => (RestoreState(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element)),
+					_ => throw new StateMachinePersistenceException(Resources.Exception_Unknown_State_Entity_type)
+			};
 		}
 
-		private IState RestoreState(Bucket bucket) =>
+		private IState? RestoreState(Bucket bucket) =>
 				Exist(bucket, TypeInfo.StateNode)
-						? new State
+						? new StateEntity
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Id = RestoreIdentifier(bucket.Nested(Key.Id)),
@@ -491,16 +496,16 @@ namespace TSSArt.StateMachine
 								  OnExit = bucket.RestoreList(Key.OnExit, RestoreOnExit),
 								  Invoke = bucket.RestoreList(Key.Invoke, RestoreInvoke)
 						  }
-						: (IState) null;
+						: (IState?) null;
 
-		private static IValueExpression RestoreValueExpression(Bucket bucket) =>
+		private static IValueExpression? RestoreValueExpression(Bucket bucket) =>
 				Exist(bucket, TypeInfo.ValueExpressionNode)
 						? new ValueExpression
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Expression = bucket.GetString(Key.Expression)
 						  }
-						: (IValueExpression) null;
+						: (IValueExpression?) null;
 
 		private class EntityData : IPersistedDocumentId
 		{
@@ -517,7 +522,7 @@ namespace TSSArt.StateMachine
 
 		private class ExternalScriptExpressionWithContent : IExternalScriptExpression, IExternalScriptProvider, IAncestorProvider
 		{
-			public ExternalScriptExpressionWithContent(object ancestor, Uri uri, string content)
+			public ExternalScriptExpressionWithContent(object ancestor, Uri? uri, string content)
 			{
 				Ancestor = ancestor;
 				Uri = uri;
@@ -526,7 +531,7 @@ namespace TSSArt.StateMachine
 
 			public object Ancestor { get; }
 
-			public Uri Uri { get; }
+			public Uri? Uri { get; }
 
 			public string Content { get; }
 		}

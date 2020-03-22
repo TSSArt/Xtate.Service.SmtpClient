@@ -31,13 +31,13 @@ namespace TSSArt.StateMachine
 			context.DataModel[_result] = _op switch
 			{
 					"emailMatch" => new DataModelValue(EmailMatch(context.DataModel[_left].AsStringOrDefault(), context.DataModel[_right])),
-					_ => throw new ArgumentOutOfRangeException()
+					_ => Infrastructure.UnexpectedValue<DataModelValue>()
 			};
 
 			return default;
 		}
 
-		private static bool EmailMatch(string email, string pattern)
+		private static bool EmailMatch(string? email, string? pattern)
 		{
 			if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(pattern))
 			{
@@ -49,7 +49,7 @@ namespace TSSArt.StateMachine
 			return Regex.Match(email, pattern, RegexOptions.IgnoreCase).Success;
 		}
 
-		private static bool EmailMatch(string email, DataModelValue value)
+		private static bool EmailMatch(string? email, DataModelValue value)
 		{
 			if (string.IsNullOrWhiteSpace(email))
 			{

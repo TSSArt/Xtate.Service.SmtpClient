@@ -4,9 +4,9 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class FinalizeNode : IFinalize, IStoreSupport, IAncestorProvider
 	{
-		private readonly Finalize _finalize;
+		private readonly FinalizeEntity _finalize;
 
-		public FinalizeNode(in Finalize finalize)
+		public FinalizeNode(in FinalizeEntity finalize)
 		{
 			_finalize = finalize;
 			ActionEvaluators = finalize.Action.AsArrayOf<IExecutableEntity, IExecEvaluator>();
@@ -14,7 +14,7 @@ namespace TSSArt.StateMachine
 
 		public ImmutableArray<IExecEvaluator> ActionEvaluators { get; }
 
-		object IAncestorProvider.Ancestor => _finalize.Ancestor;
+		object? IAncestorProvider.Ancestor => _finalize.Ancestor;
 
 		public ImmutableArray<IExecutableEntity> Action => _finalize.Action;
 

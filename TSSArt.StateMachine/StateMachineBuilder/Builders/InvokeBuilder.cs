@@ -3,48 +3,29 @@ using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public class InvokeBuilder : IInvokeBuilder
+	public class InvokeBuilder : BuilderBase, IInvokeBuilder
 	{
 		private bool                                _autoForward;
-		private IContent                            _content;
-		private IFinalize                           _finalize;
-		private string                              _id;
-		private ILocationExpression                 _idLocation;
+		private IContent?                           _content;
+		private IFinalize?                          _finalize;
+		private string?                             _id;
+		private ILocationExpression?                _idLocation;
 		private ImmutableArray<ILocationExpression> _nameList;
-		private ImmutableArray<IParam>.Builder      _parameters;
-		private Uri                                 _source;
-		private IValueExpression                    _sourceExpression;
-		private Uri                                 _type;
-		private IValueExpression                    _typeExpression;
+		private ImmutableArray<IParam>.Builder?     _parameters;
+		private Uri?                                _source;
+		private IValueExpression?                   _sourceExpression;
+		private Uri?                                _type;
+		private IValueExpression?                   _typeExpression;
 
-		public IInvoke Build()
-		{
-			if (_type != null && _typeExpression != null)
-			{
-				throw new InvalidOperationException(message: "Type and TypeExpression can't be used at the same time in Invoke element");
-			}
+		public InvokeBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
+		{ }
 
-			if (_id != null && _idLocation != null)
-			{
-				throw new InvalidOperationException(message: "Id and IdLocation can't be used at the same time in Invoke element");
-			}
-
-			if (_source != null && _sourceExpression != null)
-			{
-				throw new InvalidOperationException(message: "Source and SourceExpression can't be used at the same time in Invoke element");
-			}
-
-			if (!_nameList.IsDefaultOrEmpty && _parameters != null)
-			{
-				throw new InvalidOperationException(message: "NameList and Parameters can't be used at the same time in Invoke element");
-			}
-
-			return new Invoke
-				   {
-						   Type = _type, TypeExpression = _typeExpression, Source = _source, SourceExpression = _sourceExpression, Id = _id, IdLocation = _idLocation,
-						   NameList = _nameList, AutoForward = _autoForward, Parameters = _parameters?.ToImmutable() ?? default, Finalize = _finalize, Content = _content
-				   };
-		}
+		public IInvoke Build() =>
+				new InvokeEntity
+				{
+						Ancestor = Ancestor, Type = _type, TypeExpression = _typeExpression, Source = _source, SourceExpression = _sourceExpression, Id = _id, IdLocation = _idLocation,
+						NameList = _nameList, AutoForward = _autoForward, Parameters = _parameters?.ToImmutable() ?? default, Finalize = _finalize, Content = _content
+				};
 
 		public void SetType(Uri type) => _type = type ?? throw new ArgumentNullException(nameof(type));
 
@@ -56,7 +37,7 @@ namespace TSSArt.StateMachine
 
 		public void SetId(string id)
 		{
-			if (string.IsNullOrEmpty(id)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(id));
+			if (string.IsNullOrEmpty(id)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(id));
 
 			_id = id;
 		}
@@ -65,7 +46,7 @@ namespace TSSArt.StateMachine
 
 		public void SetNameList(ImmutableArray<ILocationExpression> nameList)
 		{
-			if (nameList.IsDefaultOrEmpty) throw new ArgumentException(message: "Value cannot be empty list.", nameof(nameList));
+			if (nameList.IsDefaultOrEmpty) throw new ArgumentException(Resources.Exception_ValueCannotBeEmptyList, nameof(nameList));
 
 			_nameList = nameList;
 		}

@@ -2,6 +2,6 @@
 {
 	public interface IValueExpression : IExecutableEntity
 	{
-		string Expression { get; }
+		string? Expression { get; }
 	}
 }

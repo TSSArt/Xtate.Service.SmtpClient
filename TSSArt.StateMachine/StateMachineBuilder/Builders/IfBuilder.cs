@@ -3,20 +3,15 @@ using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	public class IfBuilder : IIfBuilder
+	public class IfBuilder : BuilderBase, IIfBuilder
 	{
-		private ImmutableArray<IExecutableEntity>.Builder _actions;
-		private IConditionExpression                      _condition;
+		private ImmutableArray<IExecutableEntity>.Builder? _actions;
+		private IConditionExpression?                      _condition;
 
-		public IIf Build()
-		{
-			if (_condition == null)
-			{
-				throw new InvalidOperationException(message: "Condition property required for If element");
-			}
+		public IfBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
+		{ }
 
-			return new If { Condition = _condition, Action = _actions?.ToImmutable() ?? default };
-		}
+		public IIf Build() => new IfEntity { Ancestor = Ancestor, Condition = _condition, Action = _actions?.ToImmutable() ?? default };
 
 		public void SetCondition(IConditionExpression condition) => _condition = condition ?? throw new ArgumentNullException(nameof(condition));
 

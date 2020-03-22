@@ -18,22 +18,23 @@ namespace TSSArt.StateMachine
 		private const string StateStorageKey                  = "state";
 		private const string StateMachineDefinitionStorageKey = "smd";
 
-		private readonly CancellationToken                        _anyToken;
 		private readonly DataModelValue                           _arguments;
 		private readonly ImmutableDictionary<string, string>      _configuration;
-		private readonly ImmutableArray<ICustomActionFactory>    _customActionProviders;
+		private readonly ImmutableArray<ICustomActionFactory>     _customActionProviders;
 		private readonly ImmutableArray<IDataModelHandlerFactory> _dataModelHandlerFactories;
 		private readonly CancellationToken                        _destroyToken;
+		private readonly IErrorProcessor?                         _errorProcessor;
 		private readonly ChannelReader<IEvent>                    _eventChannel;
 		private readonly ExternalCommunicationWrapper             _externalCommunication;
 		private readonly LoggerWrapper                            _logger;
-		private readonly INotifyStateChanged                      _notifyStateChanged;
+		private readonly INotifyStateChanged?                     _notifyStateChanged;
 		private readonly PersistenceLevel                         _persistenceLevel;
 		private readonly IResourceLoader                          _resourceLoader;
 		private readonly string                                   _sessionId;
 		private readonly CancellationToken                        _stopToken;
 		private readonly IStorageProvider                         _storageProvider;
 		private readonly CancellationToken                        _suspendToken;
+		private          CancellationTokenSource                  _anyTokenSource;
 		private          IStateMachineContext                     _context;
 		private          IDataModelHandler                        _dataModelHandler;
 		private          DataModelValue                           _doneData;
@@ -47,17 +48,22 @@ namespace TSSArt.StateMachine
 			_suspendToken = options.SuspendToken;
 			_stopToken = options.StopToken;
 			_destroyToken = options.DestroyToken;
-			_anyToken = CancellationTokenHelper.Any(_suspendToken, _destroyToken, _stopToken);
 			_resourceLoader = options.ResourceLoader ?? DefaultResourceLoader.Instance;
 			_customActionProviders = options.CustomActionProviders;
 			_dataModelHandlerFactories = options.DataModelHandlerFactories;
 			_logger = new LoggerWrapper(options.Logger ?? DefaultLogger.Instance, sessionId);
 			_externalCommunication = new ExternalCommunicationWrapper(options.ExternalCommunication, sessionId);
 			_storageProvider = options.StorageProvider ?? NullStorageProvider.Instance;
-			_configuration = options.Configuration;
+			_configuration = options.Configuration ?? ImmutableDictionary<string, string>.Empty;
+			_errorProcessor = options.ErrorProcessor;
 			_persistenceLevel = options.PersistenceLevel;
 			_notifyStateChanged = options.NotifyStateChanged;
 			_arguments = options.Arguments.DeepClone(true);
+
+			_anyTokenSource = null!;
+			_dataModelHandler = null!;
+			_context = null!;
+			_model = null!;
 		}
 
 		private bool IsPersistingEnabled => _persistenceLevel != PersistenceLevel.None;
@@ -86,18 +92,25 @@ namespace TSSArt.StateMachine
 
 		private async ValueTask<InterpreterModel> BuildInterpreterModel(IStateMachine stateMachine)
 		{
-			var interpreterModel = IsPersistingEnabled ? await TryRestoreInterpreterModel(stateMachine).ConfigureAwait(false) : null;
+			var wrapperErrorProcessor = new WrapperErrorProcessor(_errorProcessor);
+
+			var interpreterModel = IsPersistingEnabled ? await TryRestoreInterpreterModel(stateMachine, wrapperErrorProcessor).ConfigureAwait(false) : null;
 
 			if (interpreterModel != null)
 			{
 				return interpreterModel;
 			}
 
-			var interpreterModelBuilder = new InterpreterModelBuilder();
-			var dataModelHandlerFactory = GetDataModelHandlerFactory(stateMachine.DataModelType, _dataModelHandlerFactories);
-			_dataModelHandler = dataModelHandlerFactory.CreateHandler(interpreterModelBuilder);
+			var dataModelHandlerFactory = GetDataModelHandlerFactory(stateMachine.DataModelType, _dataModelHandlerFactories, wrapperErrorProcessor);
+			_dataModelHandler = dataModelHandlerFactory.CreateHandler(wrapperErrorProcessor);
 
-			interpreterModel = await interpreterModelBuilder.Build(stateMachine, _dataModelHandler, _customActionProviders, _resourceLoader, _stopToken).ConfigureAwait(false);
+			new StateMachineValidator(wrapperErrorProcessor).Validate(stateMachine);
+
+			var interpreterModelBuilder = new InterpreterModelBuilder(stateMachine, _dataModelHandler, _customActionProviders, wrapperErrorProcessor);
+			interpreterModel = await interpreterModelBuilder.Build(_resourceLoader, _stopToken).ConfigureAwait(false);
+
+			_errorProcessor?.ThrowIfErrors();
+			wrapperErrorProcessor.ThrowIfErrors();
 
 			if (IsPersistingEnabled)
 			{
@@ -107,7 +120,7 @@ namespace TSSArt.StateMachine
 			return interpreterModel;
 		}
 
-		private async ValueTask<InterpreterModel> TryRestoreInterpreterModel(IStateMachine stateMachine)
+		private async ValueTask<InterpreterModel?> TryRestoreInterpreterModel(IStateMachine stateMachine, IErrorProcessor errorProcessor)
 		{
 			var storage = await _storageProvider.GetTransactionalStorage(partition: default, StateMachineDefinitionStorageKey, _stopToken).ConfigureAwait(false);
 			await using (storage.ConfigureAwait(false))
@@ -116,12 +129,12 @@ namespace TSSArt.StateMachine
 
 				if (bucket.TryGet(Key.Version, out int version) && version != 1)
 				{
-					throw new InvalidOperationException("Persisted state can't be read. Unsupported version.");
+					throw new StateMachinePersistenceException(Resources.Exception_Persisted_state_can_t_be_read__Unsupported_version_);
 				}
 
-				if (bucket.TryGet(Key.SessionId, out string sessionId) && sessionId != _sessionId)
+				if (bucket.TryGet(Key.SessionId, out string? sessionId) && sessionId != _sessionId)
 				{
-					throw new InvalidOperationException("Persisted state can't be read. Stored and provided SessionIds does not match.");
+					throw new StateMachinePersistenceException(Resources.Exception_Persisted_state_can_t_be_read__Stored_and_provided_SessionIds_does_not_match);
 				}
 
 				if (!bucket.TryGet(Key.StateMachineDefinition, out var memory))
@@ -131,11 +144,17 @@ namespace TSSArt.StateMachine
 
 				var smdBucket = new Bucket(new InMemoryStorage(memory.Span));
 
-				var interpreterModelBuilder = new InterpreterModelBuilder();
-				var dataModelHandlerFactory = GetDataModelHandlerFactory(smdBucket.GetString(Key.DataModelType), _dataModelHandlerFactories);
-				_dataModelHandler = dataModelHandlerFactory.CreateHandler(interpreterModelBuilder);
 
-				var entityMap = stateMachine != null ? interpreterModelBuilder.Build(stateMachine, _dataModelHandler, _customActionProviders).EntityMap : null;
+				var dataModelHandlerFactory = GetDataModelHandlerFactory(smdBucket.GetString(Key.DataModelType), _dataModelHandlerFactories, errorProcessor);
+				_dataModelHandler = dataModelHandlerFactory.CreateHandler(DefaultErrorProcessor.Instance);
+
+				ImmutableDictionary<int, IEntity>? entityMap = null;
+
+				if (stateMachine != null)
+				{
+					entityMap = new InterpreterModelBuilder(stateMachine, _dataModelHandler, _customActionProviders, DefaultErrorProcessor.Instance).Build().EntityMap;
+				}
+
 				var restoredStateMachine = new StateMachineReader().Build(smdBucket, entityMap);
 
 				if (stateMachine != null)
@@ -143,7 +162,14 @@ namespace TSSArt.StateMachine
 					//TODO: Validate stateMachine vs restoredStateMachine (number of elements should be the same and documentId should point to the same entity type)
 				}
 
-				return interpreterModelBuilder.Build(restoredStateMachine, _dataModelHandler, _customActionProviders);
+				var wrapperErrorProcessor = new WrapperErrorProcessor(_errorProcessor);
+
+				var interpreterModelBuilder = new InterpreterModelBuilder(restoredStateMachine, _dataModelHandler, _customActionProviders, wrapperErrorProcessor);
+
+				_errorProcessor?.ThrowIfErrors();
+				wrapperErrorProcessor.ThrowIfErrors();
+
+				return interpreterModelBuilder.Build();
 			}
 		}
 
@@ -171,7 +197,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private static IDataModelHandlerFactory GetDataModelHandlerFactory(string dataModelType, ImmutableArray<IDataModelHandlerFactory> factories)
+		private static IDataModelHandlerFactory GetDataModelHandlerFactory(string? dataModelType, ImmutableArray<IDataModelHandlerFactory> factories, IErrorProcessor errorProcessor)
 		{
 			if (!factories.IsDefaultOrEmpty)
 			{
@@ -194,7 +220,8 @@ namespace TSSArt.StateMachine
 					return RuntimeDataModelHandler.Factory;
 
 				default:
-					throw new InvalidOperationException($"Can't find DataModelHandlerFactory for DataModel type '{dataModelType}'");
+					errorProcessor.AddError<StateMachineInterpreter>(entity: null, Res.Format(Resources.Exception_Cant_find_DataModelHandlerFactory_for_DataModel_type, dataModelType));
+					return NoneDataModelHandler.Factory;
 			}
 		}
 
@@ -315,10 +342,11 @@ namespace TSSArt.StateMachine
 		private async ValueTask<StateMachineResult> Run(IStateMachine stateMachine)
 		{
 			var exitStatus = StateMachineExitStatus.Completed;
-			Exception exception = null;
+			Exception? exception = null;
 
 			_model = await BuildInterpreterModel(stateMachine).ConfigureAwait(false);
 			_context = await CreateContext().ConfigureAwait(false);
+			_anyTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_suspendToken, _destroyToken, _stopToken);
 			await using (_context.ConfigureAwait(false))
 			{
 				try
@@ -363,9 +391,9 @@ namespace TSSArt.StateMachine
 					OperationCanceledException e when e.CancellationToken == _stopToken => StateMachineExitStatus.Unknown,
 					OperationCanceledException e when e.CancellationToken == _destroyToken => StateMachineExitStatus.Destroyed,
 					OperationCanceledException e when e.CancellationToken == _suspendToken => StateMachineExitStatus.Suspended,
-					OperationCanceledException e when e.CancellationToken == _anyToken && _stopToken.IsCancellationRequested => StateMachineExitStatus.Unknown,
-					OperationCanceledException e when e.CancellationToken == _anyToken && _destroyToken.IsCancellationRequested => StateMachineExitStatus.Destroyed,
-					OperationCanceledException e when e.CancellationToken == _anyToken && _suspendToken.IsCancellationRequested => StateMachineExitStatus.Suspended,
+					OperationCanceledException e when e.CancellationToken == _anyTokenSource.Token && _stopToken.IsCancellationRequested => StateMachineExitStatus.Unknown,
+					OperationCanceledException e when e.CancellationToken == _anyTokenSource.Token && _destroyToken.IsCancellationRequested => StateMachineExitStatus.Destroyed,
+					OperationCanceledException e when e.CancellationToken == _anyTokenSource.Token && _suspendToken.IsCancellationRequested => StateMachineExitStatus.Suspended,
 					_ => StateMachineExitStatus.Unknown
 			};
 
@@ -380,7 +408,7 @@ namespace TSSArt.StateMachine
 
 		private async ValueTask InitializeAllDataModels()
 		{
-			if (_model.Root.Binding == BindingType.Early)
+			if (_model.Root.Binding == BindingType.Early && !_model.DataModelList.IsDefaultOrEmpty)
 			{
 				foreach (var node in _model.DataModelList)
 				{
@@ -397,7 +425,7 @@ namespace TSSArt.StateMachine
 
 			while (Capture(StateBagKey.Running, Running && !exit))
 			{
-				_anyToken.ThrowIfCancellationRequested();
+				_anyTokenSource.Token.ThrowIfCancellationRequested();
 
 				await DoOperation(StateBagKey.InternalQueueProcessing, InternalQueueProcessing).ConfigureAwait(false);
 
@@ -419,7 +447,7 @@ namespace TSSArt.StateMachine
 			{
 				while (Capture(StateBagKey.Running, Running && !exit))
 				{
-					_anyToken.ThrowIfCancellationRequested();
+					_anyTokenSource.Token.ThrowIfCancellationRequested();
 
 					liveLockDetector.Iteration(_context.InternalQueue.Count);
 
@@ -442,7 +470,7 @@ namespace TSSArt.StateMachine
 
 			_logger.ProcessingEvent(internalEvent);
 
-			_context.DataModel.SetInternal(property: "_event", new DataModelDescriptor(DataModelValue.FromEvent(internalEvent), isReadOnly: true));
+			_context.DataModel.SetInternal(property: @"_event", new DataModelDescriptor(DataModelValue.FromEvent(internalEvent), isReadOnly: true));
 
 			return SelectTransitions(internalEvent);
 		}
@@ -514,7 +542,7 @@ namespace TSSArt.StateMachine
 
 				if (Capture(StateBagKey.InternalQueueEmpty, _context.InternalQueue.Count == 0))
 				{
-					_anyToken.ThrowIfCancellationRequested();
+					_anyTokenSource.Token.ThrowIfCancellationRequested();
 
 					var transitions = await Capture(StateBagKey.ExternalEventTransitions, ExternalEventTransitions).ConfigureAwait(false);
 
@@ -524,7 +552,7 @@ namespace TSSArt.StateMachine
 
 						await CheckPoint(PersistenceLevel.Event).ConfigureAwait(false);
 					}
-					
+
 					Complete(StateBagKey.ExternalEventTransitions);
 				}
 
@@ -546,7 +574,7 @@ namespace TSSArt.StateMachine
 
 			_logger.ProcessingEvent(externalEvent);
 
-			_context.DataModel.SetInternal(property: "_event", new DataModelDescriptor(DataModelValue.FromEvent(externalEvent), isReadOnly: true));
+			_context.DataModel.SetInternal(property: @"_event", new DataModelDescriptor(DataModelValue.FromEvent(externalEvent), isReadOnly: true));
 
 			foreach (var state in _context.Configuration)
 			{
@@ -559,7 +587,7 @@ namespace TSSArt.StateMachine
 
 					if (invoke.AutoForward)
 					{
-						await ForwardEvent(invoke.InvokeId, externalEvent).ConfigureAwait(false);
+						await ForwardEvent(invoke.InvokeId!, externalEvent).ConfigureAwait(false);
 					}
 				}
 			}
@@ -587,27 +615,27 @@ namespace TSSArt.StateMachine
 		{
 			while (true)
 			{
-				var @event = await ReadExternalEventUnfiltered().ConfigureAwait(false);
+				var evt = await ReadExternalEventUnfiltered().ConfigureAwait(false);
 
-				if (@event.InvokeId == null)
+				if (evt.InvokeId == null)
 				{
-					return @event;
+					return evt;
 				}
 
-				if (_externalCommunication.IsInvokeActive(@event.InvokeId, @event.InvokeUniqueId))
+				if (_externalCommunication.IsInvokeActive(evt.InvokeId, evt.InvokeUniqueId!))
 				{
-					return @event;
+					return evt;
 				}
 			}
 		}
 
 		private async ValueTask<IEvent> ReadExternalEventUnfiltered()
 		{
-			var valueTask = _eventChannel.ReadAsync(_anyToken);
+			var valueTask = _eventChannel.ReadAsync(_anyTokenSource.Token);
 
 			if (valueTask.IsCompleted)
 			{
-				return await valueTask;
+				return await valueTask.ConfigureAwait(false);
 			}
 
 			await CheckPoint(PersistenceLevel.StableState).ConfigureAwait(false);
@@ -645,9 +673,9 @@ namespace TSSArt.StateMachine
 			Complete(StateBagKey.OnExit);
 		}
 
-		private ValueTask<List<TransitionNode>> SelectEventlessTransitions() => SelectTransitions(@event: null);
+		private ValueTask<List<TransitionNode>> SelectEventlessTransitions() => SelectTransitions(evt: null);
 
-		private async ValueTask<List<TransitionNode>> SelectTransitions(IEvent @event)
+		private async ValueTask<List<TransitionNode>> SelectTransitions(IEvent? evt)
 		{
 			var transitions = new List<TransitionNode>();
 
@@ -672,23 +700,21 @@ namespace TSSArt.StateMachine
 
 				if (!(state.Parent is StateMachineNode))
 				{
-					await FindTransitionForState(state.Parent).ConfigureAwait(false);
+					await FindTransitionForState(state.Parent!).ConfigureAwait(false);
 				}
 			}
 
 			bool EventMatch(TransitionNode transition)
 			{
-				var eventDescriptors = transition.Event;
+				var eventDescriptors = transition.EventDescriptors;
 
-				if (@event == null)
+				if (evt == null)
 				{
 					return eventDescriptors == null;
 				}
 
-				return eventDescriptors != null && eventDescriptors.Any(EventNameMatch);
+				return eventDescriptors != null && eventDescriptors.Any(d => d.IsEventMatch(evt));
 			}
-
-			bool EventNameMatch(IEventDescriptor eventDescriptor) => eventDescriptor.IsEventMatch(@event);
 
 			async ValueTask<bool> ConditionMatch(TransitionNode transition)
 			{
@@ -717,9 +743,9 @@ namespace TSSArt.StateMachine
 		private List<TransitionNode> RemoveConflictingTransitions(List<TransitionNode> enabledTransitions)
 		{
 			var filteredTransitions = new List<TransitionNode>();
-			List<TransitionNode> transitionsToRemove = null;
-			List<TransitionNode> tr1 = null;
-			List<TransitionNode> tr2 = null;
+			List<TransitionNode>? transitionsToRemove = null;
+			List<TransitionNode>? tr1 = null;
+			List<TransitionNode>? tr2 = null;
 
 			foreach (var t1 in enabledTransitions)
 			{
@@ -728,8 +754,8 @@ namespace TSSArt.StateMachine
 
 				foreach (var t2 in filteredTransitions)
 				{
-					(tr1 ??= new List<TransitionNode>(1) { default })[0] = t1;
-					(tr2 ??= new List<TransitionNode>(1) { default })[0] = t2;
+					(tr1 ??= new List<TransitionNode>(1) { default! })[0] = t1;
+					(tr2 ??= new List<TransitionNode>(1) { default! })[0] = t2;
 
 					if (HasIntersection(ComputeExitSet(tr1), ComputeExitSet(tr2)))
 					{
@@ -831,7 +857,7 @@ namespace TSSArt.StateMachine
 			return result;
 		}
 
-		public bool HasIntersection<T>(List<T> list1, List<T> list2)
+		private static bool HasIntersection<T>(List<T> list1, List<T> list2)
 		{
 			foreach (var item in list1)
 			{
@@ -857,7 +883,7 @@ namespace TSSArt.StateMachine
 				_context.Configuration.AddIfNotExists(state);
 				_context.StatesToInvoke.AddIfNotExists(state);
 
-				if (_model.Root.Binding == BindingType.Late)
+				if (_model.Root.Binding == BindingType.Late && state.DataModel != null)
 				{
 					await DoOperation(StateBagKey.InitializeDataModel, state.DataModel, InitializeDataModel, state.DataModel).ConfigureAwait(false);
 				}
@@ -888,7 +914,7 @@ namespace TSSArt.StateMachine
 					else
 					{
 						var parent = final.Parent;
-						var grandparent = parent.Parent;
+						var grandparent = parent!.Parent;
 
 						DataModelValue doneData = default;
 						if (final.DoneData != null)
@@ -1002,7 +1028,7 @@ namespace TSSArt.StateMachine
 				}
 				else
 				{
-					defaultHistoryContent[state.Parent.Id] = history.Transition.ActionEvaluators;
+					defaultHistoryContent[state.Parent!.Id] = history.Transition.ActionEvaluators;
 
 					foreach (var s in history.Transition.TargetState)
 					{
@@ -1048,10 +1074,17 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private void AddAncestorStatesToEnter(StateEntityNode state, StateEntityNode ancestor, List<StateEntityNode> statesToEnter, List<CompoundNode> statesForDefaultEntry,
+		private void AddAncestorStatesToEnter(StateEntityNode state, StateEntityNode? ancestor, List<StateEntityNode> statesToEnter, List<CompoundNode> statesForDefaultEntry,
 											  DefaultHistoryContent defaultHistoryContent)
 		{
-			foreach (var anc in GetProperAncestors(state, ancestor))
+			var ancestors = GetProperAncestors(state, ancestor);
+
+			if (ancestors == null)
+			{
+				return;
+			}
+
+			foreach (var anc in ancestors)
 			{
 				AddIfNotExists(statesToEnter, anc);
 
@@ -1068,7 +1101,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private static bool IsDescendant(StateEntityNode state1, StateEntityNode state2)
+		private static bool IsDescendant(StateEntityNode state1, StateEntityNode? state2)
 		{
 			for (var s = state1.Parent; s != null; s = s.Parent)
 			{
@@ -1081,7 +1114,7 @@ namespace TSSArt.StateMachine
 			return false;
 		}
 
-		private StateEntityNode GetTransitionDomain(TransitionNode transition)
+		private StateEntityNode? GetTransitionDomain(TransitionNode transition)
 		{
 			var tstates = GetEffectiveTargetStates(transition);
 
@@ -1098,9 +1131,16 @@ namespace TSSArt.StateMachine
 			return FindLcca(transition.Source, tstates);
 		}
 
-		private StateEntityNode FindLcca(StateEntityNode headState, List<StateEntityNode> tailStates)
+		private static StateEntityNode? FindLcca(StateEntityNode headState, List<StateEntityNode> tailStates)
 		{
-			foreach (var anc in GetProperAncestors(headState, state2: null))
+			var ancestors = GetProperAncestors(headState, state2: null);
+
+			if (ancestors == null)
+			{
+				return null;
+			}
+
+			foreach (var anc in ancestors)
 			{
 				if (tailStates.TrueForAll(s => IsDescendant(s, anc)))
 				{
@@ -1111,9 +1151,9 @@ namespace TSSArt.StateMachine
 			return null;
 		}
 
-		private List<StateEntityNode> GetProperAncestors(StateEntityNode state1, StateEntityNode state2)
+		private static List<StateEntityNode>? GetProperAncestors(StateEntityNode state1, StateEntityNode? state2)
 		{
-			var states = new List<StateEntityNode>();
+			List<StateEntityNode>? states = null;
 
 			for (var s = state1.Parent; s != null; s = s.Parent)
 			{
@@ -1122,10 +1162,10 @@ namespace TSSArt.StateMachine
 					return states;
 				}
 
-				states.Add(s);
+				(states ??= new List<StateEntityNode>()).Add(s);
 			}
 
-			return state2 == null ? states : new List<StateEntityNode>();
+			return state2 == null ? states : null;
 		}
 
 		private List<StateEntityNode> GetEffectiveTargetStates(TransitionNode transition)
@@ -1201,9 +1241,9 @@ namespace TSSArt.StateMachine
 
 		private async ValueTask Error(object source, Exception exception, bool logLoggerErrors = true)
 		{
-			var sourceEntityId = (source as IEntity).Is(out IDebugEntityId id) ? id.EntityId.ToString(CultureInfo.InvariantCulture) : null;
+			var sourceEntityId = (source as IEntity).Is(out IDebugEntityId? id) ? id.EntityId?.ToString(CultureInfo.InvariantCulture) : null;
 
-			string sendId = null;
+			string? sendId = null;
 
 			var errorType = _logger.IsPlatformError(exception)
 					? ErrorType.Platform
@@ -1216,7 +1256,7 @@ namespace TSSArt.StateMachine
 					ErrorType.Execution => EventName.ErrorExecution,
 					ErrorType.Communication => EventName.ErrorCommunication,
 					ErrorType.Platform => EventName.ErrorPlatform,
-					_ => throw new ArgumentOutOfRangeException(nameof(errorType), errorType, message: null)
+					_ => Infrastructure.UnexpectedValue<ImmutableArray<IIdentifier>>()
 			};
 
 			var eventObject = new EventObject(EventType.Platform, nameParts, DataModelValue.FromException(exception), sendId);
@@ -1266,7 +1306,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private ValueTask ForwardEvent(string invokeId, IEvent @event) => _externalCommunication.ForwardEvent(@event, invokeId, _stopToken);
+		private ValueTask ForwardEvent(string invokeId, IEvent evt) => _externalCommunication.ForwardEvent(evt, invokeId, _stopToken);
 
 		private ValueTask ApplyFinalize(InvokeNode invoke) => invoke.Finalize != null ? RunExecutableEntity(invoke.Finalize.ActionEvaluators) : default;
 
@@ -1310,7 +1350,7 @@ namespace TSSArt.StateMachine
 				return;
 			}
 
-			var dictionary = _arguments.AsObject();
+			var dictionary = _arguments.AsObject()!;
 			foreach (var node in rootDataModel.Data)
 			{
 				await InitializeData(node, dictionary[node.Id]).ConfigureAwait(false);
@@ -1345,7 +1385,7 @@ namespace TSSArt.StateMachine
 
 				if (data.Source != null)
 				{
-					var resource = await _resourceLoader.Request(data.Source.Uri, _stopToken).ConfigureAwait(false);
+					var resource = await _resourceLoader.Request(data.Source.Uri!, _stopToken).ConfigureAwait(false);
 
 					return DataModelValue.FromContent(resource.Content, resource.ContentType);
 				}
@@ -1399,8 +1439,8 @@ namespace TSSArt.StateMachine
 			var type = GetType();
 			var version = type.Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 
-			interpreterObject.SetInternal(property: "name", new DataModelDescriptor(new DataModelValue(type.FullName)));
-			interpreterObject.SetInternal(property: "version", new DataModelDescriptor(new DataModelValue(version)));
+			interpreterObject.SetInternal(property: @"name", new DataModelDescriptor(new DataModelValue(type.FullName)));
+			interpreterObject.SetInternal(property: @"version", new DataModelDescriptor(new DataModelValue(version)));
 		}
 
 		private static void PopulateConfigurationObject(IReadOnlyDictionary<string, string> configuration, DataModelObject configurationObject)
@@ -1418,9 +1458,9 @@ namespace TSSArt.StateMachine
 			var type = _dataModelHandler.GetType();
 			var version = type.Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 
-			dataModelHandlerObject.SetInternal(property: "name", new DataModelDescriptor(new DataModelValue(type.FullName)));
-			dataModelHandlerObject.SetInternal(property: "assembly", new DataModelDescriptor(new DataModelValue(type.Assembly.GetName().Name)));
-			dataModelHandlerObject.SetInternal(property: "version", new DataModelDescriptor(new DataModelValue(version)));
+			dataModelHandlerObject.SetInternal(property: @"name", new DataModelDescriptor(new DataModelValue(type.FullName)));
+			dataModelHandlerObject.SetInternal(property: @"assembly", new DataModelDescriptor(new DataModelValue(type.Assembly.GetName().Name)));
+			dataModelHandlerObject.SetInternal(property: @"version", new DataModelDescriptor(new DataModelValue(version)));
 
 			var vars = new DataModelObject(isReadOnly: true);
 			foreach (var pair in dataModelVars)
@@ -1428,7 +1468,7 @@ namespace TSSArt.StateMachine
 				vars.SetInternal(pair.Key, new DataModelDescriptor(new DataModelValue(pair.Value)));
 			}
 
-			dataModelHandlerObject.SetInternal(property: "vars", new DataModelDescriptor(new DataModelValue(vars)));
+			dataModelHandlerObject.SetInternal(property: @"vars", new DataModelDescriptor(new DataModelValue(vars)));
 		}
 
 		private enum StateBagKey
@@ -1468,10 +1508,10 @@ namespace TSSArt.StateMachine
 		{
 			private const int IterationCount = 36;
 
-			private int   _internalQueueLength;
-			private int   _index;
-			private int   _sum;
-			private int[] _data;
+			private int    _internalQueueLength;
+			private int    _index;
+			private int    _sum;
+			private int[]? _data;
 
 			public static LiveLockDetector Create() => new LiveLockDetector { _index = -1 };
 

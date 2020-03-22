@@ -5,11 +5,11 @@ namespace TSSArt.StateMachine.Test
 {
 	public static class StateMachineGenerator
 	{
-		public static IStateMachine FromScxml(string scxml)
+		private static IStateMachine FromScxml(string scxml)
 		{
 			using var stringReader = new StringReader(scxml);
 			using var xmlReader = XmlReader.Create(stringReader);
-			return new ScxmlDirector(xmlReader, new BuilderFactory()).ConstructStateMachine();
+			return new ScxmlDirector(xmlReader, BuilderFactory.Default, DefaultErrorProcessor.Instance).ConstructStateMachine();
 		}
 
 		public static IStateMachine FromInnerScxml_EcmaScript(string innerScxml) =>

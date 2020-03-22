@@ -12,20 +12,20 @@ namespace TSSArt.StateMachine.Services
 {
 	public partial class BrowserForm : Form
 	{
-		public BrowserForm(string url, string content)
+		public BrowserForm(Uri? url, string? content)
 		{
 			InitializeComponent();
 
-			Controls.Add(new ChromiumWebBrowser(url)
+			Controls.Add(new ChromiumWebBrowser(url?.ToString())
 						 {
 								 Dock = DockStyle.Fill,
 								 RequestHandler = new CustomRequestHandler(this, url, content)
 						 });
 		}
 
-		public IDictionary<string, string> Result { get; private set; }
+		public IDictionary<string, string>? Result { get; private set; }
 
-		public void Close(DialogResult dialogResult, IDictionary<string, string> result)
+		public void Close(DialogResult dialogResult, IDictionary<string, string>? result)
 		{
 			Result = result;
 			DialogResult = dialogResult;
@@ -45,11 +45,11 @@ namespace TSSArt.StateMachine.Services
 	{
 		private static readonly IResourceRequestHandler EmptyHtmlHandler = new InMemoryResourceRequestHandler(Encoding.ASCII.GetBytes("<html/>"), mimeType: null);
 
-		private readonly string      _content;
+		private readonly string?     _content;
 		private readonly BrowserForm _form;
-		private readonly string      _url;
+		private readonly Uri?        _url;
 
-		public CustomRequestHandler(BrowserForm form, string url, string content)
+		public CustomRequestHandler(BrowserForm form, Uri? url, string? content)
 		{
 			_form = form;
 			_url = url;
@@ -61,11 +61,12 @@ namespace TSSArt.StateMachine.Services
 		{
 			if (request == null) throw new ArgumentNullException(nameof(request));
 
-			if (request.Url == _url)
+			// ReSharper disable once SuspiciousTypeConversion.Global
+			if (_url != null && _url.Equals(request.Url))
 			{
 				if (request.Method == "GET")
 				{
-					return new InMemoryResourceRequestHandler(Encoding.ASCII.GetBytes(_content), mimeType: null);
+					return new InMemoryResourceRequestHandler(Encoding.ASCII.GetBytes(_content ?? string.Empty), mimeType: null);
 				}
 
 				if (request.Method == "POST")

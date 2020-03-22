@@ -27,10 +27,7 @@ namespace TSSArt.StateMachine
 
 			var source = context.DataModel[_source].AsString();
 
-			if (!Uri.TryCreate(source, UriKind.RelativeOrAbsolute, out var uri))
-			{
-				throw new InvalidOperationException("Can't parse url");
-			}
+			var uri = new Uri(source, UriKind.RelativeOrAbsolute);
 
 			if (!string.IsNullOrEmpty(_parameter))
 			{

@@ -2,6 +2,6 @@
 {
 	public interface IElseIf : IExecutableEntity
 	{
-		IConditionExpression Condition { get; }
+		IConditionExpression? Condition { get; }
 	}
 }

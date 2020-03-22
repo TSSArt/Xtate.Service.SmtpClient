@@ -6,9 +6,9 @@ namespace TSSArt.StateMachine
 {
 	internal class StateNode : StateEntityNode, IState, IAncestorProvider, IDebugEntityId
 	{
-		private readonly State _state;
+		private readonly StateEntity _state;
 
-		public StateNode(LinkedListNode<int> documentIdNode, in State state) : base(documentIdNode, GetChildNodes(state.Initial, state.States, state.HistoryStates))
+		public StateNode(LinkedListNode<int> documentIdNode, in StateEntity state) : base(documentIdNode, GetChildNodes(state.Initial, state.States, state.HistoryStates))
 		{
 			_state = state;
 
@@ -23,8 +23,8 @@ namespace TSSArt.StateMachine
 			OnEntry = state.OnEntry.AsArrayOf<IOnEntry, OnEntryNode>(true);
 			OnExit = state.OnExit.AsArrayOf<IOnExit, OnExitNode>(true);
 			Invoke = invokeList;
-			Initial = state.Initial.As<InitialNode>();
-			DataModel = state.DataModel.As<DataModelNode>();
+			Initial = state.Initial?.As<InitialNode>();
+			DataModel = state.DataModel?.As<DataModelNode>();
 
 			foreach (var transition in transitions)
 			{
@@ -44,18 +44,18 @@ namespace TSSArt.StateMachine
 		public override ImmutableArray<StateEntityNode> States        { get; }
 		public override ImmutableArray<OnEntryNode>     OnEntry       { get; }
 		public override ImmutableArray<OnExitNode>      OnExit        { get; }
-		public override DataModelNode                   DataModel     { get; }
+		public override DataModelNode?                  DataModel     { get; }
 
-		protected InitialNode Initial { get; }
+		protected InitialNode? Initial { get; }
 
-		object IAncestorProvider.Ancestor => _state.Ancestor;
+		object? IAncestorProvider.Ancestor => _state.Ancestor;
 
-		FormattableString IDebugEntityId.EntityId => $"{Id}(#{DocumentId})";
+		FormattableString IDebugEntityId.EntityId => @$"{Id}(#{DocumentId})";
 
 		public override IIdentifier Id { get; }
 
-		IInitial IState.                    Initial       => Initial;
-		IDataModel IState.                  DataModel     => DataModel;
+		IInitial? IState.                   Initial       => Initial;
+		IDataModel? IState.                 DataModel     => DataModel;
 		ImmutableArray<IInvoke> IState.     Invoke        => ImmutableArray<IInvoke>.CastUp(Invoke);
 		ImmutableArray<IStateEntity> IState.States        => ImmutableArray<IStateEntity>.CastUp(States);
 		ImmutableArray<IHistory> IState.    HistoryStates => ImmutableArray<IHistory>.CastUp(HistoryStates);

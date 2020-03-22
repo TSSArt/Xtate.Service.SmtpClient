@@ -1,9 +1,12 @@
 ﻿using System;
-using System.Buffers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
+
+#if NETSTANDARD2_1
+using System.Buffers;
+#endif
 
 namespace TSSArt.StateMachine
 {
@@ -26,6 +29,13 @@ namespace TSSArt.StateMachine
 
 			var source = context.DataModel[_source].AsString();
 
+			if (source == null)
+			{
+				context.DataModel[_destination] = DataModelValue.Null;
+
+				return default;
+			}
+
 #if NETSTANDARD2_1
 			var result = OptimizedDecode(source);
 
@@ -36,7 +46,7 @@ namespace TSSArt.StateMachine
 				{
 					if (!Convert.TryFromBase64String(str, bytes, out var length))
 					{
-						throw new InvalidOperationException("Can't parse Base64 string");
+						throw new FormatException("Can't parse Base64 string");
 					}
 
 					return Encoding.UTF8.GetString(bytes.AsSpan(start: 0, length));

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Immutable;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	public class FinalFluentBuilder<TOuterBuilder>
 	{
 		private readonly IFinalBuilder   _builder;
@@ -13,7 +15,7 @@ namespace TSSArt.StateMachine
 		public FinalFluentBuilder(IBuilderFactory factory, TOuterBuilder outerBuilder, Action<IFinal> builtAction)
 		{
 			_factory = factory ?? throw new ArgumentNullException(nameof(factory));
-			_builder = factory.CreateFinalBuilder();
+			_builder = factory.CreateFinalBuilder(null);
 			_outerBuilder = outerBuilder;
 			_builtAction = builtAction;
 		}
@@ -38,10 +40,10 @@ namespace TSSArt.StateMachine
 
 		private FinalFluentBuilder<TOuterBuilder> SetDoneData(IValueExpression evaluator)
 		{
-			var contentBuilder = _factory.CreateContentBuilder();
+			var contentBuilder = _factory.CreateContentBuilder(null);
 			contentBuilder.SetExpression(evaluator);
 
-			var doneData = _factory.CreateDoneDataBuilder();
+			var doneData = _factory.CreateDoneDataBuilder(null);
 			doneData.SetContent(contentBuilder.Build());
 
 			_builder.SetDoneData(doneData.Build());
@@ -57,7 +59,7 @@ namespace TSSArt.StateMachine
 
 		private FinalFluentBuilder<TOuterBuilder> AddOnEntry(RuntimeAction action)
 		{
-			_builder.AddOnEntry(new OnEntry { Action = ImmutableArray.Create<IExecutableEntity>(action) });
+			_builder.AddOnEntry(new OnEntryEntity { Action = ImmutableArray.Create<IExecutableEntity>(action) });
 
 			return this;
 		}
@@ -70,15 +72,15 @@ namespace TSSArt.StateMachine
 
 		private FinalFluentBuilder<TOuterBuilder> AddOnExit(RuntimeAction action)
 		{
-			_builder.AddOnExit(new OnExit { Action = ImmutableArray.Create<IExecutableEntity>(action) });
+			_builder.AddOnExit(new OnExitEntity { Action = ImmutableArray.Create<IExecutableEntity>(action) });
 
 			return this;
 		}
 
-		public FinalFluentBuilder<TOuterBuilder> AddOnExit(ExecutableAction action) => AddOnEntry(new RuntimeAction(action));
+		public FinalFluentBuilder<TOuterBuilder> AddOnExit(ExecutableAction action) => AddOnExit(new RuntimeAction(action));
 
-		public FinalFluentBuilder<TOuterBuilder> AddOnExit(ExecutableTask task) => AddOnEntry(new RuntimeAction(task));
+		public FinalFluentBuilder<TOuterBuilder> AddOnExit(ExecutableTask task) => AddOnExit(new RuntimeAction(task));
 
-		public FinalFluentBuilder<TOuterBuilder> AddOnExit(ExecutableCancellableTask task) => AddOnEntry(new RuntimeAction(task));
+		public FinalFluentBuilder<TOuterBuilder> AddOnExit(ExecutableCancellableTask task) => AddOnExit(new RuntimeAction(task));
 	}
 }

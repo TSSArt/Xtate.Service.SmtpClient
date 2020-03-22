@@ -2,7 +2,7 @@
 {
 	public interface IContent : IEntity
 	{
-		IValueExpression Expression { get; }
-		IContentBody     Body       { get; }
+		IValueExpression? Expression { get; }
+		IContentBody?     Body       { get; }
 	}
 }

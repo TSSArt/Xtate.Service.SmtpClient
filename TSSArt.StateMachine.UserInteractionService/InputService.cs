@@ -7,13 +7,9 @@ namespace TSSArt.StateMachine.Services
 	public class InputService : SimpleServiceBase
 	{
 		public static readonly IServiceFactory Factory = SimpleServiceFactory<InputService>.Instance;
-		private                DataModelArray  _controls;
 
 		protected override ValueTask<DataModelValue> Execute()
 		{
-			var parameters = Content.AsObjectOrEmpty();
-			_controls = parameters["controls"].AsArrayOrEmpty();
-
 			var task = Task.Factory.StartNew(Show, StopToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);
 
 			return new ValueTask<DataModelValue>(task);
@@ -21,9 +17,11 @@ namespace TSSArt.StateMachine.Services
 
 		private DataModelValue Show()
 		{
+			var controls = Content.AsObjectOrEmpty()["controls"].AsArrayOrEmpty();
+
 			using var form = new InputForm();
 
-			foreach (var control in _controls)
+			foreach (var control in controls)
 			{
 				var fieldObj = control.AsObjectOrEmpty();
 				var name = fieldObj["name"].AsStringOrDefault();
@@ -33,6 +31,7 @@ namespace TSSArt.StateMachine.Services
 				form.AddInput(name, location, type);
 			}
 
+			// ReSharper disable once AccessToDisposedClosure
 			using var registration = StopToken.Register(() => form.Close(DialogResult.Abort, result: default));
 
 			form.Closed += (sender, args) => Application.ExitThread();
@@ -46,9 +45,12 @@ namespace TSSArt.StateMachine.Services
 				result["status"] = new DataModelValue("ok");
 
 				var parameters = new DataModelObject();
-				foreach (var pair in form.Result)
+				if (form.Result != null)
 				{
-					parameters[pair.Key] = new DataModelValue(pair.Value);
+					foreach (var pair in form.Result)
+					{
+						parameters[pair.Key] = new DataModelValue(pair.Value);
+					}
 				}
 
 				parameters.Freeze();

@@ -1,27 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Text;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	public abstract class StateMachineVisitor
 	{
-		private readonly StateMachineVisitor                     _masterVisitor;
-		private readonly Stack<(object, ImmutableArray<object>)> _path;
-		private          StringBuilder                           _errorMessages;
+		private readonly Stack<(object, ImmutableArray<object>)>? _path;
 
 		protected StateMachineVisitor(bool trackPath = false) => _path = trackPath ? new Stack<(object, ImmutableArray<object>)>() : null;
 
-		protected StateMachineVisitor(StateMachineVisitor masterVisitor)
-		{
-			_masterVisitor = masterVisitor ?? throw new ArgumentNullException(nameof(masterVisitor));
-
-			_path = _masterVisitor?._path;
-		}
-
-		private string CurrentPath => _path != null ? string.Join(separator: "/", _path.Reverse().Select(EntityName)) : null;
+		protected string? CurrentPath => _path != null ? string.Join(separator: @"/", _path.Reverse().Select(EntityName)) : null;
 
 		private string EntityName((object obj, ImmutableArray<object> array) entry)
 		{
@@ -43,63 +36,19 @@ namespace TSSArt.StateMachine
 		{
 			if (root == null) throw new ArgumentNullException(nameof(root));
 
-			if (_masterVisitor != null)
-			{
-				throw new InvalidOperationException(message: "Only root visitor can call SetRootPath() method.");
-			}
-
 			if (_path?.Count > 0)
 			{
-				throw new InvalidOperationException(message: "Root path can be set only before visiting.");
+				throw new InvalidOperationException(message: Resources.Exception_Root_path_can_be_set_only_before_visiting);
 			}
 
 			_path?.Push((root, default));
 		}
 
-		protected void AddErrorMessage(string message)
-		{
-			if (_masterVisitor != null)
-			{
-				_masterVisitor.AddErrorMessage(message);
-			}
-			else
-			{
-				if (_errorMessages == null)
-				{
-					_errorMessages = new StringBuilder();
-				}
-				else
-				{
-					_errorMessages.AppendLine();
-				}
-
-				_errorMessages.Append(message);
-
-				if (_path != null)
-				{
-					_errorMessages.Append(value: " Path: ").Append(CurrentPath);
-				}
-			}
-		}
-
-		protected void ThrowIfErrors()
-		{
-			if (_masterVisitor != null)
-			{
-				throw new InvalidOperationException(message: "Only root visitor can call ThrowIfErrors() method");
-			}
-
-			if (_errorMessages != null)
-			{
-				throw new InvalidOperationException(_errorMessages.ToString());
-			}
-		}
-
-		private ref struct VisitData<TEntity, TIEntity> where TEntity : struct, IVisitorEntity<TEntity, TIEntity>, TIEntity where TIEntity : class
+		private ref struct VisitData<TEntity, TIEntity> where TEntity : struct, IVisitorEntity<TEntity, TIEntity>, TIEntity
 		{
 			public TEntity Properties;
 
-			private          TEntity  _original;
+			private readonly TEntity  _original;
 			private readonly TIEntity _entity;
 
 			public VisitData(TIEntity entity)
@@ -128,7 +77,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private ref struct VisitListData<TIEntity> where TIEntity : class
+		private ref struct VisitListData<TIEntity>
 		{
 			public TrackList<TIEntity> List;
 
@@ -149,14 +98,15 @@ namespace TSSArt.StateMachine
 			{
 				if (_original == list && List.IsModified)
 				{
-					list = List.ModifiedItems.ToImmutable();
+					list = List.ModifiedItems!.ToImmutable();
 				}
 			}
 		}
 
-		protected ref struct TrackList<T> where T : class
+		[PublicAPI]
+		protected ref struct TrackList<T>
 		{
-			private readonly ImmutableArray<T> _items;
+			private ImmutableArray<T> _items;
 
 			public TrackList(ImmutableArray<T> items)
 			{
@@ -190,7 +140,7 @@ namespace TSSArt.StateMachine
 				}
 			}
 
-			public ImmutableArray<T>.Builder ModifiedItems { get; private set; }
+			public ImmutableArray<T>.Builder? ModifiedItems { get; private set; }
 
 			public int Count => ModifiedItems?.Count ?? _items.Length;
 
@@ -198,6 +148,8 @@ namespace TSSArt.StateMachine
 
 			public IEnumerator<T> GetEnumerator() => ModifiedItems != null ? ModifiedItems.GetEnumerator() : ((IEnumerable<T>) _items).GetEnumerator();
 
+			[MaybeNull]
+			[AllowNull]
 			public T this[int index]
 			{
 				get => ModifiedItems != null ? ModifiedItems[index] : _items[index];
@@ -205,24 +157,24 @@ namespace TSSArt.StateMachine
 				{
 					if (ModifiedItems != null)
 					{
-						ModifiedItems[index] = value;
+						ModifiedItems[index] = value!;
 					}
 					else if (!ReferenceEquals(_items[index], value))
 					{
 						ModifiedItems = _items.ToBuilder();
-						ModifiedItems[index] = value;
+						ModifiedItems[index] = value!;
 					}
 				}
 			}
 
-			public void Add(T item)
+			public void Add([AllowNull] T item)
 			{
 				if (ModifiedItems == null)
 				{
 					ModifiedItems = _items.ToBuilder();
 				}
 
-				ModifiedItems.Add(item);
+				ModifiedItems.Add(item!);
 			}
 
 			public void Clear()
@@ -234,7 +186,8 @@ namespace TSSArt.StateMachine
 
 				if (ModifiedItems == null)
 				{
-					ModifiedItems = ImmutableArray<T>.Empty.ToBuilder();
+					var empty = ImmutableArray<T>.Empty;
+					ModifiedItems = empty.ToBuilder();
 				}
 				else
 				{
@@ -282,119 +235,119 @@ namespace TSSArt.StateMachine
 
 		protected virtual void Visit(ref IStateMachine entity)
 		{
-			var data = new VisitData<StateMachine, IStateMachine>(entity);
+			var data = new VisitData<StateMachineEntity, IStateMachine>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
 
 		protected virtual void Visit(ref ITransition entity)
 		{
-			var data = new VisitData<Transition, ITransition>(entity);
+			var data = new VisitData<TransitionEntity, ITransition>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
 
 		protected virtual void Visit(ref IState entity)
 		{
-			var data = new VisitData<State, IState>(entity);
+			var data = new VisitData<StateEntity, IState>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
 
 		protected virtual void Visit(ref IParallel entity)
 		{
-			var data = new VisitData<Parallel, IParallel>(entity);
+			var data = new VisitData<ParallelEntity, IParallel>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
 
 		protected virtual void Visit(ref IInitial entity)
 		{
-			var data = new VisitData<Initial, IInitial>(entity);
+			var data = new VisitData<InitialEntity, IInitial>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
 
 		protected virtual void Visit(ref IFinal entity)
 		{
-			var data = new VisitData<Final, IFinal>(entity);
+			var data = new VisitData<FinalEntity, IFinal>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
 
 		protected virtual void Visit(ref IHistory entity)
 		{
-			var data = new VisitData<History, IHistory>(entity);
+			var data = new VisitData<HistoryEntity, IHistory>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
 
 		protected virtual void Visit(ref IOnEntry entity)
 		{
-			var data = new VisitData<OnEntry, IOnEntry>(entity);
+			var data = new VisitData<OnEntryEntity, IOnEntry>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
 
 		protected virtual void Visit(ref IOnExit entity)
 		{
-			var data = new VisitData<OnExit, IOnExit>(entity);
+			var data = new VisitData<OnExitEntity, IOnExit>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
 
 		protected virtual void Visit(ref IAssign entity)
 		{
-			var data = new VisitData<Assign, IAssign>(entity);
+			var data = new VisitData<AssignEntity, IAssign>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
 
 		protected virtual void Visit(ref ICancel entity)
 		{
-			var data = new VisitData<Cancel, ICancel>(entity);
+			var data = new VisitData<CancelEntity, ICancel>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
 
 		protected virtual void Visit(ref IElseIf entity)
 		{
-			var data = new VisitData<ElseIf, IElseIf>(entity);
+			var data = new VisitData<ElseIfEntity, IElseIf>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
 
 		protected virtual void Visit(ref IForEach entity)
 		{
-			var data = new VisitData<ForEach, IForEach>(entity);
+			var data = new VisitData<ForEachEntity, IForEach>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
 
 		protected virtual void Visit(ref IIf entity)
 		{
-			var data = new VisitData<If, IIf>(entity);
+			var data = new VisitData<IfEntity, IIf>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
 
 		protected virtual void Visit(ref ILog entity)
 		{
-			var data = new VisitData<Log, ILog>(entity);
+			var data = new VisitData<LogEntity, ILog>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
 
 		protected virtual void Visit(ref IRaise entity)
 		{
-			var data = new VisitData<Raise, IRaise>(entity);
+			var data = new VisitData<RaiseEntity, IRaise>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
 
 		protected virtual void Visit(ref IScript entity)
 		{
-			var data = new VisitData<Script, IScript>(entity);
+			var data = new VisitData<ScriptEntity, IScript>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
@@ -408,42 +361,42 @@ namespace TSSArt.StateMachine
 
 		protected virtual void Visit(ref ISend entity)
 		{
-			var data = new VisitData<Send, ISend>(entity);
+			var data = new VisitData<SendEntity, ISend>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
 
 		protected virtual void Visit(ref IDataModel entity)
 		{
-			var data = new VisitData<DataModel, IDataModel>(entity);
+			var data = new VisitData<DataModelEntity, IDataModel>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
 
 		protected virtual void Visit(ref IData entity)
 		{
-			var data = new VisitData<Data, IData>(entity);
+			var data = new VisitData<DataEntity, IData>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
 
 		protected virtual void Visit(ref IDoneData entity)
 		{
-			var data = new VisitData<DoneData, IDoneData>(entity);
+			var data = new VisitData<DoneDataEntity, IDoneData>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
 
 		protected virtual void Visit(ref IInvoke entity)
 		{
-			var data = new VisitData<Invoke, IInvoke>(entity);
+			var data = new VisitData<InvokeEntity, IInvoke>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
 
 		protected virtual void Visit(ref IContent entity)
 		{
-			var data = new VisitData<Content, IContent>(entity);
+			var data = new VisitData<ContentEntity, IContent>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
@@ -457,21 +410,21 @@ namespace TSSArt.StateMachine
 
 		protected virtual void Visit(ref IParam entity)
 		{
-			var data = new VisitData<Param, IParam>(entity);
+			var data = new VisitData<ParamEntity, IParam>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
 
 		protected virtual void Visit(ref IFinalize entity)
 		{
-			var data = new VisitData<Finalize, IFinalize>(entity);
+			var data = new VisitData<FinalizeEntity, IFinalize>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
 
 		protected virtual void Visit(ref IElse entity)
 		{
-			var data = new VisitData<Else, IElse>(entity);
+			var data = new VisitData<ElseEntity, IElse>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
@@ -590,7 +543,8 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual void VisitUnknown(ref IExecutableEntity entity) { }
+		protected virtual void VisitUnknown(ref IExecutableEntity entity)
+		{ }
 
 		protected virtual void Visit(ref IStateEntity entity)
 		{
@@ -619,7 +573,8 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual void VisitUnknown(ref IStateEntity entity) { }
+		protected virtual void VisitUnknown(ref IStateEntity entity)
+		{ }
 
 		#endregion
 
@@ -713,7 +668,7 @@ namespace TSSArt.StateMachine
 
 		#region Build(ref IT entity, ref T properties)
 
-		protected virtual void Build(ref IStateMachine entity, ref StateMachine properties)
+		protected virtual void Build(ref IStateMachine entity, ref StateMachineEntity properties)
 		{
 			var dataModel = properties.DataModel;
 			VisitWrapper(ref dataModel);
@@ -732,11 +687,11 @@ namespace TSSArt.StateMachine
 			properties.States = states;
 		}
 
-		protected virtual void Build(ref ITransition entity, ref Transition properties)
+		protected virtual void Build(ref ITransition entity, ref TransitionEntity properties)
 		{
-			var Event = properties.Event;
-			VisitWrapper(ref Event);
-			properties.Event = Event;
+			var evt = properties.EventDescriptors;
+			VisitWrapper(ref evt);
+			properties.EventDescriptors = evt;
 
 			var target = properties.Target;
 			VisitWrapper(ref target);
@@ -751,7 +706,7 @@ namespace TSSArt.StateMachine
 			properties.Action = action;
 		}
 
-		protected virtual void Build(ref IState entity, ref State properties)
+		protected virtual void Build(ref IState entity, ref StateEntity properties)
 		{
 			var id = properties.Id;
 			VisitWrapper(ref id);
@@ -790,7 +745,7 @@ namespace TSSArt.StateMachine
 			properties.Invoke = invoke;
 		}
 
-		protected virtual void Build(ref IParallel entity, ref Parallel properties)
+		protected virtual void Build(ref IParallel entity, ref ParallelEntity properties)
 		{
 			var id = properties.Id;
 			VisitWrapper(ref id);
@@ -825,14 +780,14 @@ namespace TSSArt.StateMachine
 			properties.Invoke = invoke;
 		}
 
-		protected virtual void Build(ref IInitial entity, ref Initial properties)
+		protected virtual void Build(ref IInitial entity, ref InitialEntity properties)
 		{
 			var transition = properties.Transition;
 			VisitWrapper(ref transition);
 			properties.Transition = transition;
 		}
 
-		protected virtual void Build(ref IFinal entity, ref Final properties)
+		protected virtual void Build(ref IFinal entity, ref FinalEntity properties)
 		{
 			var id = properties.Id;
 			VisitWrapper(ref id);
@@ -851,7 +806,7 @@ namespace TSSArt.StateMachine
 			properties.DoneData = doneData;
 		}
 
-		protected virtual void Build(ref IHistory entity, ref History properties)
+		protected virtual void Build(ref IHistory entity, ref HistoryEntity properties)
 		{
 			var id = properties.Id;
 			VisitWrapper(ref id);
@@ -862,24 +817,24 @@ namespace TSSArt.StateMachine
 			properties.Transition = transition;
 		}
 
-		protected virtual void Build(ref IOnEntry entity, ref OnEntry properties)
+		protected virtual void Build(ref IOnEntry entity, ref OnEntryEntity properties)
 		{
 			var action = properties.Action;
 			VisitWrapper(ref action);
 			properties.Action = action;
 		}
 
-		protected virtual void Build(ref IOnExit entity, ref OnExit properties)
+		protected virtual void Build(ref IOnExit entity, ref OnExitEntity properties)
 		{
 			var action = properties.Action;
 			VisitWrapper(ref action);
 			properties.Action = action;
 		}
 
-		protected virtual void Build(ref IAssign entity, ref Assign properties)
+		protected virtual void Build(ref IAssign entity, ref AssignEntity properties)
 		{
 			var location = properties.Location;
-			VisitWrapper(ref location);
+			VisitWrapper(ref location!);
 			properties.Location = location;
 
 			var expression = properties.Expression;
@@ -887,28 +842,28 @@ namespace TSSArt.StateMachine
 			properties.Expression = expression;
 		}
 
-		protected virtual void Build(ref ICancel entity, ref Cancel properties)
+		protected virtual void Build(ref ICancel entity, ref CancelEntity properties)
 		{
 			var sendIdExpression = properties.SendIdExpression;
 			VisitWrapper(ref sendIdExpression);
 			properties.SendIdExpression = sendIdExpression;
 		}
 
-		protected virtual void Build(ref IElseIf entity, ref ElseIf properties)
+		protected virtual void Build(ref IElseIf entity, ref ElseIfEntity properties)
 		{
 			var condition = properties.Condition;
 			VisitWrapper(ref condition);
 			properties.Condition = condition;
 		}
 
-		protected virtual void Build(ref IForEach entity, ref ForEach properties)
+		protected virtual void Build(ref IForEach entity, ref ForEachEntity properties)
 		{
 			var array = properties.Array;
-			VisitWrapper(ref array);
+			VisitWrapper(ref array!);
 			properties.Array = array;
 
 			var item = properties.Item;
-			VisitWrapper(ref item);
+			VisitWrapper(ref item!);
 			properties.Item = item;
 
 			var index = properties.Index;
@@ -920,10 +875,10 @@ namespace TSSArt.StateMachine
 			properties.Action = action;
 		}
 
-		protected virtual void Build(ref IIf entity, ref If properties)
+		protected virtual void Build(ref IIf entity, ref IfEntity properties)
 		{
 			var condition = properties.Condition;
-			VisitWrapper(ref condition);
+			VisitWrapper(ref condition!);
 			properties.Condition = condition;
 
 			var action = properties.Action;
@@ -931,21 +886,21 @@ namespace TSSArt.StateMachine
 			properties.Action = action;
 		}
 
-		protected virtual void Build(ref ILog entity, ref Log properties)
+		protected virtual void Build(ref ILog entity, ref LogEntity properties)
 		{
 			var expression = properties.Expression;
 			VisitWrapper(ref expression);
 			properties.Expression = expression;
 		}
 
-		protected virtual void Build(ref IRaise entity, ref Raise properties)
+		protected virtual void Build(ref IRaise entity, ref RaiseEntity properties)
 		{
-			var @event = properties.Event;
-			VisitWrapper(ref @event);
-			properties.Event = @event;
+			var evt = properties.OutgoingEvent;
+			VisitWrapper(ref evt);
+			properties.OutgoingEvent = evt;
 		}
 
-		protected virtual void Build(ref IScript entity, ref Script properties)
+		protected virtual void Build(ref IScript entity, ref ScriptEntity properties)
 		{
 			var content = properties.Content;
 			VisitWrapper(ref content);
@@ -956,7 +911,7 @@ namespace TSSArt.StateMachine
 			properties.Source = source;
 		}
 
-		protected virtual void Build(ref ISend entity, ref Send properties)
+		protected virtual void Build(ref ISend entity, ref SendEntity properties)
 		{
 			var eventExpression = properties.EventExpression;
 			VisitWrapper(ref eventExpression);
@@ -991,14 +946,14 @@ namespace TSSArt.StateMachine
 			properties.Content = content;
 		}
 
-		protected virtual void Build(ref IDataModel entity, ref DataModel properties)
+		protected virtual void Build(ref IDataModel entity, ref DataModelEntity properties)
 		{
 			var data = properties.Data;
 			VisitWrapper(ref data);
 			properties.Data = data;
 		}
 
-		protected virtual void Build(ref IData entity, ref Data properties)
+		protected virtual void Build(ref IData entity, ref DataEntity properties)
 		{
 			var expression = properties.Expression;
 			VisitWrapper(ref expression);
@@ -1009,7 +964,7 @@ namespace TSSArt.StateMachine
 			properties.Source = source;
 		}
 
-		protected virtual void Build(ref IDoneData entity, ref DoneData properties)
+		protected virtual void Build(ref IDoneData entity, ref DoneDataEntity properties)
 		{
 			var content = properties.Content;
 			VisitWrapper(ref content);
@@ -1020,7 +975,7 @@ namespace TSSArt.StateMachine
 			properties.Parameters = parameters;
 		}
 
-		protected virtual void Build(ref IInvoke entity, ref Invoke properties)
+		protected virtual void Build(ref IInvoke entity, ref InvokeEntity properties)
 		{
 			var typeExpression = properties.TypeExpression;
 			VisitWrapper(ref typeExpression);
@@ -1051,7 +1006,7 @@ namespace TSSArt.StateMachine
 			properties.Finalize = finalize;
 		}
 
-		protected virtual void Build(ref IContent entity, ref Content properties)
+		protected virtual void Build(ref IContent entity, ref ContentEntity properties)
 		{
 			var expression = properties.Expression;
 			VisitWrapper(ref expression);
@@ -1062,7 +1017,7 @@ namespace TSSArt.StateMachine
 			properties.Body = body;
 		}
 
-		protected virtual void Build(ref IParam entity, ref Param properties)
+		protected virtual void Build(ref IParam entity, ref ParamEntity properties)
 		{
 			var expression = properties.Expression;
 			VisitWrapper(ref expression);
@@ -1073,30 +1028,39 @@ namespace TSSArt.StateMachine
 			properties.Location = location;
 		}
 
-		protected virtual void Build(ref IFinalize entity, ref Finalize properties)
+		protected virtual void Build(ref IFinalize entity, ref FinalizeEntity properties)
 		{
 			var action = properties.Action;
 			VisitWrapper(ref action);
 			properties.Action = action;
 		}
 
-		protected virtual void Build(ref ICustomAction entity, ref CustomAction properties) { }
+		protected virtual void Build(ref ICustomAction entity, ref CustomAction properties)
+		{ }
 
-		protected virtual void Build(ref IElse entity, ref Else properties) { }
+		protected virtual void Build(ref IElse entity, ref ElseEntity properties)
+		{ }
 
-		protected virtual void Build(ref IValueExpression entity, ref ValueExpression properties) { }
+		protected virtual void Build(ref IValueExpression entity, ref ValueExpression properties)
+		{ }
 
-		protected virtual void Build(ref ILocationExpression entity, ref LocationExpression properties) { }
+		protected virtual void Build(ref ILocationExpression entity, ref LocationExpression properties)
+		{ }
 
-		protected virtual void Build(ref IConditionExpression entity, ref ConditionExpression properties) { }
+		protected virtual void Build(ref IConditionExpression entity, ref ConditionExpression properties)
+		{ }
 
-		protected virtual void Build(ref IScriptExpression entity, ref ScriptExpression properties) { }
+		protected virtual void Build(ref IScriptExpression entity, ref ScriptExpression properties)
+		{ }
 
-		protected virtual void Build(ref IExternalScriptExpression entity, ref ExternalScriptExpression properties) { }
+		protected virtual void Build(ref IExternalScriptExpression entity, ref ExternalScriptExpression properties)
+		{ }
 
-		protected virtual void Build(ref IExternalDataExpression entity, ref ExternalDataExpression properties) { }
+		protected virtual void Build(ref IExternalDataExpression entity, ref ExternalDataExpression properties)
+		{ }
 
-		protected virtual void Build(ref IContentBody entity, ref ContentBody properties) { }
+		protected virtual void Build(ref IContentBody entity, ref ContentBody properties)
+		{ }
 
 		#endregion
 
@@ -1226,7 +1190,7 @@ namespace TSSArt.StateMachine
 
 		#region VisitWrapper(ref IT entity)
 
-		private void VisitWrapper(ref IExecutableEntity entity)
+		private void VisitWrapper(ref IExecutableEntity? entity)
 		{
 			if (entity == null) return;
 			Enter(entity);
@@ -1234,7 +1198,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref IInitial entity)
+		private void VisitWrapper(ref IInitial? entity)
 		{
 			if (entity == null) return;
 			Enter(entity);
@@ -1242,7 +1206,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref IIdentifier entity)
+		private void VisitWrapper(ref IIdentifier? entity)
 		{
 			if (entity == null) return;
 			Enter(entity);
@@ -1250,7 +1214,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref IStateEntity entity)
+		private void VisitWrapper(ref IStateEntity? entity)
 		{
 			if (entity == null) return;
 			Enter(entity);
@@ -1258,7 +1222,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref IEventDescriptor entity)
+		private void VisitWrapper(ref IEventDescriptor? entity)
 		{
 			if (entity == null) return;
 			Enter(entity);
@@ -1266,7 +1230,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref ITransition entity)
+		private void VisitWrapper(ref ITransition? entity)
 		{
 			if (entity == null) return;
 			Enter(entity);
@@ -1274,7 +1238,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref IDoneData entity)
+		private void VisitWrapper(ref IDoneData? entity)
 		{
 			if (entity == null) return;
 			Enter(entity);
@@ -1282,7 +1246,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref IHistory entity)
+		private void VisitWrapper(ref IHistory? entity)
 		{
 			if (entity == null) return;
 			Enter(entity);
@@ -1290,7 +1254,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref IOnEntry entity)
+		private void VisitWrapper(ref IOnEntry? entity)
 		{
 			if (entity == null) return;
 			Enter(entity);
@@ -1298,7 +1262,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref IOnExit entity)
+		private void VisitWrapper(ref IOnExit? entity)
 		{
 			if (entity == null) return;
 			Enter(entity);
@@ -1306,7 +1270,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref IConditionExpression entity)
+		private void VisitWrapper(ref IConditionExpression? entity)
 		{
 			if (entity == null) return;
 			Enter(entity);
@@ -1314,7 +1278,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref ILocationExpression entity)
+		private void VisitWrapper(ref ILocationExpression? entity)
 		{
 			if (entity == null) return;
 			Enter(entity);
@@ -1322,7 +1286,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref IValueExpression entity)
+		private void VisitWrapper(ref IValueExpression? entity)
 		{
 			if (entity == null) return;
 			Enter(entity);
@@ -1330,7 +1294,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref IExternalDataExpression entity)
+		private void VisitWrapper(ref IExternalDataExpression? entity)
 		{
 			if (entity == null) return;
 			Enter(entity);
@@ -1338,7 +1302,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref IScriptExpression entity)
+		private void VisitWrapper(ref IScriptExpression? entity)
 		{
 			if (entity == null) return;
 			Enter(entity);
@@ -1346,7 +1310,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref IExternalScriptExpression entity)
+		private void VisitWrapper(ref IExternalScriptExpression? entity)
 		{
 			if (entity == null) return;
 			Enter(entity);
@@ -1354,7 +1318,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref IOutgoingEvent entity)
+		private void VisitWrapper(ref IOutgoingEvent? entity)
 		{
 			if (entity == null) return;
 			Enter(entity);
@@ -1362,7 +1326,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref IInvoke entity)
+		private void VisitWrapper(ref IInvoke? entity)
 		{
 			if (entity == null) return;
 			Enter(entity);
@@ -1370,7 +1334,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref IDataModel entity)
+		private void VisitWrapper(ref IDataModel? entity)
 		{
 			if (entity == null) return;
 			Enter(entity);
@@ -1378,7 +1342,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref IData entity)
+		private void VisitWrapper(ref IData? entity)
 		{
 			if (entity == null) return;
 			Enter(entity);
@@ -1386,7 +1350,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref IParam entity)
+		private void VisitWrapper(ref IParam? entity)
 		{
 			if (entity == null) return;
 			Enter(entity);
@@ -1394,7 +1358,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref IContent entity)
+		private void VisitWrapper(ref IContent? entity)
 		{
 			if (entity == null) return;
 			Enter(entity);
@@ -1402,7 +1366,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref IContentBody entity)
+		private void VisitWrapper(ref IContentBody? entity)
 		{
 			if (entity == null) return;
 			Enter(entity);
@@ -1410,7 +1374,7 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		private void VisitWrapper(ref IFinalize entity)
+		private void VisitWrapper(ref IFinalize? entity)
 		{
 			if (entity == null) return;
 			Enter(entity);

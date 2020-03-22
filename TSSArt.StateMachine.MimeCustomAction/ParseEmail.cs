@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Buffers;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -9,6 +8,10 @@ using System.Threading.Tasks;
 using System.Xml;
 using HtmlAgilityPack;
 using MimeKit;
+
+#if NETSTANDARD2_1
+using System.Buffers;
+#endif
 
 namespace TSSArt.StateMachine.Services
 {
@@ -37,7 +40,10 @@ namespace TSSArt.StateMachine.Services
 
 			var content = context.DataModel[_source].AsString();
 
-			context.DataModel[_destination] = Parse(content);
+			if (content != null)
+			{
+				context.DataModel[_destination] = Parse(content);
+			}
 
 			return default;
 		}

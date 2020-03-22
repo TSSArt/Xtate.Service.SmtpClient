@@ -2,6 +2,6 @@
 {
 	public interface IRaise : IExecutableEntity
 	{
-		IOutgoingEvent Event { get; }
+		IOutgoingEvent? OutgoingEvent { get; }
 	}
 }

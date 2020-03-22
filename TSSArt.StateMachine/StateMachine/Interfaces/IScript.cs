@@ -2,7 +2,7 @@
 {
 	public interface IScript : IExecutableEntity
 	{
-		IScriptExpression         Content { get; }
-		IExternalScriptExpression Source  { get; }
+		IScriptExpression?         Content { get; }
+		IExternalScriptExpression? Source  { get; }
 	}
 }

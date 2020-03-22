@@ -2,16 +2,19 @@
 
 namespace TSSArt.StateMachine
 {
-	public class LogBuilder : ILogBuilder
+	public class LogBuilder : BuilderBase, ILogBuilder
 	{
-		private IValueExpression _expression;
-		private string           _label;
+		private IValueExpression? _expression;
+		private string?           _label;
 
-		public ILog Build() => new Log { Label = _label, Expression = _expression };
+		public LogBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
+		{ }
+
+		public ILog Build() => new LogEntity { Ancestor = Ancestor, Label = _label, Expression = _expression };
 
 		public void SetLabel(string label)
 		{
-			if (string.IsNullOrEmpty(label)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(label));
+			if (string.IsNullOrEmpty(label)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(label));
 
 			_label = label;
 		}

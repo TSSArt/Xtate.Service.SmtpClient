@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Buffers.Binary;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Text;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	internal readonly struct Bucket
 	{
 		public static readonly RootType RootKey = RootType.Instance;
@@ -12,7 +15,9 @@ namespace TSSArt.StateMachine
 		public class RootType
 		{
 			public static readonly RootType Instance = new RootType();
-			private RootType() { }
+
+			private RootType()
+			{ }
 		}
 
 		private static class TypeConverter<TInput, TOutput>
@@ -59,7 +64,7 @@ namespace TSSArt.StateMachine
 					case TypeCode.Object when type == typeof(RootType):
 						return new RootKeyConverter<T>();
 
-					default: return new UnsupportedConverter<T>("key");
+					default: return new UnsupportedConverter<T>(@"key");
 				}
 			}
 
@@ -82,14 +87,14 @@ namespace TSSArt.StateMachine
 					case TypeCode.String: return new StringValueConverter<T>();
 					case TypeCode.Object when type == typeof(Uri): return new UriValueConverter<T>();
 
-					default: return new UnsupportedConverter<T>("value");
+					default: return new UnsupportedConverter<T>(@"value");
 				}
 			}
 		}
 
 		private class Node
 		{
-			public readonly Node     Previous;
+			public readonly Node?    Previous;
 			public readonly IStorage Storage;
 
 			public Node(IStorage storage)
@@ -106,14 +111,15 @@ namespace TSSArt.StateMachine
 
 			public virtual int Size => 0;
 
-			public virtual void WriteTo(Span<byte> buf) { }
+			public virtual void WriteTo(Span<byte> buf)
+			{ }
 		}
 
 		private class BlocksBytesNode : Node
 		{
-			private readonly ulong  _block1;
-			private readonly ulong  _block2;
-			private readonly byte[] _bytes;
+			private readonly ulong   _block1;
+			private readonly ulong   _block2;
+			private readonly byte[]? _bytes;
 
 			public BlocksBytesNode(Node node, ulong block, Span<byte> span) : base(node)
 			{
@@ -160,9 +166,14 @@ namespace TSSArt.StateMachine
 
 		private abstract class ConverterBase<T>
 		{
-			public abstract int  GetLength(T key);
-			public abstract void Write(T key, Span<byte> bytes);
-			public abstract T    Read(ReadOnlySpan<byte> bytes);
+			public abstract int GetLength([System.Diagnostics.CodeAnalysis.NotNull]
+										  T key);
+
+			public abstract void Write([System.Diagnostics.CodeAnalysis.NotNull]
+									   T key, Span<byte> bytes);
+
+			[return: System.Diagnostics.CodeAnalysis.NotNull]
+			public abstract T Read(ReadOnlySpan<byte> bytes);
 		}
 
 		private abstract class KeyConverterBase<TKey, TInternal> : ConverterBase<TKey>
@@ -295,7 +306,8 @@ namespace TSSArt.StateMachine
 				if (key == null) throw new ArgumentNullException(nameof(key));
 
 				bytes[0] = 7;
-				bytes[bytes.Length - 1] = 0xFF;
+				var lastByteIndex = bytes.Length - 1;
+				bytes[lastByteIndex] = 0xFF;
 				var dest = bytes.Slice(start: 1, bytes.Length - 2);
 #if NETSTANDARD2_1
 				Encoding.UTF8.GetBytes(key, dest);
@@ -309,7 +321,8 @@ namespace TSSArt.StateMachine
 		{
 			protected override int GetLength(RootType key) => 0;
 
-			protected override void Write(RootType key, Span<byte> bytes) { }
+			protected override void Write(RootType key, Span<byte> bytes)
+			{ }
 		}
 
 		private class UnsupportedConverter<T> : ConverterBase<T>
@@ -318,7 +331,7 @@ namespace TSSArt.StateMachine
 
 			public UnsupportedConverter(string type) => _type = type;
 
-			private NotSupportedException GetNotSupportedException() => new NotSupportedException($"Unsupported {_type} type: [{typeof(T)}]");
+			private NotSupportedException GetNotSupportedException() => new NotSupportedException(Res.Format(Resources.Exception_UnsupportedType, _type, typeof(T)));
 
 			public override int GetLength(T key) => throw GetNotSupportedException();
 
@@ -534,7 +547,7 @@ namespace TSSArt.StateMachine
 		{
 			var size = Helper<TKey>.KeyConverter.GetLength(key) + GetSize(_block);
 
-			for (var n = _node; n != null; n = n.Previous)
+			for (var n = _node; n != null; n = n.Previous!)
 			{
 				size += n.Size;
 			}
@@ -556,7 +569,7 @@ namespace TSSArt.StateMachine
 			return buf.Slice(start: 0, length);
 		}
 
-		private static Span<byte> WritePrevious(Node node, int size, ref Span<byte> buf)
+		private static Span<byte> WritePrevious(Node? node, int size, ref Span<byte> buf)
 		{
 			if (node != null)
 			{
@@ -582,10 +595,12 @@ namespace TSSArt.StateMachine
 			}
 
 			Span<byte> buf = stackalloc byte[GetFullKeySize(key)];
-			_node.Storage.Add(CreateFullKey(buf, key), value);
+			_node.Storage.Write(CreateFullKey(buf, key), value);
 		}
 
-		public void Add<TKey, TValue>(TKey key, TValue value)
+		public void Add<TKey, TValue>([System.Diagnostics.CodeAnalysis.NotNull]
+									  TKey key, [System.Diagnostics.CodeAnalysis.NotNull]
+									  TValue value)
 		{
 			if (value == null)
 			{
@@ -596,36 +611,41 @@ namespace TSSArt.StateMachine
 			Span<byte> buf = stackalloc byte[GetFullKeySize(key)];
 			Span<byte> bufVal = stackalloc byte[Helper<TValue>.ValueConverter.GetLength(value)];
 			Helper<TValue>.ValueConverter.Write(value, bufVal);
-			_node.Storage.Add(CreateFullKey(buf, key), bufVal);
+			_node.Storage.Write(CreateFullKey(buf, key), bufVal);
 		}
 
-		public void Remove<TKey>(TKey key)
+		public void Remove<TKey>([System.Diagnostics.CodeAnalysis.NotNull]
+								 TKey key)
 		{
 			Span<byte> buf = stackalloc byte[GetFullKeySize(key)];
-			_node.Storage.Add(CreateFullKey(buf, key), ReadOnlySpan<byte>.Empty);
+			_node.Storage.Write(CreateFullKey(buf, key), ReadOnlySpan<byte>.Empty);
 		}
 
-		public void RemoveSubtree<TKey>(TKey key)
+		public void RemoveSubtree<TKey>([System.Diagnostics.CodeAnalysis.NotNull]
+										TKey key)
 		{
 			Span<byte> buf = stackalloc byte[GetFullKeySize(key)];
-			_node.Storage.Add(ReadOnlySpan<byte>.Empty, CreateFullKey(buf, key));
+			_node.Storage.Write(ReadOnlySpan<byte>.Empty, CreateFullKey(buf, key));
 		}
 
-		public bool TryGet<TKey>(TKey key, out ReadOnlyMemory<byte> value)
+		public bool TryGet<TKey>([System.Diagnostics.CodeAnalysis.NotNull]
+								 TKey key, out ReadOnlyMemory<byte> value)
 		{
 			Span<byte> buf = stackalloc byte[GetFullKeySize(key)];
-			value = _node.Storage.Get(CreateFullKey(buf, key));
+			value = _node.Storage.Read(CreateFullKey(buf, key));
 			return !value.IsEmpty;
 		}
 
-		public bool TryGet<TKey, TValue>(TKey key, out TValue value)
+		public bool TryGet<TKey, TValue>([System.Diagnostics.CodeAnalysis.NotNull]
+										 TKey key, [NotNullWhen(true)] [MaybeNullWhen(false)]
+										 out TValue value)
 		{
 			Span<byte> buf = stackalloc byte[GetFullKeySize(key)];
-			var memory = _node.Storage.Get(CreateFullKey(buf, key));
+			var memory = _node.Storage.Read(CreateFullKey(buf, key));
 
 			if (memory.Length == 0)
 			{
-				value = default;
+				value = default!;
 				return false;
 			}
 

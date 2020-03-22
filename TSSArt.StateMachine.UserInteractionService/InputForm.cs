@@ -19,7 +19,7 @@ namespace TSSArt.StateMachine.Services
 								   Left = 10,
 								   Height = 16,
 								   Width = 48,
-								   Text = "OK"
+								   Text = @"OK"
 						   };
 
 			okButton.Click += (sender, args) => { Close(DialogResult.OK, GetInputResult()); };
@@ -30,7 +30,7 @@ namespace TSSArt.StateMachine.Services
 									   Left = 60,
 									   Height = 16,
 									   Width = 48,
-									   Text = "Cancel"
+									   Text = @"Cancel"
 							   };
 
 			cancelButton.Click += (sender, args) => { Close(DialogResult.Cancel, result: default); };
@@ -39,14 +39,14 @@ namespace TSSArt.StateMachine.Services
 			Controls.Add(cancelButton);
 		}
 
-		public IDictionary<string, string> Result { get; private set; }
+		public IDictionary<string, string>? Result { get; private set; }
 
 		private IDictionary<string, string> GetInputResult()
 		{
 			return Controls.OfType<TextBox>().ToDictionary(tb => (string) tb.Tag, tb => tb.Text);
 		}
 
-		public void Close(DialogResult dialogResult, IDictionary<string, string> result)
+		public void Close(DialogResult dialogResult, IDictionary<string, string>? result)
 		{
 			Result = result;
 			DialogResult = dialogResult;
@@ -61,7 +61,7 @@ namespace TSSArt.StateMachine.Services
 			}
 		}
 
-		public void AddInput(string name, string location, string type)
+		public void AddInput(string? name, string? location, string? type)
 		{
 			_count ++;
 

@@ -5,12 +5,14 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class InitialNode : StateEntityNode, IInitial, IAncestorProvider, IDebugEntityId
 	{
-		private readonly Initial _initial;
+		private readonly InitialEntity _initial;
 
-		public InitialNode(LinkedListNode<int> documentIdNode, in Initial initial) : base(documentIdNode, children: null)
+		public InitialNode(LinkedListNode<int> documentIdNode, in InitialEntity initial) : base(documentIdNode, children: null)
 		{
+			Infrastructure.Assert(initial.Transition != null);
+
 			_initial = initial;
-			Transition = (TransitionNode) initial.Transition;
+			Transition = initial.Transition.As<TransitionNode>();
 
 			Transition.SetSource(this);
 		}
@@ -24,11 +26,11 @@ namespace TSSArt.StateMachine
 
 		public TransitionNode Transition { get; }
 
-		object IAncestorProvider.Ancestor => _initial.Ancestor;
+		object? IAncestorProvider.Ancestor => _initial.Ancestor;
 
-		public FormattableString EntityId => $"(#{DocumentId})";
+		public FormattableString EntityId => @$"(#{DocumentId})";
 
-		ITransition IInitial.Transition => _initial.Transition;
+		ITransition IInitial.Transition => _initial.Transition!;
 
 		protected override void Store(Bucket bucket)
 		{
