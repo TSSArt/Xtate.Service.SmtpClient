@@ -4,9 +4,11 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	public static class DataModelConverter
 	{
 		private static readonly JsonSerializerOptions Options = new JsonSerializerOptions
@@ -59,7 +61,7 @@ namespace TSSArt.StateMachine
 					case JsonTokenType.StartArray:
 						return new DataModelValue(JsonSerializer.Deserialize<DataModelArray>(ref reader, options));
 
-					default: throw new ArgumentOutOfRangeException();
+					default: return Infrastructure.UnexpectedValue<DataModelValue>();
 				}
 			}
 
@@ -91,7 +93,9 @@ namespace TSSArt.StateMachine
 					case DataModelValueType.Array:
 						JsonSerializer.Serialize(writer, value.AsArray(), options);
 						break;
-					default: throw new ArgumentOutOfRangeException();
+					default:
+						Infrastructure.UnexpectedValue();
+						break;
 				}
 			}
 		}
@@ -104,7 +108,7 @@ namespace TSSArt.StateMachine
 
 				if (reader.TokenType != JsonTokenType.StartObject)
 				{
-					throw new JsonException("Start object token expected");
+					throw new JsonException();
 				}
 
 				reader.Read();
@@ -151,7 +155,7 @@ namespace TSSArt.StateMachine
 
 				if (reader.TokenType != JsonTokenType.StartArray)
 				{
-					throw new JsonException("Start array token expected");
+					throw new JsonException();
 				}
 
 				reader.Read();
