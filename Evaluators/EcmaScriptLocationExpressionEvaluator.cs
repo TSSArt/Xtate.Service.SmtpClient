@@ -7,10 +7,10 @@ namespace TSSArt.StateMachine.EcmaScript
 {
 	internal class EcmaScriptLocationExpressionEvaluator : ILocationEvaluator, ILocationExpression, IAncestorProvider
 	{
-		private readonly Program            _declare;
+		private readonly Program?           _declare;
 		private readonly Expression         _leftExpression;
 		private readonly LocationExpression _locationExpression;
-		private readonly string             _name;
+		private readonly string?            _name;
 		private readonly Program            _program;
 
 		public EcmaScriptLocationExpressionEvaluator(in LocationExpression locationExpression, Program program, Expression leftExpression)
@@ -38,11 +38,11 @@ namespace TSSArt.StateMachine.EcmaScript
 			}
 		}
 
-		object IAncestorProvider.Ancestor => EcmaScriptHelper.GetAncestor(_locationExpression);
+		object? IAncestorProvider.Ancestor => EcmaScriptHelper.GetAncestor(_locationExpression);
 
 		public IObject GetValue(IExecutionContext executionContext) => new EcmaScriptObject(executionContext.Engine().Eval(_program, startNewScope: true));
 
-		public string GetName(IExecutionContext executionContext) => _name;
+		public string GetName(IExecutionContext executionContext) => _name ?? throw new StateMachineExecutionException(Resources.Exception_Name_of_Location_Expression_can_t_be_evaluated);
 
 		public void SetValue(IObject value, IExecutionContext executionContext)
 		{
@@ -62,13 +62,13 @@ namespace TSSArt.StateMachine.EcmaScript
 		{
 			if (_declare == null)
 			{
-				throw new InvalidOperationException(Resources.Error_InvalidLocalVariableName);
+				throw new StateMachineExecutionException(Resources.Exception_InvalidLocalVariableName);
 			}
 
 			executionContext.Engine().Exec(_declare, startNewScope: false);
 		}
 
-		public string Expression => _locationExpression.Expression;
+		public string? Expression => _locationExpression.Expression;
 
 		private static Program CreateDeclareStatement(JintIdentifier identifier)
 		{
@@ -78,7 +78,7 @@ namespace TSSArt.StateMachine.EcmaScript
 			return new Program { VariableDeclarations = declarations, Body = Array.Empty<Statement>(), FunctionDeclarations = Array.Empty<FunctionDeclaration>(), Type = SyntaxNodes.Program };
 		}
 
-		public static Expression GetLeftExpression(Program program)
+		public static Expression? GetLeftExpression(Program program)
 		{
 			if (program.Body.Count != 1)
 			{

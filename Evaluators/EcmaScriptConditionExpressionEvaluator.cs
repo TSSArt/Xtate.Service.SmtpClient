@@ -15,11 +15,11 @@ namespace TSSArt.StateMachine.EcmaScript
 			_program = program;
 		}
 
-		object IAncestorProvider.Ancestor => EcmaScriptHelper.GetAncestor(_conditionExpression);
+		object? IAncestorProvider.Ancestor => EcmaScriptHelper.GetAncestor(_conditionExpression);
 
 		ValueTask<bool> IBooleanEvaluator.EvaluateBoolean(IExecutionContext executionContext, CancellationToken token) =>
 				new ValueTask<bool>(executionContext.Engine().Eval(_program, startNewScope: true).AsBoolean());
 
-		public string Expression => _conditionExpression.Expression;
+		public string? Expression => _conditionExpression.Expression;
 	}
 }

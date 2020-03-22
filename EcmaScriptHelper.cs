@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Reflection;
+using JetBrains.Annotations;
 using Jint;
 using Jint.Native;
 using Jint.Native.Array;
@@ -11,12 +12,14 @@ using Jint.Runtime.Interop;
 
 namespace TSSArt.StateMachine.EcmaScript
 {
+	[PublicAPI]
 	internal static class EcmaScriptHelper
 	{
 		public const string JintVersionPropertyName = "JintVersion";
 		public const string InFunctionName          = "In";
 
-		public static readonly  string             JintVersionValue                    = typeof(Engine).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
+		public static readonly string JintVersionValue = typeof(Engine).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? @"(unknown)";
+
 		private static readonly PropertyDescriptor ReadonlyUndefinedPropertyDescriptor = new PropertyDescriptor(JsValue.Undefined, writable: false, enumerable: false, configurable: false);
 
 		public static PropertyDescriptor CreatePropertyAccessor(Engine engine, DataModelObject obj, string property)
@@ -62,9 +65,9 @@ namespace TSSArt.StateMachine.EcmaScript
 					DataModelValueType.Boolean => new JsValue(value.AsBoolean()),
 					DataModelValueType.String => new JsValue(value.AsString()),
 					DataModelValueType.Number => new JsValue(value.AsNumber()),
-					DataModelValueType.DateTime => new JsValue(value.AsDateTime().ToString(format: "o", DateTimeFormatInfo.InvariantInfo)),
-					DataModelValueType.Object => new JsValue(new DataModelObjectWrapper(engine, value.AsObject())),
-					DataModelValueType.Array => new JsValue(new DataModelArrayWrapper(engine, value.AsArray())),
+					DataModelValueType.DateTime => new JsValue(value.AsDateTime().ToString(format: @"o", DateTimeFormatInfo.InvariantInfo)),
+					DataModelValueType.Object => new JsValue(new DataModelObjectWrapper(engine, value.AsObject()!)),
+					DataModelValueType.Array => new JsValue(new DataModelArrayWrapper(engine, value.AsArray()!)),
 					_ => throw new ArgumentOutOfRangeException(nameof(value), value.Type, Resources.Exception_UnsupportedValueType)
 			};
 		}
@@ -84,7 +87,7 @@ namespace TSSArt.StateMachine.EcmaScript
 		}
 
 		private static DataModelValue CreateDateTimeOrStringValue(string val) =>
-				DateTime.TryParseExact(val, format: "o", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None, out var dttm)
+				DateTime.TryParseExact(val, format: @"o", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None, out var dttm)
 						? new DataModelValue(dttm)
 						: new DataModelValue(val);
 
@@ -117,6 +120,6 @@ namespace TSSArt.StateMachine.EcmaScript
 			}
 		}
 
-		public static object GetAncestor<T>(in T ancestorProvider) where T : IAncestorProvider => ancestorProvider.Ancestor;
+		public static object? GetAncestor<T>(in T ancestorProvider) where T : IAncestorProvider => ancestorProvider.Ancestor;
 	}
 }

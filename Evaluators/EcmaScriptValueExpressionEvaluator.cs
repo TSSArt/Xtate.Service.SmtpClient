@@ -17,7 +17,7 @@ namespace TSSArt.StateMachine.EcmaScript
 			_program = program;
 		}
 
-		object IAncestorProvider.Ancestor => EcmaScriptHelper.GetAncestor(_valueExpression);
+		object? IAncestorProvider.Ancestor => EcmaScriptHelper.GetAncestor(_valueExpression);
 
 		public ValueTask<IObject[]> EvaluateArray(IExecutionContext executionContext, CancellationToken token)
 		{
@@ -36,7 +36,7 @@ namespace TSSArt.StateMachine.EcmaScript
 			return new ValueTask<IObject[]>(result);
 		}
 
-		FormattableString IDebugEntityId.EntityId => null;
+		FormattableString? IDebugEntityId.EntityId => null;
 
 		ValueTask<int> IIntegerEvaluator.EvaluateInteger(IExecutionContext executionContext, CancellationToken token) =>
 				new ValueTask<int>((int) executionContext.Engine().Eval(_program, startNewScope: true).AsNumber());
@@ -47,6 +47,6 @@ namespace TSSArt.StateMachine.EcmaScript
 		ValueTask<string> IStringEvaluator.EvaluateString(IExecutionContext executionContext, CancellationToken token) =>
 				new ValueTask<string>(executionContext.Engine().Eval(_program, startNewScope: true).ToString());
 
-		public string Expression => _valueExpression.Expression;
+		public string? Expression => _valueExpression.Expression;
 	}
 }

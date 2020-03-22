@@ -61,20 +61,47 @@ namespace TSSArt.StateMachine.EcmaScript {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid variable name..
+        ///   Looks up a localized string similar to Condition Expression must be present..
         /// </summary>
-        internal static string Error_InvalidLocalVariableName {
+        internal static string ErrorMessage_Condition_Expression_must_be_present {
             get {
-                return ResourceManager.GetString("Error_InvalidLocalVariableName", resourceCulture);
+                return ResourceManager.GetString("ErrorMessage_Condition_Expression_must_be_present", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Statement must be a single assignable variable or object property..
         /// </summary>
-        internal static string Error_InvalidLocationExpression {
+        internal static string ErrorMessage_InvalidLocationExpression {
             get {
-                return ResourceManager.GetString("Error_InvalidLocationExpression", resourceCulture);
+                return ResourceManager.GetString("ErrorMessage_InvalidLocationExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Location Expression must be present..
+        /// </summary>
+        internal static string ErrorMessage_Location_Expression_must_be_present {
+            get {
+                return ResourceManager.GetString("ErrorMessage_Location_Expression_must_be_present", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Script Expression must be present..
+        /// </summary>
+        internal static string ErrorMessage_Script_Expression_must_be_present {
+            get {
+                return ResourceManager.GetString("ErrorMessage_Script_Expression_must_be_present", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Value Expression must be present..
+        /// </summary>
+        internal static string ErrorMessage_Value_Expression_must_be_present {
+            get {
+                return ResourceManager.GetString("ErrorMessage_Value_Expression_must_be_present", resourceCulture);
             }
         }
         
@@ -84,6 +111,24 @@ namespace TSSArt.StateMachine.EcmaScript {
         internal static string Exception_ExternalScriptMissed {
             get {
                 return ResourceManager.GetString("Exception_ExternalScriptMissed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid variable name..
+        /// </summary>
+        internal static string Exception_InvalidLocalVariableName {
+            get {
+                return ResourceManager.GetString("Exception_InvalidLocalVariableName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name of Location Expression can&apos;t be evaluated..
+        /// </summary>
+        internal static string Exception_Name_of_Location_Expression_can_t_be_evaluated {
+            get {
+                return ResourceManager.GetString("Exception_Name_of_Location_Expression_can_t_be_evaluated", resourceCulture);
             }
         }
         

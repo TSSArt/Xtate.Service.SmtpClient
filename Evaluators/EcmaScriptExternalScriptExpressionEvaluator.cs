@@ -9,18 +9,15 @@ namespace TSSArt.StateMachine.EcmaScript
 	internal class EcmaScriptExternalScriptExpressionEvaluator : IExternalScriptExpression, IExecEvaluator, IExternalScriptConsumer, IAncestorProvider
 	{
 		private readonly ExternalScriptExpression _externalScriptExpression;
-		private          Program                  _program;
+		private          Program?                 _program;
 
 		public EcmaScriptExternalScriptExpressionEvaluator(in ExternalScriptExpression externalScriptExpression) => _externalScriptExpression = externalScriptExpression;
 
-		object IAncestorProvider.Ancestor => EcmaScriptHelper.GetAncestor(_externalScriptExpression);
+		object? IAncestorProvider.Ancestor => EcmaScriptHelper.GetAncestor(_externalScriptExpression);
 
 		public ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
-			if (_program == null)
-			{
-				throw new InvalidOperationException(Resources.Exception_ExternalScriptMissed);
-			}
+			Infrastructure.Assert(_program != null, Resources.Exception_ExternalScriptMissed);
 
 			executionContext.Engine().Exec(_program, startNewScope: true);
 
@@ -34,6 +31,6 @@ namespace TSSArt.StateMachine.EcmaScript
 			_program = new JavaScriptParser().Parse(content);
 		}
 
-		public Uri Uri => _externalScriptExpression.Uri;
+		public Uri? Uri => _externalScriptExpression.Uri;
 	}
 }

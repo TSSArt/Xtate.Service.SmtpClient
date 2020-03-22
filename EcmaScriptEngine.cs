@@ -27,7 +27,9 @@ namespace TSSArt.StateMachine.EcmaScript
 
 		public static EcmaScriptEngine GetEngine(IExecutionContext executionContext)
 		{
-			var engine = (EcmaScriptEngine) executionContext.RuntimeItems[Key];
+			var engine = (EcmaScriptEngine?) executionContext.RuntimeItems[Key];
+
+			Infrastructure.Assert(engine != null);
 
 			engine.SyncRootVariables(executionContext.DataModel);
 
