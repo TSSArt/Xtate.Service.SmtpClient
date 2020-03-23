@@ -355,6 +355,8 @@ namespace TSSArt.StateMachine
 
 		private struct Entry : IComparable<Entry>
 		{
+			public readonly ReadOnlyMemory<byte> Key;
+			public readonly ReadOnlyMemory<byte> Value;
 			public Entry(ReadOnlyMemory<byte> key) : this() => Key = key;
 
 			public Entry(ReadOnlyMemory<byte> key, ReadOnlyMemory<byte> value)
@@ -363,8 +365,7 @@ namespace TSSArt.StateMachine
 				Value = value;
 			}
 
-			public readonly ReadOnlyMemory<byte> Key;
-			public readonly ReadOnlyMemory<byte> Value;
+		#region Interface IComparable<Entry>
 
 			public int CompareTo(Entry other)
 			{
@@ -380,6 +381,8 @@ namespace TSSArt.StateMachine
 
 				return Key.Span.SequenceCompareTo(other.Key.Span);
 			}
+
+		#endregion
 		}
 	}
 }

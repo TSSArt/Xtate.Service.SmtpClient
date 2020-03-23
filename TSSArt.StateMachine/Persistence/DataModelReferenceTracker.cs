@@ -148,9 +148,9 @@ namespace TSSArt.StateMachine
 
 		private struct Entry
 		{
-			public int                           RefId;
-			public int                           RefCount;
 			public DataModelPersistingController Controller;
+			public int                           RefCount;
+			public int                           RefId;
 		}
 	}
 }

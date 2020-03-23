@@ -46,10 +46,9 @@ namespace TSSArt.StateMachine
 
 		private ref struct VisitData<TEntity, TIEntity> where TEntity : struct, IVisitorEntity<TEntity, TIEntity>, TIEntity
 		{
-			public TEntity Properties;
-
-			private readonly TEntity  _original;
 			private readonly TIEntity _entity;
+			private readonly TEntity  _original;
+			public           TEntity  Properties;
 
 			public VisitData(TIEntity entity)
 			{
@@ -79,9 +78,8 @@ namespace TSSArt.StateMachine
 
 		private ref struct VisitListData<TIEntity>
 		{
-			public TrackList<TIEntity> List;
-
 			private readonly ImmutableArray<TIEntity> _original;
+			public           TrackList<TIEntity>      List;
 
 			public VisitListData(ImmutableArray<TIEntity> list)
 			{
@@ -144,10 +142,6 @@ namespace TSSArt.StateMachine
 
 			public int Count => ModifiedItems?.Count ?? _items.Length;
 
-			public bool Contains(T item) => ModifiedItems?.Contains(item) ?? _items.Contains(item);
-
-			public IEnumerator<T> GetEnumerator() => ModifiedItems != null ? ModifiedItems.GetEnumerator() : ((IEnumerable<T>) _items).GetEnumerator();
-
 			[MaybeNull]
 			[AllowNull]
 			public T this[int index]
@@ -166,6 +160,10 @@ namespace TSSArt.StateMachine
 					}
 				}
 			}
+
+			public bool Contains(T item) => ModifiedItems?.Contains(item) ?? _items.Contains(item);
+
+			public IEnumerator<T> GetEnumerator() => ModifiedItems != null ? ModifiedItems.GetEnumerator() : ((IEnumerable<T>) _items).GetEnumerator();
 
 			public void Add([AllowNull] T item)
 			{
