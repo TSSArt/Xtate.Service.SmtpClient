@@ -26,6 +26,7 @@ using System.Diagnostics;
 #pragma warning disable 1591
 #pragma warning disable CS8618
 
+// @formatter:off
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
