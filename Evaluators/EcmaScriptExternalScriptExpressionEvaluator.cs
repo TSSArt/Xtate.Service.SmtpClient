@@ -13,7 +13,13 @@ namespace TSSArt.StateMachine.EcmaScript
 
 		public EcmaScriptExternalScriptExpressionEvaluator(in ExternalScriptExpression externalScriptExpression) => _externalScriptExpression = externalScriptExpression;
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => EcmaScriptHelper.GetAncestor(_externalScriptExpression);
+
+	#endregion
+
+	#region Interface IExecEvaluator
 
 		public ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
@@ -24,6 +30,10 @@ namespace TSSArt.StateMachine.EcmaScript
 			return default;
 		}
 
+	#endregion
+
+	#region Interface IExternalScriptConsumer
+
 		public void SetContent(string content)
 		{
 			if (content == null) throw new ArgumentNullException(nameof(content));
@@ -31,6 +41,12 @@ namespace TSSArt.StateMachine.EcmaScript
 			_program = new JavaScriptParser().Parse(content);
 		}
 
+	#endregion
+
+	#region Interface IExternalScriptExpression
+
 		public Uri? Uri => _externalScriptExpression.Uri;
+
+	#endregion
 	}
 }

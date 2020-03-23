@@ -20,7 +20,11 @@ namespace TSSArt.StateMachine.EcmaScript
 			base.SetOwnProperty(propertyName: @"length", new PropertyDescriptor((uint) _array.Length, !array.IsReadOnly, enumerable: false, configurable: false));
 		}
 
+	#region Interface IObjectWrapper
+
 		public object Target => _array;
+
+	#endregion
 
 		public override void RemoveOwnProperty(string property)
 		{

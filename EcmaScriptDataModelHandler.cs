@@ -15,8 +15,7 @@ namespace TSSArt.StateMachine.EcmaScript
 
 		private readonly JavaScriptParser _parser = new JavaScriptParser();
 
-		private EcmaScriptDataModelHandler(IErrorProcessor errorProcessor) : base(errorProcessor)
-		{ }
+		private EcmaScriptDataModelHandler(IErrorProcessor errorProcessor) : base(errorProcessor) { }
 
 		public override void ExecutionContextCreated(IExecutionContext executionContext, IDictionary<string, string> dataModelVars)
 		{
@@ -152,9 +151,13 @@ namespace TSSArt.StateMachine.EcmaScript
 
 		private class DataModelHandlerFactory : IDataModelHandlerFactory
 		{
+		#region Interface IDataModelHandlerFactory
+
 			public bool CanHandle(string dataModelType) => dataModelType == DataModelType || dataModelType == DataModelTypeAlias;
 
 			public IDataModelHandler CreateHandler(IErrorProcessor errorProcessor) => new EcmaScriptDataModelHandler(errorProcessor);
+
+		#endregion
 		}
 	}
 }

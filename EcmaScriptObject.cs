@@ -8,6 +8,10 @@ namespace TSSArt.StateMachine.EcmaScript
 
 		public JsValue JsValue { get; }
 
+	#region Interface IObject
+
 		public object ToObject() => JsValue.ToObject();
+
+	#endregion
 	}
 }

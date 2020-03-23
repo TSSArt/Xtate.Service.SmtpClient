@@ -6,8 +6,9 @@ namespace TSSArt.StateMachine.EcmaScript
 {
 	internal class EcmaScriptContentBodyEvaluator : DefaultContentBodyEvaluator, IObjectEvaluator
 	{
-		public EcmaScriptContentBodyEvaluator(in ContentBody contentBody) : base(in contentBody)
-		{ }
+		public EcmaScriptContentBodyEvaluator(in ContentBody contentBody) : base(in contentBody) { }
+
+	#region Interface IObjectEvaluator
 
 		public ValueTask<IObject> EvaluateObject(IExecutionContext executionContext, CancellationToken token)
 		{
@@ -15,10 +16,11 @@ namespace TSSArt.StateMachine.EcmaScript
 			{
 				return new ValueTask<IObject>(DataModelConverter.FromJson(Value));
 			}
-			catch (JsonException)
-			{ }
+			catch (JsonException) { }
 
 			return new ValueTask<IObject>(new DataModelValue(Value));
 		}
+
+	#endregion
 	}
 }

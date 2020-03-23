@@ -18,7 +18,11 @@ namespace TSSArt.StateMachine.EcmaScript
 			Extensible = !obj.IsReadOnly;
 		}
 
+	#region Interface IObjectWrapper
+
 		public object Target => _obj;
+
+	#endregion
 
 		public override void RemoveOwnProperty(string property)
 		{
