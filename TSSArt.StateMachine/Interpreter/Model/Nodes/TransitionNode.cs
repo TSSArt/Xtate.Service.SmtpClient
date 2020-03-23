@@ -24,11 +24,25 @@ namespace TSSArt.StateMachine
 		public ImmutableArray<IExecEvaluator>  ActionEvaluators   { get; }
 		public IBooleanEvaluator?              ConditionEvaluator { get; }
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _transition.Ancestor;
+
+	#endregion
+
+	#region Interface IDebugEntityId
 
 		public FormattableString EntityId => @$"(#{DocumentId})";
 
+	#endregion
+
+	#region Interface IDocumentId
+
 		public int DocumentId => _documentIdNode.Value;
+
+	#endregion
+
+	#region Interface IStoreSupport
 
 		void IStoreSupport.Store(Bucket bucket)
 		{
@@ -41,6 +55,10 @@ namespace TSSArt.StateMachine
 			bucket.AddEntityList(Key.Action, Action);
 		}
 
+	#endregion
+
+	#region Interface ITransition
+
 		public ImmutableArray<IEventDescriptor> EventDescriptors => _transition.EventDescriptors;
 
 		public IExecutableEntity? Condition => _transition.Condition;
@@ -50,6 +68,8 @@ namespace TSSArt.StateMachine
 		public TransitionType Type => _transition.Type;
 
 		public ImmutableArray<IExecutableEntity> Action => _transition.Action;
+
+	#endregion
 
 		public void MapTarget(Dictionary<IIdentifier, StateEntityNode> idMap) => TargetState = ImmutableArray.CreateRange(Target, id => idMap[id]);
 

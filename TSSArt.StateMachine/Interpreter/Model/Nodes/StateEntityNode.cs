@@ -36,9 +36,17 @@ namespace TSSArt.StateMachine
 		public virtual ImmutableArray<HistoryNode>     HistoryStates => throw GetNotSupportedException();
 		public virtual DataModelNode?                  DataModel     => throw GetNotSupportedException();
 
+	#region Interface IDocumentId
+
 		public int DocumentId => _documentIdNode.Value;
 
+	#endregion
+
+	#region Interface IStoreSupport
+
 		void IStoreSupport.Store(Bucket bucket) => Store(bucket);
+
+	#endregion
 
 		private NotSupportedException GetNotSupportedException() => new NotSupportedException(Res.Format(Resources.Exception_Specified_method_is_not_supported_in_type, GetType().Name));
 
@@ -74,7 +82,11 @@ namespace TSSArt.StateMachine
 
 			public DocumentOrderComparer(bool reverseOrder) => _reverseOrder = reverseOrder;
 
+		#region Interface IComparer<StateEntityNode>
+
 			public int Compare(StateEntityNode x, StateEntityNode y) => _reverseOrder ? InternalCompare(y, x) : InternalCompare(x, y);
+
+		#endregion
 
 			private static int InternalCompare(StateEntityNode x, StateEntityNode y)
 			{

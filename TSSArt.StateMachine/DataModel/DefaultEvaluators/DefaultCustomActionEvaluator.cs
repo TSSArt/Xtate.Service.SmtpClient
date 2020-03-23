@@ -18,11 +18,25 @@ namespace TSSArt.StateMachine
 			_customAction = customAction;
 		}
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _customAction.Ancestor;
+
+	#endregion
+
+	#region Interface ICustomAction
 
 		public string Xml => _customAction.Xml!;
 
+	#endregion
+
+	#region Interface ICustomActionConsumer
+
 		public void SetExecutor(ICustomActionExecutor executor) => _executor = executor;
+
+	#endregion
+
+	#region Interface IExecEvaluator
 
 		public virtual ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
@@ -32,5 +46,7 @@ namespace TSSArt.StateMachine
 
 			return _executor.Execute(executionContext, token);
 		}
+
+	#endregion
 	}
 }

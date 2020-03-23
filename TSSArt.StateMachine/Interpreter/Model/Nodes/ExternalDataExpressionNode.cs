@@ -13,14 +13,26 @@ namespace TSSArt.StateMachine
 			_externalDataExpression = externalDataExpression;
 		}
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _externalDataExpression.Ancestor;
 
+	#endregion
+
+	#region Interface IExternalDataExpression
+
 		public Uri Uri => _externalDataExpression.Uri!;
+
+	#endregion
+
+	#region Interface IStoreSupport
 
 		void IStoreSupport.Store(Bucket bucket)
 		{
 			bucket.Add(Key.TypeInfo, TypeInfo.ExternalDataExpressionNode);
 			bucket.Add(Key.Uri, Uri);
 		}
+
+	#endregion
 	}
 }

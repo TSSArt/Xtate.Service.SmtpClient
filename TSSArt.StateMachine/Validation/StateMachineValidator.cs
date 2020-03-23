@@ -8,10 +8,14 @@ namespace TSSArt.StateMachine
 
 		public StateMachineValidator(IErrorProcessor errorProcessor) => _errorProcessor = errorProcessor;
 
+	#region Interface IStateMachineValidator
+
 		public void Validate(IStateMachine stateMachine)
 		{
 			Visit(ref stateMachine);
 		}
+
+	#endregion
 
 		private void AddError(object entity, string message) => _errorProcessor.AddError<StateMachineValidator>(entity, message);
 

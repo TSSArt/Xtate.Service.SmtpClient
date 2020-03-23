@@ -26,15 +26,27 @@ namespace TSSArt.StateMachine
 		public override ImmutableArray<OnExitNode>     OnExit        { get; }
 		public          DoneDataNode?                  DoneData      { get; }
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _final.Ancestor;
 
+	#endregion
+
+	#region Interface IDebugEntityId
+
 		FormattableString IDebugEntityId.EntityId => @$"{Id}(${DocumentId})";
+
+	#endregion
+
+	#region Interface IFinal
 
 		public override IIdentifier Id { get; }
 
 		ImmutableArray<IOnEntry> IFinal.OnEntry  => ImmutableArray<IOnEntry>.CastUp(OnEntry);
 		ImmutableArray<IOnExit> IFinal. OnExit   => ImmutableArray<IOnExit>.CastUp(OnExit);
 		IDoneData? IFinal.              DoneData => DoneData;
+
+	#endregion
 
 		protected override void Store(Bucket bucket)
 		{

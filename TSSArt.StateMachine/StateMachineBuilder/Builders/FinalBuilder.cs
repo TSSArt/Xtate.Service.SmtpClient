@@ -10,8 +10,9 @@ namespace TSSArt.StateMachine
 		private ImmutableArray<IOnEntry>.Builder? _onEntryList;
 		private ImmutableArray<IOnExit>.Builder?  _onExitList;
 
-		public FinalBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
-		{ }
+		public FinalBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor) { }
+
+	#region Interface IFinalBuilder
 
 		public IFinal Build() =>
 				new FinalEntity { Ancestor = Ancestor, Id = _id, OnEntry = _onEntryList?.ToImmutable() ?? default, OnExit = _onExitList?.ToImmutable() ?? default, DoneData = _doneData };
@@ -33,5 +34,7 @@ namespace TSSArt.StateMachine
 		}
 
 		public void SetDoneData(IDoneData doneData) => _doneData = doneData ?? throw new ArgumentNullException(nameof(doneData));
+
+	#endregion
 	}
 }

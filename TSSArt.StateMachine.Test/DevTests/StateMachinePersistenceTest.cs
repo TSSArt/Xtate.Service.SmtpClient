@@ -68,6 +68,8 @@ namespace TSSArt.StateMachine.Test
 		{
 			private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, MemoryStream>> _storage = new ConcurrentDictionary<string, ConcurrentDictionary<string, MemoryStream>>();
 
+		#region Interface IStorageProvider
+
 			public async ValueTask<ITransactionalStorage> GetTransactionalStorage(string partition, string key, CancellationToken token)
 			{
 				if (string.IsNullOrEmpty(key)) throw new ArgumentException(message: @"Value cannot be null or empty.", nameof(key));
@@ -94,6 +96,8 @@ namespace TSSArt.StateMachine.Test
 
 				return default;
 			}
+
+		#endregion
 		}
 	}
 }

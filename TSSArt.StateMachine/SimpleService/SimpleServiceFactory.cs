@@ -25,6 +25,8 @@ namespace TSSArt.StateMachine
 			_alias = serviceAttribute.Alias != null ? new Uri(serviceAttribute.Alias, UriKind.RelativeOrAbsolute) : null;
 		}
 
+	#region Interface IServiceFactory
+
 		ValueTask<IService> IServiceFactory.StartService(Uri? source, string? rawContent, DataModelValue content, DataModelValue parameters,
 														 IServiceCommunication serviceCommunication, CancellationToken token)
 		{
@@ -37,5 +39,7 @@ namespace TSSArt.StateMachine
 
 		Uri IServiceFactory. TypeId      => _type;
 		Uri? IServiceFactory.AliasTypeId => _alias;
+
+	#endregion
 	}
 }

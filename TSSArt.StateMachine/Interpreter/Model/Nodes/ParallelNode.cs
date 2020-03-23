@@ -45,9 +45,19 @@ namespace TSSArt.StateMachine
 		public override ImmutableArray<OnExitNode>      OnExit        { get; }
 		public override DataModelNode?                  DataModel     { get; }
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _parallel.Ancestor;
 
+	#endregion
+
+	#region Interface IDebugEntityId
+
 		FormattableString IDebugEntityId.EntityId => @$"{Id}(#{DocumentId})";
+
+	#endregion
+
+	#region Interface IParallel
 
 		public override IIdentifier Id { get; }
 
@@ -58,6 +68,8 @@ namespace TSSArt.StateMachine
 		ImmutableArray<ITransition> IParallel. Transitions   => ImmutableArray<ITransition>.CastUp(Transitions);
 		ImmutableArray<IOnEntry> IParallel.    OnEntry       => ImmutableArray<IOnEntry>.CastUp(OnEntry);
 		ImmutableArray<IOnExit> IParallel.     OnExit        => ImmutableArray<IOnExit>.CastUp(OnExit);
+
+	#endregion
 
 		protected override void Store(Bucket bucket)
 		{

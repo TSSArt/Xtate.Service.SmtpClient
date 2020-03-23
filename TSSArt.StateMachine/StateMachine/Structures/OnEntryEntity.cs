@@ -4,7 +4,21 @@ namespace TSSArt.StateMachine
 {
 	public struct OnEntryEntity : IOnEntry, IVisitorEntity<OnEntryEntity, IOnEntry>, IAncestorProvider
 	{
+		internal object? Ancestor;
+
+	#region Interface IAncestorProvider
+
+		object? IAncestorProvider.Ancestor => Ancestor;
+
+	#endregion
+
+	#region Interface IOnEntry
+
 		public ImmutableArray<IExecutableEntity> Action { get; set; }
+
+	#endregion
+
+	#region Interface IVisitorEntity<OnEntryEntity,IOnEntry>
 
 		void IVisitorEntity<OnEntryEntity, IOnEntry>.Init(IOnEntry source)
 		{
@@ -14,8 +28,6 @@ namespace TSSArt.StateMachine
 
 		bool IVisitorEntity<OnEntryEntity, IOnEntry>.RefEquals(in OnEntryEntity other) => Action == other.Action;
 
-		internal object? Ancestor;
-
-		object? IAncestorProvider.Ancestor => Ancestor;
+	#endregion
 	}
 }

@@ -7,8 +7,9 @@ namespace TSSArt.StateMachine
 		private IValueExpression? _expression;
 		private string?           _label;
 
-		public LogBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
-		{ }
+		public LogBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor) { }
+
+	#region Interface ILogBuilder
 
 		public ILog Build() => new LogEntity { Ancestor = Ancestor, Label = _label, Expression = _expression };
 
@@ -20,5 +21,7 @@ namespace TSSArt.StateMachine
 		}
 
 		public void SetExpression(IValueExpression expression) => _expression = expression ?? throw new ArgumentNullException(nameof(expression));
+
+	#endregion
 	}
 }

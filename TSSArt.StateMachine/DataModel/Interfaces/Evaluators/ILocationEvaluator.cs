@@ -1,5 +1,8 @@
-﻿namespace TSSArt.StateMachine
+﻿using JetBrains.Annotations;
+
+namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	public interface ILocationEvaluator
 	{
 		void DeclareLocalVariable(IExecutionContext executionContext);

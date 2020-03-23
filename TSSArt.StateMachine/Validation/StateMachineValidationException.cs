@@ -8,8 +8,7 @@ namespace TSSArt.StateMachine
 	[Serializable]
 	public class StateMachineValidationException : StateMachineException
 	{
-		protected StateMachineValidationException(SerializationInfo info, StreamingContext context) : base(info, context)
-		{ }
+		protected StateMachineValidationException(SerializationInfo info, StreamingContext context) : base(info, context) { }
 
 		public StateMachineValidationException(ImmutableArray<ErrorItem> validationMessages) : base(GetMessage(validationMessages)) => ValidationMessages = validationMessages;
 

@@ -19,11 +19,21 @@ namespace TSSArt.StateMachine
 			_parameterList = doneData.Parameters.AsArrayOf<IParam, DefaultParam>();
 		}
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _doneData.Ancestor;
+
+	#endregion
+
+	#region Interface IDoneData
 
 		public IContent? Content => _doneData.Content;
 
 		public ImmutableArray<IParam> Parameters => _doneData.Parameters;
+
+	#endregion
+
+	#region Interface IStoreSupport
 
 		void IStoreSupport.Store(Bucket bucket)
 		{
@@ -31,6 +41,8 @@ namespace TSSArt.StateMachine
 			bucket.AddEntity(Key.Content, Content);
 			bucket.AddEntityList(Key.Parameters, Parameters);
 		}
+
+	#endregion
 
 		public ValueTask<DataModelValue> Evaluate(IExecutionContext executionContext, CancellationToken token) =>
 				DataConverter.GetData(_contentBodyEvaluator, _contentExpressionEvaluator, nameEvaluatorList: default, _parameterList, executionContext, token);

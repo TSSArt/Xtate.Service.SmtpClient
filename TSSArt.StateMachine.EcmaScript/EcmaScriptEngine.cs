@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using JetBrains.Annotations;
 using Jint;
 using Jint.Native;
 using Jint.Parser.Ast;
@@ -9,6 +10,7 @@ using Jint.Runtime.Interop;
 
 namespace TSSArt.StateMachine.EcmaScript
 {
+	[PublicAPI]
 	internal class EcmaScriptEngine
 	{
 		public static readonly object Key = new object();

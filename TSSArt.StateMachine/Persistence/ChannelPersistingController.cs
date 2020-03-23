@@ -24,7 +24,11 @@ namespace TSSArt.StateMachine
 			Writer = new ChannelWriter(this);
 		}
 
+	#region Interface IDisposable
+
 		public void Dispose() => _initializedTcs.TrySetResult(0);
+
+	#endregion
 
 		public void Initialize(Bucket bucket, Func<Bucket, T> creator, SemaphoreSlim storageLock, Func<CancellationToken, ValueTask> postAction)
 		{

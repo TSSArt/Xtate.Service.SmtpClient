@@ -30,11 +30,25 @@ namespace TSSArt.StateMachine
 
 		public FinalizeNode? Finalize { get; }
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _invoke.Ancestor;
+
+	#endregion
+
+	#region Interface IDebugEntityId
 
 		FormattableString IDebugEntityId.EntityId => @$"{Id}(#{DocumentId})";
 
+	#endregion
+
+	#region Interface IDocumentId
+
 		public int DocumentId => _documentIdNode.Value;
+
+	#endregion
+
+	#region Interface IInvoke
 
 		public Uri?                                Type             => _invoke.Type;
 		public IValueExpression?                   TypeExpression   => _invoke.TypeExpression;
@@ -47,6 +61,10 @@ namespace TSSArt.StateMachine
 		public ImmutableArray<IParam>              Parameters       => _invoke.Parameters;
 		public IContent?                           Content          => _invoke.Content;
 		IFinalize? IInvoke.                        Finalize         => _invoke.Finalize;
+
+	#endregion
+
+	#region Interface IStoreSupport
 
 		void IStoreSupport.Store(Bucket bucket)
 		{
@@ -64,6 +82,8 @@ namespace TSSArt.StateMachine
 			bucket.AddEntity(Key.Finalize, Finalize);
 			bucket.AddEntity(Key.Content, Content);
 		}
+
+	#endregion
 
 		public void SetStateId(IIdentifier stateId) => _stateId = stateId.As<string>();
 

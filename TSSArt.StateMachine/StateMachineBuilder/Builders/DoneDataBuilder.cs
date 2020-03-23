@@ -8,8 +8,9 @@ namespace TSSArt.StateMachine
 		private IContent?                       _content;
 		private ImmutableArray<IParam>.Builder? _parameters;
 
-		public DoneDataBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
-		{ }
+		public DoneDataBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor) { }
+
+	#region Interface IDoneDataBuilder
 
 		public IDoneData Build() => new DoneDataEntity { Ancestor = Ancestor, Content = _content, Parameters = _parameters?.ToImmutable() ?? default };
 
@@ -21,5 +22,7 @@ namespace TSSArt.StateMachine
 
 			(_parameters ??= ImmutableArray.CreateBuilder<IParam>()).Add(parameter);
 		}
+
+	#endregion
 	}
 }

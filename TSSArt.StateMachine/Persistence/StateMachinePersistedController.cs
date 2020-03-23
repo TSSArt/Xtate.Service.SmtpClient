@@ -34,6 +34,8 @@ namespace TSSArt.StateMachine
 
 		protected override Channel<IEvent> Channel => _channelPersistingController;
 
+	#region Interface IStorageProvider
+
 		ValueTask<ITransactionalStorage> IStorageProvider.GetTransactionalStorage(string? partition, string key, CancellationToken token)
 		{
 			if (partition != null) throw new ArgumentException(Resources.Exception_Partition_argument_should_be_null, nameof(partition));
@@ -54,6 +56,8 @@ namespace TSSArt.StateMachine
 
 			return _storageProvider.RemoveAllTransactionalStorage(SessionId, token);
 		}
+
+	#endregion
 
 		public override async ValueTask DisposeAsync()
 		{
@@ -216,6 +220,8 @@ namespace TSSArt.StateMachine
 
 			public DateTime FireOnUtc => new DateTime(_fireOnUtcTicks, DateTimeKind.Utc);
 
+		#region Interface IStoreSupport
+
 			public void Store(Bucket bucket)
 			{
 				bucket.Add(Key.TypeInfo, TypeInfo.ScheduledEvent);
@@ -233,6 +239,8 @@ namespace TSSArt.StateMachine
 					dataBucket.SetDataModelValue(tracker, Event.Data);
 				}
 			}
+
+		#endregion
 
 			private static IOutgoingEvent RestoreEvent(Bucket bucket)
 			{

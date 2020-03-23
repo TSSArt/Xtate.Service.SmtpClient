@@ -23,11 +23,21 @@ namespace TSSArt.StateMachine
 		public ILocationEvaluator LocationEvaluator   { get; }
 		public IObjectEvaluator?  ExpressionEvaluator { get; }
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _assign.Ancestor;
+
+	#endregion
+
+	#region Interface IAssign
 
 		public ILocationExpression Location      => _assign.Location!;
 		public IValueExpression?   Expression    => _assign.Expression;
 		public string?             InlineContent => _assign.InlineContent;
+
+	#endregion
+
+	#region Interface IExecEvaluator
 
 		public virtual async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
@@ -46,5 +56,7 @@ namespace TSSArt.StateMachine
 
 			LocationEvaluator.SetValue(value, executionContext);
 		}
+
+	#endregion
 	}
 }

@@ -9,11 +9,23 @@ namespace TSSArt.StateMachine
 
 		public RaiseNode(LinkedListNode<int> documentIdNode, in RaiseEntity entity) : base(documentIdNode, (IRaise?) entity.Ancestor) => _entity = entity;
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _entity.Ancestor;
+
+	#endregion
+
+	#region Interface IDebugEntityId
 
 		FormattableString IDebugEntityId.EntityId => @$"(#{DocumentId})";
 
+	#endregion
+
+	#region Interface IRaise
+
 		public IOutgoingEvent? OutgoingEvent => _entity.OutgoingEvent;
+
+	#endregion
 
 		protected override void Store(Bucket bucket)
 		{

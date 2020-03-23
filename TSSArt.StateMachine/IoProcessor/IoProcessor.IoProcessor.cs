@@ -15,6 +15,8 @@ namespace TSSArt.StateMachine
 		private ImmutableDictionary<Uri, IEventProcessor>? _eventProcessors;
 		private ImmutableArray<IEventProcessor>            _ioProcessors;
 
+	#region Interface IIoProcessor
+
 		ImmutableArray<IEventProcessor> IIoProcessor.GetIoProcessors() => _ioProcessors;
 
 		async ValueTask IIoProcessor.StartInvoke(string sessionId, InvokeData data, CancellationToken token)
@@ -127,6 +129,8 @@ namespace TSSArt.StateMachine
 
 			return pair.Service?.Send(evt, token) ?? default;
 		}
+
+	#endregion
 
 		private void IoProcessorInit()
 		{

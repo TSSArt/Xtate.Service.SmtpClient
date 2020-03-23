@@ -17,6 +17,8 @@ namespace TSSArt.StateMachine
 			_path = path;
 		}
 
+	#region Interface IEventProcessorFactory
+
 		public async ValueTask<IEventProcessor> Create(IEventConsumer eventConsumer, CancellationToken token)
 		{
 			IWebHost webHost = null!;
@@ -34,5 +36,7 @@ namespace TSSArt.StateMachine
 
 			return eventProcessor;
 		}
+
+	#endregion
 	}
 }

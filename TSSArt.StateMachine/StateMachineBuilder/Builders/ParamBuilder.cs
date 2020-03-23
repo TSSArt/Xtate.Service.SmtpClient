@@ -8,8 +8,9 @@ namespace TSSArt.StateMachine
 		private ILocationExpression? _location;
 		private string?              _name;
 
-		public ParamBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
-		{ }
+		public ParamBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor) { }
+
+	#region Interface IParamBuilder
 
 		public IParam Build() => new ParamEntity { Ancestor = Ancestor, Name = _name, Expression = _expression, Location = _location };
 
@@ -23,5 +24,7 @@ namespace TSSArt.StateMachine
 		public void SetExpression(IValueExpression expression) => _expression = expression ?? throw new ArgumentNullException(nameof(expression));
 
 		public void SetLocation(ILocationExpression location) => _location = location ?? throw new ArgumentNullException(nameof(location));
+
+	#endregion
 	}
 }

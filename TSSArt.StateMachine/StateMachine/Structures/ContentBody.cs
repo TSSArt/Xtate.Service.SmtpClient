@@ -2,7 +2,21 @@
 {
 	public struct ContentBody : IContentBody, IVisitorEntity<ContentBody, IContentBody>, IAncestorProvider
 	{
+		internal object? Ancestor;
+
+	#region Interface IAncestorProvider
+
+		object? IAncestorProvider.Ancestor => Ancestor;
+
+	#endregion
+
+	#region Interface IContentBody
+
 		public string? Value { get; set; }
+
+	#endregion
+
+	#region Interface IVisitorEntity<ContentBody,IContentBody>
 
 		void IVisitorEntity<ContentBody, IContentBody>.Init(IContentBody source)
 		{
@@ -12,8 +26,6 @@
 
 		bool IVisitorEntity<ContentBody, IContentBody>.RefEquals(in ContentBody other) => ReferenceEquals(Value, other.Value);
 
-		internal object? Ancestor;
-
-		object? IAncestorProvider.Ancestor => Ancestor;
+	#endregion
 	}
 }

@@ -18,10 +18,20 @@ namespace TSSArt.StateMachine
 
 		public IStringEvaluator? SendIdExpressionEvaluator { get; }
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _cancel.Ancestor;
+
+	#endregion
+
+	#region Interface ICancel
 
 		public string?           SendId           => _cancel.SendId;
 		public IValueExpression? SendIdExpression => _cancel.SendIdExpression;
+
+	#endregion
+
+	#region Interface IExecEvaluator
 
 		public virtual async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
@@ -36,5 +46,7 @@ namespace TSSArt.StateMachine
 
 			await executionContext.Cancel(sendId, token).ConfigureAwait(false);
 		}
+
+	#endregion
 	}
 }

@@ -4,7 +4,21 @@ namespace TSSArt.StateMachine
 {
 	public struct ExternalDataExpression : IExternalDataExpression, IVisitorEntity<ExternalDataExpression, IExternalDataExpression>, IAncestorProvider
 	{
+		internal object? Ancestor;
+
+	#region Interface IAncestorProvider
+
+		object? IAncestorProvider.Ancestor => Ancestor;
+
+	#endregion
+
+	#region Interface IExternalDataExpression
+
 		public Uri? Uri { get; set; }
+
+	#endregion
+
+	#region Interface IVisitorEntity<ExternalDataExpression,IExternalDataExpression>
 
 		void IVisitorEntity<ExternalDataExpression, IExternalDataExpression>.Init(IExternalDataExpression source)
 		{
@@ -14,8 +28,6 @@ namespace TSSArt.StateMachine
 
 		bool IVisitorEntity<ExternalDataExpression, IExternalDataExpression>.RefEquals(in ExternalDataExpression other) => ReferenceEquals(Uri, other.Uri);
 
-		internal object? Ancestor;
-
-		object? IAncestorProvider.Ancestor => Ancestor;
+	#endregion
 	}
 }

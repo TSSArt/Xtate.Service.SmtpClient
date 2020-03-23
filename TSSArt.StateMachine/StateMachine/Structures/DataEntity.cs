@@ -4,10 +4,30 @@ namespace TSSArt.StateMachine
 {
 	public struct DataEntity : IData, IVisitorEntity<DataEntity, IData>, IAncestorProvider, IDebugEntityId
 	{
+		internal object? Ancestor;
+
+	#region Interface IAncestorProvider
+
+		object? IAncestorProvider.Ancestor => Ancestor;
+
+	#endregion
+
+	#region Interface IData
+
 		public string?                  Id            { get; set; }
 		public IExternalDataExpression? Source        { get; set; }
 		public IValueExpression?        Expression    { get; set; }
 		public string?                  InlineContent { get; set; }
+
+	#endregion
+
+	#region Interface IDebugEntityId
+
+		FormattableString IDebugEntityId.EntityId => @$"{Id}";
+
+	#endregion
+
+	#region Interface IVisitorEntity<DataEntity,IData>
 
 		void IVisitorEntity<DataEntity, IData>.Init(IData source)
 		{
@@ -24,10 +44,6 @@ namespace TSSArt.StateMachine
 				ReferenceEquals(InlineContent, other.InlineContent) &&
 				ReferenceEquals(Expression, other.Expression);
 
-		internal object? Ancestor;
-
-		object? IAncestorProvider.Ancestor => Ancestor;
-
-		FormattableString IDebugEntityId.EntityId => @$"{Id}";
+	#endregion
 	}
 }

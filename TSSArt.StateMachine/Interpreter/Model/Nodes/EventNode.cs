@@ -14,7 +14,13 @@ namespace TSSArt.StateMachine
 			_event = evt;
 		}
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _event;
+
+	#endregion
+
+	#region Interface IOutgoingEvent
 
 		public ImmutableArray<IIdentifier> NameParts => _event.NameParts;
 		public string?                     SendId    => _event.SendId;
@@ -23,9 +29,15 @@ namespace TSSArt.StateMachine
 		public Uri?                        Type      => _event.Type;
 		public int                         DelayMs   => _event.DelayMs;
 
+	#endregion
+
+	#region Interface IStoreSupport
+
 		void IStoreSupport.Store(Bucket bucket)
 		{
 			bucket.Add(Key.Id, EventName.ToName(_event.NameParts));
 		}
+
+	#endregion
 	}
 }

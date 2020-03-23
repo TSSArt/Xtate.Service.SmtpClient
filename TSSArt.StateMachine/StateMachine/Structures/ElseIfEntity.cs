@@ -2,7 +2,21 @@
 {
 	public struct ElseIfEntity : IElseIf, IVisitorEntity<ElseIfEntity, IElseIf>, IAncestorProvider
 	{
+		internal object? Ancestor;
+
+	#region Interface IAncestorProvider
+
+		object? IAncestorProvider.Ancestor => Ancestor;
+
+	#endregion
+
+	#region Interface IElseIf
+
 		public IConditionExpression? Condition { get; set; }
+
+	#endregion
+
+	#region Interface IVisitorEntity<ElseIfEntity,IElseIf>
 
 		void IVisitorEntity<ElseIfEntity, IElseIf>.Init(IElseIf source)
 		{
@@ -12,8 +26,6 @@
 
 		bool IVisitorEntity<ElseIfEntity, IElseIf>.RefEquals(in ElseIfEntity other) => ReferenceEquals(Condition, other.Condition);
 
-		internal object? Ancestor;
-
-		object? IAncestorProvider.Ancestor => Ancestor;
+	#endregion
 	}
 }

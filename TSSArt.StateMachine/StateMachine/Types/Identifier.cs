@@ -1,7 +1,9 @@
 ﻿using System;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	public sealed class Identifier : IIdentifier, IEquatable<IIdentifier>, IAncestorProvider
 	{
 		private readonly string _val;
@@ -21,9 +23,17 @@ namespace TSSArt.StateMachine
 			}
 		}
 
+	#region Interface IAncestorProvider
+
 		object IAncestorProvider.Ancestor => _val;
 
+	#endregion
+
+	#region Interface IEquatable<IIdentifier>
+
 		public bool Equals(IIdentifier other) => Equals((object) other);
+
+	#endregion
 
 		public static explicit operator Identifier(string val) => new Identifier(val);
 

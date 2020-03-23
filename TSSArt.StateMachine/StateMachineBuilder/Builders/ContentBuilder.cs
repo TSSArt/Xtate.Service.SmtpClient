@@ -7,8 +7,9 @@ namespace TSSArt.StateMachine
 		private IContentBody?     _body;
 		private IValueExpression? _expression;
 
-		public ContentBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
-		{ }
+		public ContentBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor) { }
+
+	#region Interface IContentBuilder
 
 		public IContent Build() => new ContentEntity { Ancestor = Ancestor, Expression = _expression, Body = _body };
 
@@ -20,5 +21,7 @@ namespace TSSArt.StateMachine
 
 			_body = new ContentBody { Value = body };
 		}
+
+	#endregion
 	}
 }

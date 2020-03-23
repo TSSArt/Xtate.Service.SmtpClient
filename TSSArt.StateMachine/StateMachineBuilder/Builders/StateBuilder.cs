@@ -16,8 +16,9 @@ namespace TSSArt.StateMachine
 		private ImmutableArray<IStateEntity>.Builder? _states;
 		private ImmutableArray<ITransition>.Builder?  _transitions;
 
-		public StateBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
-		{ }
+		public StateBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor) { }
+
+	#region Interface IStateBuilder
 
 		public IState Build()
 		{
@@ -107,5 +108,7 @@ namespace TSSArt.StateMachine
 		}
 
 		public void SetDataModel(IDataModel dataModel) => _dataModel = dataModel ?? throw new ArgumentNullException(nameof(dataModel));
+
+	#endregion
 	}
 }

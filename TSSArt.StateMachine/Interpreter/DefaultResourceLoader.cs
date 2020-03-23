@@ -11,6 +11,8 @@ namespace TSSArt.StateMachine
 	{
 		public static readonly IResourceLoader Instance = new DefaultResourceLoader();
 
+	#region Interface IResourceLoader
+
 		public async ValueTask<Resource> Request(Uri uri, CancellationToken token)
 		{
 			using var client = new HttpClient();
@@ -33,5 +35,7 @@ namespace TSSArt.StateMachine
 
 			return new ValueTask<XmlReader>(XmlReader.Create(uri.ToString(), readerSettings, parserContext));
 		}
+
+	#endregion
 	}
 }

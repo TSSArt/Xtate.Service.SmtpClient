@@ -185,10 +185,14 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 
 	public class StateMachineProvider : IResourceLoader
 	{
+	#region Interface IResourceLoader
+
 		public ValueTask<Resource> Request(Uri uri, CancellationToken token) => throw new NotSupportedException();
 
 		public ValueTask<XmlReader> RequestXmlReader(Uri uri, XmlReaderSettings readerSettings = null, XmlParserContext parserContext = null, CancellationToken token = default) =>
 				new ValueTask<XmlReader>(XmlReader.Create(uri.ToString(), readerSettings, parserContext));
+
+	#endregion
 
 		public ValueTask<IStateMachine> GetStateMachine(Uri source)
 		{

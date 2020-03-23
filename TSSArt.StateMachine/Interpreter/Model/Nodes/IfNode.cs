@@ -10,13 +10,25 @@ namespace TSSArt.StateMachine
 
 		public IfNode(LinkedListNode<int> documentIdNode, in IfEntity entity) : base(documentIdNode, (IIf?) entity.Ancestor) => _entity = entity;
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _entity.Ancestor;
 
+	#endregion
+
+	#region Interface IDebugEntityId
+
 		FormattableString IDebugEntityId.EntityId => @$"(#{DocumentId})";
+
+	#endregion
+
+	#region Interface IIf
 
 		public IConditionExpression? Condition => _entity.Condition;
 
 		public ImmutableArray<IExecutableEntity> Action => _entity.Action;
+
+	#endregion
 
 		protected override void Store(Bucket bucket)
 		{

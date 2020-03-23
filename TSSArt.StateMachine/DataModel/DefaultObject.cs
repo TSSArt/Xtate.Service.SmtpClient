@@ -6,6 +6,10 @@
 
 		public DefaultObject(object value) => _value = value;
 
+	#region Interface IObject
+
 		public object ToObject() => _value;
+
+	#endregion
 	}
 }

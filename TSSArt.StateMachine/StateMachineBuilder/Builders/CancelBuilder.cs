@@ -7,8 +7,9 @@ namespace TSSArt.StateMachine
 		private string?           _sendId;
 		private IValueExpression? _sendIdExpression;
 
-		public CancelBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
-		{ }
+		public CancelBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor) { }
+
+	#region Interface ICancelBuilder
 
 		public ICancel Build() => new CancelEntity { Ancestor = Ancestor, SendId = _sendId, SendIdExpression = _sendIdExpression };
 
@@ -20,5 +21,7 @@ namespace TSSArt.StateMachine
 		}
 
 		public void SetSendIdExpression(IValueExpression sendIdExpression) => _sendIdExpression = sendIdExpression ?? throw new ArgumentNullException(nameof(sendIdExpression));
+
+	#endregion
 	}
 }

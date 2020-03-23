@@ -29,11 +29,9 @@ namespace TSSArt.StateMachine
 
 		private State _state;
 
-		public DataModelObject() : this(State.Writable)
-		{ }
+		public DataModelObject() : this(State.Writable) { }
 
-		public DataModelObject(bool isReadOnly) : this(isReadOnly ? State.Readonly : State.Writable)
-		{ }
+		public DataModelObject(bool isReadOnly) : this(isReadOnly ? State.Readonly : State.Writable) { }
 
 		private DataModelObject(State state) => _state = state;
 
@@ -62,7 +60,13 @@ namespace TSSArt.StateMachine
 			}
 		}
 
+	#region Interface IDynamicMetaObjectProvider
+
 		DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter) => new MetaObject(parameter, this, Dynamic.CreateMetaObject);
+
+	#endregion
+
+	#region Interface IFormattable
 
 		public string ToString(string? format, IFormatProvider? formatProvider)
 		{
@@ -83,6 +87,8 @@ namespace TSSArt.StateMachine
 
 			return sb.ToString();
 		}
+
+	#endregion
 
 		public event ChangedHandler? Changed;
 

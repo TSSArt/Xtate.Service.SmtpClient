@@ -148,7 +148,11 @@ namespace TSSArt.StateMachine.Test
 		{
 			public Node(int docId) => DocumentId = docId;
 
+		#region Interface IDocumentId
+
 			public int DocumentId { get; }
+
+		#endregion
 		}
 	}
 }

@@ -11,14 +11,26 @@
 			_scriptExpression = scriptExpression;
 		}
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _scriptExpression.Ancestor;
 
+	#endregion
+
+	#region Interface IScriptExpression
+
 		public string Expression => _scriptExpression.Expression!;
+
+	#endregion
+
+	#region Interface IStoreSupport
 
 		void IStoreSupport.Store(Bucket bucket)
 		{
 			bucket.Add(Key.TypeInfo, TypeInfo.ScriptExpressionNode);
 			bucket.Add(Key.Expression, Expression);
 		}
+
+	#endregion
 	}
 }

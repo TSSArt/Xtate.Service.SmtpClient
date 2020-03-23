@@ -14,7 +14,13 @@ namespace TSSArt.StateMachine
 
 		public override bool IsAtomicState => false;
 
+	#region Interface IDebugEntityId
+
 		FormattableString IDebugEntityId.EntityId => @$"{Id}(#{DocumentId})";
+
+	#endregion
+
+	#region Interface IStoreSupport
 
 		void IStoreSupport.Store(Bucket bucket)
 		{
@@ -30,5 +36,7 @@ namespace TSSArt.StateMachine
 			bucket.AddEntityList(Key.OnExit, OnExit);
 			bucket.AddEntityList(Key.Invoke, Invoke);
 		}
+
+	#endregion
 	}
 }

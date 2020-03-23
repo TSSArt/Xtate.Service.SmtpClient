@@ -5,10 +5,30 @@ namespace TSSArt.StateMachine
 {
 	public struct FinalEntity : IFinal, IVisitorEntity<FinalEntity, IFinal>, IAncestorProvider, IDebugEntityId
 	{
+		internal object? Ancestor;
+
+	#region Interface IAncestorProvider
+
+		object? IAncestorProvider.Ancestor => Ancestor;
+
+	#endregion
+
+	#region Interface IDebugEntityId
+
+		FormattableString IDebugEntityId.EntityId => @$"{Id}";
+
+	#endregion
+
+	#region Interface IFinal
+
 		public IIdentifier?             Id       { get; set; }
 		public ImmutableArray<IOnEntry> OnEntry  { get; set; }
 		public ImmutableArray<IOnExit>  OnExit   { get; set; }
 		public IDoneData?               DoneData { get; set; }
+
+	#endregion
+
+	#region Interface IVisitorEntity<FinalEntity,IFinal>
 
 		void IVisitorEntity<FinalEntity, IFinal>.Init(IFinal source)
 		{
@@ -25,10 +45,6 @@ namespace TSSArt.StateMachine
 				ReferenceEquals(Id, other.Id) &&
 				ReferenceEquals(DoneData, other.DoneData);
 
-		internal object? Ancestor;
-
-		object? IAncestorProvider.Ancestor => Ancestor;
-
-		FormattableString IDebugEntityId.EntityId => @$"{Id}";
+	#endregion
 	}
 }

@@ -8,8 +8,9 @@ namespace TSSArt.StateMachine
 		private ImmutableArray<IExecutableEntity>.Builder? _actions;
 		private IConditionExpression?                      _condition;
 
-		public IfBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
-		{ }
+		public IfBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor) { }
+
+	#region Interface IIfBuilder
 
 		public IIf Build() => new IfEntity { Ancestor = Ancestor, Condition = _condition, Action = _actions?.ToImmutable() ?? default };
 
@@ -21,5 +22,7 @@ namespace TSSArt.StateMachine
 
 			(_actions ??= ImmutableArray.CreateBuilder<IExecutableEntity>()).Add(action);
 		}
+
+	#endregion
 	}
 }

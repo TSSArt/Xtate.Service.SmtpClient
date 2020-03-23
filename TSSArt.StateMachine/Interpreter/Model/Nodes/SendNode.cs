@@ -10,9 +10,19 @@ namespace TSSArt.StateMachine
 
 		public SendNode(LinkedListNode<int> documentIdNode, in SendEntity entity) : base(documentIdNode, (ISend?) entity.Ancestor) => _entity = entity;
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _entity.Ancestor;
 
+	#endregion
+
+	#region Interface IDebugEntityId
+
 		FormattableString IDebugEntityId.EntityId => @$"{Id}(#{DocumentId})";
+
+	#endregion
+
+	#region Interface ISend
 
 		public string?                             EventName        => _entity.EventName;
 		public IValueExpression?                   EventExpression  => _entity.EventExpression;
@@ -27,6 +37,8 @@ namespace TSSArt.StateMachine
 		public ImmutableArray<ILocationExpression> NameList         => _entity.NameList;
 		public ImmutableArray<IParam>              Parameters       => _entity.Parameters;
 		public IContent?                           Content          => _entity.Content;
+
+	#endregion
 
 		protected override void Store(Bucket bucket)
 		{

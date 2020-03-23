@@ -7,8 +7,9 @@ namespace TSSArt.StateMachine
 	{
 		private ImmutableArray<IData>.Builder? _dataList;
 
-		public DataModelBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
-		{ }
+		public DataModelBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor) { }
+
+	#region Interface IDataModelBuilder
 
 		public IDataModel Build() => new DataModelEntity { Ancestor = Ancestor, Data = _dataList?.ToImmutable() ?? default };
 
@@ -18,5 +19,7 @@ namespace TSSArt.StateMachine
 
 			(_dataList ??= ImmutableArray.CreateBuilder<IData>()).Add(data);
 		}
+
+	#endregion
 	}
 }

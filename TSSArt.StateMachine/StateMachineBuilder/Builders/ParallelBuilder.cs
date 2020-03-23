@@ -14,8 +14,9 @@ namespace TSSArt.StateMachine
 		private ImmutableArray<IStateEntity>.Builder? _states;
 		private ImmutableArray<ITransition>.Builder?  _transitions;
 
-		public ParallelBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
-		{ }
+		public ParallelBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor) { }
+
+	#region Interface IParallelBuilder
 
 		public IParallel Build() =>
 				new ParallelEntity
@@ -77,5 +78,7 @@ namespace TSSArt.StateMachine
 		}
 
 		public void SetDataModel(IDataModel dataModel) => _dataModel = dataModel ?? throw new ArgumentNullException(nameof(dataModel));
+
+	#endregion
 	}
 }

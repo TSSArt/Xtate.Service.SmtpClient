@@ -17,7 +17,13 @@ namespace TSSArt.StateMachine
 			_raise = raise;
 		}
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _raise.Ancestor;
+
+	#endregion
+
+	#region Interface IExecEvaluator
 
 		public virtual ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
@@ -26,6 +32,12 @@ namespace TSSArt.StateMachine
 			return executionContext.Send(_raise.OutgoingEvent!, token);
 		}
 
+	#endregion
+
+	#region Interface IRaise
+
 		public IOutgoingEvent OutgoingEvent => _raise.OutgoingEvent!;
+
+	#endregion
 	}
 }

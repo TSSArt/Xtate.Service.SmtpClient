@@ -5,6 +5,22 @@ namespace TSSArt.StateMachine
 {
 	public struct SendEntity : ISend, IVisitorEntity<SendEntity, ISend>, IAncestorProvider, IDebugEntityId
 	{
+		internal object? Ancestor;
+
+	#region Interface IAncestorProvider
+
+		object? IAncestorProvider.Ancestor => Ancestor;
+
+	#endregion
+
+	#region Interface IDebugEntityId
+
+		FormattableString IDebugEntityId.EntityId => @$"{Id}";
+
+	#endregion
+
+	#region Interface ISend
+
 		public IContent?                           Content          { get; set; }
 		public IValueExpression?                   DelayExpression  { get; set; }
 		public int?                                DelayMs          { get; set; }
@@ -18,6 +34,10 @@ namespace TSSArt.StateMachine
 		public IValueExpression?                   TargetExpression { get; set; }
 		public Uri?                                Type             { get; set; }
 		public IValueExpression?                   TypeExpression   { get; set; }
+
+	#endregion
+
+	#region Interface IVisitorEntity<SendEntity,ISend>
 
 		void IVisitorEntity<SendEntity, ISend>.Init(ISend source)
 		{
@@ -52,10 +72,6 @@ namespace TSSArt.StateMachine
 				ReferenceEquals(TypeExpression, other.TypeExpression) &&
 				ReferenceEquals(Content, other.Content);
 
-		internal object? Ancestor;
-
-		object? IAncestorProvider.Ancestor => Ancestor;
-
-		FormattableString IDebugEntityId.EntityId => @$"{Id}";
+	#endregion
 	}
 }

@@ -20,6 +20,8 @@ namespace TSSArt.StateMachine
 
 		public RuntimeEvaluator(EvaluatorCancellableTask task) => _evaluator = task ?? throw new ArgumentNullException(nameof(task));
 
+	#region Interface IObjectEvaluator
+
 		public async ValueTask<IObject> EvaluateObject(IExecutionContext executionContext, CancellationToken token) =>
 				_evaluator switch
 				{
@@ -29,6 +31,12 @@ namespace TSSArt.StateMachine
 						_ => Infrastructure.UnexpectedValue<IObject>()
 				};
 
+	#endregion
+
+	#region Interface IValueExpression
+
 		public string? Expression => null;
+
+	#endregion
 	}
 }

@@ -13,9 +13,17 @@ namespace TSSArt.StateMachine
 			_entity = entity;
 		}
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _entity.Ancestor;
 
+	#endregion
+
+	#region Interface ICustomAction
+
 		public string Xml => _entity.Xml!;
+
+	#endregion
 
 		protected override void Store(Bucket bucket)
 		{

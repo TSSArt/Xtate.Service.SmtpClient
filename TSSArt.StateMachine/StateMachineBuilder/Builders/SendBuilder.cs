@@ -19,8 +19,9 @@ namespace TSSArt.StateMachine
 		private Uri?                                _type;
 		private IValueExpression?                   _typeExpression;
 
-		public SendBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
-		{ }
+		public SendBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor) { }
+
+	#region Interface ISendBuilder
 
 		public ISend Build() =>
 				new SendEntity
@@ -80,5 +81,7 @@ namespace TSSArt.StateMachine
 		}
 
 		public void SetContent(IContent content) => _content = content ?? throw new ArgumentNullException(nameof(content));
+
+	#endregion
 	}
 }

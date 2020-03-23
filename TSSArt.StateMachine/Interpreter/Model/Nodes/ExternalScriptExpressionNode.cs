@@ -14,7 +14,13 @@ namespace TSSArt.StateMachine
 			_externalScriptExpression = externalScriptExpression;
 		}
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _externalScriptExpression.Ancestor;
+
+	#endregion
+
+	#region Interface IExternalScriptConsumer
 
 		public void SetContent(string content)
 		{
@@ -26,7 +32,15 @@ namespace TSSArt.StateMachine
 			}
 		}
 
+	#endregion
+
+	#region Interface IExternalScriptExpression
+
 		public Uri Uri => _externalScriptExpression.Uri!;
+
+	#endregion
+
+	#region Interface IStoreSupport
 
 		void IStoreSupport.Store(Bucket bucket)
 		{
@@ -34,5 +48,7 @@ namespace TSSArt.StateMachine
 			bucket.Add(Key.Uri, Uri);
 			bucket.Add(Key.Content, _content);
 		}
+
+	#endregion
 	}
 }

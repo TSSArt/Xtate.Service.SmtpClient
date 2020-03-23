@@ -60,6 +60,8 @@ namespace TSSArt.StateMachine.IntegrationTest
 
 	internal class ResourceProvider : IResourceLoader
 	{
+	#region Interface IResourceLoader
+
 		public ValueTask<Resource> Request(Uri uri, CancellationToken token) => throw new NotSupportedException();
 
 		public ValueTask<XmlReader> RequestXmlReader(Uri uri, XmlReaderSettings readerSettings = null, XmlParserContext parserContext = null, CancellationToken token = default)
@@ -67,5 +69,7 @@ namespace TSSArt.StateMachine.IntegrationTest
 			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("TSSArt.StateMachine.IntegrationTest." + uri + ".xml");
 			return new ValueTask<XmlReader>(XmlReader.Create(stream, readerSettings, parserContext));
 		}
+
+	#endregion
 	}
 }

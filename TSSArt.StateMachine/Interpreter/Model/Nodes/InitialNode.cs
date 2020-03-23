@@ -26,11 +26,23 @@ namespace TSSArt.StateMachine
 
 		public TransitionNode Transition { get; }
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _initial.Ancestor;
+
+	#endregion
+
+	#region Interface IDebugEntityId
 
 		public FormattableString EntityId => @$"(#{DocumentId})";
 
+	#endregion
+
+	#region Interface IInitial
+
 		ITransition IInitial.Transition => _initial.Transition!;
+
+	#endregion
 
 		protected override void Store(Bucket bucket)
 		{

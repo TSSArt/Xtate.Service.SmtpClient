@@ -9,7 +9,13 @@ namespace TSSArt.StateMachine
 
 		public AssignNode(LinkedListNode<int> documentIdNode, in AssignEntity entity) : base(documentIdNode, (IAssign?) entity.Ancestor) => _entity = entity;
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _entity.Ancestor;
+
+	#endregion
+
+	#region Interface IAssign
 
 		public ILocationExpression? Location => _entity.Location;
 
@@ -17,7 +23,13 @@ namespace TSSArt.StateMachine
 
 		public string? InlineContent => _entity.InlineContent;
 
+	#endregion
+
+	#region Interface IDebugEntityId
+
 		FormattableString IDebugEntityId.EntityId => @$"(#{DocumentId})";
+
+	#endregion
 
 		protected override void Store(Bucket bucket)
 		{

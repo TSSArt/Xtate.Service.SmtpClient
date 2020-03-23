@@ -51,7 +51,13 @@ namespace TSSArt.StateMachine
 
 		public ImmutableArray<(IBooleanEvaluator? Condition, ImmutableArray<IExecEvaluator> Actions)> Branches { get; }
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _if.Ancestor;
+
+	#endregion
+
+	#region Interface IExecEvaluator
 
 		public virtual async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
@@ -71,7 +77,13 @@ namespace TSSArt.StateMachine
 			}
 		}
 
+	#endregion
+
+	#region Interface IIf
+
 		public ImmutableArray<IExecutableEntity> Action    => _if.Action;
 		public IConditionExpression              Condition => _if.Condition!;
+
+	#endregion
 	}
 }

@@ -7,8 +7,11 @@ namespace TSSArt.StateMachine
 	{
 		public static readonly IErrorProcessor Instance = new DefaultErrorProcessor();
 
-		private DefaultErrorProcessor()
-		{ }
+		private DefaultErrorProcessor() { }
+
+	#region Interface IErrorProcessor
+
+		public void ThrowIfErrors() { }
 
 		void IErrorProcessor.AddError(ErrorItem errorItem)
 		{
@@ -19,7 +22,6 @@ namespace TSSArt.StateMachine
 
 		bool IErrorProcessor.LineInfoRequired => false;
 
-		public void ThrowIfErrors()
-		{ }
+	#endregion
 	}
 }

@@ -4,10 +4,12 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
-	internal class FileStorageProvider : IStorageProvider
+	[PublicAPI]
+	public class FileStorageProvider : IStorageProvider
 	{
 		private static readonly char[]   InvalidFileNameChars   = Path.GetInvalidFileNameChars();
 		private static readonly string[] InvalidCharReplacement = GetInvalidCharReplacement();
@@ -20,6 +22,8 @@ namespace TSSArt.StateMachine
 			_path = path ?? throw new ArgumentNullException(nameof(path));
 			_extension = extension;
 		}
+
+	#region Interface IStorageProvider
 
 		public async ValueTask<ITransactionalStorage> GetTransactionalStorage(string? partition, string key, CancellationToken token)
 		{
@@ -50,8 +54,7 @@ namespace TSSArt.StateMachine
 			{
 				File.Delete(path);
 			}
-			catch (IOException)
-			{ }
+			catch (IOException) { }
 
 			return default;
 		}
@@ -64,11 +67,12 @@ namespace TSSArt.StateMachine
 			{
 				Directory.Delete(path, recursive: true);
 			}
-			catch (IOException)
-			{ }
+			catch (IOException) { }
 
 			return default;
 		}
+
+	#endregion
 
 		private static string[] GetInvalidCharReplacement()
 		{

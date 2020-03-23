@@ -13,6 +13,8 @@ namespace TSSArt.StateMachine
 			Data = data;
 		}
 
+	#region Interface IEvent
+
 		public DataModelValue Data { get; }
 
 		public string? InvokeId => null;
@@ -28,5 +30,7 @@ namespace TSSArt.StateMachine
 		public string? SendId => null;
 
 		public EventType Type => EventType.External;
+
+	#endregion
 	}
 }

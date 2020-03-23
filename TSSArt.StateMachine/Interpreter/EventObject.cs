@@ -6,16 +6,13 @@ namespace TSSArt.StateMachine
 	internal sealed class EventObject : IEvent, IStoreSupport
 	{
 		public EventObject(string name, string? invokeId = null, string? invokeUniqueId = null) :
-				this(EventType.External, EventName.ToParts(name), data: default, sendId: null, invokeId, invokeUniqueId)
-		{ }
+				this(EventType.External, EventName.ToParts(name), data: default, sendId: null, invokeId, invokeUniqueId) { }
 
 		public EventObject(EventType type, IOutgoingEvent evt, Uri? origin = null, Uri? originType = null, string? invokeId = null, string? invokeUniqueId = null)
-				: this(type, evt.SendId, evt.NameParts, invokeId, invokeUniqueId, origin, originType, evt.Data)
-		{ }
+				: this(type, evt.SendId, evt.NameParts, invokeId, invokeUniqueId, origin, originType, evt.Data) { }
 
 		public EventObject(EventType type, ImmutableArray<IIdentifier> nameParts, DataModelValue data = default, string? sendId = null, string? invokeId = null, string? invokeUniqueId = null)
-				: this(type, sendId, nameParts, invokeId, invokeUniqueId, origin: null, originType: null, data)
-		{ }
+				: this(type, sendId, nameParts, invokeId, invokeUniqueId, origin: null, originType: null, data) { }
 
 		private EventObject(EventType type, string? sendId, ImmutableArray<IIdentifier> nameParts, string? invokeId, string? invokeUniqueId, Uri? origin, Uri? originType, DataModelValue data)
 		{
@@ -51,6 +48,8 @@ namespace TSSArt.StateMachine
 			}
 		}
 
+	#region Interface IEvent
+
 		public DataModelValue Data { get; }
 
 		public string? InvokeId { get; }
@@ -66,6 +65,10 @@ namespace TSSArt.StateMachine
 		public string? SendId { get; }
 
 		public EventType Type { get; }
+
+	#endregion
+
+	#region Interface IStoreSupport
 
 		public void Store(Bucket bucket)
 		{
@@ -84,5 +87,7 @@ namespace TSSArt.StateMachine
 				bucket.Nested(Key.DataValue).SetDataModelValue(tracker, Data);
 			}
 		}
+
+	#endregion
 	}
 }

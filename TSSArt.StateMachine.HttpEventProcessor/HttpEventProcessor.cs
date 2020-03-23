@@ -37,7 +37,11 @@ namespace TSSArt.StateMachine
 			_onDispose = onDispose ?? throw new ArgumentNullException(nameof(onDispose));
 		}
 
+	#region Interface IAsyncDisposable
+
 		public ValueTask DisposeAsync() => _onDispose();
+
+	#endregion
 
 		protected override Uri GetTarget(string sessionId) => new Uri(_baseUri, sessionId);
 

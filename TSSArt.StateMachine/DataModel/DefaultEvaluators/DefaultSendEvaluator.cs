@@ -36,9 +36,19 @@ namespace TSSArt.StateMachine
 		public ImmutableArray<ILocationEvaluator> NameEvaluatorList          { get; }
 		public ImmutableArray<DefaultParam>       ParameterList              { get; }
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _send.Ancestor;
 
+	#endregion
+
+	#region Interface IDebugEntityId
+
 		public FormattableString EntityId => @$"{Id}";
+
+	#endregion
+
+	#region Interface IExecEvaluator
 
 		public virtual async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
@@ -71,6 +81,10 @@ namespace TSSArt.StateMachine
 			await executionContext.Send(eventObject, token).ConfigureAwait(false);
 		}
 
+	#endregion
+
+	#region Interface ISend
+
 		public IContent?                           Content          => _send.Content;
 		public IValueExpression?                   DelayExpression  => _send.DelayExpression;
 		public int?                                DelayMs          => _send.DelayMs;
@@ -84,6 +98,8 @@ namespace TSSArt.StateMachine
 		public IValueExpression?                   TargetExpression => _send.TargetExpression;
 		public Uri?                                Type             => _send.Type;
 		public IValueExpression?                   TypeExpression   => _send.TypeExpression;
+
+	#endregion
 
 		private static Uri ToUri(string uri) => new Uri(uri, UriKind.RelativeOrAbsolute);
 	}

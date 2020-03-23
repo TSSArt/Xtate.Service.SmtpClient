@@ -4,11 +4,25 @@ namespace TSSArt.StateMachine
 {
 	public struct TransitionEntity : ITransition, IVisitorEntity<TransitionEntity, ITransition>, IAncestorProvider
 	{
+		internal object? Ancestor;
+
+	#region Interface IAncestorProvider
+
+		object? IAncestorProvider.Ancestor => Ancestor;
+
+	#endregion
+
+	#region Interface ITransition
+
 		public ImmutableArray<IEventDescriptor>  EventDescriptors { get; set; }
 		public IExecutableEntity?                Condition        { get; set; }
 		public ImmutableArray<IIdentifier>       Target           { get; set; }
 		public TransitionType                    Type             { get; set; }
 		public ImmutableArray<IExecutableEntity> Action           { get; set; }
+
+	#endregion
+
+	#region Interface IVisitorEntity<TransitionEntity,ITransition>
 
 		void IVisitorEntity<TransitionEntity, ITransition>.Init(ITransition source)
 		{
@@ -27,8 +41,6 @@ namespace TSSArt.StateMachine
 				EventDescriptors == other.EventDescriptors &&
 				ReferenceEquals(Condition, other.Condition);
 
-		internal object? Ancestor;
-
-		object? IAncestorProvider.Ancestor => Ancestor;
+	#endregion
 	}
 }

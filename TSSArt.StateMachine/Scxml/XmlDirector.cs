@@ -26,11 +26,15 @@ namespace TSSArt.StateMachine
 
 		protected string Current => _current ?? _xmlReader.Value;
 
+	#region Interface IXmlLineInfo
+
 		public bool HasLineInfo() => _xmlLineInfo?.HasLineInfo() ?? false;
 
 		public int LineNumber => _xmlLineInfo?.LineNumber ?? 0;
 
 		public int LinePosition => _xmlLineInfo?.LinePosition ?? 0;
+
+	#endregion
 
 		protected string ReadOuterXml() => _xmlReader.ReadOuterXml();
 
@@ -332,6 +336,8 @@ namespace TSSArt.StateMachine
 
 			public PolicyBuilder(Policy<TEntity> policy) => _policy = policy;
 
+		#region Interface XmlDirector<TDirector>.IPolicyBuilder<TEntity>
+
 			public IPolicyBuilder<TEntity> IgnoreUnknownElements(bool value)
 			{
 				_policy.IgnoreUnknownElements = value;
@@ -446,6 +452,8 @@ namespace TSSArt.StateMachine
 
 				return this;
 			}
+
+		#endregion
 
 			private void UseRawContent(bool val)
 			{

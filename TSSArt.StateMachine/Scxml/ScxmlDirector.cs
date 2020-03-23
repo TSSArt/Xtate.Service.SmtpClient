@@ -497,8 +497,7 @@ namespace TSSArt.StateMachine
 
 		private IElse ReadElse() => Populate(_factory.CreateElseBuilder(CreateAncestor()), ElsePolicy).Build();
 
-		private static void ElseBuildPolicy(IPolicyBuilder<IElseBuilder> pb)
-		{ }
+		private static void ElseBuildPolicy(IPolicyBuilder<IElseBuilder> pb) { }
 
 		private IElseIf ReadElseIf() => Populate(_factory.CreateElseIfBuilder(CreateAncestor()), ElseIfPolicy).Build();
 
@@ -536,10 +535,14 @@ namespace TSSArt.StateMachine
 				LinePosition = linePosition;
 			}
 
+		#region Interface IXmlLineInfo
+
 			public bool HasLineInfo() => true;
 
 			public int LineNumber   { get; }
 			public int LinePosition { get; }
+
+		#endregion
 		}
 	}
 }

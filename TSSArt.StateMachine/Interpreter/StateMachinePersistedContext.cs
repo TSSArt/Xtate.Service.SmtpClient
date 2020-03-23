@@ -35,6 +35,8 @@ namespace TSSArt.StateMachine
 
 		public override IPersistenceContext PersistenceContext => this;
 
+	#region Interface IPersistenceContext
+
 		public void ClearState(int key) => _state.RemoveSubtree(key);
 
 		public int GetState(int key) => _state.TryGet(key, out int value) ? value : 0;
@@ -48,6 +50,8 @@ namespace TSSArt.StateMachine
 		public ValueTask CheckPoint(int level, CancellationToken token) => _storage.CheckPoint(level, token);
 
 		public ValueTask Shrink(CancellationToken token) => _storage.Shrink(token);
+
+	#endregion
 
 		private static IEvent EventCreator(Bucket bucket) => new EventObject(bucket);
 

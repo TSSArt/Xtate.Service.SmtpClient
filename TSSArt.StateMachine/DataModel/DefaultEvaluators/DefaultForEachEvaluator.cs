@@ -29,7 +29,13 @@ namespace TSSArt.StateMachine
 		public ILocationEvaluator?            IndexEvaluator      { get; }
 		public ImmutableArray<IExecEvaluator> ActionEvaluatorList { get; }
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _forEach.Ancestor;
+
+	#endregion
+
+	#region Interface IExecEvaluator
 
 		public virtual async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
@@ -52,9 +58,15 @@ namespace TSSArt.StateMachine
 			}
 		}
 
+	#endregion
+
+	#region Interface IForEach
+
 		public IValueExpression                  Array  => _forEach.Array!;
 		public ILocationExpression               Item   => _forEach.Item!;
 		public ILocationExpression?              Index  => _forEach.Index;
 		public ImmutableArray<IExecutableEntity> Action => _forEach.Action;
+
+	#endregion
 	}
 }

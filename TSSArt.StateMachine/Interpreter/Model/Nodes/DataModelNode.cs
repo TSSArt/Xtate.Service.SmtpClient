@@ -17,16 +17,32 @@ namespace TSSArt.StateMachine
 
 		public ImmutableArray<DataNode> Data { get; }
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _dataModel.Ancestor;
+
+	#endregion
+
+	#region Interface IDataModel
 
 		ImmutableArray<IData> IDataModel.Data => _dataModel.Data;
 
+	#endregion
+
+	#region Interface IDocumentId
+
 		public int DocumentId => _documentIdNode.Value;
+
+	#endregion
+
+	#region Interface IStoreSupport
 
 		void IStoreSupport.Store(Bucket bucket)
 		{
 			bucket.Add(Key.TypeInfo, TypeInfo.DataModelNode);
 			bucket.AddEntityList(Key.DataList, Data);
 		}
+
+	#endregion
 	}
 }

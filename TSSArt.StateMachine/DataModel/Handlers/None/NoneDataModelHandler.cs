@@ -8,8 +8,7 @@ namespace TSSArt.StateMachine
 
 		public static readonly IDataModelHandlerFactory Factory = new DataModelHandlerFactory();
 
-		private NoneDataModelHandler(IErrorProcessor errorProcessor) : base(errorProcessor)
-		{ }
+		private NoneDataModelHandler(IErrorProcessor errorProcessor) : base(errorProcessor) { }
 
 		protected override void Visit(ref IForEach forEach) => AddErrorMessage(forEach, Resources.ErrorMesasge_ForEach_not_supported_in_NONE_data_model_);
 
@@ -50,9 +49,13 @@ namespace TSSArt.StateMachine
 
 		private class DataModelHandlerFactory : IDataModelHandlerFactory
 		{
+		#region Interface IDataModelHandlerFactory
+
 			public bool CanHandle(string dataModelType) => dataModelType == DataModelType;
 
 			public IDataModelHandler CreateHandler(IErrorProcessor errorProcessor) => new NoneDataModelHandler(errorProcessor);
+
+		#endregion
 		}
 	}
 }

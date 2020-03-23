@@ -11,6 +11,8 @@ namespace TSSArt.StateMachine
 
 		public WrapperErrorProcessor(IErrorProcessor? errorProcessor) => _errorProcessor = errorProcessor;
 
+	#region Interface IErrorProcessor
+
 		public void AddError(ErrorItem errorItem)
 		{
 			if (errorItem == null) throw new ArgumentNullException(nameof(errorItem));
@@ -23,8 +25,6 @@ namespace TSSArt.StateMachine
 			_errorProcessor?.AddError(errorItem);
 		}
 
-		public bool LineInfoRequired => _errorProcessor?.LineInfoRequired ?? false;
-
 		public void ThrowIfErrors()
 		{
 			if (_error != null)
@@ -32,5 +32,9 @@ namespace TSSArt.StateMachine
 				throw new StateMachineValidationException(ImmutableArray.Create(_error));
 			}
 		}
+
+		public bool LineInfoRequired => _errorProcessor?.LineInfoRequired ?? false;
+
+	#endregion
 	}
 }

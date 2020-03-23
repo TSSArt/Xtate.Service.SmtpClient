@@ -12,6 +12,10 @@
 
 		public object Value { get; }
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _ancestor;
+
+	#endregion
 	}
 }

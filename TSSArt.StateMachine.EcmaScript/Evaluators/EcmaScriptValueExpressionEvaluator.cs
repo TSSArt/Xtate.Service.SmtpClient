@@ -17,7 +17,13 @@ namespace TSSArt.StateMachine.EcmaScript
 			_program = program;
 		}
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => EcmaScriptHelper.GetAncestor(_valueExpression);
+
+	#endregion
+
+	#region Interface IArrayEvaluator
 
 		public ValueTask<IObject[]> EvaluateArray(IExecutionContext executionContext, CancellationToken token)
 		{
@@ -36,17 +42,39 @@ namespace TSSArt.StateMachine.EcmaScript
 			return new ValueTask<IObject[]>(result);
 		}
 
+	#endregion
+
+	#region Interface IDebugEntityId
+
 		FormattableString? IDebugEntityId.EntityId => null;
+
+	#endregion
+
+	#region Interface IIntegerEvaluator
 
 		ValueTask<int> IIntegerEvaluator.EvaluateInteger(IExecutionContext executionContext, CancellationToken token) =>
 				new ValueTask<int>((int) executionContext.Engine().Eval(_program, startNewScope: true).AsNumber());
 
+	#endregion
+
+	#region Interface IObjectEvaluator
+
 		ValueTask<IObject> IObjectEvaluator.EvaluateObject(IExecutionContext executionContext, CancellationToken token) =>
 				new ValueTask<IObject>(new EcmaScriptObject(executionContext.Engine().Eval(_program, startNewScope: true)));
+
+	#endregion
+
+	#region Interface IStringEvaluator
 
 		ValueTask<string> IStringEvaluator.EvaluateString(IExecutionContext executionContext, CancellationToken token) =>
 				new ValueTask<string>(executionContext.Engine().Eval(_program, startNewScope: true).ToString());
 
+	#endregion
+
+	#region Interface IValueExpression
+
 		public string? Expression => _valueExpression.Expression;
+
+	#endregion
 	}
 }

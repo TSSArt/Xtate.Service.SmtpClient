@@ -50,6 +50,8 @@ namespace TSSArt.StateMachine
 			}
 		}
 
+	#region Interface IDisposable
+
 		public void Dispose()
 		{
 			if (_disposed)
@@ -63,6 +65,10 @@ namespace TSSArt.StateMachine
 
 			_disposed = true;
 		}
+
+	#endregion
+
+	#region Interface IStorage
 
 		public void Write(ReadOnlySpan<byte> key, ReadOnlySpan<byte> value)
 		{
@@ -96,6 +102,8 @@ namespace TSSArt.StateMachine
 
 			return ReadModelTryGetValue(_readModel, new Entry(buffer), out var result) ? result.Value : ReadOnlyMemory<byte>.Empty;
 		}
+
+	#endregion
 
 		private static bool ReadModelTryGetValue(SortedSet<Entry> readModel, Entry equalEntry, out Entry actualEntry)
 		{

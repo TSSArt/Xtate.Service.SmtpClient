@@ -2,8 +2,22 @@
 {
 	public struct ScriptEntity : IScript, IVisitorEntity<ScriptEntity, IScript>, IAncestorProvider
 	{
+		internal object? Ancestor;
+
+	#region Interface IAncestorProvider
+
+		object? IAncestorProvider.Ancestor => Ancestor;
+
+	#endregion
+
+	#region Interface IScript
+
 		public IScriptExpression?         Content { get; set; }
 		public IExternalScriptExpression? Source  { get; set; }
+
+	#endregion
+
+	#region Interface IVisitorEntity<ScriptEntity,IScript>
 
 		void IVisitorEntity<ScriptEntity, IScript>.Init(IScript source)
 		{
@@ -16,8 +30,6 @@
 				ReferenceEquals(Content, other.Content) &&
 				ReferenceEquals(Source, other.Source);
 
-		internal object? Ancestor;
-
-		object? IAncestorProvider.Ancestor => Ancestor;
+	#endregion
 	}
 }

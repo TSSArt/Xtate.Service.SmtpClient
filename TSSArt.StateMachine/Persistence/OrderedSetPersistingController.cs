@@ -57,10 +57,14 @@ namespace TSSArt.StateMachine
 			orderedSet.Changed += OnChanged;
 		}
 
+	#region Interface IDisposable
+
 		public void Dispose()
 		{
 			_orderedSet.Changed -= OnChanged;
 		}
+
+	#endregion
 
 		private void OnChanged(OrderedSet<T>.ChangedAction action, T item)
 		{

@@ -4,10 +4,24 @@ namespace TSSArt.StateMachine
 {
 	public struct ForEachEntity : IForEach, IVisitorEntity<ForEachEntity, IForEach>, IAncestorProvider
 	{
+		internal object? Ancestor;
+
+	#region Interface IAncestorProvider
+
+		object? IAncestorProvider.Ancestor => Ancestor;
+
+	#endregion
+
+	#region Interface IForEach
+
 		public ImmutableArray<IExecutableEntity> Action { get; set; }
 		public IValueExpression?                 Array  { get; set; }
 		public ILocationExpression?              Index  { get; set; }
 		public ILocationExpression?              Item   { get; set; }
+
+	#endregion
+
+	#region Interface IVisitorEntity<ForEachEntity,IForEach>
 
 		void IVisitorEntity<ForEachEntity, IForEach>.Init(IForEach source)
 		{
@@ -24,8 +38,6 @@ namespace TSSArt.StateMachine
 				ReferenceEquals(Index, other.Index) &&
 				ReferenceEquals(Item, other.Item);
 
-		internal object? Ancestor;
-
-		object? IAncestorProvider.Ancestor => Ancestor;
+	#endregion
 	}
 }

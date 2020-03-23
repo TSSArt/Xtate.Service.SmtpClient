@@ -24,6 +24,8 @@ namespace TSSArt.StateMachine
 			_namespace = customActionProviderAttribute.Namespace;
 		}
 
+	#region Interface ICustomActionFactory
+
 		public bool CanHandle(string ns, string name) => ns == _namespace && _actions.ContainsKey(name);
 
 		public ICustomActionExecutor CreateExecutor(string xml)
@@ -35,6 +37,8 @@ namespace TSSArt.StateMachine
 
 			return _actions[xmlReader.LocalName](xmlReader);
 		}
+
+	#endregion
 
 		protected void Register(string name, Func<XmlReader, CustomActionBase> executorFactory)
 		{

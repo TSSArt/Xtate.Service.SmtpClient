@@ -517,7 +517,11 @@ namespace TSSArt.StateMachine
 				}
 			}
 
+		#region Interface IPersistedDocumentId
+
 			public int DocumentId { get; }
+
+		#endregion
 		}
 
 		private class ExternalScriptExpressionWithContent : IExternalScriptExpression, IExternalScriptProvider, IAncestorProvider
@@ -529,11 +533,23 @@ namespace TSSArt.StateMachine
 				Content = content;
 			}
 
+		#region Interface IAncestorProvider
+
 			public object Ancestor { get; }
+
+		#endregion
+
+		#region Interface IExternalScriptExpression
 
 			public Uri? Uri { get; }
 
+		#endregion
+
+		#region Interface IExternalScriptProvider
+
 			public string Content { get; }
+
+		#endregion
 		}
 	}
 }

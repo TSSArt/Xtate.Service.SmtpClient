@@ -1,5 +1,4 @@
 ﻿namespace TSSArt.StateMachine
 {
-	public interface IValueEvaluator
-	{ }
+	public interface IValueEvaluator { }
 }

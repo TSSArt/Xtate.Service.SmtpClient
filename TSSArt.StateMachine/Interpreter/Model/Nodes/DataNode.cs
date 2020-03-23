@@ -20,16 +20,34 @@ namespace TSSArt.StateMachine
 
 		public IObjectEvaluator? ExpressionEvaluator { get; }
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _data.Ancestor;
+
+	#endregion
+
+	#region Interface IData
 
 		public IValueExpression?        Expression    => _data.Expression;
 		public IExternalDataExpression? Source        => _data.Source;
 		public string                   Id            => _data.Id!;
 		public string?                  InlineContent => _data.InlineContent;
 
+	#endregion
+
+	#region Interface IDebugEntityId
+
 		FormattableString IDebugEntityId.EntityId => @$"{Id}(#{DocumentId})";
 
+	#endregion
+
+	#region Interface IDocumentId
+
 		public int DocumentId => _documentIdNode.Value;
+
+	#endregion
+
+	#region Interface IStoreSupport
 
 		void IStoreSupport.Store(Bucket bucket)
 		{
@@ -40,5 +58,7 @@ namespace TSSArt.StateMachine
 			bucket.AddEntity(Key.Expression, Expression);
 			bucket.Add(Key.InlineContent, InlineContent);
 		}
+
+	#endregion
 	}
 }

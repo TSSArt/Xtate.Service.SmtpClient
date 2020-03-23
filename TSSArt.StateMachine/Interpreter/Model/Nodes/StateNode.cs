@@ -48,9 +48,19 @@ namespace TSSArt.StateMachine
 
 		protected InitialNode? Initial { get; }
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _state.Ancestor;
 
+	#endregion
+
+	#region Interface IDebugEntityId
+
 		FormattableString IDebugEntityId.EntityId => @$"{Id}(#{DocumentId})";
+
+	#endregion
+
+	#region Interface IState
 
 		public override IIdentifier Id { get; }
 
@@ -62,6 +72,8 @@ namespace TSSArt.StateMachine
 		ImmutableArray<ITransition> IState. Transitions   => ImmutableArray<ITransition>.CastUp(Transitions);
 		ImmutableArray<IOnEntry> IState.    OnEntry       => ImmutableArray<IOnEntry>.CastUp(OnEntry);
 		ImmutableArray<IOnExit> IState.     OnExit        => ImmutableArray<IOnExit>.CastUp(OnExit);
+
+	#endregion
 
 		protected override void Store(Bucket bucket)
 		{

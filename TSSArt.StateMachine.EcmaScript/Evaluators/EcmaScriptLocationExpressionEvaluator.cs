@@ -38,7 +38,13 @@ namespace TSSArt.StateMachine.EcmaScript
 			}
 		}
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => EcmaScriptHelper.GetAncestor(_locationExpression);
+
+	#endregion
+
+	#region Interface ILocationEvaluator
 
 		public IObject GetValue(IExecutionContext executionContext) => new EcmaScriptObject(executionContext.Engine().Eval(_program, startNewScope: true));
 
@@ -68,7 +74,13 @@ namespace TSSArt.StateMachine.EcmaScript
 			executionContext.Engine().Exec(_declare, startNewScope: false);
 		}
 
+	#endregion
+
+	#region Interface ILocationExpression
+
 		public string? Expression => _locationExpression.Expression;
+
+	#endregion
 
 		private static Program CreateDeclareStatement(JintIdentifier identifier)
 		{

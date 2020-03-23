@@ -9,8 +9,9 @@ namespace TSSArt.StateMachine
 
 		protected DataModelHandlerBase(IErrorProcessor errorProcessor) => _errorProcessor = errorProcessor;
 
-		public virtual void ExecutionContextCreated(IExecutionContext executionContext, IDictionary<string, string> dataModelVars)
-		{ }
+	#region Interface IDataModelHandler
+
+		public virtual void ExecutionContextCreated(IExecutionContext executionContext, IDictionary<string, string> dataModelVars) { }
 
 		void IDataModelHandler.Process(ref IExecutableEntity executableEntity)
 		{
@@ -31,6 +32,8 @@ namespace TSSArt.StateMachine
 		{
 			Visit(ref invoke);
 		}
+
+	#endregion
 
 		protected void AddErrorMessage(object? entity, string message, Exception? exception = null) => _errorProcessor.AddError(GetType(), entity, message, exception);
 

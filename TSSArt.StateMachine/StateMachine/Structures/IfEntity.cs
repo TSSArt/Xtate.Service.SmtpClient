@@ -4,8 +4,22 @@ namespace TSSArt.StateMachine
 {
 	public struct IfEntity : IIf, IVisitorEntity<IfEntity, IIf>, IAncestorProvider
 	{
+		internal object? Ancestor;
+
+	#region Interface IAncestorProvider
+
+		object? IAncestorProvider.Ancestor => Ancestor;
+
+	#endregion
+
+	#region Interface IIf
+
 		public ImmutableArray<IExecutableEntity> Action    { get; set; }
 		public IConditionExpression?             Condition { get; set; }
+
+	#endregion
+
+	#region Interface IVisitorEntity<IfEntity,IIf>
 
 		void IVisitorEntity<IfEntity, IIf>.Init(IIf source)
 		{
@@ -18,8 +32,6 @@ namespace TSSArt.StateMachine
 				Action == other.Action &&
 				ReferenceEquals(Condition, other.Condition);
 
-		internal object? Ancestor;
-
-		object? IAncestorProvider.Ancestor => Ancestor;
+	#endregion
 	}
 }
