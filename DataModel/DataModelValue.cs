@@ -28,13 +28,16 @@ namespace TSSArt.StateMachine
 	[DebuggerDisplay(value: "{ToObject()} ({Type})")]
 	public readonly struct DataModelValue : IObject, IEquatable<DataModelValue>, IFormattable, IDynamicMetaObjectProvider
 	{
+		public static readonly DataModelValue Undefined;
+		public static readonly DataModelValue Null = new DataModelValue((string?) null);
+
 		private static readonly object NullValue     = new object();
 		private static readonly object NumberValue   = new object();
 		private static readonly object DateTimeValue = new object();
 		private static readonly object BooleanValue  = new object();
 
-		private readonly object? _value;
 		private readonly long    _int64;
+		private readonly object? _value;
 
 		public DataModelValue(DataModelObject? value)
 		{
@@ -72,6 +75,66 @@ namespace TSSArt.StateMachine
 			_int64 = value ? 1 : 0;
 		}
 
+		public DataModelValueType Type =>
+				_value switch
+				{
+						DataModelObject _ => DataModelValueType.Object,
+						DataModelArray _ => DataModelValueType.Array,
+						string _ => DataModelValueType.String,
+						{ } val when val == DateTimeValue => DataModelValueType.DateTime,
+						{ } val when val == NumberValue => DataModelValueType.Number,
+						{ } val when val == BooleanValue => DataModelValueType.Boolean,
+						{ } val when val == NullValue => DataModelValueType.Null,
+						null => DataModelValueType.Undefined,
+						_ => Infrastructure.UnexpectedValue<DataModelValueType>()
+				};
+
+	#region Interface IDynamicMetaObjectProvider
+
+		DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter) => new MetaObject(parameter, this, Dynamic.CreateMetaObject);
+
+	#endregion
+
+	#region Interface IEquatable<DataModelValue>
+
+		public bool Equals(DataModelValue other) => Equals(_value, other._value) && _int64 == other._int64;
+
+	#endregion
+
+	#region Interface IFormattable
+
+		public string ToString(string? format, IFormatProvider? formatProvider)
+		{
+			var obj = ToObject();
+
+			if (obj is IFormattable formattable)
+			{
+				return formattable.ToString(format, formatProvider);
+			}
+
+			return Convert.ToString(obj, formatProvider) ?? string.Empty;
+		}
+
+	#endregion
+
+	#region Interface IObject
+
+		public object? ToObject() =>
+				_value switch
+				{
+						DataModelObject obj => obj,
+						DataModelArray arr => arr,
+						string str => str,
+						{ } val when val == DateTimeValue => AsDateTime(),
+						{ } val when val == NumberValue => AsNumber(),
+						{ } val when val == BooleanValue => AsBoolean(),
+						{ } val when val == NullValue => null,
+						null => null,
+						_ => Infrastructure.UnexpectedValue<object>()
+				};
+
+	#endregion
+
 		public static implicit operator DataModelValue(DataModelObject? val) => new DataModelValue(val);
 		public static implicit operator DataModelValue(DataModelArray? val)  => new DataModelValue(val);
 		public static implicit operator DataModelValue(string? val)          => new DataModelValue(val);
@@ -100,43 +163,9 @@ namespace TSSArt.StateMachine
 		public static DateTime         ToDateTime(DataModelValue val)        => val.AsDateTime();
 		public static bool             ToBoolean(DataModelValue val)         => val.AsBoolean();
 
-		public DataModelValueType Type =>
-				_value switch
-				{
-						DataModelObject _ => DataModelValueType.Object,
-						DataModelArray _ => DataModelValueType.Array,
-						string _ => DataModelValueType.String,
-						{ } val when val == DateTimeValue => DataModelValueType.DateTime,
-						{ } val when val == NumberValue => DataModelValueType.Number,
-						{ } val when val == BooleanValue => DataModelValueType.Boolean,
-						{ } val when val == NullValue => DataModelValueType.Null,
-						null => DataModelValueType.Undefined,
-						_ => Infrastructure.UnexpectedValue<DataModelValueType>()
-				};
-
-		public bool Equals(DataModelValue other) => Equals(_value, other._value) && _int64 == other._int64;
-
 		public bool IsUndefinedOrNull() => _value == null || _value == NullValue;
 
 		public bool IsUndefined() => _value == null;
-
-		public object? ToObject() =>
-				_value switch
-				{
-						DataModelObject obj => obj,
-						DataModelArray arr => arr,
-						string str => str,
-						{ } val when val == DateTimeValue => AsDateTime(),
-						{ } val when val == NumberValue => AsNumber(),
-						{ } val when val == BooleanValue => AsBoolean(),
-						{ } val when val == NullValue => null,
-						null => null,
-						_ => Infrastructure.UnexpectedValue<object>()
-				};
-
-		public static readonly DataModelValue Undefined;
-
-		public static readonly DataModelValue Null = new DataModelValue((string?) null);
 
 		public DataModelObject? AsObject() =>
 				_value switch
@@ -356,20 +385,6 @@ namespace TSSArt.StateMachine
 		}
 
 		public override string ToString() => ToString(format: null, formatProvider: null);
-
-		public string ToString(string? format, IFormatProvider? formatProvider)
-		{
-			var obj = ToObject();
-
-			if (obj is IFormattable formattable)
-			{
-				return formattable.ToString(format, formatProvider);
-			}
-
-			return Convert.ToString(obj, formatProvider) ?? string.Empty;
-		}
-
-		DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter) => new MetaObject(parameter, this, Dynamic.CreateMetaObject);
 
 		private class DebugView
 		{

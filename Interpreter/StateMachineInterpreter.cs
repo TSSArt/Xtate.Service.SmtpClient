@@ -1508,10 +1508,24 @@ namespace TSSArt.StateMachine
 		{
 			private const int IterationCount = 36;
 
-			private int    _internalQueueLength;
-			private int    _index;
-			private int    _sum;
 			private int[]? _data;
+			private int    _index;
+			private int    _internalQueueLength;
+			private int    _sum;
+
+		#region Interface IDisposable
+
+			public void Dispose()
+			{
+				if (_data != null)
+				{
+					ArrayPool<int>.Shared.Return(_data);
+
+					_data = null;
+				}
+			}
+
+		#endregion
 
 			public static LiveLockDetector Create() => new LiveLockDetector { _index = -1 };
 
@@ -1544,16 +1558,6 @@ namespace TSSArt.StateMachine
 				_internalQueueLength = internalQueueCount;
 				_sum += delta;
 				_data[_index ++ % IterationCount] = delta;
-			}
-
-			public void Dispose()
-			{
-				if (_data != null)
-				{
-					ArrayPool<int>.Shared.Return(_data);
-
-					_data = null;
-				}
 			}
 		}
 	}
