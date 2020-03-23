@@ -14,16 +14,32 @@ namespace TSSArt.StateMachine
 			_entity = entity;
 		}
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _entity.Ancestor;
+
+	#endregion
+
+	#region Interface IDebugEntityId
 
 		FormattableString IDebugEntityId.EntityId => @$"(#{DocumentId})";
 
+	#endregion
+
+	#region Interface IDocumentId
+
 		public int DocumentId => _documentIdNode.Value;
+
+	#endregion
+
+	#region Interface IStoreSupport
 
 		void IStoreSupport.Store(Bucket bucket)
 		{
 			bucket.Add(Key.TypeInfo, TypeInfo.ElseNode);
 			bucket.Add(Key.DocumentId, DocumentId);
 		}
+
+	#endregion
 	}
 }

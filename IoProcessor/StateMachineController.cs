@@ -47,6 +47,8 @@ namespace TSSArt.StateMachine
 
 		public string SessionId { get; }
 
+	#region Interface IAsyncDisposable
+
 		public virtual ValueTask DisposeAsync()
 		{
 			if (_disposed)
@@ -62,6 +64,10 @@ namespace TSSArt.StateMachine
 
 			return default;
 		}
+
+	#endregion
+
+	#region Interface IExternalCommunication
 
 		ImmutableArray<IEventProcessor> IExternalCommunication.GetIoProcessors() => _ioProcessor.GetIoProcessors();
 
@@ -100,6 +106,10 @@ namespace TSSArt.StateMachine
 
 		ValueTask IExternalCommunication.ForwardEvent(IEvent evt, string invokeId, CancellationToken token) => _ioProcessor.ForwardEvent(SessionId, evt, invokeId, token);
 
+	#endregion
+
+	#region Interface INotifyStateChanged
+
 		ValueTask INotifyStateChanged.OnChanged(StateMachineInterpreterState state)
 		{
 			if (state == StateMachineInterpreterState.Accepted)
@@ -114,6 +124,10 @@ namespace TSSArt.StateMachine
 			return default;
 		}
 
+	#endregion
+
+	#region Interface IService
+
 		public ValueTask Send(IEvent evt, CancellationToken token) => Channel.Writer.WriteAsync(evt, token);
 
 		ValueTask IService.Destroy(CancellationToken token)
@@ -124,6 +138,8 @@ namespace TSSArt.StateMachine
 		}
 
 		public ValueTask<DataModelValue> Result => new ValueTask<DataModelValue>(_completedTcs.Task);
+
+	#endregion
 
 		private static Channel<IEvent> CreateChannel(IStateMachineOptions? options)
 		{

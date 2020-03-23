@@ -9,8 +9,7 @@ namespace TSSArt.StateMachine
 	{
 		public static readonly ILogger Instance = new DefaultLogger();
 
-		private DefaultLogger()
-		{ }
+		private DefaultLogger() { }
 
 		public ValueTask LogInfo(string sessionId, string? stateMachineName, string? label, DataModelValue data, CancellationToken token)
 		{

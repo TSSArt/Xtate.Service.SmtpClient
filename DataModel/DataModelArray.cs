@@ -34,11 +34,9 @@ namespace TSSArt.StateMachine
 
 		private State _state;
 
-		public DataModelArray() : this(State.Writable)
-		{ }
+		public DataModelArray() : this(State.Writable) { }
 
-		public DataModelArray(bool isReadOnly) : this(isReadOnly ? State.Readonly : State.Writable)
-		{ }
+		public DataModelArray(bool isReadOnly) : this(isReadOnly ? State.Readonly : State.Writable) { }
 
 		public DataModelArray(int capacity) => _list = new List<DataModelDescriptor>(capacity);
 
@@ -62,39 +60,7 @@ namespace TSSArt.StateMachine
 
 		public int Length => _list.Count;
 
-		DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter) => new MetaObject(parameter, this, Dynamic.CreateMetaObject);
-
-		public string ToString(string? format, IFormatProvider? formatProvider)
-		{
-			var sb = new StringBuilder();
-
-			sb.Append('[');
-			foreach (var item in _list)
-			{
-				if (sb.Length > 1)
-				{
-					sb.Append(',');
-				}
-
-				sb.Append(item.Value.ToString(format: null, formatProvider));
-			}
-
-			sb.Append(']');
-
-			return sb.ToString();
-		}
-
-		public bool IsReadOnly => _state != State.Writable;
-
-		public IEnumerator<DataModelValue> GetEnumerator()
-		{
-			foreach (var descriptor in _list)
-			{
-				yield return descriptor.Value;
-			}
-		}
-
-		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+	#region Interface ICollection<DataModelValue>
 
 		public void Add(DataModelValue item)
 		{
@@ -138,7 +104,82 @@ namespace TSSArt.StateMachine
 			return RemoveInternal(new DataModelDescriptor(item));
 		}
 
+		public bool IsReadOnly => _state != State.Writable;
+
 		int ICollection<DataModelValue>.Count => _list.Count;
+
+	#endregion
+
+	#region Interface IDynamicMetaObjectProvider
+
+		DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter) => new MetaObject(parameter, this, Dynamic.CreateMetaObject);
+
+	#endregion
+
+	#region Interface IEnumerable
+
+		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+	#endregion
+
+	#region Interface IEnumerable<DataModelValue>
+
+		public IEnumerator<DataModelValue> GetEnumerator()
+		{
+			foreach (var descriptor in _list)
+			{
+				yield return descriptor.Value;
+			}
+		}
+
+	#endregion
+
+	#region Interface IFormattable
+
+		public string ToString(string? format, IFormatProvider? formatProvider)
+		{
+			var sb = new StringBuilder();
+
+			sb.Append('[');
+			foreach (var item in _list)
+			{
+				if (sb.Length > 1)
+				{
+					sb.Append(',');
+				}
+
+				sb.Append(item.Value.ToString(format: null, formatProvider));
+			}
+
+			sb.Append(']');
+
+			return sb.ToString();
+		}
+
+	#endregion
+
+	#region Interface IList<DataModelValue>
+
+		public DataModelValue this[int index]
+		{
+			get
+			{
+				if (index < 0) throw new ArgumentOutOfRangeException(nameof(index));
+
+				return GetDescriptor(index).Value;
+			}
+			set
+			{
+				if (index < 0) throw new ArgumentOutOfRangeException(nameof(index));
+
+				if (!CanSet(index, value))
+				{
+					throw ObjectCantBeModifiedException();
+				}
+
+				SetInternal(index, new DataModelDescriptor(value));
+			}
+		}
 
 		public int IndexOf(DataModelValue item) => _list.IndexOf(new DataModelDescriptor(item));
 
@@ -166,26 +207,7 @@ namespace TSSArt.StateMachine
 			RemoveAtInternal(index);
 		}
 
-		public DataModelValue this[int index]
-		{
-			get
-			{
-				if (index < 0) throw new ArgumentOutOfRangeException(nameof(index));
-
-				return GetDescriptor(index).Value;
-			}
-			set
-			{
-				if (index < 0) throw new ArgumentOutOfRangeException(nameof(index));
-
-				if (!CanSet(index, value))
-				{
-					throw ObjectCantBeModifiedException();
-				}
-
-				SetInternal(index, new DataModelDescriptor(value));
-			}
-		}
+	#endregion
 
 		internal DataModelDescriptor GetDescriptor(int index) => index < _list.Count ? _list[index] : new DataModelDescriptor(DataModelValue.Undefined);
 

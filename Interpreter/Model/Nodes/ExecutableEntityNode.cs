@@ -18,11 +18,23 @@ namespace TSSArt.StateMachine
 			_documentIdNode = documentIdNode;
 		}
 
+	#region Interface IDocumentId
+
 		public int DocumentId => _documentIdNode.Value;
+
+	#endregion
+
+	#region Interface IExecEvaluator
 
 		public ValueTask Execute(IExecutionContext executionContext, CancellationToken token) => _execEvaluator.Execute(executionContext, token);
 
+	#endregion
+
+	#region Interface IStoreSupport
+
 		void IStoreSupport.Store(Bucket bucket) => Store(bucket);
+
+	#endregion
 
 		protected abstract void Store(Bucket bucket);
 	}

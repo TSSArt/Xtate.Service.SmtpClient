@@ -22,6 +22,8 @@ namespace TSSArt.StateMachine
 			IoProcessorInit();
 		}
 
+	#region Interface IAsyncDisposable
+
 		public async ValueTask DisposeAsync()
 		{
 			if (_disposed)
@@ -41,6 +43,8 @@ namespace TSSArt.StateMachine
 
 			_disposed = true;
 		}
+
+	#endregion
 
 		public async ValueTask StartAsync(CancellationToken token = default)
 		{

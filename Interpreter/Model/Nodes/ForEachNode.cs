@@ -10,9 +10,19 @@ namespace TSSArt.StateMachine
 
 		public ForEachNode(LinkedListNode<int> documentIdNode, in ForEachEntity entity) : base(documentIdNode, (IForEach?) entity.Ancestor) => _entity = entity;
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _entity.Ancestor;
 
+	#endregion
+
+	#region Interface IDebugEntityId
+
 		FormattableString IDebugEntityId.EntityId => @$"(#{DocumentId})";
+
+	#endregion
+
+	#region Interface IForEach
 
 		public IValueExpression? Array => _entity.Array;
 
@@ -21,6 +31,8 @@ namespace TSSArt.StateMachine
 		public ILocationExpression? Index => _entity.Index;
 
 		public ImmutableArray<IExecutableEntity> Action => _entity.Action;
+
+	#endregion
 
 		protected override void Store(Bucket bucket)
 		{

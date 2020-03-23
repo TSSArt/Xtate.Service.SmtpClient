@@ -16,8 +16,9 @@ namespace TSSArt.StateMachine
 		private IScript?                              _script;
 		private ImmutableArray<IStateEntity>.Builder? _states;
 
-		public StateMachineBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
-		{ }
+		public StateMachineBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor) { }
+
+	#region Interface IStateMachineBuilder
 
 		public IStateMachine Build()
 		{
@@ -96,5 +97,7 @@ namespace TSSArt.StateMachine
 			_options.ExternalQueueSize = size;
 			_injectOptions = true;
 		}
+
+	#endregion
 	}
 }

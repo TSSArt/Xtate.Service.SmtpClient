@@ -34,6 +34,8 @@ namespace TSSArt.StateMachine
 
 		protected CancellationToken StopToken => _stopTokenSource.Token;
 
+	#region Interface IAsyncDisposable
+
 		public virtual ValueTask DisposeAsync()
 		{
 			_suspendTokenSource.Dispose();
@@ -41,6 +43,8 @@ namespace TSSArt.StateMachine
 
 			return default;
 		}
+
+	#endregion
 
 		public virtual ValueTask InitializeAsync(CancellationToken token) => default;
 

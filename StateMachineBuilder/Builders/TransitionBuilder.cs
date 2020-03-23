@@ -10,8 +10,9 @@ namespace TSSArt.StateMachine
 		private ImmutableArray<IIdentifier>                _target;
 		private TransitionType                             _type;
 
-		public TransitionBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
-		{ }
+		public TransitionBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor) { }
+
+	#region Interface ITransitionBuilder
 
 		public ITransition Build() =>
 				new TransitionEntity { Ancestor = Ancestor, EventDescriptors = _eventDescriptors, Condition = _condition, Target = _target, Type = _type, Action = _actions?.ToImmutable() ?? default };
@@ -25,5 +26,7 @@ namespace TSSArt.StateMachine
 		public void SetEvent(ImmutableArray<IEventDescriptor> eventDescriptors) => _eventDescriptors = eventDescriptors;
 
 		public void AddAction(IExecutableEntity action) => (_actions ??= ImmutableArray.CreateBuilder<IExecutableEntity>()).Add(action);
+
+	#endregion
 	}
 }

@@ -9,6 +9,16 @@ namespace TSSArt.StateMachine
 	{
 		private ImmutableArray<ErrorItem>.Builder? _errors;
 
+	#region Interface IErrorProcessor
+
+		public void ThrowIfErrors()
+		{
+			if (_errors != null)
+			{
+				throw new StateMachineValidationException(_errors.ToImmutable());
+			}
+		}
+
 		void IErrorProcessor.AddError(ErrorItem errorItem)
 		{
 			if (errorItem == null) throw new ArgumentNullException(nameof(errorItem));
@@ -18,12 +28,6 @@ namespace TSSArt.StateMachine
 
 		bool IErrorProcessor.LineInfoRequired => true;
 
-		public void ThrowIfErrors()
-		{
-			if (_errors != null)
-			{
-				throw new StateMachineValidationException(_errors.ToImmutable());
-			}
-		}
+	#endregion
 	}
 }

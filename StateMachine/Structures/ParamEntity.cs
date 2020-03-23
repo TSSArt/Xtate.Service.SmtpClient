@@ -2,9 +2,23 @@
 {
 	public struct ParamEntity : IParam, IVisitorEntity<ParamEntity, IParam>, IAncestorProvider
 	{
+		internal object? Ancestor;
+
+	#region Interface IAncestorProvider
+
+		object? IAncestorProvider.Ancestor => Ancestor;
+
+	#endregion
+
+	#region Interface IParam
+
 		public IValueExpression?    Expression { get; set; }
 		public ILocationExpression? Location   { get; set; }
 		public string?              Name       { get; set; }
+
+	#endregion
+
+	#region Interface IVisitorEntity<ParamEntity,IParam>
 
 		void IVisitorEntity<ParamEntity, IParam>.Init(IParam source)
 		{
@@ -19,8 +33,6 @@
 				ReferenceEquals(Location, other.Location) &&
 				ReferenceEquals(Name, other.Name);
 
-		internal object? Ancestor;
-
-		object? IAncestorProvider.Ancestor => Ancestor;
+	#endregion
 	}
 }

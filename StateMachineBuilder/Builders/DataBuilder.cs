@@ -9,8 +9,9 @@ namespace TSSArt.StateMachine
 		private string?                  _inlineContent;
 		private IExternalDataExpression? _source;
 
-		public DataBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
-		{ }
+		public DataBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor) { }
+
+	#region Interface IDataBuilder
 
 		public IData Build() => new DataEntity { Ancestor = Ancestor, Id = _id, Source = _source, Expression = _expression, InlineContent = _inlineContent };
 
@@ -26,5 +27,7 @@ namespace TSSArt.StateMachine
 		public void SetExpression(IValueExpression expression) => _expression = expression ?? throw new ArgumentNullException(nameof(expression));
 
 		public void SetInlineContent(string inlineContent) => _inlineContent = inlineContent ?? throw new ArgumentNullException(nameof(inlineContent));
+
+	#endregion
 	}
 }

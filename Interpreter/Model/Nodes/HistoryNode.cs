@@ -20,14 +20,26 @@ namespace TSSArt.StateMachine
 
 		public TransitionNode Transition { get; }
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _history.Ancestor;
+
+	#endregion
+
+	#region Interface IDebugEntityId
 
 		FormattableString IDebugEntityId.EntityId => @$"{Id}(#{DocumentId})";
 
-		ITransition IHistory.Transition => _history.Transition!;
+	#endregion
+
+	#region Interface IHistory
 
 		public override IIdentifier Id   { get; }
 		public          HistoryType Type => _history.Type;
+
+		ITransition IHistory.Transition => _history.Transition!;
+
+	#endregion
 
 		protected override void Store(Bucket bucket)
 		{

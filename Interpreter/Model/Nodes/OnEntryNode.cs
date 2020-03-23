@@ -18,13 +18,31 @@ namespace TSSArt.StateMachine
 
 		public ImmutableArray<IExecEvaluator> ActionEvaluators { get; }
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _onEntry.Ancestor;
+
+	#endregion
+
+	#region Interface IDebugEntityId
 
 		FormattableString IDebugEntityId.EntityId => @$"(#{DocumentId})";
 
+	#endregion
+
+	#region Interface IDocumentId
+
 		public int DocumentId => _documentIdNode.Value;
 
+	#endregion
+
+	#region Interface IOnEntry
+
 		public ImmutableArray<IExecutableEntity> Action => _onEntry.Action;
+
+	#endregion
+
+	#region Interface IStoreSupport
 
 		void IStoreSupport.Store(Bucket bucket)
 		{
@@ -32,5 +50,7 @@ namespace TSSArt.StateMachine
 			bucket.Add(Key.DocumentId, DocumentId);
 			bucket.AddEntityList(Key.Action, Action);
 		}
+
+	#endregion
 	}
 }

@@ -4,6 +4,7 @@ using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	public static class Infrastructure
 	{
 		[AssertionMethod]

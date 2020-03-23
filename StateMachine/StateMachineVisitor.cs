@@ -216,7 +216,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		#region Visit(ref IT entity)
+	#region Visit(ref IT entity)
 
 		protected virtual void Visit(ref IIdentifier entity)
 		{
@@ -543,8 +543,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual void VisitUnknown(ref IExecutableEntity entity)
-		{ }
+		protected virtual void VisitUnknown(ref IExecutableEntity entity) { }
 
 		protected virtual void Visit(ref IStateEntity entity)
 		{
@@ -573,12 +572,11 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected virtual void VisitUnknown(ref IStateEntity entity)
-		{ }
+		protected virtual void VisitUnknown(ref IStateEntity entity) { }
 
-		#endregion
+	#endregion
 
-		#region Visit(ref ImmutableArray<IT> list)
+	#region Visit(ref ImmutableArray<IT> list)
 
 		protected virtual void Visit(ref ImmutableArray<IIdentifier> list)
 		{
@@ -664,9 +662,9 @@ namespace TSSArt.StateMachine
 			data.Update(ref list);
 		}
 
-		#endregion
+	#endregion
 
-		#region Build(ref IT entity, ref T properties)
+	#region Build(ref IT entity, ref T properties)
 
 		protected virtual void Build(ref IStateMachine entity, ref StateMachineEntity properties)
 		{
@@ -1035,36 +1033,27 @@ namespace TSSArt.StateMachine
 			properties.Action = action;
 		}
 
-		protected virtual void Build(ref ICustomAction entity, ref CustomAction properties)
-		{ }
+		protected virtual void Build(ref ICustomAction entity, ref CustomAction properties) { }
 
-		protected virtual void Build(ref IElse entity, ref ElseEntity properties)
-		{ }
+		protected virtual void Build(ref IElse entity, ref ElseEntity properties) { }
 
-		protected virtual void Build(ref IValueExpression entity, ref ValueExpression properties)
-		{ }
+		protected virtual void Build(ref IValueExpression entity, ref ValueExpression properties) { }
 
-		protected virtual void Build(ref ILocationExpression entity, ref LocationExpression properties)
-		{ }
+		protected virtual void Build(ref ILocationExpression entity, ref LocationExpression properties) { }
 
-		protected virtual void Build(ref IConditionExpression entity, ref ConditionExpression properties)
-		{ }
+		protected virtual void Build(ref IConditionExpression entity, ref ConditionExpression properties) { }
 
-		protected virtual void Build(ref IScriptExpression entity, ref ScriptExpression properties)
-		{ }
+		protected virtual void Build(ref IScriptExpression entity, ref ScriptExpression properties) { }
 
-		protected virtual void Build(ref IExternalScriptExpression entity, ref ExternalScriptExpression properties)
-		{ }
+		protected virtual void Build(ref IExternalScriptExpression entity, ref ExternalScriptExpression properties) { }
 
-		protected virtual void Build(ref IExternalDataExpression entity, ref ExternalDataExpression properties)
-		{ }
+		protected virtual void Build(ref IExternalDataExpression entity, ref ExternalDataExpression properties) { }
 
-		protected virtual void Build(ref IContentBody entity, ref ContentBody properties)
-		{ }
+		protected virtual void Build(ref IContentBody entity, ref ContentBody properties) { }
 
-		#endregion
+	#endregion
 
-		#region Build(ref ImmutableArray<IT> list, ref TrackList<IT> trackList)
+	#region Build(ref ImmutableArray<IT> list, ref TrackList<IT> trackList)
 
 		protected virtual void Build(ref ImmutableArray<IIdentifier> list, ref TrackList<IIdentifier> trackList)
 		{
@@ -1186,9 +1175,9 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		#endregion
+	#endregion
 
-		#region VisitWrapper(ref IT entity)
+	#region VisitWrapper(ref IT entity)
 
 		private void VisitWrapper(ref IExecutableEntity? entity)
 		{
@@ -1382,9 +1371,9 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		#endregion
+	#endregion
 
-		#region VisitWrapper(ref ImmutableArray<IT> entity)
+	#region VisitWrapper(ref ImmutableArray<IT> entity)
 
 		private void VisitWrapper(ref ImmutableArray<IStateEntity> entity)
 		{
@@ -1482,6 +1471,6 @@ namespace TSSArt.StateMachine
 			Exit();
 		}
 
-		#endregion
+	#endregion
 	}
 }

@@ -13,14 +13,26 @@ namespace TSSArt.StateMachine
 			_documentIdNode = documentIdNode;
 		}
 
+	#region Interface IAncestorProvider
+
 		public object Ancestor => _entity;
 
+	#endregion
+
+	#region Interface IDocumentId
+
 		public int DocumentId => _documentIdNode.Value;
+
+	#endregion
+
+	#region Interface IStoreSupport
 
 		public void Store(Bucket bucket)
 		{
 			bucket.Add(Key.TypeInfo, TypeInfo.RuntimeExecNode);
 			bucket.Add(Key.DocumentId, DocumentId);
 		}
+
+	#endregion
 	}
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
@@ -10,6 +11,7 @@ namespace TSSArt.StateMachine
 
 	public delegate ValueTask<bool> PredicateCancellableTask(IExecutionContext executionContext, CancellationToken token);
 
+	[PublicAPI]
 	public class RuntimePredicate : IExecutableEntity, IBooleanEvaluator
 	{
 		private readonly object _predicate;
@@ -20,6 +22,8 @@ namespace TSSArt.StateMachine
 
 		public RuntimePredicate(PredicateCancellableTask task) => _predicate = task ?? throw new ArgumentNullException(nameof(task));
 
+	#region Interface IBooleanEvaluator
+
 		public async ValueTask<bool> EvaluateBoolean(IExecutionContext executionContext, CancellationToken token) =>
 				_predicate switch
 				{
@@ -28,5 +32,7 @@ namespace TSSArt.StateMachine
 						PredicateCancellableTask task => await task(executionContext, token).ConfigureAwait(false),
 						_ => Infrastructure.UnexpectedValue<bool>()
 				};
+
+	#endregion
 	}
 }

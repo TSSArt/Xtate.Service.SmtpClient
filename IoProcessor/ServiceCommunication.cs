@@ -20,6 +20,8 @@ namespace TSSArt.StateMachine
 			_invokeUniqueId = invokeUniqueId;
 		}
 
+	#region Interface IServiceCommunication
+
 		public ValueTask SendToCreator(IOutgoingEvent evt, CancellationToken token)
 		{
 			if (evt.Type != null || evt.SendId != null || evt.DelayMs != 0)
@@ -38,5 +40,7 @@ namespace TSSArt.StateMachine
 
 			return _creator.Send(eventObject, token);
 		}
+
+	#endregion
 	}
 }

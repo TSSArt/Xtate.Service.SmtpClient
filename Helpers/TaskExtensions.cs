@@ -1,8 +1,10 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	internal static class TaskExtensions
 	{
 		public static Task WaitAsync(this Task task, CancellationToken token)

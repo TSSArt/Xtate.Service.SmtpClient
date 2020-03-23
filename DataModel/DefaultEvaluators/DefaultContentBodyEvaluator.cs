@@ -16,10 +16,22 @@ namespace TSSArt.StateMachine
 			_contentBody = contentBody;
 		}
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _contentBody.Ancestor;
+
+	#endregion
+
+	#region Interface IContentBody
 
 		public string Value => _contentBody.Value!;
 
+	#endregion
+
+	#region Interface IStringEvaluator
+
 		public virtual ValueTask<string> EvaluateString(IExecutionContext executionContext, CancellationToken token) => new ValueTask<string>(Value);
+
+	#endregion
 	}
 }

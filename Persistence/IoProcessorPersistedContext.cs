@@ -400,12 +400,19 @@ namespace TSSArt.StateMachine
 				}
 			}
 
-			public string                  SessionId                  { get; }
-			public int                     RecordId                   { get; set; }
-			public StateMachineController? Controller                 { get; set; }
-			public PersistenceLevel?       PersistenceLevel           { get; }
-			public bool?                   SynchronousEventProcessing { get; }
-			public int?                    ExternalQueueSize          { get; }
+			public string                  SessionId  { get; }
+			public int                     RecordId   { get; set; }
+			public StateMachineController? Controller { get; set; }
+
+		#region Interface IStateMachineOptions
+
+			public PersistenceLevel? PersistenceLevel           { get; }
+			public bool?             SynchronousEventProcessing { get; }
+			public int?              ExternalQueueSize          { get; }
+
+		#endregion
+
+		#region Interface IStoreSupport
 
 			public void Store(Bucket bucket)
 			{
@@ -427,6 +434,8 @@ namespace TSSArt.StateMachine
 					bucket.Add(Key.OptionExternalQueueSize, ExternalQueueSize.Value);
 				}
 			}
+
+		#endregion
 		}
 
 		private class InvokedServiceMeta : IStoreSupport
@@ -453,6 +462,8 @@ namespace TSSArt.StateMachine
 			public string? SessionId       { get; }
 			public int     RecordId        { get; set; }
 
+		#region Interface IStoreSupport
+
 			public void Store(Bucket bucket)
 			{
 				bucket.Add(Key.TypeInfo, TypeInfo.InvokedService);
@@ -461,6 +472,8 @@ namespace TSSArt.StateMachine
 				bucket.Add(Key.InvokeUniqueId, InvokeUniqueId);
 				bucket.Add(Key.SessionId, SessionId);
 			}
+
+		#endregion
 		}
 	}
 }

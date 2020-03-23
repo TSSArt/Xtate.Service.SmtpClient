@@ -18,7 +18,13 @@ namespace TSSArt.StateMachine
 
 		public IObjectEvaluator? ExpressionEvaluator { get; }
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _log.Ancestor;
+
+	#endregion
+
+	#region Interface IExecEvaluator
 
 		public virtual async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
@@ -35,8 +41,14 @@ namespace TSSArt.StateMachine
 			await executionContext.Log(_log.Label, data, token).ConfigureAwait(false);
 		}
 
+	#endregion
+
+	#region Interface ILog
+
 		public IValueExpression? Expression => _log.Expression;
 
 		public string? Label => _log.Label;
+
+	#endregion
 	}
 }

@@ -4,7 +4,21 @@ namespace TSSArt.StateMachine
 {
 	public struct DataModelEntity : IDataModel, IVisitorEntity<DataModelEntity, IDataModel>, IAncestorProvider
 	{
+		internal object? Ancestor;
+
+	#region Interface IAncestorProvider
+
+		object? IAncestorProvider.Ancestor => Ancestor;
+
+	#endregion
+
+	#region Interface IDataModel
+
 		public ImmutableArray<IData> Data { get; set; }
+
+	#endregion
+
+	#region Interface IVisitorEntity<DataModelEntity,IDataModel>
 
 		void IVisitorEntity<DataModelEntity, IDataModel>.Init(IDataModel source)
 		{
@@ -14,8 +28,6 @@ namespace TSSArt.StateMachine
 
 		bool IVisitorEntity<DataModelEntity, IDataModel>.RefEquals(in DataModelEntity other) => Data == other.Data;
 
-		internal object? Ancestor;
-
-		object? IAncestorProvider.Ancestor => Ancestor;
+	#endregion
 	}
 }

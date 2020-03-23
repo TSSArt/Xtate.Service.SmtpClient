@@ -14,14 +14,26 @@ namespace TSSArt.StateMachine
 
 		public ImmutableArray<IExecEvaluator> ActionEvaluators { get; }
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _finalize.Ancestor;
 
+	#endregion
+
+	#region Interface IFinalize
+
 		public ImmutableArray<IExecutableEntity> Action => _finalize.Action;
+
+	#endregion
+
+	#region Interface IStoreSupport
 
 		void IStoreSupport.Store(Bucket bucket)
 		{
 			bucket.Add(Key.TypeInfo, TypeInfo.FinalizeNode);
 			bucket.AddEntityList(Key.Action, Action);
 		}
+
+	#endregion
 	}
 }

@@ -27,10 +27,14 @@ namespace TSSArt.StateMachine
 			entityQueue.Changed += OnChanged;
 		}
 
+	#region Interface IDisposable
+
 		public void Dispose()
 		{
 			_entityQueue.Changed -= OnChanged;
 		}
+
+	#endregion
 
 		private void OnChanged(EntityQueue<T>.ChangedAction action, T entity)
 		{

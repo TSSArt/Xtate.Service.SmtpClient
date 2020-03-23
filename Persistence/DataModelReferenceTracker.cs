@@ -19,6 +19,8 @@ namespace TSSArt.StateMachine
 			bucket.TryGet(Bucket.RootKey, out _nextRefId);
 		}
 
+	#region Interface IDisposable
+
 		public void Dispose()
 		{
 			if (_disposed)
@@ -33,6 +35,8 @@ namespace TSSArt.StateMachine
 
 			_disposed = true;
 		}
+
+	#endregion
 
 		public object GetValue(int refId, DataModelValueType type, object? baseObject)
 		{

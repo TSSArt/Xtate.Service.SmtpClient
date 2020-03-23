@@ -40,10 +40,14 @@ namespace TSSArt.StateMachine
 			keyList.Changed += OnChanged;
 		}
 
+	#region Interface IDisposable
+
 		public void Dispose()
 		{
 			_keyList.Changed -= OnChanged;
 		}
+
+	#endregion
 
 		private void OnChanged(KeyList<T>.ChangedAction action, IEntity entity, List<T> list)
 		{

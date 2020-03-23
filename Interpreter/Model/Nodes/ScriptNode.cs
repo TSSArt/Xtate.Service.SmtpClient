@@ -8,11 +8,19 @@ namespace TSSArt.StateMachine
 
 		public ScriptNode(LinkedListNode<int> documentIdNode, in ScriptEntity entity) : base(documentIdNode, (IScript?) entity.Ancestor) => _entity = entity;
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _entity.Ancestor;
+
+	#endregion
+
+	#region Interface IScript
 
 		public IScriptExpression? Content => _entity.Content;
 
 		public IExternalScriptExpression? Source => _entity.Source;
+
+	#endregion
 
 		protected override void Store(Bucket bucket)
 		{

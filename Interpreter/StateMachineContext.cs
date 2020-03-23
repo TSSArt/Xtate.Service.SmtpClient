@@ -22,6 +22,14 @@ namespace TSSArt.StateMachine
 			DataModel = CreateDataModel(stateMachineName, sessionId, arguments);
 		}
 
+	#region Interface IAsyncDisposable
+
+		public virtual ValueTask DisposeAsync() => default;
+
+	#endregion
+
+	#region Interface IExecutionContext
+
 		public bool InState(IIdentifier id)
 		{
 			foreach (var state in Configuration)
@@ -53,6 +61,10 @@ namespace TSSArt.StateMachine
 
 		public IContextItems RuntimeItems { get; } = new ContextItems();
 
+	#endregion
+
+	#region Interface IStateMachineContext
+
 		public DataModelObject DataModel { get; }
 
 		public OrderedSet<StateEntityNode> Configuration { get; } = new OrderedSet<StateEntityNode>();
@@ -71,9 +83,9 @@ namespace TSSArt.StateMachine
 
 		public OrderedSet<StateEntityNode> StatesToInvoke { get; } = new OrderedSet<StateEntityNode>();
 
-		public virtual ValueTask DisposeAsync() => default;
-
 		public virtual IPersistenceContext PersistenceContext => throw new NotSupportedException();
+
+	#endregion
 
 		private static bool IsInternalEvent(IOutgoingEvent evt)
 		{
@@ -139,6 +151,8 @@ namespace TSSArt.StateMachine
 		{
 			private readonly Dictionary<object, object> _items = new Dictionary<object, object>();
 
+		#region Interface IContextItems
+
 			public object? this[object key]
 			{
 				get => _items.TryGetValue(key, out var value) ? value : null;
@@ -150,6 +164,8 @@ namespace TSSArt.StateMachine
 					}
 				}
 			}
+
+		#endregion
 		}
 	}
 }

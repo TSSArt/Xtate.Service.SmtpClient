@@ -6,10 +6,10 @@
 
 		public static readonly IDataModelHandlerFactory Factory = new DataModelHandlerFactory();
 
-		private RuntimeDataModelHandler(IErrorProcessor errorProcessor) : base(errorProcessor)
-		{ }
+		private RuntimeDataModelHandler(IErrorProcessor errorProcessor) : base(errorProcessor) { }
 
-		protected override void Visit(ref IScript script)       => AddErrorMessage(script, Resources.ErrorMessage_ScriptingNotSupportedInRuntimeDataModel);
+		protected override void Visit(ref IScript script) => AddErrorMessage(script, Resources.ErrorMessage_ScriptingNotSupportedInRuntimeDataModel);
+
 		protected override void Visit(ref IDataModel dataModel) => AddErrorMessage(dataModel, Resources.ErrorMessage_DataModelNotSupportedInRuntimeDataModel);
 
 		protected override void Visit(ref IExecutableEntity executableEntity)
@@ -22,9 +22,13 @@
 
 		private class DataModelHandlerFactory : IDataModelHandlerFactory
 		{
+		#region Interface IDataModelHandlerFactory
+
 			public bool CanHandle(string dataModelType) => dataModelType == DataModelType;
 
 			public IDataModelHandler CreateHandler(IErrorProcessor errorProcessor) => new RuntimeDataModelHandler(errorProcessor);
+
+		#endregion
 		}
 	}
 }

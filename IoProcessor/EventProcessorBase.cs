@@ -27,13 +27,17 @@ namespace TSSArt.StateMachine
 
 		protected Uri EventProcessorId { get; }
 
-		Uri IEventProcessor.Id => EventProcessorId;
-
-		Uri? IEventProcessor.AliasId => _eventProcessorAliasId;
+	#region Interface IEventProcessor
 
 		Uri IEventProcessor.GetTarget(string sessionId) => GetTarget(sessionId);
 
 		ValueTask IEventProcessor.Dispatch(string sessionId, IOutgoingEvent evt, CancellationToken token) => OutgoingEvent(sessionId, evt, token);
+
+		Uri IEventProcessor.Id => EventProcessorId;
+
+		Uri? IEventProcessor.AliasId => _eventProcessorAliasId;
+
+	#endregion
 
 		protected abstract Uri GetTarget(string sessionId);
 

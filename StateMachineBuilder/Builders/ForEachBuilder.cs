@@ -10,8 +10,9 @@ namespace TSSArt.StateMachine
 		private ILocationExpression?                       _index;
 		private ILocationExpression?                       _item;
 
-		public ForEachBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
-		{ }
+		public ForEachBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor) { }
+
+	#region Interface IForEachBuilder
 
 		public IForEach Build() => new ForEachEntity { Ancestor = Ancestor, Array = _array, Item = _item, Index = _index, Action = _actions?.ToImmutable() ?? default };
 
@@ -33,5 +34,7 @@ namespace TSSArt.StateMachine
 
 			(_actions ??= ImmutableArray.CreateBuilder<IExecutableEntity>()).Add(action);
 		}
+
+	#endregion
 	}
 }

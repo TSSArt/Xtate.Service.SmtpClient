@@ -20,6 +20,8 @@ namespace TSSArt.StateMachine
 
 		public RuntimeAction(ExecutableCancellableTask task) => _action = task ?? throw new ArgumentNullException(nameof(task));
 
+	#region Interface IExecEvaluator
+
 		public async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
 			switch (_action)
@@ -37,5 +39,7 @@ namespace TSSArt.StateMachine
 					break;
 			}
 		}
+
+	#endregion
 	}
 }

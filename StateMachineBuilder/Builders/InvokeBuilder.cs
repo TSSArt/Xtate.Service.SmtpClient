@@ -17,8 +17,9 @@ namespace TSSArt.StateMachine
 		private Uri?                                _type;
 		private IValueExpression?                   _typeExpression;
 
-		public InvokeBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
-		{ }
+		public InvokeBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor) { }
+
+	#region Interface IInvokeBuilder
 
 		public IInvoke Build() =>
 				new InvokeEntity
@@ -63,5 +64,7 @@ namespace TSSArt.StateMachine
 		public void SetFinalize(IFinalize finalize) => _finalize = finalize ?? throw new ArgumentNullException(nameof(finalize));
 
 		public void SetContent(IContent content) => _content = content ?? throw new ArgumentNullException(nameof(content));
+
+	#endregion
 	}
 }

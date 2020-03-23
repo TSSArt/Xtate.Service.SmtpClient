@@ -5,6 +5,22 @@ namespace TSSArt.StateMachine
 {
 	public struct ParallelEntity : IParallel, IVisitorEntity<ParallelEntity, IParallel>, IAncestorProvider, IDebugEntityId
 	{
+		internal object? Ancestor;
+
+	#region Interface IAncestorProvider
+
+		object? IAncestorProvider.Ancestor => Ancestor;
+
+	#endregion
+
+	#region Interface IDebugEntityId
+
+		FormattableString IDebugEntityId.EntityId => @$"{Id}";
+
+	#endregion
+
+	#region Interface IParallel
+
 		public IIdentifier?                 Id            { get; set; }
 		public ImmutableArray<IStateEntity> States        { get; set; }
 		public ImmutableArray<IHistory>     HistoryStates { get; set; }
@@ -13,6 +29,10 @@ namespace TSSArt.StateMachine
 		public ImmutableArray<IOnEntry>     OnEntry       { get; set; }
 		public ImmutableArray<IOnExit>      OnExit        { get; set; }
 		public ImmutableArray<IInvoke>      Invoke        { get; set; }
+
+	#endregion
+
+	#region Interface IVisitorEntity<ParallelEntity,IParallel>
 
 		void IVisitorEntity<ParallelEntity, IParallel>.Init(IParallel source)
 		{
@@ -37,10 +57,6 @@ namespace TSSArt.StateMachine
 				OnEntry == other.OnEntry &&
 				Transitions == other.Transitions;
 
-		internal object? Ancestor;
-
-		object? IAncestorProvider.Ancestor => Ancestor;
-
-		FormattableString IDebugEntityId.EntityId => @$"{Id}";
+	#endregion
 	}
 }

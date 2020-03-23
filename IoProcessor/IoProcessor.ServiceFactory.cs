@@ -9,9 +9,7 @@ namespace TSSArt.StateMachine
 		private static readonly Uri ServiceFactoryTypeId      = new Uri("http://www.w3.org/TR/scxml/");
 		private static readonly Uri ServiceFactoryAliasTypeId = new Uri(uriString: "scxml", UriKind.Relative);
 
-		Uri IServiceFactory.TypeId => ServiceFactoryTypeId;
-
-		Uri IServiceFactory.AliasTypeId => ServiceFactoryAliasTypeId;
+	#region Interface IServiceFactory
 
 		async ValueTask<IService> IServiceFactory.StartService(Uri? source, string? rawContent, DataModelValue content, DataModelValue parameters,
 															   IServiceCommunication serviceCommunication, CancellationToken token)
@@ -40,5 +38,11 @@ namespace TSSArt.StateMachine
 
 			return service;
 		}
+
+		Uri IServiceFactory.TypeId => ServiceFactoryTypeId;
+
+		Uri IServiceFactory.AliasTypeId => ServiceFactoryAliasTypeId;
+
+	#endregion
 	}
 }

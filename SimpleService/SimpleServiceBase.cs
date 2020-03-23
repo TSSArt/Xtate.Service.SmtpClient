@@ -28,10 +28,16 @@ namespace TSSArt.StateMachine
 
 		protected CancellationToken StopToken => _tokenSource.Token;
 
+	#region Interface IAsyncDisposable
+
 		public async ValueTask DisposeAsync()
 		{
 			await DisposeAsync(true).ConfigureAwait(false);
 		}
+
+	#endregion
+
+	#region Interface IService
 
 		ValueTask IService.Send(IEvent evt, CancellationToken token) => default;
 
@@ -44,6 +50,8 @@ namespace TSSArt.StateMachine
 		}
 
 		ValueTask<DataModelValue> IService.Result => new ValueTask<DataModelValue>(_completedTcs.Task);
+
+	#endregion
 
 		internal void Start(Uri? source, string? rawContent, DataModelValue content, DataModelValue parameters, IServiceCommunication serviceCommunication)
 		{

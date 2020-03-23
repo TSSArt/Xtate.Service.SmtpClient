@@ -7,8 +7,9 @@ namespace TSSArt.StateMachine
 	{
 		private ImmutableArray<IExecutableEntity>.Builder? _actions;
 
-		public FinalizeBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor)
-		{ }
+		public FinalizeBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor) { }
+
+	#region Interface IFinalizeBuilder
 
 		public IFinalize Build() => new FinalizeEntity { Ancestor = Ancestor, Action = _actions?.ToImmutable() ?? default };
 
@@ -18,5 +19,7 @@ namespace TSSArt.StateMachine
 
 			(_actions ??= ImmutableArray.CreateBuilder<IExecutableEntity>()).Add(action);
 		}
+
+	#endregion
 	}
 }

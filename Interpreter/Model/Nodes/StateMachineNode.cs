@@ -23,9 +23,19 @@ namespace TSSArt.StateMachine
 		public InitialNode     Initial         { get; }
 		public IExecEvaluator? ScriptEvaluator { get; }
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _stateMachine.Ancestor;
 
+	#endregion
+
+	#region Interface IDebugEntityId
+
 		FormattableString IDebugEntityId.EntityId => @$"{Name}(#{DocumentId})";
+
+	#endregion
+
+	#region Interface IStateMachine
 
 		public BindingType        Binding       => _stateMachine.Binding;
 		public string?            Name          => _stateMachine.Name;
@@ -35,6 +45,8 @@ namespace TSSArt.StateMachine
 		IDataModel? IStateMachine.                 DataModel => _stateMachine.DataModel;
 		IInitial? IStateMachine.                   Initial   => _stateMachine.Initial;
 		ImmutableArray<IStateEntity> IStateMachine.States    => _stateMachine.States;
+
+	#endregion
 
 		protected override void Store(Bucket bucket)
 		{

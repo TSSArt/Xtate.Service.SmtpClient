@@ -16,17 +16,35 @@ namespace TSSArt.StateMachine
 			_param = param;
 		}
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _param.Ancestor;
+
+	#endregion
+
+	#region Interface IDebugEntityId
 
 		FormattableString IDebugEntityId.EntityId => @$"{Name}(#{DocumentId})";
 
+	#endregion
+
+	#region Interface IDocumentId
+
 		public int DocumentId => _documentIdNode.Value;
+
+	#endregion
+
+	#region Interface IParam
 
 		public string Name => _param.Name!;
 
 		public IValueExpression? Expression => _param.Expression;
 
 		public ILocationExpression? Location => _param.Location;
+
+	#endregion
+
+	#region Interface IStoreSupport
 
 		void IStoreSupport.Store(Bucket bucket)
 		{
@@ -36,5 +54,7 @@ namespace TSSArt.StateMachine
 			bucket.AddEntity(Key.Expression, Expression);
 			bucket.AddEntity(Key.Location, Location);
 		}
+
+	#endregion
 	}
 }

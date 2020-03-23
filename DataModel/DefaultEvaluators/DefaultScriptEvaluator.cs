@@ -23,7 +23,13 @@ namespace TSSArt.StateMachine
 		public IExecEvaluator? ContentEvaluator { get; }
 		public IExecEvaluator? SourceEvaluator  { get; }
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _script.Ancestor;
+
+	#endregion
+
+	#region Interface IExecEvaluator
 
 		public virtual ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
@@ -33,8 +39,14 @@ namespace TSSArt.StateMachine
 			return evaluator!.Execute(executionContext, token);
 		}
 
+	#endregion
+
+	#region Interface IScript
+
 		public IScriptExpression? Content => _script.Content;
 
 		public IExternalScriptExpression? Source => _script.Source;
+
+	#endregion
 	}
 }

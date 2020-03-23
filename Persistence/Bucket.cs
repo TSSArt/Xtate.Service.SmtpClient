@@ -16,8 +16,7 @@ namespace TSSArt.StateMachine
 		{
 			public static readonly RootType Instance = new RootType();
 
-			private RootType()
-			{ }
+			private RootType() { }
 		}
 
 		private static class TypeConverter<TInput, TOutput>
@@ -111,8 +110,7 @@ namespace TSSArt.StateMachine
 
 			public virtual int Size => 0;
 
-			public virtual void WriteTo(Span<byte> buf)
-			{ }
+			public virtual void WriteTo(Span<byte> buf) { }
 		}
 
 		private class BlocksBytesNode : Node
@@ -321,8 +319,7 @@ namespace TSSArt.StateMachine
 		{
 			protected override int GetLength(RootType key) => 0;
 
-			protected override void Write(RootType key, Span<byte> bytes)
-			{ }
+			protected override void Write(RootType key, Span<byte> bytes) { }
 		}
 
 		private class UnsupportedConverter<T> : ConverterBase<T>

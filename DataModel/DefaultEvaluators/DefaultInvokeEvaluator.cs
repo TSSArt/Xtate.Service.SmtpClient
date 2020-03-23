@@ -32,7 +32,13 @@ namespace TSSArt.StateMachine
 		public IStringEvaluator?                  SourceExpressionEvaluator  { get; }
 		public IStringEvaluator?                  TypeExpressionEvaluator    { get; }
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _invoke.Ancestor;
+
+	#endregion
+
+	#region Interface ICancelInvokeEvaluator
 
 		public virtual ValueTask Cancel(string invokeId, IExecutionContext executionContext, CancellationToken token)
 		{
@@ -41,6 +47,10 @@ namespace TSSArt.StateMachine
 
 			return executionContext.CancelInvoke(invokeId, token);
 		}
+
+	#endregion
+
+	#region Interface IInvoke
 
 		public Uri?                                Type             => _invoke.Type;
 		public IValueExpression?                   TypeExpression   => _invoke.TypeExpression;
@@ -53,6 +63,10 @@ namespace TSSArt.StateMachine
 		public ImmutableArray<IParam>              Parameters       => _invoke.Parameters;
 		public IFinalize?                          Finalize         => _invoke.Finalize;
 		public IContent?                           Content          => _invoke.Content;
+
+	#endregion
+
+	#region Interface IStartInvokeEvaluator
 
 		public virtual async ValueTask<(string InvokeId, string InvokeUniqueId)> Start(string stateId, IExecutionContext executionContext, CancellationToken token)
 		{
@@ -88,6 +102,8 @@ namespace TSSArt.StateMachine
 
 			return (invokeId, invokeUniqueId);
 		}
+
+	#endregion
 
 		private static Uri ToUri(string uri) => new Uri(uri, UriKind.RelativeOrAbsolute);
 	}

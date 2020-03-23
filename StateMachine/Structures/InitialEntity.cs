@@ -2,7 +2,21 @@
 {
 	public struct InitialEntity : IInitial, IVisitorEntity<InitialEntity, IInitial>, IAncestorProvider
 	{
+		internal object? Ancestor;
+
+	#region Interface IAncestorProvider
+
+		object? IAncestorProvider.Ancestor => Ancestor;
+
+	#endregion
+
+	#region Interface IInitial
+
 		public ITransition? Transition { get; set; }
+
+	#endregion
+
+	#region Interface IVisitorEntity<InitialEntity,IInitial>
 
 		void IVisitorEntity<InitialEntity, IInitial>.Init(IInitial source)
 		{
@@ -13,8 +27,6 @@
 
 		bool IVisitorEntity<InitialEntity, IInitial>.RefEquals(in InitialEntity other) => ReferenceEquals(Transition, other.Transition);
 
-		internal object? Ancestor;
-
-		object? IAncestorProvider.Ancestor => Ancestor;
+	#endregion
 	}
 }

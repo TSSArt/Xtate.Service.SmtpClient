@@ -9,13 +9,25 @@ namespace TSSArt.StateMachine
 
 		public CancelNode(LinkedListNode<int> documentIdNode, in CancelEntity entity) : base(documentIdNode, (ICancel?) entity.Ancestor) => _entity = entity;
 
+	#region Interface IAncestorProvider
+
 		object? IAncestorProvider.Ancestor => _entity.Ancestor;
+
+	#endregion
+
+	#region Interface ICancel
 
 		public string? SendId => _entity.SendId;
 
 		public IValueExpression? SendIdExpression => _entity.SendIdExpression;
 
+	#endregion
+
+	#region Interface IDebugEntityId
+
 		FormattableString IDebugEntityId.EntityId => @$"(#{DocumentId})";
+
+	#endregion
 
 		protected override void Store(Bucket bucket)
 		{

@@ -32,7 +32,13 @@ namespace TSSArt.StateMachine
 			}
 		}
 
+	#region Interface IAncestorProvider
+
 		object IAncestorProvider.Ancestor => _val;
+
+	#endregion
+
+	#region Interface IEventDescriptor
 
 		public bool IsEventMatch(IEvent evt)
 		{
@@ -53,6 +59,8 @@ namespace TSSArt.StateMachine
 
 			return true;
 		}
+
+	#endregion
 
 		public static explicit operator EventDescriptor(string val) => new EventDescriptor(val);
 

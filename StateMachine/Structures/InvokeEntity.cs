@@ -5,6 +5,22 @@ namespace TSSArt.StateMachine
 {
 	public struct InvokeEntity : IInvoke, IVisitorEntity<InvokeEntity, IInvoke>, IAncestorProvider, IDebugEntityId
 	{
+		internal object? Ancestor;
+
+	#region Interface IAncestorProvider
+
+		object? IAncestorProvider.Ancestor => Ancestor;
+
+	#endregion
+
+	#region Interface IDebugEntityId
+
+		FormattableString IDebugEntityId.EntityId => @$"{Id}";
+
+	#endregion
+
+	#region Interface IInvoke
+
 		public bool                                AutoForward      { get; set; }
 		public IContent?                           Content          { get; set; }
 		public IFinalize?                          Finalize         { get; set; }
@@ -16,6 +32,10 @@ namespace TSSArt.StateMachine
 		public IValueExpression?                   SourceExpression { get; set; }
 		public Uri?                                Type             { get; set; }
 		public IValueExpression?                   TypeExpression   { get; set; }
+
+	#endregion
+
+	#region Interface IVisitorEntity<InvokeEntity,IInvoke>
 
 		void IVisitorEntity<InvokeEntity, IInvoke>.Init(IInvoke source)
 		{
@@ -46,10 +66,6 @@ namespace TSSArt.StateMachine
 				ReferenceEquals(SourceExpression, other.SourceExpression) &&
 				ReferenceEquals(Finalize, other.Finalize);
 
-		internal object? Ancestor;
-
-		object? IAncestorProvider.Ancestor => Ancestor;
-
-		FormattableString IDebugEntityId.EntityId => @$"{Id}";
+	#endregion
 	}
 }

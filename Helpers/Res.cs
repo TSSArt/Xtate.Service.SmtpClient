@@ -1,5 +1,8 @@
-﻿namespace TSSArt.StateMachine
+﻿using JetBrains.Annotations;
+
+namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	internal static class Res
 	{
 		public static string Format(string format, object arg)                            => string.Format(Resources.Culture, format, arg);

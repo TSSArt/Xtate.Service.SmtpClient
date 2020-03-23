@@ -10,6 +10,8 @@ namespace TSSArt.StateMachine
 		private static readonly Uri EventProcessorId      = new Uri("http://www.w3.org/TR/scxml/#SCXMLEventProcessor");
 		private static readonly Uri EventProcessorAliasId = new Uri(uriString: "scxml", UriKind.Relative);
 
+	#region Interface IEventConsumer
+
 		ValueTask IEventConsumer.Dispatch(string sessionId, IEvent evt, CancellationToken token)
 		{
 			GetCurrentContext().ValidateSessionId(sessionId, out var controller);
@@ -17,9 +19,9 @@ namespace TSSArt.StateMachine
 			return controller.Send(evt, token);
 		}
 
-		Uri IEventProcessor.Id => EventProcessorId;
+	#endregion
 
-		Uri IEventProcessor.AliasId => EventProcessorAliasId;
+	#region Interface IEventProcessor
 
 		Uri IEventProcessor.GetTarget(string sessionId) => GetTarget(sessionId);
 
@@ -36,6 +38,12 @@ namespace TSSArt.StateMachine
 
 			return service.Send(serviceEvent, token);
 		}
+
+		Uri IEventProcessor.Id => EventProcessorId;
+
+		Uri IEventProcessor.AliasId => EventProcessorAliasId;
+
+	#endregion
 
 		private static Uri GetTarget(string sessionId) => new Uri(BaseUri, sessionId);
 	}

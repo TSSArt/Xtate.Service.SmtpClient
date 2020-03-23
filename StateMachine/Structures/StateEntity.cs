@@ -5,6 +5,22 @@ namespace TSSArt.StateMachine
 {
 	public struct StateEntity : IState, IVisitorEntity<StateEntity, IState>, IAncestorProvider, IDebugEntityId
 	{
+		internal object? Ancestor;
+
+	#region Interface IAncestorProvider
+
+		object? IAncestorProvider.Ancestor => Ancestor;
+
+	#endregion
+
+	#region Interface IDebugEntityId
+
+		FormattableString IDebugEntityId.EntityId => @$"{Id}";
+
+	#endregion
+
+	#region Interface IState
+
 		public IDataModel?                  DataModel     { get; set; }
 		public IIdentifier?                 Id            { get; set; }
 		public IInitial?                    Initial       { get; set; }
@@ -14,6 +30,10 @@ namespace TSSArt.StateMachine
 		public ImmutableArray<IStateEntity> States        { get; set; }
 		public ImmutableArray<IHistory>     HistoryStates { get; set; }
 		public ImmutableArray<ITransition>  Transitions   { get; set; }
+
+	#endregion
+
+	#region Interface IVisitorEntity<StateEntity,IState>
 
 		void IVisitorEntity<StateEntity, IState>.Init(IState source)
 		{
@@ -40,10 +60,6 @@ namespace TSSArt.StateMachine
 				OnEntry == other.OnEntry &&
 				Transitions == other.Transitions;
 
-		internal object? Ancestor;
-
-		object? IAncestorProvider.Ancestor => Ancestor;
-
-		FormattableString IDebugEntityId.EntityId => @$"{Id}";
+	#endregion
 	}
 }
