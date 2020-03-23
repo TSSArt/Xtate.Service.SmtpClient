@@ -71,7 +71,7 @@ namespace TSSArt.StateMachine.Test
 			var _ = new StateMachineFluentBuilder(BuilderFactory.Default)
 					.BeginState((Identifier) "a")
 					.AddTransition(context => true, (Identifier) "a")
-					.AddOnEntry(context => Console.WriteLine("OnEntry"))
+					.AddOnEntry(context => Console.WriteLine(@"OnEntry"))
 					.EndState()
 					.Build();
 

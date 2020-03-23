@@ -70,7 +70,7 @@ namespace TSSArt.StateMachine.Test
 
 			public async ValueTask<ITransactionalStorage> GetTransactionalStorage(string partition, string key, CancellationToken token)
 			{
-				if (string.IsNullOrEmpty(key)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(key));
+				if (string.IsNullOrEmpty(key)) throw new ArgumentException(message: @"Value cannot be null or empty.", nameof(key));
 
 				var partitionStorage = _storage.GetOrAdd(partition ?? "", p => new ConcurrentDictionary<string, MemoryStream>());
 				var memStream = partitionStorage.GetOrAdd(key, k => new MemoryStream());
@@ -80,7 +80,7 @@ namespace TSSArt.StateMachine.Test
 
 			public ValueTask RemoveTransactionalStorage(string partition, string key, CancellationToken token)
 			{
-				if (string.IsNullOrEmpty(key)) throw new ArgumentException(message: "Value cannot be null or empty.", nameof(key));
+				if (string.IsNullOrEmpty(key)) throw new ArgumentException(message: @"Value cannot be null or empty.", nameof(key));
 
 				var partitionStorage = _storage.GetOrAdd(partition ?? "", p => new ConcurrentDictionary<string, MemoryStream>());
 				partitionStorage.TryRemove(key, out _);
