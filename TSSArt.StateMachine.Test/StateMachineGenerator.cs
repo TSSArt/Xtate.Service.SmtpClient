@@ -9,7 +9,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			using var stringReader = new StringReader(scxml);
 			using var xmlReader = XmlReader.Create(stringReader);
-			return new ScxmlDirector(xmlReader, BuilderFactory.Default, DefaultErrorProcessor.Instance).ConstructStateMachine();
+			return new ScxmlDirector(xmlReader, BuilderFactory.Instance, DefaultErrorProcessor.Instance).ConstructStateMachine(StateMachineValidator.Instance);
 		}
 
 		public static IStateMachine FromInnerScxml_EcmaScript(string innerScxml) =>

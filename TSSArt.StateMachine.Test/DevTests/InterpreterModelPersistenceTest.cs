@@ -21,9 +21,9 @@ namespace TSSArt.StateMachine.Test
 
 			var xmlReader = XmlReader.Create(stream);
 
-			var director = new ScxmlDirector(xmlReader, BuilderFactory.Default, DefaultErrorProcessor.Instance);
+			var director = new ScxmlDirector(xmlReader, BuilderFactory.Instance, DefaultErrorProcessor.Instance);
 
-			_allStateMachine = director.ConstructStateMachine();
+			_allStateMachine = director.ConstructStateMachine(StateMachineValidator.Instance);
 
 			_dataModelHandler = EcmaScriptDataModelHandler.Factory.CreateHandler(DefaultErrorProcessor.Instance);
 		}
@@ -68,7 +68,7 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public void SaveRestoreInterpreterModelRuntimeModelTest()
 		{
-			var _ = new StateMachineFluentBuilder(BuilderFactory.Default)
+			var _ = new StateMachineFluentBuilder(BuilderFactory.Instance)
 					.BeginState((Identifier) "a")
 					.AddTransition(context => true, (Identifier) "a")
 					.AddOnEntry(context => Console.WriteLine(@"OnEntry"))

@@ -25,9 +25,9 @@ namespace TSSArt.StateMachine.Test
 
 			var xmlReader = XmlReader.Create(stream);
 
-			var director = new ScxmlDirector(xmlReader, BuilderFactory.Default, DefaultErrorProcessor.Instance);
+			var director = new ScxmlDirector(xmlReader, BuilderFactory.Instance, DefaultErrorProcessor.Instance);
 
-			_stateMachine = director.ConstructStateMachine();
+			_stateMachine = director.ConstructStateMachine(StateMachineValidator.Instance);
 		}
 
 		[TestMethod]

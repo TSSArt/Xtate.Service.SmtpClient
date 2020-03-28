@@ -251,9 +251,9 @@ namespace TSSArt.StateMachine.Test
 
 			var xmlReader = XmlReader.Create(stream);
 
-			var director = new ScxmlDirector(xmlReader, BuilderFactory.Default, DefaultErrorProcessor.Instance);
+			var director = new ScxmlDirector(xmlReader, BuilderFactory.Instance, DefaultErrorProcessor.Instance);
 
-			var stateMachine = director.ConstructStateMachine();
+			var stateMachine = director.ConstructStateMachine(StateMachineValidator.Instance);
 
 			var dataModelHandler = EcmaScriptDataModelHandler.Factory.CreateHandler(DefaultErrorProcessor.Instance);
 			var imBuilder = new InterpreterModelBuilder(stateMachine, dataModelHandler, customActionProviders: default, errorProcessor: default);

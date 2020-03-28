@@ -25,18 +25,19 @@ namespace TSSArt.StateMachine.Core.Host
 						  {
 								  EventProcessorFactories = ImmutableArray.Create((IEventProcessorFactory) new HttpEventProcessorFactory(baseUri, path: "/")),
 								  ServiceFactories = ImmutableArray.Create(WebBrowserService.GetFactory<CefSharpWebBrowserService>(), InputService.Factory),
-								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory)
+								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
+								  VerboseValidation = true
 						  };
 
 			await using var ioProcessor = new IoProcessor(options);
+
+			await ioProcessor.StartAsync().ConfigureAwait(false);
 
 			foreach (var name in GetResourceNames())
 			{
 				var _ = ioProcessor.Execute(GetStateMachine(name));
 			}
-
-			await ioProcessor.StartAsync().ConfigureAwait(false);
-
+			
 			Application.Run();
 
 			await ioProcessor.StopAsync().ConfigureAwait(false);
@@ -59,7 +60,10 @@ namespace TSSArt.StateMachine.Core.Host
 		{
 			using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(name);
 			using var xmlReader = XmlReader.Create(stream ?? throw new MissingManifestResourceException());
-			return new ScxmlDirector(xmlReader, BuilderFactory.Default, DefaultErrorProcessor.Instance).ConstructStateMachine();
+			var errorProcessor = new DetailedErrorProcessor(sessionId: null, stateMachine: null, new Uri(name, UriKind.RelativeOrAbsolute), scxml: null);
+			var stateMachine = new ScxmlDirector(xmlReader, BuilderFactory.Instance, errorProcessor).ConstructStateMachine(StateMachineValidator.Instance);
+			errorProcessor.ThrowIfErrors();
+			return stateMachine;
 		}
 	}
 }

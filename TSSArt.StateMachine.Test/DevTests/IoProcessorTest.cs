@@ -2,6 +2,7 @@
 using System.Collections.Immutable;
 using System.IO;
 using System.Net.Mime;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -24,7 +25,7 @@ namespace TSSArt.StateMachine.Test
 		private XmlReader GetStateMachine(string xml) => GetStateMachineBase("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' datamodel='ecmascript'>" + xml + "</scxml>");
 
 		[TestMethod]
-		public void SimpleTest()
+		public async Task SimpleTest()
 		{
 			var resourceLoaderMock = new Mock<IResourceLoader>();
 
@@ -38,7 +39,10 @@ namespace TSSArt.StateMachine.Test
 						  };
 
 			var ioProcessor = new IoProcessor(options);
-			var _ = ioProcessor.Execute(new Uri(@"D:\Ser\Projects\T.S.S.Art\MID\PoC\TSSArt.StateMachine.Test\Resources\All.xml"));
+			await ioProcessor.StartAsync();
+			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("TSSArt.StateMachine.Test.Resources.All.xml");
+			var reader = new StreamReader(stream ?? throw new InvalidOperationException());
+			var _ = ioProcessor.Execute(reader.ReadToEnd());
 		}
 
 		[TestMethod]
@@ -199,9 +203,9 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 			using var stream = new FileStream(source.AbsolutePath, FileMode.Open);
 			var xmlReader = XmlReader.Create(stream);
 
-			var director = new ScxmlDirector(xmlReader, BuilderFactory.Default, DefaultErrorProcessor.Instance);
+			var director = new ScxmlDirector(xmlReader, BuilderFactory.Instance, DefaultErrorProcessor.Instance);
 
-			return new ValueTask<IStateMachine>(director.ConstructStateMachine());
+			return new ValueTask<IStateMachine>(director.ConstructStateMachine(StateMachineValidator.Instance));
 		}
 
 		public ValueTask<IStateMachine> GetStateMachine(string scxml)
@@ -209,9 +213,9 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 			var reader = new StringReader(scxml);
 			var xmlReader = XmlReader.Create(reader);
 
-			var director = new ScxmlDirector(xmlReader, BuilderFactory.Default, DefaultErrorProcessor.Instance);
+			var director = new ScxmlDirector(xmlReader, BuilderFactory.Instance, DefaultErrorProcessor.Instance);
 
-			return new ValueTask<IStateMachine>(director.ConstructStateMachine());
+			return new ValueTask<IStateMachine>(director.ConstructStateMachine(StateMachineValidator.Instance));
 		}
 	}
 }

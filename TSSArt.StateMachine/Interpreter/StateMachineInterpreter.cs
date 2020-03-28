@@ -18,12 +18,13 @@ namespace TSSArt.StateMachine
 		private const string StateStorageKey                  = "state";
 		private const string StateMachineDefinitionStorageKey = "smd";
 
+		private readonly IStateMachineValidator                   _stateMachineValidator = StateMachineValidator.Instance;
 		private readonly DataModelValue                           _arguments;
 		private readonly ImmutableDictionary<string, string>      _configuration;
 		private readonly ImmutableArray<ICustomActionFactory>     _customActionProviders;
 		private readonly ImmutableArray<IDataModelHandlerFactory> _dataModelHandlerFactories;
 		private readonly CancellationToken                        _destroyToken;
-		private readonly IErrorProcessor?                         _errorProcessor;
+		private readonly IErrorProcessor                          _errorProcessor;
 		private readonly ChannelReader<IEvent>                    _eventChannel;
 		private readonly ExternalCommunicationWrapper             _externalCommunication;
 		private readonly LoggerWrapper                            _logger;
@@ -55,7 +56,7 @@ namespace TSSArt.StateMachine
 			_externalCommunication = new ExternalCommunicationWrapper(options.ExternalCommunication, sessionId);
 			_storageProvider = options.StorageProvider ?? NullStorageProvider.Instance;
 			_configuration = options.Configuration ?? ImmutableDictionary<string, string>.Empty;
-			_errorProcessor = options.ErrorProcessor;
+			_errorProcessor = options.ErrorProcessor ?? DefaultErrorProcessor.Instance;
 			_persistenceLevel = options.PersistenceLevel;
 			_notifyStateChanged = options.NotifyStateChanged;
 			_arguments = options.Arguments.DeepClone(true);
@@ -104,7 +105,7 @@ namespace TSSArt.StateMachine
 			var dataModelHandlerFactory = GetDataModelHandlerFactory(stateMachine.DataModelType, _dataModelHandlerFactories, wrapperErrorProcessor);
 			_dataModelHandler = dataModelHandlerFactory.CreateHandler(wrapperErrorProcessor);
 
-			new StateMachineValidator(wrapperErrorProcessor).Validate(stateMachine);
+			_stateMachineValidator.Validate(stateMachine, wrapperErrorProcessor);
 
 			var interpreterModelBuilder = new InterpreterModelBuilder(stateMachine, _dataModelHandler, _customActionProviders, wrapperErrorProcessor);
 			interpreterModel = await interpreterModelBuilder.Build(_resourceLoader, _stopToken).ConfigureAwait(false);
@@ -322,8 +323,9 @@ namespace TSSArt.StateMachine
 					return list;
 				}
 
-				var capturedSet = new List<TransitionNode>();
 				var length = persistenceContext.GetState((int) key, subKey: 0);
+				var capturedSet = new List<TransitionNode>(length);
+
 				for (var i = 0; i < length; i ++)
 				{
 					var documentId = persistenceContext.GetState((int) key, i + 1);

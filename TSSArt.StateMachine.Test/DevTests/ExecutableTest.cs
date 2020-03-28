@@ -25,7 +25,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			using var textReader = new StringReader(scxml);
 			using var reader = XmlReader.Create(textReader);
-			return new ScxmlDirector(reader, BuilderFactory.Default, DefaultErrorProcessor.Instance).ConstructStateMachine();
+			return new ScxmlDirector(reader, BuilderFactory.Instance, DefaultErrorProcessor.Instance).ConstructStateMachine(StateMachineValidator.Instance);
 		}
 
 		private IStateMachine NoneDataModel(string xml) => GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' datamodel='none'>" + xml + "</scxml>");

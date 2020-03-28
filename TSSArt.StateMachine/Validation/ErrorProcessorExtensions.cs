@@ -21,11 +21,15 @@ namespace TSSArt.StateMachine
 				if (entity.Is<IXmlLineInfo>(out var xmlLineInfo) && (xmlLineInfo?.HasLineInfo() ?? false))
 				{
 					errorProcessor.AddError(new ErrorItem(source, message, exception, xmlLineInfo.LineNumber, xmlLineInfo.LinePosition));
+
+					return;
 				}
 
 				if (exception is XmlException xmlException && xmlException.LineNumber > 0)
 				{
 					errorProcessor.AddError(new ErrorItem(source, message, exception, xmlException.LineNumber, xmlException.LinePosition));
+
+					return;
 				}
 			}
 

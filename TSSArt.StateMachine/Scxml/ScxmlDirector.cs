@@ -40,22 +40,20 @@ namespace TSSArt.StateMachine
 		private static readonly Policy<IAssignBuilder>       AssignPolicy       = BuildPolicy<IAssignBuilder>(AssignBuildPolicy);
 		private static readonly Policy<ICancelBuilder>       CancelPolicy       = BuildPolicy<ICancelBuilder>(CancelBuildPolicy);
 
-		private readonly IErrorProcessor        _errorProcessor;
-		private readonly IBuilderFactory        _factory;
-		private readonly IStateMachineValidator _stateMachineValidator;
+		private readonly IErrorProcessor _errorProcessor;
+		private readonly IBuilderFactory _factory;
 
 		public ScxmlDirector(XmlReader xmlReader, IBuilderFactory factory, IErrorProcessor errorProcessor) : base(xmlReader, errorProcessor)
 		{
 			_factory = factory;
 			_errorProcessor = errorProcessor;
-			_stateMachineValidator = new StateMachineValidator(errorProcessor);
 		}
 
-		public IStateMachine ConstructStateMachine()
+		public IStateMachine ConstructStateMachine(IStateMachineValidator? stateMachineValidator = null)
 		{
 			var stateMachine = ReadStateMachine();
 
-			_stateMachineValidator.Validate(stateMachine);
+			stateMachineValidator?.Validate(stateMachine, _errorProcessor);
 
 			return stateMachine;
 		}

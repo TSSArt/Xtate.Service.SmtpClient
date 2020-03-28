@@ -160,11 +160,11 @@ namespace TSSArt.StateMachine
 						: base.CreateStateMachineController(sessionId, options, stateMachine, in defaultOptions);
 
 		public override async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, IStateMachineOptions? options, IStateMachine? stateMachine, Uri? source,
-																						 string? scxml, DataModelValue parameters, CancellationToken token)
+																						 string? scxml, DataModelValue parameters, IErrorProcessor errorProcessor, CancellationToken token)
 		{
 			Infrastructure.Assert(_storage != null);
 
-			stateMachine = await GetStateMachine(stateMachine, source, scxml, token).ConfigureAwait(false);
+			stateMachine = await GetStateMachine(stateMachine, source, scxml, errorProcessor, token).ConfigureAwait(false);
 
 			if (options == null)
 			{
@@ -173,13 +173,13 @@ namespace TSSArt.StateMachine
 
 			if (!options.IsStateMachinePersistable())
 			{
-				return await base.CreateAndAddStateMachine(sessionId, options, stateMachine, source: null, scxml: null, parameters, token).ConfigureAwait(false);
+				return await base.CreateAndAddStateMachine(sessionId, options, stateMachine, source: null, scxml: null, parameters, errorProcessor, token).ConfigureAwait(false);
 			}
 
 			await _lockStateMachines.WaitAsync(token).ConfigureAwait(false);
 			try
 			{
-				var stateMachineController = await base.CreateAndAddStateMachine(sessionId, options, stateMachine, source: null, scxml: null, parameters, token).ConfigureAwait(false);
+				var stateMachineController = await base.CreateAndAddStateMachine(sessionId, options, stateMachine, source: null, scxml: null, parameters, errorProcessor, token).ConfigureAwait(false);
 
 				var bucket = new Bucket(_storage).Nested(StateMachinesKey);
 				var recordId = _stateMachineRecordId ++;
@@ -279,7 +279,7 @@ namespace TSSArt.StateMachine
 					{
 						var stateMachineMeta = new StateMachineMeta(bucket) { RecordId = i };
 						var stateMachineController = await base.CreateAndAddStateMachine(stateMachineMeta.SessionId, stateMachineMeta, stateMachine: null, source: null, scxml: null,
-																						 parameters: default, token).ConfigureAwait(false);
+																						 parameters: default, DefaultErrorProcessor.Instance, token).ConfigureAwait(false);
 						stateMachineMeta.Controller = stateMachineController;
 
 						_stateMachines.Add(stateMachineMeta.SessionId, stateMachineMeta);

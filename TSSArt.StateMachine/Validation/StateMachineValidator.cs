@@ -2,436 +2,446 @@
 
 namespace TSSArt.StateMachine
 {
-	public class StateMachineValidator : StateMachineVisitor, IStateMachineValidator
+	public class StateMachineValidator : IStateMachineValidator
 	{
-		private readonly IErrorProcessor _errorProcessor;
-
-		public StateMachineValidator(IErrorProcessor errorProcessor) => _errorProcessor = errorProcessor;
+		public static readonly IStateMachineValidator Instance = new StateMachineValidator();
 
 	#region Interface IStateMachineValidator
 
-		public void Validate(IStateMachine stateMachine)
+		public void Validate(IStateMachine stateMachine, IErrorProcessor errorProcessor)
 		{
-			Visit(ref stateMachine);
+			new Validator(errorProcessor).Validate(stateMachine);
 		}
 
 	#endregion
 
-		private void AddError(object entity, string message) => _errorProcessor.AddError<StateMachineValidator>(entity, message);
-
-		protected override void Visit(ref IAssign entity)
+		private class Validator : StateMachineVisitor
 		{
-			if (entity == null) throw new ArgumentNullException(nameof(entity));
+			private readonly IErrorProcessor _errorProcessor;
 
-			if (entity.Location == null)
+			public Validator(IErrorProcessor errorProcessor) => _errorProcessor = errorProcessor;
+
+			public void Validate(IStateMachine stateMachine)
 			{
-				AddError(entity, Resources.ErrorMessage_AssignItemLocationMissed);
+				Visit(ref stateMachine);
 			}
 
-			if (entity.Expression == null && entity.InlineContent == null)
+			private void AddError(object entity, string message) => _errorProcessor.AddError<StateMachineValidator>(entity, message);
+
+			protected override void Visit(ref IAssign entity)
 			{
-				AddError(entity, Resources.ErrorMessage_AssignItemContentAndExpressionMissed);
-			}
+				if (entity == null) throw new ArgumentNullException(nameof(entity));
 
-			if (entity.Expression != null && entity.InlineContent != null)
-			{
-				AddError(entity, Resources.ErrorMessage_AssignItemContentAndExpressionSpecified);
-			}
-
-			base.Visit(ref entity);
-		}
-
-		protected override void Visit(ref ICancel entity)
-		{
-			if (entity == null) throw new ArgumentNullException(nameof(entity));
-
-			if (entity.SendId == null && entity.SendIdExpression == null)
-			{
-				AddError(entity, Resources.ErrorMessage_CancelItemSendIdAndExpressionMissed);
-			}
-
-			if (entity.SendId != null && entity.SendIdExpression != null)
-			{
-				AddError(entity, Resources.ErrorMessage_CancelItemSendIdAndExpressionSpecified);
-			}
-
-			if (entity.SendId != null && entity.SendId.Length == 0)
-			{
-				AddError(entity, Resources.ErrorMessage_SendidAttributeCantBeEmptyInCancelElement);
-			}
-
-			base.Visit(ref entity);
-		}
-
-		protected override void Visit(ref IConditionExpression entity)
-		{
-			if (entity == null) throw new ArgumentNullException(nameof(entity));
-
-			if (entity.Expression == null)
-			{
-				AddError(entity, Resources.ErrorMessage_ConditionExpressionCantBeNull);
-			}
-
-			base.Visit(ref entity);
-		}
-
-		protected override void Visit(ref ILocationExpression entity)
-		{
-			if (entity == null) throw new ArgumentNullException(nameof(entity));
-
-			if (entity.Expression == null)
-			{
-				AddError(entity, Resources.ErrorMessage_Location_expression_can_t_be_null);
-			}
-
-			base.Visit(ref entity);
-		}
-
-		protected override void Visit(ref IScriptExpression entity)
-		{
-			if (entity == null) throw new ArgumentNullException(nameof(entity));
-
-			if (entity.Expression == null)
-			{
-				AddError(entity, Resources.ErrorMessage_Script_expression_can_t_be_null);
-			}
-
-			base.Visit(ref entity);
-		}
-
-		protected override void Visit(ref IContentBody entity)
-		{
-			if (entity == null) throw new ArgumentNullException(nameof(entity));
-
-			if (entity.Value == null)
-			{
-				AddError(entity, Resources.ErrorMessage_Content_value_can_t_be_null);
-			}
-
-			base.Visit(ref entity);
-		}
-
-		protected override void Visit(ref IContent entity)
-		{
-			if (entity == null) throw new ArgumentNullException(nameof(entity));
-
-			if (entity.Expression == null && entity.Body == null)
-			{
-				AddError(entity, Resources.ErrorMessage_ContentItemExpressionAndBodyMissed);
-			}
-
-			if (entity.Expression != null && entity.Body != null)
-			{
-				AddError(entity, Resources.ErrorMessage_ContentItemExpressionAndBodySpecified);
-			}
-
-			base.Visit(ref entity);
-		}
-
-		protected override void Visit(ref ICustomAction entity)
-		{
-			if (entity == null) throw new ArgumentNullException(nameof(entity));
-
-			if (entity.Xml == null)
-			{
-				AddError(entity, Resources.ErrorMessage_XmlCannotBeNull);
-			}
-
-			base.Visit(ref entity);
-		}
-
-		protected override void Visit(ref IData entity)
-		{
-			if (entity == null) throw new ArgumentNullException(nameof(entity));
-
-			if (string.IsNullOrEmpty(entity.Id))
-			{
-				AddError(entity, Resources.ErrorMessage_Id_property_required_in_Data_element);
-			}
-
-			if (entity.InlineContent != null && entity.Expression != null || entity.InlineContent != null && entity.Source != null || entity.Source != null && entity.Expression != null)
-			{
-				AddError(entity, Resources.ErrorMessage_Expression_and_Source_and_Inline_content_can_t_be_used_at_the_same_time_in_Data_element);
-			}
-
-			base.Visit(ref entity);
-		}
-
-		protected override void Visit(ref IElseIf entity)
-		{
-			if (entity == null) throw new ArgumentNullException(nameof(entity));
-
-			if (entity.Condition == null)
-			{
-				AddError(entity, Resources.ErrorMessage_Condition_property_required_for_ElseIf_element);
-			}
-
-			base.Visit(ref entity);
-		}
-
-		protected override void Visit(ref IFinalize entity)
-		{
-			if (entity == null) throw new ArgumentNullException(nameof(entity));
-
-			foreach (var executableEntity in entity.Action)
-			{
-				if (executableEntity is IRaise)
+				if (entity.Location == null)
 				{
-					AddError(executableEntity, Resources.ErrorMessage_Raise_can_t_be_used_in_Finalize_element);
+					AddError(entity, Resources.ErrorMessage_AssignItemLocationMissed);
 				}
 
-				if (executableEntity is ISend)
+				if (entity.Expression == null && entity.InlineContent == null)
 				{
-					AddError(executableEntity, Resources.ErrorMessage_Send_can_t_be_used_in_Finalize_element);
+					AddError(entity, Resources.ErrorMessage_AssignItemContentAndExpressionMissed);
 				}
-			}
 
-			base.Visit(ref entity);
-		}
-
-		protected override void Visit(ref IForEach entity)
-		{
-			if (entity == null) throw new ArgumentNullException(nameof(entity));
-
-			if (entity.Array == null)
-			{
-				AddError(entity, Resources.ErrorMessage_ArrayPropertyRequiredForForEachElement);
-			}
-
-			if (entity.Item == null)
-			{
-				AddError(entity, Resources.ErrorMessage_Condition_property_required_for_ForEach_element);
-			}
-
-			base.Visit(ref entity);
-		}
-
-		protected override void Visit(ref IHistory entity)
-		{
-			if (entity == null) throw new ArgumentNullException(nameof(entity));
-
-			if (entity.Transition == null)
-			{
-				AddError(entity, Resources.ErrorMessage_Transition_must_be_present_in_History_element);
-			}
-
-			if (entity.Type < HistoryType.Shallow || entity.Type > HistoryType.Deep)
-			{
-				AddError(entity, Resources.ErrorMessage_Invalid_Type_value_in_History_element);
-			}
-
-			base.Visit(ref entity);
-		}
-
-		protected override void Visit(ref IIf entity)
-		{
-			if (entity == null) throw new ArgumentNullException(nameof(entity));
-
-			if (entity.Condition == null)
-			{
-				AddError(entity, Resources.ErrorMessage_Condition_property_required_for_If_element);
-			}
-
-			var condition = true;
-
-			foreach (var op in entity.Action)
-			{
-				switch (op)
+				if (entity.Expression != null && entity.InlineContent != null)
 				{
-					case IElseIf _:
-						if (!condition)
-						{
-							AddError(op, Resources.ErrorMessage_ElseifCannotFollowElse);
-						}
-
-						break;
-
-					case IElse _:
-						if (!condition)
-						{
-							AddError(op, Resources.ErrorMessage_ElseCanBeUsedOnlyOnce);
-						}
-
-						condition = false;
-						break;
+					AddError(entity, Resources.ErrorMessage_AssignItemContentAndExpressionSpecified);
 				}
+
+				base.Visit(ref entity);
 			}
 
-
-			base.Visit(ref entity);
-		}
-
-		protected override void Visit(ref IInitial entity)
-		{
-			if (entity == null) throw new ArgumentNullException(nameof(entity));
-
-			if (entity.Transition == null)
+			protected override void Visit(ref ICancel entity)
 			{
-				AddError(entity, Resources.ErrorMessage_Transition_must_be_present_in_Initial_element);
+				if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+				if (entity.SendId == null && entity.SendIdExpression == null)
+				{
+					AddError(entity, Resources.ErrorMessage_CancelItemSendIdAndExpressionMissed);
+				}
+
+				if (entity.SendId != null && entity.SendIdExpression != null)
+				{
+					AddError(entity, Resources.ErrorMessage_CancelItemSendIdAndExpressionSpecified);
+				}
+
+				if (entity.SendId != null && entity.SendId.Length == 0)
+				{
+					AddError(entity, Resources.ErrorMessage_SendidAttributeCantBeEmptyInCancelElement);
+				}
+
+				base.Visit(ref entity);
 			}
 
-			base.Visit(ref entity);
-		}
-
-		protected override void Visit(ref IInvoke entity)
-		{
-			if (entity == null) throw new ArgumentNullException(nameof(entity));
-
-			if (entity.Type == null && entity.TypeExpression == null)
+			protected override void Visit(ref IConditionExpression entity)
 			{
-				AddError(entity, Resources.ErrorMessage_Type_or_TypeExpression_must_be_specified_in_Invoke_element);
+				if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+				if (entity.Expression == null)
+				{
+					AddError(entity, Resources.ErrorMessage_ConditionExpressionCantBeNull);
+				}
+
+				base.Visit(ref entity);
 			}
 
-			if (entity.Type != null && entity.TypeExpression != null)
+			protected override void Visit(ref ILocationExpression entity)
 			{
-				AddError(entity, Resources.ErrorMessage_Type_and_TypeExpression_can_t_be_used_at_the_same_time_in_Invoke_element);
+				if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+				if (entity.Expression == null)
+				{
+					AddError(entity, Resources.ErrorMessage_Location_expression_can_t_be_null);
+				}
+
+				base.Visit(ref entity);
 			}
 
-			if (entity.Id != null && entity.IdLocation != null)
+			protected override void Visit(ref IScriptExpression entity)
 			{
-				AddError(entity, Resources.ErrorMessage_Id_and_IdLocation_can_t_be_used_at_the_same_time_in_Invoke_element);
+				if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+				if (entity.Expression == null)
+				{
+					AddError(entity, Resources.ErrorMessage_Script_expression_can_t_be_null);
+				}
+
+				base.Visit(ref entity);
 			}
 
-			if (entity.Source != null && entity.SourceExpression != null)
+			protected override void Visit(ref IContentBody entity)
 			{
-				AddError(entity, Resources.ErrorMessage_Source_and_SourceExpression_can_t_be_used_at_the_same_time_in_Invoke_element);
+				if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+				if (entity.Value == null)
+				{
+					AddError(entity, Resources.ErrorMessage_Content_value_can_t_be_null);
+				}
+
+				base.Visit(ref entity);
 			}
 
-			if (!entity.NameList.IsDefaultOrEmpty && !entity.Parameters.IsDefaultOrEmpty)
+			protected override void Visit(ref IContent entity)
 			{
-				AddError(entity, Resources.ErrorMessage_NameList_and_Parameters_can_t_be_used_at_the_same_time_in_Invoke_element);
+				if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+				if (entity.Expression == null && entity.Body == null)
+				{
+					AddError(entity, Resources.ErrorMessage_ContentItemExpressionAndBodyMissed);
+				}
+
+				if (entity.Expression != null && entity.Body != null)
+				{
+					AddError(entity, Resources.ErrorMessage_ContentItemExpressionAndBodySpecified);
+				}
+
+				base.Visit(ref entity);
 			}
 
-			base.Visit(ref entity);
-		}
-
-		protected override void Visit(ref IParam entity)
-		{
-			if (entity == null) throw new ArgumentNullException(nameof(entity));
-
-			if (entity.Name == null)
+			protected override void Visit(ref ICustomAction entity)
 			{
-				AddError(entity, Resources.ErrorMessage_Name_attributes_required_in_Param_element);
+				if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+				if (entity.Xml == null)
+				{
+					AddError(entity, Resources.ErrorMessage_XmlCannotBeNull);
+				}
+
+				base.Visit(ref entity);
 			}
 
-			if (entity.Expression != null && entity.Location != null)
+			protected override void Visit(ref IData entity)
 			{
-				AddError(entity, Resources.ErrorMessage_Expression_and_Location_can_t_be_used_at_the_same_time_in_Param_element);
+				if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+				if (string.IsNullOrEmpty(entity.Id))
+				{
+					AddError(entity, Resources.ErrorMessage_Id_property_required_in_Data_element);
+				}
+
+				if (entity.InlineContent != null && entity.Expression != null || entity.InlineContent != null && entity.Source != null || entity.Source != null && entity.Expression != null)
+				{
+					AddError(entity, Resources.ErrorMessage_Expression_and_Source_and_Inline_content_can_t_be_used_at_the_same_time_in_Data_element);
+				}
+
+				base.Visit(ref entity);
 			}
 
-			base.Visit(ref entity);
-		}
-
-		protected override void Visit(ref IRaise entity)
-		{
-			if (entity == null) throw new ArgumentNullException(nameof(entity));
-
-			if (entity.OutgoingEvent == null)
+			protected override void Visit(ref IElseIf entity)
 			{
-				AddError(entity, Resources.ErrorMessage_Event_property_required_for_Raise_element);
+				if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+				if (entity.Condition == null)
+				{
+					AddError(entity, Resources.ErrorMessage_Condition_property_required_for_ElseIf_element);
+				}
+
+				base.Visit(ref entity);
 			}
 
-			base.Visit(ref entity);
-		}
-
-		protected override void Visit(ref IScript entity)
-		{
-			if (entity == null) throw new ArgumentNullException(nameof(entity));
-
-			if (entity.Source != null && entity.Content != null)
+			protected override void Visit(ref IFinalize entity)
 			{
-				AddError(entity, Resources.ErrorMessage_Source_and_Body_can_t_be_used_at_the_same_time_in_Assign_element);
+				if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+				foreach (var executableEntity in entity.Action)
+				{
+					if (executableEntity is IRaise)
+					{
+						AddError(executableEntity, Resources.ErrorMessage_Raise_can_t_be_used_in_Finalize_element);
+					}
+
+					if (executableEntity is ISend)
+					{
+						AddError(executableEntity, Resources.ErrorMessage_Send_can_t_be_used_in_Finalize_element);
+					}
+				}
+
+				base.Visit(ref entity);
 			}
 
-			base.Visit(ref entity);
-		}
-
-		protected override void Visit(ref ISend entity)
-		{
-			if (entity == null) throw new ArgumentNullException(nameof(entity));
-
-			if (entity.EventName != null && entity.EventExpression != null || entity.EventName != null && entity.Content != null || entity.EventExpression != null && entity.Content != null)
+			protected override void Visit(ref IForEach entity)
 			{
-				AddError(entity, Resources.ErrorMessage_Event__EventExpression_and_Content_can_t_be_used_at_the_same_time_in_Send_element);
+				if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+				if (entity.Array == null)
+				{
+					AddError(entity, Resources.ErrorMessage_ArrayPropertyRequiredForForEachElement);
+				}
+
+				if (entity.Item == null)
+				{
+					AddError(entity, Resources.ErrorMessage_Condition_property_required_for_ForEach_element);
+				}
+
+				base.Visit(ref entity);
 			}
 
-			if (entity.Target != null && entity.TargetExpression != null)
+			protected override void Visit(ref IHistory entity)
 			{
-				AddError(entity, Resources.ErrorMessage_Target_and_TargetExpression_can_t_be_used_at_the_same_time_in_Send_element);
+				if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+				if (entity.Transition == null)
+				{
+					AddError(entity, Resources.ErrorMessage_Transition_must_be_present_in_History_element);
+				}
+
+				if (entity.Type < HistoryType.Shallow || entity.Type > HistoryType.Deep)
+				{
+					AddError(entity, Resources.ErrorMessage_Invalid_Type_value_in_History_element);
+				}
+
+				base.Visit(ref entity);
 			}
 
-			if (entity.Type != null && entity.TypeExpression != null)
+			protected override void Visit(ref IIf entity)
 			{
-				AddError(entity, Resources.ErrorMessage_Type_and_TypeExpression_can_t_be_used_at_the_same_time_in_Send_element);
+				if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+				if (entity.Condition == null)
+				{
+					AddError(entity, Resources.ErrorMessage_Condition_property_required_for_If_element);
+				}
+
+				var condition = true;
+
+				foreach (var op in entity.Action)
+				{
+					switch (op)
+					{
+						case IElseIf _:
+							if (!condition)
+							{
+								AddError(op, Resources.ErrorMessage_ElseifCannotFollowElse);
+							}
+
+							break;
+
+						case IElse _:
+							if (!condition)
+							{
+								AddError(op, Resources.ErrorMessage_ElseCanBeUsedOnlyOnce);
+							}
+
+							condition = false;
+							break;
+					}
+				}
+
+
+				base.Visit(ref entity);
 			}
 
-			if (entity.Id != null && entity.IdLocation != null)
+			protected override void Visit(ref IInitial entity)
 			{
-				AddError(entity, Resources.ErrorMessage_Id_and_IdLocation_can_t_be_used_at_the_same_time_in_Send_element);
+				if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+				if (entity.Transition == null)
+				{
+					AddError(entity, Resources.ErrorMessage_Transition_must_be_present_in_Initial_element);
+				}
+
+				base.Visit(ref entity);
 			}
 
-			if (entity.DelayMs != null && entity.DelayExpression != null)
+			protected override void Visit(ref IInvoke entity)
 			{
-				AddError(entity, Resources.ErrorMessage_Event_and_EventExpression_can_t_be_used_at_the_same_time_in_Send_element);
+				if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+				if (entity.Type == null && entity.TypeExpression == null)
+				{
+					AddError(entity, Resources.ErrorMessage_Type_or_TypeExpression_must_be_specified_in_Invoke_element);
+				}
+
+				if (entity.Type != null && entity.TypeExpression != null)
+				{
+					AddError(entity, Resources.ErrorMessage_Type_and_TypeExpression_can_t_be_used_at_the_same_time_in_Invoke_element);
+				}
+
+				if (entity.Id != null && entity.IdLocation != null)
+				{
+					AddError(entity, Resources.ErrorMessage_Id_and_IdLocation_can_t_be_used_at_the_same_time_in_Invoke_element);
+				}
+
+				if (entity.Source != null && entity.SourceExpression != null)
+				{
+					AddError(entity, Resources.ErrorMessage_Source_and_SourceExpression_can_t_be_used_at_the_same_time_in_Invoke_element);
+				}
+
+				if (!entity.NameList.IsDefaultOrEmpty && !entity.Parameters.IsDefaultOrEmpty)
+				{
+					AddError(entity, Resources.ErrorMessage_NameList_and_Parameters_can_t_be_used_at_the_same_time_in_Invoke_element);
+				}
+
+				base.Visit(ref entity);
 			}
 
-			if (!entity.NameList.IsDefaultOrEmpty && entity.Content != null)
+			protected override void Visit(ref IParam entity)
 			{
-				AddError(entity, Resources.ErrorMessage_NameList_and_Content_can_t_be_used_at_the_same_time_in_Send_element);
+				if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+				if (entity.Name == null)
+				{
+					AddError(entity, Resources.ErrorMessage_Name_attributes_required_in_Param_element);
+				}
+
+				if (entity.Expression != null && entity.Location != null)
+				{
+					AddError(entity, Resources.ErrorMessage_Expression_and_Location_can_t_be_used_at_the_same_time_in_Param_element);
+				}
+
+				base.Visit(ref entity);
 			}
 
-			if (!entity.Parameters.IsDefaultOrEmpty && entity.Content != null)
+			protected override void Visit(ref IRaise entity)
 			{
-				AddError(entity, Resources.ErrorMessage_Parameters_and_Content_can_t_be_used_at_the_same_time_in_Send_element);
+				if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+				if (entity.OutgoingEvent == null)
+				{
+					AddError(entity, Resources.ErrorMessage_Event_property_required_for_Raise_element);
+				}
+
+				base.Visit(ref entity);
 			}
 
-			if (entity.EventName == null && entity.EventExpression == null && entity.Content == null)
+			protected override void Visit(ref IScript entity)
 			{
-				AddError(entity, Resources.ErrorMessage_Must_be_present_Event_or_EventExpression_or_Content_in_Send_element);
+				if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+				if (entity.Source != null && entity.Content != null)
+				{
+					AddError(entity, Resources.ErrorMessage_Source_and_Body_can_t_be_used_at_the_same_time_in_Assign_element);
+				}
+
+				base.Visit(ref entity);
 			}
 
-			base.Visit(ref entity);
-		}
-
-		protected override void Visit(ref IStateMachine entity)
-		{
-			if (entity == null) throw new ArgumentNullException(nameof(entity));
-
-			if (entity.Initial != null && entity.States.IsDefaultOrEmpty)
+			protected override void Visit(ref ISend entity)
 			{
-				AddError(entity, Resources.ErrorMessage_Initial_state_property_cannot_be_used_without_any_states);
+				if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+				if (entity.EventName != null && entity.EventExpression != null || entity.EventName != null && entity.Content != null || entity.EventExpression != null && entity.Content != null)
+				{
+					AddError(entity, Resources.ErrorMessage_Event__EventExpression_and_Content_can_t_be_used_at_the_same_time_in_Send_element);
+				}
+
+				if (entity.Target != null && entity.TargetExpression != null)
+				{
+					AddError(entity, Resources.ErrorMessage_Target_and_TargetExpression_can_t_be_used_at_the_same_time_in_Send_element);
+				}
+
+				if (entity.Type != null && entity.TypeExpression != null)
+				{
+					AddError(entity, Resources.ErrorMessage_Type_and_TypeExpression_can_t_be_used_at_the_same_time_in_Send_element);
+				}
+
+				if (entity.Id != null && entity.IdLocation != null)
+				{
+					AddError(entity, Resources.ErrorMessage_Id_and_IdLocation_can_t_be_used_at_the_same_time_in_Send_element);
+				}
+
+				if (entity.DelayMs != null && entity.DelayExpression != null)
+				{
+					AddError(entity, Resources.ErrorMessage_Event_and_EventExpression_can_t_be_used_at_the_same_time_in_Send_element);
+				}
+
+				if (!entity.NameList.IsDefaultOrEmpty && entity.Content != null)
+				{
+					AddError(entity, Resources.ErrorMessage_NameList_and_Content_can_t_be_used_at_the_same_time_in_Send_element);
+				}
+
+				if (!entity.Parameters.IsDefaultOrEmpty && entity.Content != null)
+				{
+					AddError(entity, Resources.ErrorMessage_Parameters_and_Content_can_t_be_used_at_the_same_time_in_Send_element);
+				}
+
+				if (entity.EventName == null && entity.EventExpression == null && entity.Content == null)
+				{
+					AddError(entity, Resources.ErrorMessage_Must_be_present_Event_or_EventExpression_or_Content_in_Send_element);
+				}
+
+				base.Visit(ref entity);
 			}
 
-			if (entity.Binding < BindingType.Early || entity.Binding > BindingType.Late)
+			protected override void Visit(ref IStateMachine entity)
 			{
-				AddError(entity, Resources.ErrorMessage_Invalid_BindingType_value_in_StateMachine_element);
+				if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+				if (entity.Initial != null && entity.States.IsDefaultOrEmpty)
+				{
+					AddError(entity, Resources.ErrorMessage_Initial_state_property_cannot_be_used_without_any_states);
+				}
+
+				if (entity.Binding < BindingType.Early || entity.Binding > BindingType.Late)
+				{
+					AddError(entity, Resources.ErrorMessage_Invalid_BindingType_value_in_StateMachine_element);
+				}
+
+				base.Visit(ref entity);
 			}
 
-			base.Visit(ref entity);
-		}
-
-		protected override void Visit(ref IState entity)
-		{
-			if (entity == null) throw new ArgumentNullException(nameof(entity));
-
-			if (entity.Initial != null && entity.States.IsDefaultOrEmpty)
+			protected override void Visit(ref IState entity)
 			{
-				AddError(entity, Resources.ErrorMessage_Initial_state_property_can_be_used_only_in_complex_states);
+				if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+				if (entity.Initial != null && entity.States.IsDefaultOrEmpty)
+				{
+					AddError(entity, Resources.ErrorMessage_Initial_state_property_can_be_used_only_in_complex_states);
+				}
+
+				base.Visit(ref entity);
 			}
 
-			base.Visit(ref entity);
-		}
-
-		protected override void Visit(ref ITransition entity)
-		{
-			if (entity == null) throw new ArgumentNullException(nameof(entity));
-
-			if (entity.EventDescriptors.IsDefaultOrEmpty && entity.Condition == null && entity.Target.IsDefaultOrEmpty)
+			protected override void Visit(ref ITransition entity)
 			{
-				AddError(entity, Resources.ErrorMessage_Must_be_present_at_least_Event_or_Condition_or_Target_in_Transition_element);
-			}
+				if (entity == null) throw new ArgumentNullException(nameof(entity));
 
-			base.Visit(ref entity);
+				if (entity.EventDescriptors.IsDefaultOrEmpty && entity.Condition == null && entity.Target.IsDefaultOrEmpty)
+				{
+					AddError(entity, Resources.ErrorMessage_Must_be_present_at_least_Event_or_Condition_or_Target_in_Transition_element);
+				}
+
+				base.Visit(ref entity);
+			}
 		}
 	}
 }

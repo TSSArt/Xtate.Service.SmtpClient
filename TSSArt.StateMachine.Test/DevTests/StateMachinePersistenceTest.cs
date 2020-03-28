@@ -29,9 +29,9 @@ namespace TSSArt.StateMachine.Test
 
 			var xmlReader = XmlReader.Create(stream);
 
-			var director = new ScxmlDirector(xmlReader, BuilderFactory.Default, DefaultErrorProcessor.Instance);
+			var director = new ScxmlDirector(xmlReader, BuilderFactory.Instance, DefaultErrorProcessor.Instance);
 
-			_allStateMachine = director.ConstructStateMachine();
+			_allStateMachine = director.ConstructStateMachine(StateMachineValidator.Instance);
 
 			_resourceLoaderMock = new Mock<IResourceLoader>();
 			var task = new ValueTask<Resource>(new Resource(new Uri("http://none"), new ContentType(), content: "content"));

@@ -18,7 +18,9 @@ namespace TSSArt.StateMachine
 			var scxml = rawContent ?? content.AsStringOrDefault();
 			var context = GetCurrentContext();
 
-			var service = await context.CreateAndAddStateMachine(sessionId, options: null, stateMachine: null, source, scxml, parameters, token).ConfigureAwait(false);
+			var errorProcessor = CreateErrorProcessor(sessionId, stateMachine: null, source, scxml);
+			
+			var service = await context.CreateAndAddStateMachine(sessionId, options: null, stateMachine: null, source, scxml, parameters, errorProcessor, token).ConfigureAwait(false);
 
 			await service.StartAsync(token).ConfigureAwait(false);
 

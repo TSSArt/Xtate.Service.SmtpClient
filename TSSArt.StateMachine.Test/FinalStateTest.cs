@@ -11,7 +11,7 @@ namespace TSSArt.StateMachine.Test
 		public async Task Final_state_with_number_as_done_data_Should_return_same_value()
 		{
 			// Arrange
-			var stateMachine = new StateMachineFluentBuilder(BuilderFactory.Default)
+			var stateMachine = new StateMachineFluentBuilder(BuilderFactory.Instance)
 							   .BeginFinal()
 							   .SetDoneData(ctx => new DataModelValue(22))
 							   .EndFinal()
@@ -32,7 +32,7 @@ namespace TSSArt.StateMachine.Test
 		public async Task Input_argument_Should_be_passed_as_return_value()
 		{
 			// Arrange
-			var stateMachine = new StateMachineFluentBuilder(BuilderFactory.Default)
+			var stateMachine = new StateMachineFluentBuilder(BuilderFactory.Instance)
 							   .BeginFinal()
 							   .SetDoneData(ctx =>
 											{

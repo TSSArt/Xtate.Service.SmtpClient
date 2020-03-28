@@ -6,7 +6,7 @@ namespace TSSArt.StateMachine
 	[PublicAPI]
 	public class BuilderFactory : IBuilderFactory
 	{
-		public static readonly IBuilderFactory Default = new BuilderFactory(DefaultErrorProcessor.Instance);
+		public static readonly IBuilderFactory Instance = new BuilderFactory(DefaultErrorProcessor.Instance);
 
 		private readonly IErrorProcessor _errorProcessor;
 
