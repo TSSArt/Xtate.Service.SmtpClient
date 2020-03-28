@@ -60,7 +60,6 @@ namespace TSSArt.StateMachine
 							  StopToken = _stopTokenSource.Token,
 							  SuspendToken = _suspendTokenSource.Token,
 							  Logger = _options.Logger,
-							  ErrorProcessor = _options.VerboseValidation ? new DetailedErrorProcessor() : null,
 							  DataModelHandlerFactories = _options.DataModelHandlerFactories
 					  };
 		}
@@ -82,9 +81,9 @@ namespace TSSArt.StateMachine
 
 		private static XmlParserContext? GetXmlParserContext() => null;
 
-		private static IBuilderFactory GetBuilderFactory() => BuilderFactory.Default;
+		private static IBuilderFactory GetBuilderFactory() => BuilderFactory.Instance;
 
-		protected async ValueTask<IStateMachine> GetStateMachine(IStateMachine? stateMachine, Uri? source, string? scxml, CancellationToken token)
+		protected async ValueTask<IStateMachine> GetStateMachine(IStateMachine? stateMachine, Uri? source, string? scxml, IErrorProcessor errorProcessor, CancellationToken token)
 		{
 			if (stateMachine != null)
 			{
@@ -101,7 +100,7 @@ namespace TSSArt.StateMachine
 				}
 
 				using var xmlReader = await resourceLoader.RequestXmlReader(source, GetXmlReaderSettings(), GetXmlParserContext(), token).ConfigureAwait(false);
-				var scxmlDirector = new ScxmlDirector(xmlReader, GetBuilderFactory(), DefaultErrorProcessor.Instance);
+				var scxmlDirector = new ScxmlDirector(xmlReader, GetBuilderFactory(), errorProcessor);
 
 				return scxmlDirector.ConstructStateMachine();
 			}
@@ -110,7 +109,7 @@ namespace TSSArt.StateMachine
 			{
 				using var stringReader = new StringReader(scxml);
 				using var xmlReader = XmlReader.Create(stringReader, GetXmlReaderSettings(), GetXmlParserContext());
-				var scxmlDirector = new ScxmlDirector(xmlReader, GetBuilderFactory(), DefaultErrorProcessor.Instance);
+				var scxmlDirector = new ScxmlDirector(xmlReader, GetBuilderFactory(), errorProcessor);
 
 				return scxmlDirector.ConstructStateMachine();
 			}
@@ -119,12 +118,13 @@ namespace TSSArt.StateMachine
 		}
 
 		public virtual async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, IStateMachineOptions? options, IStateMachine? stateMachine, Uri? source,
-																						string? scxml, DataModelValue parameters, CancellationToken token)
+																						string? scxml, DataModelValue parameters, IErrorProcessor errorProcessor, CancellationToken token)
 		{
 			FillInterpreterOptions(out var interpreterOptions);
 			interpreterOptions.Arguments = parameters;
+			interpreterOptions.ErrorProcessor = errorProcessor;
 
-			stateMachine = await GetStateMachine(stateMachine, source, scxml, token).ConfigureAwait(false);
+			stateMachine = await GetStateMachine(stateMachine, source, scxml, errorProcessor, token).ConfigureAwait(false);
 
 			if (options == null)
 			{

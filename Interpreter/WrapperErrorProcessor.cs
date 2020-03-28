@@ -5,11 +5,11 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class WrapperErrorProcessor : IErrorProcessor
 	{
-		private readonly IErrorProcessor? _errorProcessor;
+		private readonly IErrorProcessor _errorProcessor;
 
 		private ErrorItem? _error;
 
-		public WrapperErrorProcessor(IErrorProcessor? errorProcessor) => _errorProcessor = errorProcessor;
+		public WrapperErrorProcessor(IErrorProcessor errorProcessor) => _errorProcessor = errorProcessor;
 
 	#region Interface IErrorProcessor
 
@@ -22,7 +22,7 @@ namespace TSSArt.StateMachine
 				_error = errorItem;
 			}
 
-			_errorProcessor?.AddError(errorItem);
+			_errorProcessor.AddError(errorItem);
 		}
 
 		public void ThrowIfErrors()
@@ -33,7 +33,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public bool LineInfoRequired => _errorProcessor?.LineInfoRequired ?? false;
+		public bool LineInfoRequired => _errorProcessor.LineInfoRequired;
 
 	#endregion
 	}

@@ -130,22 +130,34 @@ namespace TSSArt.StateMachine
 
 		public ValueTask<DataModelValue> Execute(string sessionId, string scxml, DataModelValue parameters = default) => Execute(stateMachine: null, source: null, scxml, sessionId, parameters);
 
-		private async ValueTask<DataModelValue> Execute(IStateMachine? stateMachine, Uri? source, string? scxml, string sessionId, DataModelValue parameters)
+		private ValueTask<DataModelValue> Execute(IStateMachine? stateMachine, Uri? source, string? scxml, string sessionId, DataModelValue parameters)
 		{
 			if (sessionId == null) throw new ArgumentNullException(nameof(sessionId));
 
 			var context = GetCurrentContext();
 
-			var controller = await context.CreateAndAddStateMachine(sessionId, options: null, stateMachine, source, scxml, parameters, token: default).ConfigureAwait(false);
+			return ExecuteAsync();
 
-			try
+			async ValueTask<DataModelValue> ExecuteAsync()
 			{
-				return await controller.ExecuteAsync().ConfigureAwait(false);
+				var errorProcessor = CreateErrorProcessor(sessionId, stateMachine, source, scxml);
+
+				var controller = await context.CreateAndAddStateMachine(sessionId, options: null, stateMachine, source, scxml, parameters, errorProcessor, token: default).ConfigureAwait(false);
+
+				try
+				{
+					return await controller.ExecuteAsync().ConfigureAwait(false);
+				}
+				finally
+				{
+					await context.DestroyStateMachine(sessionId).ConfigureAwait(false);
+				}
 			}
-			finally
-			{
-				await context.DestroyStateMachine(sessionId).ConfigureAwait(false);
-			}
+		}
+
+		private IErrorProcessor CreateErrorProcessor(string sessionId, IStateMachine? stateMachine, Uri? source, string? scxml)
+		{
+			return _options.VerboseValidation ? new DetailedErrorProcessor(sessionId, stateMachine, source, scxml) : DefaultErrorProcessor.Instance;
 		}
 
 		private IoProcessorContext GetCurrentContext() => _context ?? throw new InvalidOperationException(Resources.Exception_IO_Processor_has_not_been_started);

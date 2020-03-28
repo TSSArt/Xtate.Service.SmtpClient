@@ -34,11 +34,11 @@ namespace TSSArt.StateMachine
 			return false;
 		}
 
-		public ValueTask Log(string? stateMachineName, string? label, DataModelValue data, CancellationToken token)
+		public async ValueTask Log(string? stateMachineName, string? label, DataModelValue data, CancellationToken token)
 		{
 			try
 			{
-				return _logger.LogInfo(_sessionId, stateMachineName, label, data, token);
+				await _logger.LogInfo(_sessionId, stateMachineName, label, data, token).ConfigureAwait(false);
 			}
 			catch (Exception ex)
 			{
@@ -48,11 +48,11 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public ValueTask Error(ErrorType errorType, string? stateMachineName, string? sourceEntityId, Exception exception, CancellationToken token)
+		public async ValueTask Error(ErrorType errorType, string? stateMachineName, string? sourceEntityId, Exception exception, CancellationToken token)
 		{
 			try
 			{
-				return _logger.LogError(errorType, _sessionId, stateMachineName, sourceEntityId, exception, token);
+				await _logger.LogError(errorType, _sessionId, stateMachineName, sourceEntityId, exception, token).ConfigureAwait(false);
 			}
 			catch (Exception ex)
 			{

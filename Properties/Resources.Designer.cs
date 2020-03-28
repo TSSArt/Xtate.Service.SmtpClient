@@ -874,15 +874,6 @@ namespace TSSArt.StateMachine {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to CloseInput of readerSetting must be set to true..
-        /// </summary>
-        internal static string Exception_CloseInput_of_readerSetting_must_be_set_to_true {
-            get {
-                return ResourceManager.GetString("Exception_CloseInput_of_readerSetting_must_be_set_to_true", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Condition does not specified..
         /// </summary>
         internal static string Exception_ConditionDoesNotSpecified {

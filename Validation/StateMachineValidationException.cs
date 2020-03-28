@@ -10,8 +10,20 @@ namespace TSSArt.StateMachine
 	{
 		protected StateMachineValidationException(SerializationInfo info, StreamingContext context) : base(info, context) { }
 
-		public StateMachineValidationException(ImmutableArray<ErrorItem> validationMessages) : base(GetMessage(validationMessages)) => ValidationMessages = validationMessages;
+		public StateMachineValidationException(ImmutableArray<ErrorItem> validationMessages, string? sessionId = null, IStateMachine? stateMachine = null, Uri? source = null, string? scxml = null)
+				: base(GetMessage(validationMessages))
+		{
+			SessionId = sessionId;
+			StateMachine = stateMachine;
+			ScxmlSource = source;
+			Scxml = scxml;
+			ValidationMessages = validationMessages;
+		}
 
+		public Uri?                      ScxmlSource        { get; }
+		public string?                   SessionId          { get; }
+		public IStateMachine?            StateMachine       { get; }
+		public string?                   Scxml              { get; }
 		public ImmutableArray<ErrorItem> ValidationMessages { get; }
 
 		private static string? GetMessage(ImmutableArray<ErrorItem> validationMessages)

@@ -10,7 +10,7 @@ namespace TSSArt.StateMachine
 	internal sealed class DefaultResourceLoader : IResourceLoader
 	{
 		public static readonly IResourceLoader Instance = new DefaultResourceLoader();
-
+		
 	#region Interface IResourceLoader
 
 		public async ValueTask<Resource> Request(Uri uri, CancellationToken token)
@@ -28,12 +28,14 @@ namespace TSSArt.StateMachine
 
 		public ValueTask<XmlReader> RequestXmlReader(Uri uri, XmlReaderSettings? readerSettings = null, XmlParserContext? parserContext = null, CancellationToken token = default)
 		{
-			if (readerSettings?.CloseInput ?? false)
+			try
 			{
-				throw new ArgumentException(Resources.Exception_CloseInput_of_readerSetting_must_be_set_to_true, nameof(readerSettings));
+				return new ValueTask<XmlReader>(XmlReader.Create(uri.ToString(), readerSettings, parserContext));
 			}
-
-			return new ValueTask<XmlReader>(XmlReader.Create(uri.ToString(), readerSettings, parserContext));
+			catch (Exception ex)
+			{
+				return new ValueTask<XmlReader>(Task.FromException<XmlReader>(ex));
+			}
 		}
 
 	#endregion

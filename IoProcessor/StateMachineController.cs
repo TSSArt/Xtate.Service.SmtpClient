@@ -213,6 +213,7 @@ namespace TSSArt.StateMachine
 					}
 
 					FillOptions(out var options);
+					
 					var result = await StateMachineInterpreter.RunAsync(SessionId, _stateMachine, Channel.Reader, options).ConfigureAwait(false);
 					exitStatus = result.Status;
 
@@ -222,7 +223,7 @@ namespace TSSArt.StateMachine
 					{
 						case StateMachineExitStatus.Completed:
 							_completedTcs.TrySetResult(result.Result);
-							return new StateMachineResult(StateMachineExitStatus.Completed, result.Result);
+							return result;
 
 						case StateMachineExitStatus.Suspended when _defaultOptions.SuspendToken.IsCancellationRequested:
 							var suspendException = new OperationCanceledException(_defaultOptions.SuspendToken);
