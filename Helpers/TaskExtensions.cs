@@ -34,5 +34,21 @@ namespace TSSArt.StateMachine
 
 			return await task.ConfigureAwait(false);
 		}
+
+		public static void Forget(this ValueTask valueTask)
+		{
+			if (!valueTask.IsCompleted)
+			{
+				valueTask.AsTask();
+			}
+		}
+
+		public static void Forget<T>(this ValueTask<T> valueTask)
+		{
+			if (!valueTask.IsCompleted)
+			{
+				valueTask.AsTask();
+			}
+		}
 	}
 }

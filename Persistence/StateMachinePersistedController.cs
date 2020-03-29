@@ -118,16 +118,16 @@ namespace TSSArt.StateMachine
 				_storageLock.Release();
 			}
 
-			var _ = DelayedFire(scheduledPersistedEvent, evt.DelayMs);
+			DelayedFire(scheduledPersistedEvent, evt.DelayMs).Forget();
 		}
 
-		protected override async ValueTask DisposeEvent(ScheduledEvent scheduledEvent, CancellationToken token)
+		protected override async ValueTask CancelEvent(ScheduledEvent scheduledEvent, CancellationToken token)
 		{
 			if (scheduledEvent == null) throw new ArgumentNullException(nameof(scheduledEvent));
 
 			var scheduledPersistedEvent = (ScheduledPersistedEvent) scheduledEvent;
 
-			scheduledPersistedEvent.Dispose();
+			scheduledPersistedEvent.Cancel();
 
 			await _storageLock.WaitAsync(token).ConfigureAwait(false);
 			try
@@ -195,7 +195,7 @@ namespace TSSArt.StateMachine
 
 					var delayMs = (int) ((scheduledEvent.FireOnUtc - utcNow).Ticks / TimeSpan.TicksPerMillisecond);
 
-					var _ = DelayedFire(scheduledEvent, delayMs > 1 ? delayMs : 1);
+					DelayedFire(scheduledEvent, delayMs > 1 ? delayMs : 1).Forget();
 				}
 			}
 		}

@@ -598,4 +598,16 @@
   <data name="Exception_UnsupportedType" xml:space="preserve">
     <value>Unsupported {0} type: [{1}].</value>
   </data>
+  <data name="Exception_State_Machine_external_queue_has_been_closed" xml:space="preserve">
+    <value>State Machine external queue has been closed.</value>
+  </data>
+  <data name="Exception_State_Machine_has_been_halted" xml:space="preserve">
+    <value>State Machine has been halted.</value>
+  </data>
+  <data name="Exception_State_Machine_has_been_destroyed" xml:space="preserve">
+    <value>State Machine has been destroyed.</value>
+  </data>
+  <data name="Exception_State_Machine_has_been_suspended" xml:space="preserve">
+    <value>State Machine has been suspended.</value>
+  </data>
 </root>
