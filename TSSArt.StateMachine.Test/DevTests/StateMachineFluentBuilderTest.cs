@@ -72,10 +72,22 @@ namespace TSSArt.StateMachine.Test
 			var channel = Channel.CreateUnbounded<IEvent>();
 			channel.Writer.Complete();
 			var eventChannel = channel.Reader;
-			await StateMachineInterpreter.RunAsync(IdGenerator.NewSessionId(), builder.Build(), eventChannel);
+
+			try
+			{ 
+				await StateMachineInterpreter.RunAsync(IdGenerator.NewSessionId(), builder.Build(), eventChannel);
+
+				Assert.Fail("StateMachineQueueClosedException should be raised");
+			}
+			catch (StateMachineQueueClosedException)
+			{
+				// ignore
+			}
+
 		}
 
 		[TestMethod]
+		[ExpectedException(typeof(StateMachineLiveLockException))]
 		public async Task LiveLockErrorConditionTest()
 		{
 			var builder = new StateMachineFluentBuilder(BuilderFactory.Instance);
@@ -90,12 +102,11 @@ namespace TSSArt.StateMachine.Test
 			var channel = Channel.CreateUnbounded<IEvent>();
 			channel.Writer.Complete();
 			var eventChannel = channel.Reader;
-			var result = await StateMachineInterpreter.RunAsync(IdGenerator.NewSessionId(), builder.Build(), eventChannel);
-
-			Assert.AreEqual(StateMachineExitStatus.LiveLockAbort, result.Status);
+			await StateMachineInterpreter.RunAsync(IdGenerator.NewSessionId(), builder.Build(), eventChannel);
 		}
 
 		[TestMethod]
+		[ExpectedException(typeof(StateMachineLiveLockException))]
 		public async Task LiveLockPingPongTest()
 		{
 			var builder = new StateMachineFluentBuilder(BuilderFactory.Instance);
@@ -115,9 +126,7 @@ namespace TSSArt.StateMachine.Test
 			var channel = Channel.CreateUnbounded<IEvent>();
 			channel.Writer.Complete();
 			var eventChannel = channel.Reader;
-			var result = await StateMachineInterpreter.RunAsync(IdGenerator.NewSessionId(), builder.Build(), eventChannel);
-
-			Assert.AreEqual(StateMachineExitStatus.LiveLockAbort, result.Status);
+			await StateMachineInterpreter.RunAsync(IdGenerator.NewSessionId(), builder.Build(), eventChannel);
 		}
 	}
 }

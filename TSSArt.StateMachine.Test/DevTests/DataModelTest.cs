@@ -42,7 +42,16 @@ namespace TSSArt.StateMachine.Test
 		{
 			var stateMachine = getter(innerXml);
 
-			await StateMachineInterpreter.RunAsync(IdGenerator.NewSessionId(), stateMachine, _eventChannel, _options);
+			try
+			{
+				await StateMachineInterpreter.RunAsync(IdGenerator.NewSessionId(), stateMachine, _eventChannel, _options);
+
+				Assert.Fail("StateMachineQueueClosedException should be raised");
+			}
+			catch (StateMachineQueueClosedException)
+			{
+				// ignore
+			}
 		}
 
 		[TestInitialize]

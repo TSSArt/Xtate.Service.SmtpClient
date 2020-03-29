@@ -56,12 +56,23 @@ namespace TSSArt.StateMachine.Test
 						  };
 
 			var newSessionId = IdGenerator.NewSessionId();
-			var stateMachineResult = await StateMachineInterpreter.RunAsync(newSessionId, _allStateMachine, channel.Reader, options);
+			try
+			{
+				await StateMachineInterpreter.RunAsync(newSessionId, _allStateMachine, channel.Reader, options);
+			}
+			catch (StateMachineQueueClosedException)
+			{
+				//expected
+			}
 
-			var stateMachineResult2 = await StateMachineInterpreter.RunAsync(newSessionId, stateMachine: null, channel2.Reader, options);
-
-			Assert.AreEqual(StateMachineExitStatus.QueueClosed, stateMachineResult.Status);
-			Assert.AreEqual(StateMachineExitStatus.QueueClosed, stateMachineResult2.Status);
+			try
+			{
+				await StateMachineInterpreter.RunAsync(newSessionId, stateMachine: null, channel2.Reader, options);
+			}
+			catch (StateMachineQueueClosedException)
+			{
+				//expected
+			}
 		}
 
 		private class TestStorage : IStorageProvider

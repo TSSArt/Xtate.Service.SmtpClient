@@ -1290,6 +1290,42 @@ namespace TSSArt.StateMachine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to State Machine external queue has been closed..
+        /// </summary>
+        internal static string Exception_State_Machine_external_queue_has_been_closed {
+            get {
+                return ResourceManager.GetString("Exception_State_Machine_external_queue_has_been_closed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to State Machine has been destroyed..
+        /// </summary>
+        internal static string Exception_State_Machine_has_been_destroyed {
+            get {
+                return ResourceManager.GetString("Exception_State_Machine_has_been_destroyed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to State Machine has been halted..
+        /// </summary>
+        internal static string Exception_State_Machine_has_been_halted {
+            get {
+                return ResourceManager.GetString("Exception_State_Machine_has_been_halted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to State Machine has been suspended..
+        /// </summary>
+        internal static string Exception_State_Machine_has_been_suspended {
+            get {
+                return ResourceManager.GetString("Exception_State_Machine_has_been_suspended", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to StateId not initialized..
         /// </summary>
         internal static string Exception_StateId_not_initialized {

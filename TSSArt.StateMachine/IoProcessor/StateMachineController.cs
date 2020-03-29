@@ -91,7 +91,7 @@ namespace TSSArt.StateMachine
 			{
 				if (evt.Event.SendId == sendId)
 				{
-					await DisposeEvent(evt, token).ConfigureAwait(false);
+					await CancelEvent(evt, token).ConfigureAwait(false);
 				}
 			}
 
@@ -165,7 +165,7 @@ namespace TSSArt.StateMachine
 		{
 			token.Register(() => _acceptedTcs.TrySetCanceled(token));
 
-			var _ = RunAsync(false);
+			ExecuteAsync().Forget();
 
 			return new ValueTask(_acceptedTcs.Task);
 		}
@@ -193,13 +193,10 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public async ValueTask<DataModelValue> ExecuteAsync() => (await RunAsync(true).ConfigureAwait(false)).Result;
-
 		protected virtual ValueTask Initialize() => default;
 
-		private async ValueTask<StateMachineResult> RunAsync(bool throwOnError)
+		public async ValueTask<DataModelValue> ExecuteAsync()
 		{
-			var exitStatus = StateMachineExitStatus.Unknown;
 			var initialized = false;
 			while (true)
 			{
@@ -213,103 +210,63 @@ namespace TSSArt.StateMachine
 					}
 
 					FillOptions(out var options);
-					
-					var result = await StateMachineInterpreter.RunAsync(SessionId, _stateMachine, Channel.Reader, options).ConfigureAwait(false);
-					exitStatus = result.Status;
 
-					_acceptedTcs.TrySetResult(0);
-
-					switch (result.Status)
-					{
-						case StateMachineExitStatus.Completed:
-							_completedTcs.TrySetResult(result.Result);
-							return result;
-
-						case StateMachineExitStatus.Suspended when _defaultOptions.SuspendToken.IsCancellationRequested:
-							var suspendException = new OperationCanceledException(_defaultOptions.SuspendToken);
-							if (throwOnError)
-							{
-								throw suspendException;
-							}
-
-							_completedTcs.TrySetCanceled(_defaultOptions.SuspendToken);
-							return new StateMachineResult(result.Status, suspendException);
-
-						case StateMachineExitStatus.Suspended:
-							break;
-
-						case StateMachineExitStatus.Destroyed:
-							var destroyException = new OperationCanceledException(options.DestroyToken);
-							if (throwOnError)
-							{
-								throw destroyException;
-							}
-
-							_completedTcs.TrySetCanceled(options.DestroyToken);
-							return new StateMachineResult(result.Status, destroyException);
-
-						case StateMachineExitStatus.QueueClosed:
-						case StateMachineExitStatus.LiveLockAbort:
-							if (throwOnError)
-							{
-								throw result.Exception!;
-							}
-
-							_completedTcs.TrySetException(result.Exception);
-							return new StateMachineResult(result.Status, result.Exception!);
-
-						default:
-							return Infrastructure.UnexpectedValue<StateMachineResult>();
-					}
-
-					var anyTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_defaultOptions.StopToken, _defaultOptions.DestroyToken, _defaultOptions.SuspendToken);
 					try
 					{
-						if (!await Channel.Reader.WaitToReadAsync(anyTokenSource.Token).ConfigureAwait(false))
-						{
-							exitStatus = StateMachineExitStatus.QueueClosed;
-							await Channel.Reader.ReadAsync(CancellationToken.None).ConfigureAwait(false);
-						}
+						var result = await StateMachineInterpreter.RunAsync(SessionId, _stateMachine, Channel.Reader, options).ConfigureAwait(false);
+						_acceptedTcs.TrySetResult(0);
+						_completedTcs.TrySetResult(result);
+
+						return result;
 					}
-					finally
-					{
-						anyTokenSource.Dispose();
-					}
+					catch (StateMachineSuspendedException) when (!_defaultOptions.SuspendToken.IsCancellationRequested) { }
+
+					await WaitForResume().ConfigureAwait(false);
+				}
+				catch (OperationCanceledException ex)
+				{
+					_acceptedTcs.TrySetCanceled(ex.CancellationToken);
+					_completedTcs.TrySetCanceled(ex.CancellationToken);
+
+					throw;
 				}
 				catch (Exception ex)
 				{
-					if (ex is OperationCanceledException operationCanceledException)
-					{
-						var token = operationCanceledException.CancellationToken;
-						if (_defaultOptions.StopToken.IsCancellationRequested)
-						{
-							token = _defaultOptions.StopToken;
-						}
-						else if (_defaultOptions.DestroyToken.IsCancellationRequested)
-						{
-							token = _defaultOptions.DestroyToken;
-						}
-						else if (_defaultOptions.SuspendToken.IsCancellationRequested)
-						{
-							token = _defaultOptions.SuspendToken;
-						}
+					_acceptedTcs.TrySetException(ex);
+					_completedTcs.TrySetException(ex);
 
-						_acceptedTcs.TrySetCanceled(token);
-						_completedTcs.TrySetCanceled(token);
-					}
-					else
-					{
-						_acceptedTcs.TrySetException(ex);
-						_completedTcs.TrySetException(ex);
-					}
-
-					if (throwOnError)
-					{
-						throw;
-					}
-
-					return new StateMachineResult(exitStatus, ex);
+					throw;
 				}
+			}
+		}
+
+		private async ValueTask WaitForResume()
+		{
+			var anyTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_defaultOptions.StopToken, _defaultOptions.DestroyToken, _defaultOptions.SuspendToken);
+			try
+			{
+				if (await Channel.Reader.WaitToReadAsync(anyTokenSource.Token).ConfigureAwait(false))
+				{
+					return;
+				}
+				
+				await Channel.Reader.ReadAsync(CancellationToken.None).ConfigureAwait(false);
+			}
+			catch (OperationCanceledException ex) when (ex.CancellationToken == anyTokenSource.Token && _defaultOptions.StopToken.IsCancellationRequested)
+			{
+				throw new OperationCanceledException(Resources.Exception_State_Machine_has_been_halted, ex, _defaultOptions.StopToken);
+			}
+			catch (OperationCanceledException ex) when (ex.CancellationToken == anyTokenSource.Token && _defaultOptions.SuspendToken.IsCancellationRequested)
+			{
+				throw new StateMachineSuspendedException(Resources.Exception_State_Machine_has_been_suspended, ex, _defaultOptions.SuspendToken);
+			}
+			catch (ChannelClosedException ex)
+			{
+				throw new StateMachineQueueClosedException(Resources.Exception_State_Machine_external_queue_has_been_closed, ex);
+			}
+			finally
+			{
+				anyTokenSource.Dispose();
 			}
 		}
 
@@ -321,7 +278,7 @@ namespace TSSArt.StateMachine
 
 			_scheduledEvents.Add(scheduledEvent);
 
-			var _ = DelayedFire(scheduledEvent, evt.DelayMs);
+			DelayedFire(scheduledEvent, evt.DelayMs).Forget();
 
 			CleanScheduledEvents();
 
@@ -340,30 +297,33 @@ namespace TSSArt.StateMachine
 		{
 			if (scheduledEvent == null) throw new ArgumentNullException(nameof(scheduledEvent));
 
-			await Task.Delay(delayMs).ConfigureAwait(false);
-
-			if (scheduledEvent.IsDisposed)
-			{
-				return;
-			}
-
-			await DisposeEvent(scheduledEvent, token: default).ConfigureAwait(false);
-
 			try
 			{
-				await _ioProcessor.DispatchEvent(SessionId, scheduledEvent.Event, skipDelay: true, CancellationToken.None).ConfigureAwait(false);
+				await Task.Delay(delayMs, scheduledEvent.CancellationToken).ConfigureAwait(false);
+
+				await CancelEvent(scheduledEvent, token: default).ConfigureAwait(false);
+
+				try
+				{
+					await _ioProcessor.DispatchEvent(SessionId, scheduledEvent.Event, skipDelay: true, CancellationToken.None).ConfigureAwait(false);
+				}
+				catch (Exception ex)
+				{
+					await _logger.LogError(ErrorType.Communication, SessionId, _stateMachine.Name, scheduledEvent.Event.SendId, ex, token: default).ConfigureAwait(false);
+				}
 			}
-			catch (Exception ex)
+			finally
 			{
-				await _logger.LogError(ErrorType.Communication, SessionId, _stateMachine.Name, scheduledEvent.Event.SendId, ex, token: default).ConfigureAwait(false);
+				scheduledEvent.Dispose();
 			}
 		}
 
-		protected virtual ValueTask DisposeEvent(ScheduledEvent scheduledEvent, CancellationToken token)
+		protected virtual ValueTask CancelEvent(ScheduledEvent scheduledEvent, CancellationToken token)
 		{
 			if (scheduledEvent == null) throw new ArgumentNullException(nameof(scheduledEvent));
 
-			scheduledEvent.Dispose();
+			scheduledEvent.Cancel();
+
 			_toDelete.Enqueue(scheduledEvent);
 
 			return default;
@@ -371,13 +331,17 @@ namespace TSSArt.StateMachine
 
 		protected class ScheduledEvent
 		{
+			private readonly CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+
 			public ScheduledEvent(IOutgoingEvent evt) => Event = evt;
 
 			public IOutgoingEvent Event { get; }
 
-			public bool IsDisposed { get; private set; }
+			public CancellationToken CancellationToken => _cancellationTokenSource.Token;
 
-			public void Dispose() => IsDisposed = true;
+			public void Cancel() => _cancellationTokenSource.Cancel();
+
+			public void Dispose() => _cancellationTokenSource.Dispose();
 		}
 	}
 }

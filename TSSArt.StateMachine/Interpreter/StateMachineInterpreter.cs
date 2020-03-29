@@ -83,7 +83,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public static ValueTask<StateMachineResult> RunAsync(string sessionId, IStateMachine stateMachine, ChannelReader<IEvent> eventChannel, in InterpreterOptions options = default)
+		public static ValueTask<DataModelValue> RunAsync(string sessionId, IStateMachine stateMachine, ChannelReader<IEvent> eventChannel, in InterpreterOptions options = default)
 		{
 			if (sessionId == null) throw new ArgumentNullException(nameof(sessionId));
 			if (eventChannel == null) throw new ArgumentNullException(nameof(eventChannel));
@@ -341,71 +341,63 @@ namespace TSSArt.StateMachine
 		private ValueTask NotifyExited()   => _notifyStateChanged?.OnChanged(StateMachineInterpreterState.Exited) ?? default;
 		private ValueTask NotifyWaiting()  => _notifyStateChanged?.OnChanged(StateMachineInterpreterState.Waiting) ?? default;
 
-		private async ValueTask<StateMachineResult> Run(IStateMachine stateMachine)
+		private async ValueTask<DataModelValue> Run(IStateMachine stateMachine)
 		{
-			var exitStatus = StateMachineExitStatus.Completed;
-			Exception? exception = null;
-
 			_model = await BuildInterpreterModel(stateMachine).ConfigureAwait(false);
 			_context = await CreateContext().ConfigureAwait(false);
 			_anyTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_suspendToken, _destroyToken, _stopToken);
-			await using (_context.ConfigureAwait(false))
+			await using var _ = _context.ConfigureAwait(false);
+			try
 			{
-				try
-				{
-					await DoOperation(StateBagKey.NotifyAccepted, NotifyAccepted).ConfigureAwait(false);
-					await DoOperation(StateBagKey.InitializeRootDataModel, InitializeRootDataModel).ConfigureAwait(false);
-					await DoOperation(StateBagKey.EarlyInitializeDataModel, InitializeAllDataModels).ConfigureAwait(false);
-					await DoOperation(StateBagKey.ExecuteGlobalScript, ExecuteGlobalScript).ConfigureAwait(false);
-					await DoOperation(StateBagKey.NotifyStarted, NotifyStarted).ConfigureAwait(false);
-					await DoOperation(StateBagKey.InitialEnterStates, InitialEnterStates).ConfigureAwait(false);
-					await DoOperation(StateBagKey.MainEventLoop, MainEventLoop).ConfigureAwait(false);
-					await DoOperation(StateBagKey.ExitInterpreter, ExitInterpreter).ConfigureAwait(false);
-					await DoOperation(StateBagKey.NotifyExited, NotifyExited).ConfigureAwait(false);
-				}
-				catch (Exception ex) when (ConvertToStatus(ex, out var status))
-				{
-					exitStatus = status;
-					exception = ex;
-				}
+				await DoOperation(StateBagKey.NotifyAccepted, NotifyAccepted).ConfigureAwait(false);
+				await DoOperation(StateBagKey.InitializeRootDataModel, InitializeRootDataModel).ConfigureAwait(false);
+				await DoOperation(StateBagKey.EarlyInitializeDataModel, InitializeAllDataModels).ConfigureAwait(false);
+				await DoOperation(StateBagKey.ExecuteGlobalScript, ExecuteGlobalScript).ConfigureAwait(false);
+				await DoOperation(StateBagKey.NotifyStarted, NotifyStarted).ConfigureAwait(false);
+				await DoOperation(StateBagKey.InitialEnterStates, InitialEnterStates).ConfigureAwait(false);
+				await DoOperation(StateBagKey.MainEventLoop, MainEventLoop).ConfigureAwait(false);
+				await DoOperation(StateBagKey.ExitInterpreter, ExitInterpreter).ConfigureAwait(false);
+				await DoOperation(StateBagKey.NotifyExited, NotifyExited).ConfigureAwait(false);
+			}
+			catch (ChannelClosedException ex)
+			{
+				throw new StateMachineQueueClosedException(Resources.Exception_State_Machine_external_queue_has_been_closed, ex);
+			}
+			catch (StateMachineLiveLockException)
+			{
+				await CleanupPersistedData().ConfigureAwait(false);
 
-				if (exitStatus == StateMachineExitStatus.Destroyed)
-				{
-					await DoOperation(StateBagKey.ExitInterpreter, ExitInterpreter).ConfigureAwait(false);
-					await DoOperation(StateBagKey.NotifyExited, NotifyExited).ConfigureAwait(false);
-				}
+				throw;
+			}
+			catch (OperationCanceledException ex) when (ex.CancellationToken == _stopToken || ex.CancellationToken == _anyTokenSource.Token && _stopToken.IsCancellationRequested)
+			{
+				throw new OperationCanceledException(Resources.Exception_State_Machine_has_been_halted, ex, _stopToken);
+			}
+			catch (OperationCanceledException ex) when (ex.CancellationToken == _destroyToken || ex.CancellationToken == _anyTokenSource.Token && _destroyToken.IsCancellationRequested)
+			{
+				await DoOperation(StateBagKey.ExitInterpreter, ExitInterpreter).ConfigureAwait(false);
+				await DoOperation(StateBagKey.NotifyExited, NotifyExited).ConfigureAwait(false);
+				await CleanupPersistedData().ConfigureAwait(false);
 
-				if (IsPersistingEnabled && (exitStatus == StateMachineExitStatus.Completed || exitStatus == StateMachineExitStatus.Destroyed || exitStatus == StateMachineExitStatus.LiveLockAbort))
-				{
-					await CleanupPersistedData().ConfigureAwait(false);
-				}
+				throw new StateMachineDestroyedException(Resources.Exception_State_Machine_has_been_destroyed, ex, _destroyToken);
+			}
+			catch (OperationCanceledException ex) when (ex.CancellationToken == _suspendToken || ex.CancellationToken == _anyTokenSource.Token && _suspendToken.IsCancellationRequested)
+			{
+				throw new StateMachineSuspendedException(Resources.Exception_State_Machine_has_been_suspended, ex, _suspendToken);
 			}
 
-			return exception == null ? new StateMachineResult(exitStatus, _doneData) : new StateMachineResult(exitStatus, exception);
+			await CleanupPersistedData().ConfigureAwait(false);
+
+			return _doneData;
 		}
-
-		private bool ConvertToStatus(Exception ex, out StateMachineExitStatus exitStatus)
-		{
-			exitStatus = ex switch
-			{
-					ChannelClosedException _ => StateMachineExitStatus.QueueClosed,
-					StateMachineLiveLockException _ => StateMachineExitStatus.LiveLockAbort,
-					OperationCanceledException e when e.CancellationToken == _stopToken => StateMachineExitStatus.Unknown,
-					OperationCanceledException e when e.CancellationToken == _destroyToken => StateMachineExitStatus.Destroyed,
-					OperationCanceledException e when e.CancellationToken == _suspendToken => StateMachineExitStatus.Suspended,
-					OperationCanceledException e when e.CancellationToken == _anyTokenSource.Token && _stopToken.IsCancellationRequested => StateMachineExitStatus.Unknown,
-					OperationCanceledException e when e.CancellationToken == _anyTokenSource.Token && _destroyToken.IsCancellationRequested => StateMachineExitStatus.Destroyed,
-					OperationCanceledException e when e.CancellationToken == _anyTokenSource.Token && _suspendToken.IsCancellationRequested => StateMachineExitStatus.Suspended,
-					_ => StateMachineExitStatus.Unknown
-			};
-
-			return exitStatus != StateMachineExitStatus.Unknown;
-		}
-
+		
 		private async ValueTask CleanupPersistedData()
 		{
-			await _storageProvider.RemoveTransactionalStorage(partition: default, StateStorageKey, _stopToken).ConfigureAwait(false);
-			await _storageProvider.RemoveTransactionalStorage(partition: default, StateMachineDefinitionStorageKey, _stopToken).ConfigureAwait(false);
+			if (IsPersistingEnabled)
+			{
+				await _storageProvider.RemoveTransactionalStorage(partition: default, StateStorageKey, _stopToken).ConfigureAwait(false);
+				await _storageProvider.RemoveTransactionalStorage(partition: default, StateMachineDefinitionStorageKey, _stopToken).ConfigureAwait(false);
+			}
 		}
 
 		private async ValueTask InitializeAllDataModels()
