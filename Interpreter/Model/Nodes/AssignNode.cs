@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
@@ -7,7 +6,7 @@ namespace TSSArt.StateMachine
 	{
 		private readonly AssignEntity _entity;
 
-		public AssignNode(LinkedListNode<int> documentIdNode, in AssignEntity entity) : base(documentIdNode, (IAssign?) entity.Ancestor) => _entity = entity;
+		public AssignNode(in DocumentIdRecord documentIdNode, in AssignEntity entity) : base(documentIdNode, (IAssign?) entity.Ancestor) => _entity = entity;
 
 	#region Interface IAncestorProvider
 

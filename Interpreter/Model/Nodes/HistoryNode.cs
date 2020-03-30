@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
@@ -7,7 +6,7 @@ namespace TSSArt.StateMachine
 	{
 		private readonly HistoryEntity _history;
 
-		public HistoryNode(LinkedListNode<int> documentIdNode, in HistoryEntity history) : base(documentIdNode, children: null)
+		public HistoryNode(in DocumentIdRecord documentIdNode, in HistoryEntity history) : base(documentIdNode, children: null)
 		{
 			Infrastructure.Assert(history.Transition != null);
 

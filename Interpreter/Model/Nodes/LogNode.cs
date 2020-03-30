@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
@@ -7,7 +6,7 @@ namespace TSSArt.StateMachine
 	{
 		private readonly LogEntity _entity;
 
-		public LogNode(LinkedListNode<int> documentIdNode, in LogEntity entity) : base(documentIdNode, (ILog?) entity.Ancestor) => _entity = entity;
+		public LogNode(in DocumentIdRecord documentIdNode, in LogEntity entity) : base(documentIdNode, (ILog?) entity.Ancestor) => _entity = entity;
 
 	#region Interface IAncestorProvider
 

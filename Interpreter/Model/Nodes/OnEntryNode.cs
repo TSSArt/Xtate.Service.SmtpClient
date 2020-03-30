@@ -1,15 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	internal sealed class OnEntryNode : IOnEntry, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
-		private readonly LinkedListNode<int> _documentIdNode;
-		private readonly OnEntryEntity       _onEntry;
+		private          DocumentIdRecord _documentIdNode;
+		private readonly OnEntryEntity    _onEntry;
 
-		public OnEntryNode(LinkedListNode<int> documentIdNode, in OnEntryEntity onEntry)
+		public OnEntryNode(in DocumentIdRecord documentIdNode, in OnEntryEntity onEntry)
 		{
 			_onEntry = onEntry;
 			_documentIdNode = documentIdNode;

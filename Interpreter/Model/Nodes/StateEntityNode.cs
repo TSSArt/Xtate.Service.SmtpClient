@@ -9,9 +9,9 @@ namespace TSSArt.StateMachine
 		public static readonly IComparer<StateEntityNode> EntryOrder = new DocumentOrderComparer(reverseOrder: false);
 		public static readonly IComparer<StateEntityNode> ExitOrder  = new DocumentOrderComparer(reverseOrder: true);
 
-		private readonly LinkedListNode<int> _documentIdNode;
+		private DocumentIdRecord _documentIdNode;
 
-		protected StateEntityNode(LinkedListNode<int> documentIdNode, IEnumerable<StateEntityNode>? children)
+		protected StateEntityNode(in DocumentIdRecord documentIdNode, IEnumerable<StateEntityNode>? children)
 		{
 			_documentIdNode = documentIdNode;
 

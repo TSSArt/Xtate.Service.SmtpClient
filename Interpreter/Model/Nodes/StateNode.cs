@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
@@ -8,7 +7,7 @@ namespace TSSArt.StateMachine
 	{
 		private readonly StateEntity _state;
 
-		public StateNode(LinkedListNode<int> documentIdNode, in StateEntity state) : base(documentIdNode, GetChildNodes(state.Initial, state.States, state.HistoryStates))
+		public StateNode(in DocumentIdRecord documentIdNode, in StateEntity state) : base(documentIdNode, GetChildNodes(state.Initial, state.States, state.HistoryStates))
 		{
 			_state = state;
 

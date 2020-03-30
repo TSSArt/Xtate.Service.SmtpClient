@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
 	internal sealed class ElseNode : IElse, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
-		private readonly LinkedListNode<int> _documentIdNode;
-		private readonly ElseEntity          _entity;
+		private          DocumentIdRecord _documentIdNode;
+		private readonly ElseEntity       _entity;
 
-		public ElseNode(LinkedListNode<int> documentIdNode, in ElseEntity entity)
+		public ElseNode(in DocumentIdRecord documentIdNode, in ElseEntity entity)
 		{
 			_documentIdNode = documentIdNode;
 			_entity = entity;

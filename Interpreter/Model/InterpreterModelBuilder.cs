@@ -81,7 +81,11 @@ namespace TSSArt.StateMachine
 				}
 			}
 
-			return new InterpreterModel(stateMachine.As<StateMachineNode>(), _counter, CreateEntityMap(), _dataModelNodeArray?.ToImmutable() ?? default);
+			var entityMap = CreateEntityMap();
+
+			_documentIdList.Clear();
+
+			return new InterpreterModel(stateMachine.As<StateMachineNode>(), _counter, entityMap, _dataModelNodeArray?.ToImmutable() ?? default);
 		}
 
 		public async ValueTask<InterpreterModel> Build(IResourceLoader resourceLoader, CancellationToken token)
@@ -131,9 +135,9 @@ namespace TSSArt.StateMachine
 
 		private void RegisterEntity(IEntity entity) => _entities.Add(entity);
 
-		private LinkedListNode<int> NewDocumentId() => _documentIdList.AddLast(-1);
+		private DocumentIdRecord NewDocumentId() => new DocumentIdRecord(_documentIdList);
 
-		private LinkedListNode<int> NewDocumentIdAfter(LinkedListNode<int> node) => _documentIdList.AddAfter(node, value: -1);
+		private static DocumentIdRecord NewDocumentIdAfter(in DocumentIdRecord previous) => previous.After();
 
 		protected override void Build(ref IStateMachine stateMachine, ref StateMachineEntity stateMachineProperties)
 		{

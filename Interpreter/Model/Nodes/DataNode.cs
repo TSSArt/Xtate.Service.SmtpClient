@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
 	internal sealed class DataNode : IData, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
-		private readonly DataEntity          _data;
-		private readonly LinkedListNode<int> _documentIdNode;
+		private readonly DataEntity       _data;
+		private          DocumentIdRecord _documentIdNode;
 
-		public DataNode(LinkedListNode<int> documentIdNode, in DataEntity data)
+		public DataNode(in DocumentIdRecord documentIdNode, in DataEntity data)
 		{
 			Infrastructure.Assert(data.Id != null);
 

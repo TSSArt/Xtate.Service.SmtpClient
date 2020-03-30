@@ -116,21 +116,21 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public ValueTask<DataModelValue> Execute(IStateMachine stateMachine, DataModelValue parameters = default) =>
+		public Task<DataModelValue> Execute(IStateMachine stateMachine, DataModelValue parameters = default) =>
 				Execute(stateMachine, source: null, scxml: default, IdGenerator.NewSessionId(), parameters);
 
-		public ValueTask<DataModelValue> Execute(Uri source, DataModelValue parameters = default) => Execute(stateMachine: null, source, scxml: default, IdGenerator.NewSessionId(), parameters);
+		public Task<DataModelValue> Execute(Uri source, DataModelValue parameters = default) => Execute(stateMachine: null, source, scxml: default, IdGenerator.NewSessionId(), parameters);
 
-		public ValueTask<DataModelValue> Execute(string scxml, DataModelValue parameters = default) => Execute(stateMachine: null, source: null, scxml, IdGenerator.NewSessionId(), parameters);
+		public Task<DataModelValue> Execute(string scxml, DataModelValue parameters = default) => Execute(stateMachine: null, source: null, scxml, IdGenerator.NewSessionId(), parameters);
 
-		public ValueTask<DataModelValue> Execute(string sessionId, IStateMachine stateMachine, DataModelValue parameters = default) =>
+		public Task<DataModelValue> Execute(string sessionId, IStateMachine stateMachine, DataModelValue parameters = default) =>
 				Execute(stateMachine, source: null, scxml: default, sessionId, parameters);
 
-		public ValueTask<DataModelValue> Execute(string sessionId, Uri source, DataModelValue parameters = default) => Execute(stateMachine: null, source, scxml: default, sessionId, parameters);
+		public Task<DataModelValue> Execute(string sessionId, Uri source, DataModelValue parameters = default) => Execute(stateMachine: null, source, scxml: default, sessionId, parameters);
 
-		public ValueTask<DataModelValue> Execute(string sessionId, string scxml, DataModelValue parameters = default) => Execute(stateMachine: null, source: null, scxml, sessionId, parameters);
+		public Task<DataModelValue> Execute(string sessionId, string scxml, DataModelValue parameters = default) => Execute(stateMachine: null, source: null, scxml, sessionId, parameters);
 
-		private ValueTask<DataModelValue> Execute(IStateMachine? stateMachine, Uri? source, string? scxml, string sessionId, DataModelValue parameters)
+		private Task<DataModelValue> Execute(IStateMachine? stateMachine, Uri? source, string? scxml, string sessionId, DataModelValue parameters)
 		{
 			if (sessionId == null) throw new ArgumentNullException(nameof(sessionId));
 
@@ -138,7 +138,7 @@ namespace TSSArt.StateMachine
 
 			return ExecuteAsync();
 
-			async ValueTask<DataModelValue> ExecuteAsync()
+			async Task<DataModelValue> ExecuteAsync()
 			{
 				var errorProcessor = CreateErrorProcessor(sessionId, stateMachine, source, scxml);
 

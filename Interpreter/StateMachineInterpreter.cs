@@ -390,7 +390,7 @@ namespace TSSArt.StateMachine
 
 			return _doneData;
 		}
-		
+
 		private async ValueTask CleanupPersistedData()
 		{
 			if (IsPersistingEnabled)

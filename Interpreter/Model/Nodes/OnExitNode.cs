@@ -1,15 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	internal sealed class OnExitNode : IOnExit, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
-		private readonly LinkedListNode<int> _documentIdNode;
-		private readonly OnExitEntity        _onExit;
+		private          DocumentIdRecord _documentIdNode;
+		private readonly OnExitEntity     _onExit;
 
-		public OnExitNode(LinkedListNode<int> documentIdNode, in OnExitEntity onExit)
+		public OnExitNode(in DocumentIdRecord documentIdNode, in OnExitEntity onExit)
 		{
 			_onExit = onExit;
 			_documentIdNode = documentIdNode;

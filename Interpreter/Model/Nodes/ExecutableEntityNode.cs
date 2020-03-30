@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -7,10 +6,10 @@ namespace TSSArt.StateMachine
 {
 	internal abstract class ExecutableEntityNode : IExecutableEntity, IExecEvaluator, IStoreSupport, IDocumentId
 	{
-		private readonly LinkedListNode<int> _documentIdNode;
-		private readonly IExecEvaluator      _execEvaluator;
+		private          DocumentIdRecord _documentIdNode;
+		private readonly IExecEvaluator   _execEvaluator;
 
-		protected ExecutableEntityNode(LinkedListNode<int> documentIdNode, IExecutableEntity? entity)
+		protected ExecutableEntityNode(in DocumentIdRecord documentIdNode, IExecutableEntity? entity)
 		{
 			if (entity == null) throw new ArgumentNullException(nameof(entity));
 
