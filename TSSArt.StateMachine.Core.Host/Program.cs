@@ -1,13 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
+using System.Linq;
 using System.Reflection;
 using System.Resources;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
 using TSSArt.StateMachine.EcmaScript;
-using TSSArt.StateMachine.Services;
 
 namespace TSSArt.StateMachine.Core.Host
 {
@@ -21,26 +20,24 @@ namespace TSSArt.StateMachine.Core.Host
 
 			var baseUri = new Uri(args.Length > 0 ? args[0] : "http://localhost:5000/");
 
-			var options = new IoProcessorOptions
-						  {
-								  EventProcessorFactories = ImmutableArray.Create((IEventProcessorFactory) new HttpEventProcessorFactory(baseUri, path: "/")),
-								  ServiceFactories = ImmutableArray.Create(WebBrowserService.GetFactory<CefSharpWebBrowserService>(), InputService.Factory),
-								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
-								  VerboseValidation = true
-						  };
+			var options = new IoProcessorOptionsBuilder()
+						   .AddEcmaScript()
+						   .AddCefSharpWebBrowser()
+						   .AddUserInteraction()
+						   .AddHttpEventProcessor(baseUri, path: "/")
+						   .Build();
 
 			await using var ioProcessor = new IoProcessor(options);
 
 			await ioProcessor.StartAsync().ConfigureAwait(false);
 
-			foreach (var name in GetResourceNames())
-			{
-				var _ = ioProcessor.Execute(GetStateMachine(name));
-			}
-			
+			var machines = GetResourceNames().Select(name => ioProcessor.Execute(GetStateMachine(name))).ToList();
+
 			Application.Run();
 
 			await ioProcessor.StopAsync().ConfigureAwait(false);
+
+			await Task.WhenAll(machines).ConfigureAwait(false);
 		}
 
 		private static IEnumerable<string> GetResourceNames()

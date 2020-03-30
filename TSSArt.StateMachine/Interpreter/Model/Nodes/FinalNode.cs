@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
@@ -8,7 +7,7 @@ namespace TSSArt.StateMachine
 	{
 		private readonly FinalEntity _final;
 
-		public FinalNode(LinkedListNode<int> documentIdNode, in FinalEntity final) : base(documentIdNode, children: null)
+		public FinalNode(in DocumentIdRecord documentIdNode, in FinalEntity final) : base(documentIdNode, children: null)
 		{
 			_final = final;
 

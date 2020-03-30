@@ -6,10 +6,10 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class TransitionNode : ITransition, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
-		private readonly LinkedListNode<int> _documentIdNode;
-		private readonly TransitionEntity    _transition;
+		private          DocumentIdRecord _documentIdNode;
+		private readonly TransitionEntity _transition;
 
-		public TransitionNode(LinkedListNode<int> documentIdNode, in TransitionEntity transition, ImmutableArray<StateEntityNode> target = default)
+		public TransitionNode(in DocumentIdRecord documentIdNode, in TransitionEntity transition, ImmutableArray<StateEntityNode> target = default)
 		{
 			_transition = transition;
 			_documentIdNode = documentIdNode;

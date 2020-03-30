@@ -1,14 +1,13 @@
-﻿using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
 	internal sealed class DataModelNode : IDataModel, IStoreSupport, IAncestorProvider, IDocumentId
 	{
-		private readonly DataModelEntity     _dataModel;
-		private readonly LinkedListNode<int> _documentIdNode;
+		private readonly DataModelEntity  _dataModel;
+		private          DocumentIdRecord _documentIdNode;
 
-		public DataModelNode(LinkedListNode<int> documentIdNode, in DataModelEntity dataModel)
+		public DataModelNode(in DocumentIdRecord documentIdNode, in DataModelEntity dataModel)
 		{
 			_documentIdNode = documentIdNode;
 			_dataModel = dataModel;

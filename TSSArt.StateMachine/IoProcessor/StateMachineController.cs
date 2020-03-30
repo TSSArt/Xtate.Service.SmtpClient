@@ -137,7 +137,7 @@ namespace TSSArt.StateMachine
 			return default;
 		}
 
-		public ValueTask<DataModelValue> Result => new ValueTask<DataModelValue>(_completedTcs.Task);
+		public Task<DataModelValue> Result => _completedTcs.Task;
 
 	#endregion
 
@@ -249,7 +249,7 @@ namespace TSSArt.StateMachine
 				{
 					return;
 				}
-				
+
 				await Channel.Reader.ReadAsync(CancellationToken.None).ConfigureAwait(false);
 			}
 			catch (OperationCanceledException ex) when (ex.CancellationToken == anyTokenSource.Token && _defaultOptions.StopToken.IsCancellationRequested)

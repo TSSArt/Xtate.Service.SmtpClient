@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
@@ -7,7 +6,7 @@ namespace TSSArt.StateMachine
 	{
 		private readonly InitialEntity _initial;
 
-		public InitialNode(LinkedListNode<int> documentIdNode, in InitialEntity initial) : base(documentIdNode, children: null)
+		public InitialNode(in DocumentIdRecord documentIdNode, in InitialEntity initial) : base(documentIdNode, children: null)
 		{
 			Infrastructure.Assert(initial.Transition != null);
 
@@ -17,7 +16,7 @@ namespace TSSArt.StateMachine
 			Transition.SetSource(this);
 		}
 
-		public InitialNode(LinkedListNode<int> documentIdNode, TransitionNode transition) : base(documentIdNode, children: null)
+		public InitialNode(in DocumentIdRecord documentIdNode, TransitionNode transition) : base(documentIdNode, children: null)
 		{
 			Transition = transition ?? throw new ArgumentNullException(nameof(transition));
 

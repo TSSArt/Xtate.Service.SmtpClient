@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
 	internal sealed class CompoundNode : StateNode, IStoreSupport, IDebugEntityId
 	{
-		public CompoundNode(LinkedListNode<int> documentIdNode, in StateEntity state) : base(documentIdNode, state)
+		public CompoundNode(in DocumentIdRecord documentIdNode, in StateEntity state) : base(documentIdNode, state)
 		{
 			Infrastructure.Assert(base.Initial != null);
 		}

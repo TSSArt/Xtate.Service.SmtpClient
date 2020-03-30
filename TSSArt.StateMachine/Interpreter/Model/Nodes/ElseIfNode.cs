@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
 	internal sealed class ElseIfNode : IElseIf, IAncestorProvider, IStoreSupport, IDocumentId, IDebugEntityId
 	{
-		private readonly LinkedListNode<int> _documentIdNode;
-		private readonly ElseIfEntity        _entity;
+		private          DocumentIdRecord _documentIdNode;
+		private readonly ElseIfEntity     _entity;
 
-		public ElseIfNode(LinkedListNode<int> documentIdNode, in ElseIfEntity entity)
+		public ElseIfNode(in DocumentIdRecord documentIdNode, in ElseIfEntity entity)
 		{
 			Infrastructure.Assert(entity.Condition != null);
 

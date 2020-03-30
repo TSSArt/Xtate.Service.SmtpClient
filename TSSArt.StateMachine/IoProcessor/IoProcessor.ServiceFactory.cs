@@ -19,7 +19,7 @@ namespace TSSArt.StateMachine
 			var context = GetCurrentContext();
 
 			var errorProcessor = CreateErrorProcessor(sessionId, stateMachine: null, source, scxml);
-			
+
 			var service = await context.CreateAndAddStateMachine(sessionId, options: null, stateMachine: null, source, scxml, parameters, errorProcessor, token).ConfigureAwait(false);
 
 			await service.StartAsync(token).ConfigureAwait(false);

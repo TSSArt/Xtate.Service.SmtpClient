@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
@@ -8,7 +7,7 @@ namespace TSSArt.StateMachine
 	{
 		private readonly SendEntity _entity;
 
-		public SendNode(LinkedListNode<int> documentIdNode, in SendEntity entity) : base(documentIdNode, (ISend?) entity.Ancestor) => _entity = entity;
+		public SendNode(in DocumentIdRecord documentIdNode, in SendEntity entity) : base(documentIdNode, (ISend?) entity.Ancestor) => _entity = entity;
 
 	#region Interface IAncestorProvider
 

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,12 +8,12 @@ namespace TSSArt.StateMachine
 	internal sealed class InvokeNode : IInvoke, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
 		private readonly ICancelInvokeEvaluator _cancelInvokeEvaluator;
-		private readonly LinkedListNode<int>    _documentIdNode;
+		private          DocumentIdRecord       _documentIdNode;
 		private readonly InvokeEntity           _invoke;
 		private readonly IStartInvokeEvaluator  _startInvokeEvaluator;
 		private          string?                _stateId;
 
-		public InvokeNode(LinkedListNode<int> documentIdNode, in InvokeEntity invoke)
+		public InvokeNode(in DocumentIdRecord documentIdNode, in InvokeEntity invoke)
 		{
 			_documentIdNode = documentIdNode;
 			_invoke = invoke;

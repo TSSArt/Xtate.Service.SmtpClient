@@ -10,7 +10,7 @@ namespace TSSArt.StateMachine
 	internal sealed class DefaultResourceLoader : IResourceLoader
 	{
 		public static readonly IResourceLoader Instance = new DefaultResourceLoader();
-		
+
 	#region Interface IResourceLoader
 
 		public async ValueTask<Resource> Request(Uri uri, CancellationToken token)

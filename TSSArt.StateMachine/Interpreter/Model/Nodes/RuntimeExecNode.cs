@@ -1,13 +1,11 @@
-﻿using System.Collections.Generic;
-
-namespace TSSArt.StateMachine
+﻿namespace TSSArt.StateMachine
 {
 	internal sealed class RuntimeExecNode : IExecutableEntity, IStoreSupport, IAncestorProvider, IDocumentId
 	{
-		private readonly LinkedListNode<int> _documentIdNode;
-		private readonly IExecutableEntity   _entity;
+		private          DocumentIdRecord  _documentIdNode;
+		private readonly IExecutableEntity _entity;
 
-		public RuntimeExecNode(LinkedListNode<int> documentIdNode, IExecutableEntity entity)
+		public RuntimeExecNode(in DocumentIdRecord documentIdNode, IExecutableEntity entity)
 		{
 			_entity = entity;
 			_documentIdNode = documentIdNode;

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
@@ -8,7 +7,7 @@ namespace TSSArt.StateMachine
 	{
 		private readonly ParallelEntity _parallel;
 
-		public ParallelNode(LinkedListNode<int> documentIdNode, in ParallelEntity parallel) : base(documentIdNode, GetChildNodes(initial: null, parallel.States, parallel.HistoryStates))
+		public ParallelNode(in DocumentIdRecord documentIdNode, in ParallelEntity parallel) : base(documentIdNode, GetChildNodes(initial: null, parallel.States, parallel.HistoryStates))
 		{
 			_parallel = parallel;
 

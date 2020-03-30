@@ -7,32 +7,52 @@ namespace TSSArt.StateMachine
 	[PublicAPI]
 	internal static class TaskExtensions
 	{
-		public static async Task<T> WaitAsync<T>(this Task<T> task, CancellationToken token)
+		public static Task<T> WaitAsync<T>(this Task<T> task, CancellationToken token)
 		{
 			if (task.IsCompleted || !token.CanBeCanceled)
 			{
-				return await task.ConfigureAwait(false);
+				return task;
 			}
 
-			await Task.WhenAny(task, Task.Delay(millisecondsDelay: -1, token)).ConfigureAwait(false);
+			if (token.IsCancellationRequested)
+			{
+				return Task.FromCanceled<T>(token);
+			}
 
-			token.ThrowIfCancellationRequested();
+			return WaitAsyncLocal();
 
-			return await task.ConfigureAwait(false);
+			async Task<T> WaitAsyncLocal()
+			{
+				await Task.WhenAny(task, Task.Delay(millisecondsDelay: -1, token)).ConfigureAwait(false);
+
+				token.ThrowIfCancellationRequested();
+
+				return await task.ConfigureAwait(false);
+			}
 		}
 
-		public static async ValueTask<T> WaitAsync<T>(this ValueTask<T> task, CancellationToken token)
+		public static ValueTask<T> WaitAsync<T>(this ValueTask<T> task, CancellationToken token)
 		{
 			if (task.IsCompleted || !token.CanBeCanceled)
 			{
-				return await task.ConfigureAwait(false);
+				return task;
 			}
 
-			await Task.WhenAny(task.AsTask(), Task.Delay(millisecondsDelay: -1, token)).ConfigureAwait(false);
+			if (token.IsCancellationRequested)
+			{
+				return new ValueTask<T>(Task.FromCanceled<T>(token));
+			}
 
-			token.ThrowIfCancellationRequested();
+			return WaitAsyncLocal();
 
-			return await task.ConfigureAwait(false);
+			async ValueTask<T> WaitAsyncLocal()
+			{
+				await Task.WhenAny(task.AsTask(), Task.Delay(millisecondsDelay: -1, token)).ConfigureAwait(false);
+
+				token.ThrowIfCancellationRequested();
+
+				return await task.ConfigureAwait(false);
+			}
 		}
 
 		public static void Forget(this ValueTask valueTask)

@@ -49,7 +49,7 @@ namespace TSSArt.StateMachine
 			return default;
 		}
 
-		ValueTask<DataModelValue> IService.Result => new ValueTask<DataModelValue>(_completedTcs.Task);
+		Task<DataModelValue> IService.Result => _completedTcs.Task;
 
 	#endregion
 

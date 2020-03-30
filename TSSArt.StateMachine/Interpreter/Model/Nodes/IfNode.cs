@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
@@ -8,7 +7,7 @@ namespace TSSArt.StateMachine
 	{
 		private readonly IfEntity _entity;
 
-		public IfNode(LinkedListNode<int> documentIdNode, in IfEntity entity) : base(documentIdNode, (IIf?) entity.Ancestor) => _entity = entity;
+		public IfNode(in DocumentIdRecord documentIdNode, in IfEntity entity) : base(documentIdNode, (IIf?) entity.Ancestor) => _entity = entity;
 
 	#region Interface IAncestorProvider
 

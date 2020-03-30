@@ -1,12 +1,10 @@
-﻿using System.Collections.Generic;
-
-namespace TSSArt.StateMachine
+﻿namespace TSSArt.StateMachine
 {
 	internal sealed class ScriptNode : ExecutableEntityNode, IScript, IAncestorProvider
 	{
 		private readonly ScriptEntity _entity;
 
-		public ScriptNode(LinkedListNode<int> documentIdNode, in ScriptEntity entity) : base(documentIdNode, (IScript?) entity.Ancestor) => _entity = entity;
+		public ScriptNode(in DocumentIdRecord documentIdNode, in ScriptEntity entity) : base(documentIdNode, (IScript?) entity.Ancestor) => _entity = entity;
 
 	#region Interface IAncestorProvider
 

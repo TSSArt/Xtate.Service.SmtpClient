@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
 	internal sealed class ParamNode : IParam, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
-		private readonly LinkedListNode<int> _documentIdNode;
-		private readonly ParamEntity         _param;
+		private          DocumentIdRecord _documentIdNode;
+		private readonly ParamEntity      _param;
 
-		public ParamNode(LinkedListNode<int> documentIdNode, in ParamEntity param)
+		public ParamNode(in DocumentIdRecord documentIdNode, in ParamEntity param)
 		{
 			Infrastructure.Assert(param.Name != null);
 

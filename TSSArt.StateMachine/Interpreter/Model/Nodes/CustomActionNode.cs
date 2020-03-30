@@ -1,12 +1,10 @@
-﻿using System.Collections.Generic;
-
-namespace TSSArt.StateMachine
+﻿namespace TSSArt.StateMachine
 {
 	internal sealed class CustomActionNode : ExecutableEntityNode, ICustomAction, IAncestorProvider
 	{
 		private readonly CustomAction _entity;
 
-		public CustomActionNode(LinkedListNode<int> documentIdNode, in CustomAction entity) : base(documentIdNode, (ICustomAction?) entity.Ancestor)
+		public CustomActionNode(in DocumentIdRecord documentIdNode, in CustomAction entity) : base(documentIdNode, (ICustomAction?) entity.Ancestor)
 		{
 			Infrastructure.Assert(entity.Xml != null);
 

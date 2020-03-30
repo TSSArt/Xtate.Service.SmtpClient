@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace TSSArt.StateMachine
 {
@@ -7,7 +6,7 @@ namespace TSSArt.StateMachine
 	{
 		private readonly CancelEntity _entity;
 
-		public CancelNode(LinkedListNode<int> documentIdNode, in CancelEntity entity) : base(documentIdNode, (ICancel?) entity.Ancestor) => _entity = entity;
+		public CancelNode(in DocumentIdRecord documentIdNode, in CancelEntity entity) : base(documentIdNode, (ICancel?) entity.Ancestor) => _entity = entity;
 
 	#region Interface IAncestorProvider
 
