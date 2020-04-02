@@ -31,13 +31,13 @@ namespace TSSArt.StateMachine
 			}
 
 			var serviceCommunication = new ServiceCommunication(service, EventProcessorId, data.InvokeId, data.InvokeUniqueId);
-			var invokedService = await factory.StartService(data.Source, data.RawContent, data.Content, data.Parameters, serviceCommunication, token).ConfigureAwait(false);
+			var invokedService = await factory.StartService(service.Location, data, serviceCommunication, token).ConfigureAwait(false);
 
 			await context.AddService(sessionId, data.InvokeId, data.InvokeUniqueId, invokedService, token).ConfigureAwait(false);
 
-			CompleteAsync();
+			CompleteAsync().Forget();
 
-			async void CompleteAsync()
+			async ValueTask CompleteAsync()
 			{
 				try
 				{

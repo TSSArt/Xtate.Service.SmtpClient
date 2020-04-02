@@ -4,8 +4,8 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class ElseIfNode : IElseIf, IAncestorProvider, IStoreSupport, IDocumentId, IDebugEntityId
 	{
-		private          DocumentIdRecord _documentIdNode;
 		private readonly ElseIfEntity     _entity;
+		private          DocumentIdRecord _documentIdNode;
 
 		public ElseIfNode(in DocumentIdRecord documentIdNode, in ElseIfEntity entity)
 		{

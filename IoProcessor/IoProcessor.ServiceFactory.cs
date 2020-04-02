@@ -11,22 +11,27 @@ namespace TSSArt.StateMachine
 
 	#region Interface IServiceFactory
 
-		async ValueTask<IService> IServiceFactory.StartService(Uri? source, string? rawContent, DataModelValue content, DataModelValue parameters,
-															   IServiceCommunication serviceCommunication, CancellationToken token)
+		async ValueTask<IService> IServiceFactory.StartService(Uri? location, InvokeData invokeData, IServiceCommunication serviceCommunication, CancellationToken token)
 		{
-			var sessionId = IdGenerator.NewSessionId();
-			var scxml = rawContent ?? content.AsStringOrDefault();
+			var sessionId = invokeData.InvokeId;
+			var scxml = invokeData.RawContent ?? invokeData.Content.AsStringOrDefault();
 			var context = GetCurrentContext();
+			var source = invokeData.Source;
+
+			if (scxml == null && source?.IsAbsoluteUri == false && location?.IsAbsoluteUri == true)
+			{
+				source = new Uri(location, source);
+			}
 
 			var errorProcessor = CreateErrorProcessor(sessionId, stateMachine: null, source, scxml);
 
-			var service = await context.CreateAndAddStateMachine(sessionId, options: null, stateMachine: null, source, scxml, parameters, errorProcessor, token).ConfigureAwait(false);
+			var service = await context.CreateAndAddStateMachine(sessionId, options: null, stateMachine: null, source, scxml, invokeData.Parameters, errorProcessor, token).ConfigureAwait(false);
 
 			await service.StartAsync(token).ConfigureAwait(false);
 
-			CompleteAsync();
+			CompleteAsync().Forget();
 
-			async void CompleteAsync()
+			async ValueTask CompleteAsync()
 			{
 				try
 				{

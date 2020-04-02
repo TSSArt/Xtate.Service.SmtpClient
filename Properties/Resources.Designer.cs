@@ -847,6 +847,15 @@ namespace TSSArt.StateMachine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot find ResourceLoader to load external resource..
+        /// </summary>
+        internal static string Exception_Cannot_find_ResourceLoader_to_load_external_resource {
+            get {
+                return ResourceManager.GetString("Exception_Cannot_find_ResourceLoader_to_load_external_resource", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot find target..
         /// </summary>
         internal static string Exception_Cannot_find_target {

@@ -4,8 +4,8 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class ElseNode : IElse, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
-		private          DocumentIdRecord _documentIdNode;
 		private readonly ElseEntity       _entity;
+		private          DocumentIdRecord _documentIdNode;
 
 		public ElseNode(in DocumentIdRecord documentIdNode, in ElseEntity entity)
 		{

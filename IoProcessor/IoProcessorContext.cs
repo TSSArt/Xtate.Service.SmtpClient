@@ -11,6 +11,9 @@ namespace TSSArt.StateMachine
 	{
 		private static readonly Uri ParentTarget = new Uri(uriString: "#_parent", UriKind.Relative);
 
+		private static readonly XmlReaderSettings DefaultSyncXmlReaderSettings  = new XmlReaderSettings { Async = false, CloseInput = true };
+		private static readonly XmlReaderSettings DefaultAsyncXmlReaderSettings = new XmlReaderSettings { Async = true, CloseInput = true };
+
 		private readonly IIoProcessor       _ioProcessor;
 		private readonly IoProcessorOptions _options;
 
@@ -55,7 +58,7 @@ namespace TSSArt.StateMachine
 							  Configuration = _options.Configuration,
 							  PersistenceLevel = _options.PersistenceLevel,
 							  StorageProvider = _options.StorageProvider,
-							  ResourceLoader = _options.ResourceLoader,
+							  ResourceLoaders = _options.ResourceLoaders,
 							  CustomActionProviders = _options.CustomActionFactories,
 							  StopToken = _stopTokenSource.Token,
 							  SuspendToken = _suspendTokenSource.Token,
@@ -77,9 +80,25 @@ namespace TSSArt.StateMachine
 		protected virtual StateMachineController CreateStateMachineController(string sessionId, IStateMachineOptions? options, IStateMachine stateMachine, in InterpreterOptions defaultOptions) =>
 				new StateMachineController(sessionId, options, stateMachine, _ioProcessor, _options.SuspendIdlePeriod, defaultOptions);
 
-		private static XmlReaderSettings GetXmlReaderSettings(bool useAsync = false) => new XmlReaderSettings { Async = useAsync, CloseInput = true };
+		private static XmlReaderSettings GetXmlReaderSettings(bool useAsync = false) => useAsync ? DefaultAsyncXmlReaderSettings : DefaultSyncXmlReaderSettings;
 
-		private static XmlParserContext? GetXmlParserContext() => null;
+		private XmlParserContext GetXmlParserContext()
+		{
+			var xmlNameTable = new NameTable();
+			var nameTable = xmlNameTable;
+			ScxmlDirector.FillXmlNameTable(nameTable);
+
+			if (!_options.CustomActionFactories.IsDefaultOrEmpty)
+			{
+				foreach (var factory in _options.CustomActionFactories)
+				{
+					factory.FillXmlNameTable(nameTable);
+				}
+			}
+
+			var nsManager = new XmlNamespaceManager(nameTable);
+			return new XmlParserContext(nameTable, nsManager, xmlLang: null, xmlSpace: default);
+		}
 
 		private static IBuilderFactory GetBuilderFactory() => BuilderFactory.Instance;
 
@@ -92,17 +111,10 @@ namespace TSSArt.StateMachine
 
 			if (source != null)
 			{
-				var resourceLoader = _options.ResourceLoader;
-
-				if (resourceLoader == null)
-				{
-					throw new StateMachineProcessorException(Resources.Exception_ResourceLoader_did_not_specified);
-				}
-
-				using var xmlReader = await resourceLoader.RequestXmlReader(source, GetXmlReaderSettings(), GetXmlParserContext(), token).ConfigureAwait(false);
+				using var xmlReader = await GetXmlReader().ConfigureAwait(false);
 				var scxmlDirector = new ScxmlDirector(xmlReader, GetBuilderFactory(), errorProcessor);
 
-				return scxmlDirector.ConstructStateMachine();
+				return new StateMachineWithLocation(scxmlDirector.ConstructStateMachine(), source);
 			}
 
 			if (scxml != null)
@@ -115,6 +127,22 @@ namespace TSSArt.StateMachine
 			}
 
 			throw new ArgumentException(Resources.Exception_StateMachine_or_Source_or_SCXML_should_be_provided);
+
+			async ValueTask<XmlReader> GetXmlReader()
+			{
+				if (!_options.ResourceLoaders.IsDefaultOrEmpty)
+				{
+					foreach (var resourceLoader in _options.ResourceLoaders)
+					{
+						if (resourceLoader.CanHandle(source))
+						{
+							return await resourceLoader.RequestXmlReader(source, GetXmlReaderSettings(), GetXmlParserContext(), token).ConfigureAwait(false);
+						}
+					}
+				}
+
+				throw new StateMachineProcessorException(Resources.Exception_Cannot_find_ResourceLoader_to_load_external_resource);
+			}
 		}
 
 		public virtual async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, IStateMachineOptions? options, IStateMachine? stateMachine, Uri? source,

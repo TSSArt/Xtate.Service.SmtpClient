@@ -15,10 +15,8 @@ namespace TSSArt.StateMachine
 
 	public sealed class StateMachineInterpreter
 	{
-		private const string StateStorageKey                  = "state";
-		private const string StateMachineDefinitionStorageKey = "smd";
-
-		private readonly IStateMachineValidator                   _stateMachineValidator = StateMachineValidator.Instance;
+		private const    string                                   StateStorageKey                  = "state";
+		private const    string                                   StateMachineDefinitionStorageKey = "smd";
 		private readonly DataModelValue                           _arguments;
 		private readonly ImmutableDictionary<string, string>      _configuration;
 		private readonly ImmutableArray<ICustomActionFactory>     _customActionProviders;
@@ -30,17 +28,19 @@ namespace TSSArt.StateMachine
 		private readonly LoggerWrapper                            _logger;
 		private readonly INotifyStateChanged?                     _notifyStateChanged;
 		private readonly PersistenceLevel                         _persistenceLevel;
-		private readonly IResourceLoader                          _resourceLoader;
+		private readonly ImmutableArray<IResourceLoader>          _resourceLoaders;
 		private readonly string                                   _sessionId;
-		private readonly CancellationToken                        _stopToken;
-		private readonly IStorageProvider                         _storageProvider;
-		private readonly CancellationToken                        _suspendToken;
-		private          CancellationTokenSource                  _anyTokenSource;
-		private          IStateMachineContext                     _context;
-		private          IDataModelHandler                        _dataModelHandler;
-		private          DataModelValue                           _doneData;
-		private          InterpreterModel                         _model;
-		private          bool                                     _stop;
+
+		private readonly IStateMachineValidator  _stateMachineValidator = StateMachineValidator.Instance;
+		private readonly CancellationToken       _stopToken;
+		private readonly IStorageProvider        _storageProvider;
+		private readonly CancellationToken       _suspendToken;
+		private          CancellationTokenSource _anyTokenSource;
+		private          IStateMachineContext    _context;
+		private          IDataModelHandler       _dataModelHandler;
+		private          DataModelValue          _doneData;
+		private          InterpreterModel        _model;
+		private          bool                    _stop;
 
 		private StateMachineInterpreter(string sessionId, ChannelReader<IEvent> eventChannel, in InterpreterOptions options)
 		{
@@ -49,7 +49,7 @@ namespace TSSArt.StateMachine
 			_suspendToken = options.SuspendToken;
 			_stopToken = options.StopToken;
 			_destroyToken = options.DestroyToken;
-			_resourceLoader = options.ResourceLoader ?? DefaultResourceLoader.Instance;
+			_resourceLoaders = options.ResourceLoaders;
 			_customActionProviders = options.CustomActionProviders;
 			_dataModelHandlerFactories = options.DataModelHandlerFactories;
 			_logger = new LoggerWrapper(options.Logger ?? DefaultLogger.Instance, sessionId);
@@ -108,7 +108,7 @@ namespace TSSArt.StateMachine
 			_stateMachineValidator.Validate(stateMachine, wrapperErrorProcessor);
 
 			var interpreterModelBuilder = new InterpreterModelBuilder(stateMachine, _dataModelHandler, _customActionProviders, wrapperErrorProcessor);
-			interpreterModel = await interpreterModelBuilder.Build(_resourceLoader, _stopToken).ConfigureAwait(false);
+			interpreterModel = await interpreterModelBuilder.Build(_resourceLoaders, _stopToken).ConfigureAwait(false);
 
 			_errorProcessor?.ThrowIfErrors();
 			wrapperErrorProcessor.ThrowIfErrors();
@@ -652,7 +652,7 @@ namespace TSSArt.StateMachine
 
 				foreach (var invoke in state.Invoke)
 				{
-					CancelInvoke(invoke);
+					await CancelInvoke(invoke).ConfigureAwait(false);
 				}
 
 				_context.Configuration.Delete(state);
@@ -826,7 +826,7 @@ namespace TSSArt.StateMachine
 
 				foreach (var invoke in state.Invoke)
 				{
-					CancelInvoke(invoke);
+					await CancelInvoke(invoke).ConfigureAwait(false);
 				}
 
 				_context.Configuration.Delete(state);
@@ -1316,7 +1316,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private async void CancelInvoke(InvokeNode invoke)
+		private async ValueTask CancelInvoke(InvokeNode invoke)
 		{
 			try
 			{
@@ -1379,7 +1379,7 @@ namespace TSSArt.StateMachine
 
 				if (data.Source != null)
 				{
-					var resource = await _resourceLoader.Request(data.Source.Uri!, _stopToken).ConfigureAwait(false);
+					var resource = await Load().ConfigureAwait(false);
 
 					return DataModelValue.FromContent(resource.Content, resource.ContentType);
 				}
@@ -1397,6 +1397,24 @@ namespace TSSArt.StateMachine
 				}
 
 				return DataModelValue.Undefined;
+			}
+
+			async ValueTask<Resource> Load()
+			{
+				if (!_resourceLoaders.IsDefaultOrEmpty)
+				{
+					var uri = data.Source.Uri!;
+
+					foreach (var resourceLoader in _resourceLoaders)
+					{
+						if (resourceLoader.CanHandle(uri))
+						{
+							return await resourceLoader.Request(uri, _stopToken).ConfigureAwait(false);
+						}
+					}
+				}
+
+				throw new StateMachineProcessorException(Resources.Exception_Cannot_find_ResourceLoader_to_load_external_resource);
 			}
 		}
 

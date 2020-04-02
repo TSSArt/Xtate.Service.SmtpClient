@@ -87,16 +87,7 @@ namespace TSSArt.StateMachine
 
 			Infrastructure.Assert(type != null);
 
-			var invokeData = new InvokeData
-							 {
-									 InvokeId = invokeId,
-									 InvokeUniqueId = invokeUniqueId,
-									 Type = type,
-									 Source = source,
-									 RawContent = rawContent,
-									 Content = content,
-									 Parameters = parameters
-							 };
+			var invokeData = new InvokeData(invokeId, invokeUniqueId, type, source, rawContent, content, parameters);
 
 			await executionContext.StartInvoke(invokeData, token).ConfigureAwait(false);
 

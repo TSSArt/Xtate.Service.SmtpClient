@@ -88,15 +88,13 @@ namespace TSSArt.StateMachine
 			return new InterpreterModel(stateMachine.As<StateMachineNode>(), _counter, entityMap, _dataModelNodeArray?.ToImmutable() ?? default);
 		}
 
-		public async ValueTask<InterpreterModel> Build(IResourceLoader resourceLoader, CancellationToken token)
+		public async ValueTask<InterpreterModel> Build(ImmutableArray<IResourceLoader> resourceLoaders, CancellationToken token)
 		{
-			if (resourceLoader == null) throw new ArgumentNullException(nameof(resourceLoader));
-
 			var model = Build();
 
 			if (_externalScriptList != null)
 			{
-				await SetExternalResources(_externalScriptList, resourceLoader, token).ConfigureAwait(false);
+				await SetExternalResources(_externalScriptList, resourceLoaders, token).ConfigureAwait(false);
 			}
 
 			return model;
@@ -122,14 +120,33 @@ namespace TSSArt.StateMachine
 			return entityMap.ToImmutable();
 		}
 
-		private static async ValueTask SetExternalResources(List<(Uri Uri, IExternalScriptConsumer Consumer)> externalScriptList, IResourceLoader resourceLoader, CancellationToken token)
+		private static async ValueTask SetExternalResources(List<(Uri Uri, IExternalScriptConsumer Consumer)> externalScriptList, ImmutableArray<IResourceLoader> resourceLoaders,
+															CancellationToken token)
 		{
 			foreach (var (uri, consumer) in externalScriptList)
 			{
 				token.ThrowIfCancellationRequested();
 
-				var resource = await resourceLoader.Request(uri, token).ConfigureAwait(false);
-				consumer.SetContent(resource.Content);
+				await Load(uri, consumer).ConfigureAwait(false);
+			}
+
+			async ValueTask Load(Uri uri, IExternalScriptConsumer consumer)
+			{
+				if (!resourceLoaders.IsDefaultOrEmpty)
+				{
+					foreach (var resourceLoader in resourceLoaders)
+					{
+						if (resourceLoader.CanHandle(uri))
+						{
+							var resource = await resourceLoader.Request(uri, token).ConfigureAwait(false);
+							consumer.SetContent(resource.Content);
+
+							return;
+						}
+					}
+				}
+
+				throw new StateMachineProcessorException(Resources.Exception_Cannot_find_ResourceLoader_to_load_external_resource);
 			}
 		}
 

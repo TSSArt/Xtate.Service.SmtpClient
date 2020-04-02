@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Globalization;
 
 namespace TSSArt.StateMachine
 {
 	internal static class IdGenerator
 	{
-		private static string NewGuidString() => Guid.NewGuid().ToString(format: "D", CultureInfo.InvariantCulture);
+		private static string NewGuidString() => Guid.NewGuid().ToString(format: "D", provider: default);
 
 		public static string NewSessionId() => NewGuidString();
 

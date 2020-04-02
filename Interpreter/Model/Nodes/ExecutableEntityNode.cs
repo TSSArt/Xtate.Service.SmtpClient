@@ -6,8 +6,8 @@ namespace TSSArt.StateMachine
 {
 	internal abstract class ExecutableEntityNode : IExecutableEntity, IExecEvaluator, IStoreSupport, IDocumentId
 	{
-		private          DocumentIdRecord _documentIdNode;
 		private readonly IExecEvaluator   _execEvaluator;
+		private          DocumentIdRecord _documentIdNode;
 
 		protected ExecutableEntityNode(in DocumentIdRecord documentIdNode, IExecutableEntity? entity)
 		{
