@@ -31,6 +31,7 @@ namespace TSSArt.StateMachine
 		public StateMachineController(string sessionId, IStateMachineOptions? options, IStateMachine stateMachine, IIoProcessor ioProcessor, TimeSpan idlePeriod, in InterpreterOptions defaultOptions)
 		{
 			SessionId = sessionId;
+			Location = stateMachine.Is<ILocation>(out var location) ? location.Uri : null;
 			_stateMachine = stateMachine;
 			_ioProcessor = ioProcessor;
 			_defaultOptions = defaultOptions;
@@ -46,6 +47,7 @@ namespace TSSArt.StateMachine
 		protected virtual Channel<IEvent> Channel { get; }
 
 		public string SessionId { get; }
+		public Uri?   Location  { get; }
 
 	#region Interface IAsyncDisposable
 

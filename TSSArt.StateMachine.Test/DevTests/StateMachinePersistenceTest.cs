@@ -36,6 +36,7 @@ namespace TSSArt.StateMachine.Test
 			_resourceLoaderMock = new Mock<IResourceLoader>();
 			var task = new ValueTask<Resource>(new Resource(new Uri("http://none"), new ContentType(), content: "content"));
 			_resourceLoaderMock.Setup(e => e.Request(It.IsAny<Uri>(), It.IsAny<CancellationToken>())).Returns(task);
+			_resourceLoaderMock.Setup(e => e.CanHandle(It.IsAny<Uri>())).Returns(true);
 		}
 
 		[TestMethod]
@@ -50,7 +51,7 @@ namespace TSSArt.StateMachine.Test
 			var options = new InterpreterOptions
 						  {
 								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
-								  ResourceLoader = _resourceLoaderMock.Object,
+								  ResourceLoaders = ImmutableArray.Create(_resourceLoaderMock.Object),
 								  PersistenceLevel = PersistenceLevel.ExecutableAction,
 								  StorageProvider = new TestStorage()
 						  };

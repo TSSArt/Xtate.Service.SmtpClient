@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using HtmlAgilityPack;
 using MimeKit;
+
 #if NETSTANDARD2_1
 using System.Buffers;
 
@@ -32,6 +33,15 @@ namespace TSSArt.StateMachine.Services
 			_xpath = xmlReader.GetAttribute("xpath");
 			_attr = xmlReader.GetAttribute("attr");
 			_pattern = xmlReader.GetAttribute("regex");
+		}
+
+		internal static void FillXmlNameTable(XmlNameTable xmlNameTable)
+		{
+			xmlNameTable.Add("source");
+			xmlNameTable.Add("destination");
+			xmlNameTable.Add("xpath");
+			xmlNameTable.Add("attr");
+			xmlNameTable.Add("regex");
 		}
 
 		public override ValueTask Execute(IExecutionContext context, CancellationToken token)

@@ -1,4 +1,4 @@
-﻿<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" datamodel="ecmascript" initial="idle">
+﻿<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" datamodel="ecmascript" name="dialog" initial="idle">
   <state id="main">
     <datamodel>
       <data id="id" />

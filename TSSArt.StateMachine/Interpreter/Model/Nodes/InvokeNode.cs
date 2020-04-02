@@ -8,9 +8,9 @@ namespace TSSArt.StateMachine
 	internal sealed class InvokeNode : IInvoke, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
 		private readonly ICancelInvokeEvaluator _cancelInvokeEvaluator;
-		private          DocumentIdRecord       _documentIdNode;
 		private readonly InvokeEntity           _invoke;
 		private readonly IStartInvokeEvaluator  _startInvokeEvaluator;
+		private          DocumentIdRecord       _documentIdNode;
 		private          string?                _stateId;
 
 		public InvokeNode(in DocumentIdRecord documentIdNode, in InvokeEntity invoke)

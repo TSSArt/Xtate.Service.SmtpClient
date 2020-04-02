@@ -27,12 +27,11 @@ namespace TSSArt.StateMachine
 
 	#region Interface IServiceFactory
 
-		ValueTask<IService> IServiceFactory.StartService(Uri? source, string? rawContent, DataModelValue content, DataModelValue parameters,
-														 IServiceCommunication serviceCommunication, CancellationToken token)
+		ValueTask<IService> IServiceFactory.StartService(Uri? location, InvokeData invokeData, IServiceCommunication serviceCommunication, CancellationToken token)
 		{
 			var service = new TService();
 
-			service.Start(source, rawContent, content, parameters, serviceCommunication);
+			service.Start(location, invokeData, serviceCommunication);
 
 			return new ValueTask<IService>(service);
 		}

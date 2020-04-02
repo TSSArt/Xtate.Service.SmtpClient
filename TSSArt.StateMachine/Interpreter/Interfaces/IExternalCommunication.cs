@@ -12,15 +12,26 @@ namespace TSSArt.StateMachine
 		ToInternalQueue
 	}
 
-	public struct InvokeData
+	public class InvokeData
 	{
-		public string         InvokeId       { get; set; }
-		public string         InvokeUniqueId { get; set; }
-		public Uri            Type           { get; set; }
-		public Uri?           Source         { get; set; }
-		public string?        RawContent     { get; set; }
-		public DataModelValue Content        { get; set; }
-		public DataModelValue Parameters     { get; set; }
+		public InvokeData(string invokeId, string invokeUniqueId, Uri type, Uri? source, string? rawContent, DataModelValue content, DataModelValue parameters)
+		{
+			InvokeId = invokeId;
+			InvokeUniqueId = invokeUniqueId;
+			Type = type;
+			Source = source;
+			RawContent = rawContent;
+			Content = content;
+			Parameters = parameters;
+		}
+
+		public string         InvokeId       { get; }
+		public string         InvokeUniqueId { get; }
+		public Uri            Type           { get; }
+		public Uri?           Source         { get; }
+		public string?        RawContent     { get; }
+		public DataModelValue Content        { get; }
+		public DataModelValue Parameters     { get; }
 	}
 
 	public interface IExternalCommunication

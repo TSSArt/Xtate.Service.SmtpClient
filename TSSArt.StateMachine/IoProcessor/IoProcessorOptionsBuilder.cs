@@ -8,35 +8,33 @@ namespace TSSArt.StateMachine
 	[PublicAPI]
 	public class IoProcessorOptionsBuilder
 	{
-		private ImmutableArray<IEventProcessorFactory>.Builder?   _eventProcessorFactories;
-		private ImmutableArray<IServiceFactory>.Builder?          _serviceFactories;
-		private ImmutableArray<IDataModelHandlerFactory>.Builder? _dataModelHandlerFactories;
-		private ImmutableArray<ICustomActionFactory>.Builder?     _customActionFactories;
 		private ImmutableDictionary<string, string>.Builder?      _configuration;
+		private ImmutableArray<ICustomActionFactory>.Builder?     _customActionFactories;
+		private ImmutableArray<IDataModelHandlerFactory>.Builder? _dataModelHandlerFactories;
+		private ImmutableArray<IEventProcessorFactory>.Builder?   _eventProcessorFactories;
 		private ILogger?                                          _logger;
 		private PersistenceLevel                                  _persistenceLevel;
+		private ImmutableArray<IResourceLoader>.Builder?          _resourceLoaders;
+		private ImmutableArray<IServiceFactory>.Builder?          _serviceFactories;
 		private IStorageProvider?                                 _storageProvider;
-		private IResourceLoader?                                  _resourceLoader;
 		private TimeSpan                                          _suspendIdlePeriod;
 		private bool                                              _verboseValidation = true;
 
-		public IoProcessorOptions Build()
-		{
-			return new IoProcessorOptions
-				   {
-						   EventProcessorFactories = _eventProcessorFactories?.ToImmutable() ?? default,
-						   ServiceFactories = _serviceFactories?.ToImmutable() ?? default,
-						   DataModelHandlerFactories = _dataModelHandlerFactories?.ToImmutable() ?? default,
-						   CustomActionFactories = _customActionFactories?.ToImmutable() ?? default,
-						   Configuration = _configuration?.ToImmutable(),
-						   Logger = _logger,
-						   PersistenceLevel = _persistenceLevel,
-						   StorageProvider = _storageProvider,
-						   ResourceLoader = _resourceLoader,
-						   SuspendIdlePeriod = _suspendIdlePeriod,
-						   VerboseValidation = _verboseValidation
-				   };
-		}
+		public IoProcessorOptions Build() =>
+				new IoProcessorOptions
+				{
+						EventProcessorFactories = _eventProcessorFactories?.ToImmutable() ?? default,
+						ServiceFactories = _serviceFactories?.ToImmutable() ?? default,
+						DataModelHandlerFactories = _dataModelHandlerFactories?.ToImmutable() ?? default,
+						CustomActionFactories = _customActionFactories?.ToImmutable() ?? default,
+						ResourceLoaders = _resourceLoaders?.ToImmutable() ?? default,
+						Configuration = _configuration?.ToImmutable(),
+						Logger = _logger,
+						PersistenceLevel = _persistenceLevel,
+						StorageProvider = _storageProvider,
+						SuspendIdlePeriod = _suspendIdlePeriod,
+						VerboseValidation = _verboseValidation
+				};
 
 		public IoProcessorOptionsBuilder SetLogger(ILogger logger)
 		{
@@ -61,9 +59,11 @@ namespace TSSArt.StateMachine
 			return this;
 		}
 
-		public IoProcessorOptionsBuilder SetResourceLoader(IResourceLoader resourceLoader)
+		public IoProcessorOptionsBuilder AddResourceLoader(IResourceLoader resourceLoader)
 		{
-			_resourceLoader = resourceLoader ?? throw new ArgumentNullException(nameof(resourceLoader));
+			if (resourceLoader == null) throw new ArgumentNullException(nameof(resourceLoader));
+
+			(_resourceLoaders ??= ImmutableArray.CreateBuilder<IResourceLoader>()).Add(resourceLoader);
 
 			return this;
 		}

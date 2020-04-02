@@ -3,6 +3,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
+
 #if NETSTANDARD2_1
 using System.Buffers;
 
@@ -21,6 +22,12 @@ namespace TSSArt.StateMachine
 
 			_source = xmlReader.GetAttribute("source");
 			_destination = xmlReader.GetAttribute("destination");
+		}
+
+		internal static void FillXmlNameTable(XmlNameTable xmlNameTable)
+		{
+			xmlNameTable.Add("source");
+			xmlNameTable.Add("destination");
 		}
 
 		public override ValueTask Execute(IExecutionContext context, CancellationToken token)

@@ -35,7 +35,7 @@ namespace TSSArt.StateMachine
 		[DoesNotReturn]
 		public static void Fail()
 		{
-			Assert(true);
+			Assert(false);
 
 			throw new NotSupportedException();
 		}
@@ -44,7 +44,7 @@ namespace TSSArt.StateMachine
 		[DoesNotReturn]
 		public static void Fail(string message)
 		{
-			Assert(condition: true, message);
+			Assert(condition: false, message);
 
 			throw new NotSupportedException();
 		}
@@ -53,7 +53,7 @@ namespace TSSArt.StateMachine
 		[DoesNotReturn]
 		public static T Fail<T>()
 		{
-			Assert(condition: true);
+			Assert(condition: false);
 
 			throw new NotSupportedException();
 		}
@@ -62,7 +62,7 @@ namespace TSSArt.StateMachine
 		[DoesNotReturn]
 		public static T Fail<T>(string message)
 		{
-			Assert(condition: true, message);
+			Assert(condition: false, message);
 
 			throw new NotSupportedException();
 		}
@@ -71,7 +71,7 @@ namespace TSSArt.StateMachine
 		[DoesNotReturn]
 		public static void UnexpectedValue()
 		{
-			Assert(condition: true, Resources.Exception_UnexpectedValue);
+			Assert(condition: false, Resources.Exception_UnexpectedValue);
 
 			throw new NotSupportedException();
 		}
@@ -80,7 +80,7 @@ namespace TSSArt.StateMachine
 		[DoesNotReturn]
 		public static T UnexpectedValue<T>()
 		{
-			Assert(condition: true, Resources.Exception_UnexpectedValue);
+			Assert(condition: false, Resources.Exception_UnexpectedValue);
 
 			throw new NotSupportedException();
 		}

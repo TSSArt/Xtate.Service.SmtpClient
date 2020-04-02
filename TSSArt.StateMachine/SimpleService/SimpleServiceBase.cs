@@ -11,20 +11,22 @@ namespace TSSArt.StateMachine
 		private readonly TaskCompletionSource<DataModelValue> _completedTcs = new TaskCompletionSource<DataModelValue>();
 		private readonly CancellationTokenSource              _tokenSource  = new CancellationTokenSource();
 
-		private bool _disposed;
+		private bool        _disposed;
+		private InvokeData? _invokeData;
 
 		protected SimpleServiceBase()
 		{
-			Source = null!;
-			RawContent = null!;
+			_invokeData = null!;
 			ServiceCommunication = null!;
 		}
 
-		protected Uri?                  Source               { get; private set; }
-		protected string?               RawContent           { get; private set; }
-		protected DataModelValue        Content              { get; private set; }
-		protected DataModelValue        Parameters           { get; private set; }
+		protected Uri?                  Location             { get; private set; }
 		protected IServiceCommunication ServiceCommunication { get; private set; }
+
+		protected Uri?           Source     => _invokeData?.Source;
+		protected string?        RawContent => _invokeData?.RawContent;
+		protected DataModelValue Content    => _invokeData?.Content ?? default;
+		protected DataModelValue Parameters => _invokeData?.Parameters ?? default;
 
 		protected CancellationToken StopToken => _tokenSource.Token;
 
@@ -53,17 +55,15 @@ namespace TSSArt.StateMachine
 
 	#endregion
 
-		internal void Start(Uri? source, string? rawContent, DataModelValue content, DataModelValue parameters, IServiceCommunication serviceCommunication)
+		internal void Start(Uri? location, InvokeData invokeData, IServiceCommunication serviceCommunication)
 		{
-			Source = source;
-			RawContent = rawContent;
-			Content = content;
-			Parameters = parameters;
+			Location = location;
+			_invokeData = invokeData;
 			ServiceCommunication = serviceCommunication;
 
-			RunAsync();
+			RunAsync().Forget();
 
-			async void RunAsync()
+			async ValueTask RunAsync()
 			{
 				try
 				{

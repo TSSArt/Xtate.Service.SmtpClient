@@ -2,14 +2,24 @@
 using System.Collections.Immutable;
 using System.Globalization;
 using System.Xml;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	public class ScxmlDirector : XmlDirector<ScxmlDirector>
 	{
 		private const string ScxmlNs       = "http://www.w3.org/2005/07/scxml";
 		private const string TSSArtScxmlNs = "http://tssart.com/scxml";
 		private const char   Space         = ' ';
+
+		private static readonly string[] Keywords =
+		{
+				"array", "assign", "autoforward", "binding", "cancel", "cond", "content", "data", "datamodel", "delay", "delayexpr", "donedata", "else", "elseif", "event",
+				"eventexpr", "expr", "final", "finalize", "foreach", "history", "id", "idlocation", "if", "index", "initial", "invoke", "item", "label", "location", "log",
+				"name", "namelist", "onentry", "onexit", "parallel", "param", "persistence", "queueSize", "raise", "script", "scxml", "send", "sendid", "sendidexpr", "src",
+				"srcexpr", "state", "synchronous", "target", "targetexpr", "transition", "type", "typeexpr", "version"
+		};
 
 		private static readonly char[] SpaceSplitter = { Space };
 
@@ -47,6 +57,19 @@ namespace TSSArt.StateMachine
 		{
 			_factory = factory;
 			_errorProcessor = errorProcessor;
+		}
+
+		public static void FillXmlNameTable(XmlNameTable xmlNameTable)
+		{
+			if (xmlNameTable == null) throw new ArgumentNullException(nameof(xmlNameTable));
+
+			xmlNameTable.Add(ScxmlNs);
+			xmlNameTable.Add(TSSArtScxmlNs);
+
+			foreach (var keyword in Keywords)
+			{
+				xmlNameTable.Add(keyword);
+			}
 		}
 
 		public IStateMachine ConstructStateMachine(IStateMachineValidator? stateMachineValidator = null)

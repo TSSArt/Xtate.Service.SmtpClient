@@ -74,7 +74,7 @@ namespace TSSArt.StateMachine.Test
 			var eventChannel = channel.Reader;
 
 			try
-			{ 
+			{
 				await StateMachineInterpreter.RunAsync(IdGenerator.NewSessionId(), builder.Build(), eventChannel);
 
 				Assert.Fail("StateMachineQueueClosedException should be raised");
@@ -83,7 +83,6 @@ namespace TSSArt.StateMachine.Test
 			{
 				// ignore
 			}
-
 		}
 
 		[TestMethod]

@@ -14,18 +14,6 @@ namespace TSSArt.StateMachine
 			_value = -1;
 		}
 
-		[Pure]
-		public DocumentIdRecord After()
-		{
-			Infrastructure.Assert(_node != null);
-
-			return new DocumentIdRecord
-				   {
-						   _node = _node.List.AddAfter(_node, value: -1),
-						   _value = -1
-				   };
-		}
-
 		public int Value
 		{
 			get
@@ -46,6 +34,18 @@ namespace TSSArt.StateMachine
 
 				return value;
 			}
+		}
+
+		[Pure]
+		public DocumentIdRecord After()
+		{
+			Infrastructure.Assert(_node != null);
+
+			return new DocumentIdRecord
+				   {
+						   _node = _node.List.AddAfter(_node, value: -1),
+						   _value = -1
+				   };
 		}
 	}
 }

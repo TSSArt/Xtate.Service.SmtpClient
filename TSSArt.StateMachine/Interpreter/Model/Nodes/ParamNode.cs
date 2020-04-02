@@ -4,8 +4,8 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class ParamNode : IParam, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
-		private          DocumentIdRecord _documentIdNode;
 		private readonly ParamEntity      _param;
+		private          DocumentIdRecord _documentIdNode;
 
 		public ParamNode(in DocumentIdRecord documentIdNode, in ParamEntity param)
 		{

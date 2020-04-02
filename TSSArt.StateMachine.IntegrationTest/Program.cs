@@ -28,7 +28,7 @@ namespace TSSArt.StateMachine.IntegrationTest
 								  ServiceFactories = ImmutableArray.Create(HttpClientService.Factory, SmtpClientService.Factory),
 								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
 								  CustomActionFactories = ImmutableArray.Create(BasicCustomActionFactory.Instance, MimeCustomActionFactory.Instance, MidCustomActionFactory.Instance),
-								  ResourceLoader = new ResourceProvider(),
+								  ResourceLoaders = ImmutableArray.Create((IResourceLoader) new ResourceProvider()),
 								  Configuration = configurationBuilder.ToImmutable()
 						  };
 
@@ -61,6 +61,8 @@ namespace TSSArt.StateMachine.IntegrationTest
 	internal class ResourceProvider : IResourceLoader
 	{
 	#region Interface IResourceLoader
+
+		public bool CanHandle(Uri uri) => true;
 
 		public ValueTask<Resource> Request(Uri uri, CancellationToken token) => throw new NotSupportedException();
 

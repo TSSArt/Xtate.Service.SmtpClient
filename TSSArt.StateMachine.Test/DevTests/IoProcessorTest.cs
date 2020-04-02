@@ -35,7 +35,7 @@ namespace TSSArt.StateMachine.Test
 			var options = new IoProcessorOptions
 						  {
 								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
-								  ResourceLoader = resourceLoaderMock.Object
+								  ResourceLoaders = ImmutableArray.Create(resourceLoaderMock.Object)
 						  };
 
 			var ioProcessor = new IoProcessor(options);
@@ -54,10 +54,12 @@ namespace TSSArt.StateMachine.Test
 			stateMachineProviderMock.Setup(x => x.RequestXmlReader(new Uri("scxml://a"), It.IsAny<XmlReaderSettings>(), It.IsAny<XmlParserContext>(), It.IsAny<CancellationToken>()))
 									.Returns(new ValueTask<XmlReader>(stateMachine));
 
+			stateMachineProviderMock.Setup(x => x.CanHandle(It.IsAny<Uri>())).Returns(true);
+
 			var options = new IoProcessorOptions
 						  {
 								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
-								  ResourceLoader = stateMachineProviderMock.Object
+								  ResourceLoaders = ImmutableArray.Create(stateMachineProviderMock.Object)
 						  };
 
 			var ioProcessor = new IoProcessor(options);
@@ -103,7 +105,7 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 						  {
 								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
 								  ServiceFactories = ImmutableArray.Create(HttpClientService.Factory),
-								  ResourceLoader = stateMachineProviderMock.Object
+								  ResourceLoaders = ImmutableArray.Create(stateMachineProviderMock.Object)
 						  };
 
 			var ioProcessor = new IoProcessor(options);
@@ -190,6 +192,8 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 	public class StateMachineProvider : IResourceLoader
 	{
 	#region Interface IResourceLoader
+
+		public bool CanHandle(Uri uri) => true;
 
 		public ValueTask<Resource> Request(Uri uri, CancellationToken token) => throw new NotSupportedException();
 

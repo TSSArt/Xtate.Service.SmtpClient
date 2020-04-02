@@ -155,10 +155,8 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private IErrorProcessor CreateErrorProcessor(string sessionId, IStateMachine? stateMachine, Uri? source, string? scxml)
-		{
-			return _options.VerboseValidation ? new DetailedErrorProcessor(sessionId, stateMachine, source, scxml) : DefaultErrorProcessor.Instance;
-		}
+		private IErrorProcessor CreateErrorProcessor(string sessionId, IStateMachine? stateMachine, Uri? source, string? scxml) =>
+				_options.VerboseValidation ? new DetailedErrorProcessor(sessionId, stateMachine, source, scxml) : DefaultErrorProcessor.Instance;
 
 		private IoProcessorContext GetCurrentContext() => _context ?? throw new InvalidOperationException(Resources.Exception_IO_Processor_has_not_been_started);
 

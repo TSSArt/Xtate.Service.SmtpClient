@@ -2,8 +2,8 @@
 {
 	internal sealed class RuntimeExecNode : IExecutableEntity, IStoreSupport, IAncestorProvider, IDocumentId
 	{
-		private          DocumentIdRecord  _documentIdNode;
 		private readonly IExecutableEntity _entity;
+		private          DocumentIdRecord  _documentIdNode;
 
 		public RuntimeExecNode(in DocumentIdRecord documentIdNode, IExecutableEntity entity)
 		{

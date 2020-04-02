@@ -31,6 +31,14 @@ namespace TSSArt.StateMachine
 			//<mid:storage location="password" operation="set" variable="password" />
 		}
 
+		internal static void FillXmlNameTable(XmlNameTable xmlNameTable)
+		{
+			xmlNameTable.Add("location");
+			xmlNameTable.Add("operation");
+			xmlNameTable.Add("template");
+			xmlNameTable.Add("rule");
+		}
+
 		public override ValueTask Execute(IExecutionContext context, CancellationToken token)
 		{
 			if (context == null) throw new ArgumentNullException(nameof(context));

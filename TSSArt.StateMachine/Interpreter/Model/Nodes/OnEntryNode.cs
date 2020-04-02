@@ -5,8 +5,8 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class OnEntryNode : IOnEntry, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{
-		private          DocumentIdRecord _documentIdNode;
 		private readonly OnEntryEntity    _onEntry;
+		private          DocumentIdRecord _documentIdNode;
 
 		public OnEntryNode(in DocumentIdRecord documentIdNode, in OnEntryEntity onEntry)
 		{

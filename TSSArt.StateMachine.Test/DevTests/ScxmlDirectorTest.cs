@@ -68,7 +68,7 @@ namespace TSSArt.StateMachine.Test
 			try
 			{
 				await StateMachineInterpreter.RunAsync(IdGenerator.NewSessionId(), _stateMachine, channel.Reader, options);
-				
+
 				Assert.Fail("StateMachineQueueClosedException should be raised");
 			}
 			catch (StateMachineQueueClosedException)

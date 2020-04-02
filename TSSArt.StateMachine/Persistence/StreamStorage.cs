@@ -128,7 +128,7 @@ namespace TSSArt.StateMachine
 
 			_disposed = true;
 		}
-		
+
 		public ValueTask DisposeAsync()
 		{
 			Dispose();

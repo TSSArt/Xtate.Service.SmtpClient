@@ -7,10 +7,10 @@ namespace TSSArt.StateMachine
 	[PublicAPI]
 	public sealed class DetailedErrorProcessor : IErrorProcessor
 	{
-		private readonly string?        _sessionId;
-		private readonly IStateMachine? _stateMachine;
-		private readonly Uri?           _source;
 		private readonly string?        _scxml;
+		private readonly string?        _sessionId;
+		private readonly Uri?           _source;
+		private readonly IStateMachine? _stateMachine;
 
 		private ImmutableArray<ErrorItem>.Builder? _errors;
 

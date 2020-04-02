@@ -1,4 +1,7 @@
-﻿namespace TSSArt.StateMachine.Services
+﻿using System;
+using System.Xml;
+
+namespace TSSArt.StateMachine.Services
 {
 	[CustomActionProvider("http://tssart.com/scxml/customaction/mime")]
 	public class MimeCustomActionFactory : CustomActionFactoryBase
@@ -8,6 +11,15 @@
 		private MimeCustomActionFactory()
 		{
 			Register(name: "parseEmail", xmlReader => new ParseEmail(xmlReader));
+		}
+
+		protected override void FillXmlNameTable(XmlNameTable xmlNameTable)
+		{
+			if (xmlNameTable == null) throw new ArgumentNullException(nameof(xmlNameTable));
+
+			base.FillXmlNameTable(xmlNameTable);
+
+			ParseEmail.FillXmlNameTable(xmlNameTable);
 		}
 	}
 }

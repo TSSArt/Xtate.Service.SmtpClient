@@ -263,7 +263,7 @@ namespace TSSArt.StateMachine
 						_ => Infrastructure.UnexpectedValue<bool>()
 				};
 
-		public static DataModelValue FromContent(string content, ContentType contentType)
+		public static DataModelValue FromContent(string content, ContentType? contentType)
 		{
 			var _ = contentType;
 

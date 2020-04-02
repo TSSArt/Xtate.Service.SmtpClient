@@ -23,6 +23,13 @@ namespace TSSArt.StateMachine
 			_arguments = xmlReader.GetAttribute("arguments");
 		}
 
+		internal static void FillXmlNameTable(XmlNameTable xmlNameTable)
+		{
+			xmlNameTable.Add("template");
+			xmlNameTable.Add("destination");
+			xmlNameTable.Add("arguments");
+		}
+
 		public override ValueTask Execute(IExecutionContext context, CancellationToken token)
 		{
 			if (context == null) throw new ArgumentNullException(nameof(context));

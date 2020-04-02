@@ -24,6 +24,14 @@ namespace TSSArt.StateMachine
 			_result = xmlReader.GetAttribute("result");
 		}
 
+		internal static void FillXmlNameTable(XmlNameTable xmlNameTable)
+		{
+			xmlNameTable.Add("left");
+			xmlNameTable.Add("right");
+			xmlNameTable.Add("op");
+			xmlNameTable.Add("result");
+		}
+
 		public override ValueTask Execute(IExecutionContext context, CancellationToken token)
 		{
 			if (context == null) throw new ArgumentNullException(nameof(context));
