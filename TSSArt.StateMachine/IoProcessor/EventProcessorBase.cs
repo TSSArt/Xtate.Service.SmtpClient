@@ -33,9 +33,9 @@ namespace TSSArt.StateMachine
 
 		ValueTask IEventProcessor.Dispatch(string sessionId, IOutgoingEvent evt, CancellationToken token) => OutgoingEvent(sessionId, evt, token);
 
-		Uri IEventProcessor.Id => EventProcessorId;
+		bool IEventProcessor.CanHandle(Uri? type, Uri? target) => FullUriComparer.Instance.Equals(type, EventProcessorId) || FullUriComparer.Instance.Equals(type, _eventProcessorAliasId);
 
-		Uri? IEventProcessor.AliasId => _eventProcessorAliasId;
+		Uri IEventProcessor.Id => EventProcessorId;
 
 	#endregion
 

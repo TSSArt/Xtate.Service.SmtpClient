@@ -214,20 +214,19 @@ namespace TSSArt.StateMachine.Services
 			result.StatusCode = (int) response.StatusCode;
 			result.StatusDescription = response.StatusDescription;
 
-#if NETSTANDARD2_1
-			await using var stream = response.GetResponseStream();
-#else
-			using var stream = response.GetResponseStream();
-#endif
-			var responseContentType = new ContentType(response.ContentType);
+			var stream = response.GetResponseStream();
+			await using (stream.ConfigureAwait(false))
+			{
+				var responseContentType = new ContentType(response.ContentType);
 
-			if (responseContentType.MediaType == MediaTypeApplicationJson)
-			{
-				result.Content = await FromJsonContent(stream, token).ConfigureAwait(false);
-			}
-			else if (responseContentType.MediaType == MediaTypeTextHtml)
-			{
-				result.Content = await FromHtmlContent(stream, captures).ConfigureAwait(false);
+				if (responseContentType.MediaType == MediaTypeApplicationJson)
+				{
+					result.Content = await FromJsonContent(stream, token).ConfigureAwait(false);
+				}
+				else if (responseContentType.MediaType == MediaTypeTextHtml)
+				{
+					result.Content = await FromHtmlContent(stream, captures).ConfigureAwait(false);
+				}
 			}
 
 			result.Headers = from key in response.Headers.AllKeys select new KeyValuePair<string, string>(key, response.Headers[key]);
@@ -290,26 +289,24 @@ namespace TSSArt.StateMachine.Services
 
 			request.ContentType = contentType;
 
-#if NETSTANDARD2_1
-			await using var stream = request.GetRequestStream();
-#else
-			using var stream = request.GetRequestStream();
-#endif
-
-			if (contentType == MediaTypeApplicationFormUrlEncoded)
+			var stream = request.GetRequestStream();
+			await using (stream.ConfigureAwait(false))
 			{
-				using var httpContent = CreateFormUrlEncodedContent(content);
-				await httpContent.CopyToAsync(stream).ConfigureAwait(false);
-			}
-			else if (contentType == MediaTypeApplicationJson)
-			{
-				using var httpContent = CreateJsonContent(content);
-				await httpContent.CopyToAsync(stream).ConfigureAwait(false);
-			}
-			else
-			{
-				using var httpContent = CreateDefaultContent(content);
-				await httpContent.CopyToAsync(stream).ConfigureAwait(false);
+				if (contentType == MediaTypeApplicationFormUrlEncoded)
+				{
+					using var httpContent = CreateFormUrlEncodedContent(content);
+					await httpContent.CopyToAsync(stream).ConfigureAwait(false);
+				}
+				else if (contentType == MediaTypeApplicationJson)
+				{
+					using var httpContent = CreateJsonContent(content);
+					await httpContent.CopyToAsync(stream).ConfigureAwait(false);
+				}
+				else
+				{
+					using var httpContent = CreateDefaultContent(content);
+					await httpContent.CopyToAsync(stream).ConfigureAwait(false);
+				}
 			}
 		}
 

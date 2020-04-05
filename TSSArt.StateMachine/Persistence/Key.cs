@@ -22,6 +22,7 @@
 		Event,
 		EventExpression,
 		Expression,
+		Exception,
 		Finalize,
 		FireOn,
 		HistoryStates,

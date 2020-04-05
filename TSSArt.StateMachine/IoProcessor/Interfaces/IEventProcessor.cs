@@ -6,8 +6,9 @@ namespace TSSArt.StateMachine
 {
 	public interface IEventProcessor
 	{
-		Uri  Id      { get; }
-		Uri? AliasId { get; }
+		Uri Id { get; }
+
+		bool CanHandle(Uri? type, Uri? target);
 
 		Uri GetTarget(string sessionId);
 

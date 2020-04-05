@@ -307,7 +307,7 @@ namespace TSSArt.StateMachine
 
 			public override int Size => GetSize(_block1) + GetSize(_block2) + (_bytes?.Length ?? 0);
 
-			private void WriteBlock(ulong block, ref int index, Span<byte> buf)
+			private static void WriteBlock(ulong block, ref int index, Span<byte> buf)
 			{
 				var size = GetSize(block);
 

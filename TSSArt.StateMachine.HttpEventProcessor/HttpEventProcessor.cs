@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
@@ -8,6 +9,8 @@ using System.Net.Mime;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
@@ -23,25 +26,91 @@ namespace TSSArt.StateMachine
 		private const string MediaTypeApplicationFormUrlEncoded = "application/x-www-form-urlencoded";
 		private const string EventNameParameterName             = "_scxmleventname";
 
-		private readonly Uri             _baseUri;
-		private readonly Func<ValueTask> _onDispose;
-		private readonly string          _path;
+		private static readonly ConcurrentDictionary<int, Host> Hosts = new ConcurrentDictionary<int, Host>();
 
-		public HttpEventProcessor(IEventConsumer eventConsumer, Uri baseUri, string path, Func<ValueTask> onDispose) : base(eventConsumer)
+		private readonly Uri    _baseUri;
+		private readonly string _path;
+
+		public HttpEventProcessor(IEventConsumer eventConsumer, Uri baseUri, string path) : base(eventConsumer)
 		{
 			if (baseUri == null) throw new ArgumentNullException(nameof(baseUri));
 			if (string.IsNullOrEmpty(path)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(path));
 
 			_baseUri = new Uri(baseUri, path);
 			_path = path;
-			_onDispose = onDispose ?? throw new ArgumentNullException(nameof(onDispose));
 		}
 
 	#region Interface IAsyncDisposable
 
-		public ValueTask DisposeAsync() => _onDispose();
+		public async ValueTask DisposeAsync()
+		{
+			if (Hosts.TryGetValue(_baseUri.Port, out var host))
+			{
+				await host.RemoveProcessor(this, token: default).ConfigureAwait(false);
+			}
+		}
 
 	#endregion
+
+		private class Host
+		{
+			private ImmutableList<HttpEventProcessor> _processors = ImmutableList<HttpEventProcessor>.Empty;
+
+			private readonly IWebHost _webHost;
+
+			public static Host Create(int port) => new Host(port);
+
+			private Host(int port)
+			{
+				_webHost = new WebHostBuilder()
+						   .Configure(builder => builder.Run(HandleRequest))
+						   .UseKestrel(serverOptions => serverOptions.ListenAnyIP(port))
+						   .Build();
+			}
+
+			private async Task HandleRequest(HttpContext context)
+			{
+				foreach (var httpEventProcessor in _processors)
+				{
+					if (await httpEventProcessor.Handle(context.Request).ConfigureAwait(false))
+					{
+						return;
+					}
+				}
+			}
+
+			public async ValueTask AddProcessor(HttpEventProcessor httpEventProcessor, CancellationToken token)
+			{
+				ImmutableList<HttpEventProcessor> preVal, newVal;
+				do
+				{
+					preVal = _processors;
+					newVal = preVal.Add(httpEventProcessor);
+				} while (Interlocked.CompareExchange(ref _processors, newVal, preVal) != preVal);
+
+				if (preVal.Count == 0)
+				{
+					await _webHost.StartAsync(token).ConfigureAwait(false);
+				}
+			}
+
+			public async ValueTask RemoveProcessor(HttpEventProcessor httpEventProcessor, CancellationToken token)
+			{
+				ImmutableList<HttpEventProcessor> preVal, newVal;
+				do
+				{
+					preVal = _processors;
+					newVal = preVal.Remove(httpEventProcessor);
+				} while (Interlocked.CompareExchange(ref _processors, newVal, preVal) != preVal);
+
+				if (newVal.Count == 0)
+				{
+					await _webHost.StopAsync(token).ConfigureAwait(false);
+				}
+			}
+		}
+
+		public ValueTask Start(CancellationToken token) => Hosts.GetOrAdd(_baseUri.Port, Host.Create).AddProcessor(this, token);
 
 		protected override Uri GetTarget(string sessionId) => new Uri(_baseUri, sessionId);
 
@@ -158,19 +227,17 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public async ValueTask<bool> Handle(HttpRequest request)
+		private async ValueTask<bool> Handle(HttpRequest request)
 		{
-			if (request == null) throw new ArgumentNullException(nameof(request));
-
 			string sessionId;
 
 			if (_path == @"/")
 			{
-				sessionId = Path.GetFileName(request.Path);
+				sessionId = ExtractSessionId(request.Path);
 			}
-			else if (request.Path.StartsWithSegments(_path, out var sessionIdPathString))
+			else if (request.Path.StartsWithSegments(_path, StringComparison.OrdinalIgnoreCase, out var sessionIdPathString))
 			{
-				sessionId = Path.GetFileName(sessionIdPathString);
+				sessionId = ExtractSessionId(sessionIdPathString);
 			}
 			else
 			{
@@ -181,6 +248,18 @@ namespace TSSArt.StateMachine
 			await IncomingEvent(sessionId, evt, token: default).ConfigureAwait(false);
 
 			return true;
+		}
+
+		private static string ExtractSessionId(PathString pathString)
+		{
+			var unescapedString = pathString.Value;
+
+			if (unescapedString.Length > 0 && unescapedString[0] == '/')
+			{
+				return unescapedString.Substring(1);
+			}
+
+			return unescapedString;
 		}
 
 		private async ValueTask<IEvent> CreateEvent(HttpRequest request)

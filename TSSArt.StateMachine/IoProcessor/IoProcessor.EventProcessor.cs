@@ -6,13 +6,13 @@ namespace TSSArt.StateMachine
 {
 	public sealed partial class IoProcessor : IEventProcessor, IEventConsumer
 	{
-		private static readonly Uri BaseUri               = new Uri("ioprocessor://./");
+		private static readonly Uri BaseUri               = new Uri("ioprocessor:///");
 		private static readonly Uri EventProcessorId      = new Uri("http://www.w3.org/TR/scxml/#SCXMLEventProcessor");
 		private static readonly Uri EventProcessorAliasId = new Uri(uriString: "scxml", UriKind.Relative);
 
 	#region Interface IEventConsumer
 
-		ValueTask IEventConsumer.Dispatch(string sessionId, IEvent evt, CancellationToken token)
+		public ValueTask Dispatch(string sessionId, IEvent evt, CancellationToken token = default)
 		{
 			GetCurrentContext().ValidateSessionId(sessionId, out var controller);
 
@@ -32,19 +32,36 @@ namespace TSSArt.StateMachine
 				throw new StateMachineProcessorException(Resources.Exception_Event_Target_did_not_specified);
 			}
 
-			var service = GetCurrentContext().GetService(sessionId, evt.Target);
+			var service = GetCurrentContext().GetService(sessionId, new Uri(evt.Target.Fragment));
 
 			var serviceEvent = new EventObject(EventType.External, evt, GetTarget(sessionId), EventProcessorId);
 
 			return service.Send(serviceEvent, token);
 		}
 
-		Uri IEventProcessor.Id => EventProcessorId;
+		bool IEventProcessor.CanHandle(Uri? type, Uri? target) => CanHandleType(type) && CanHandleTarget(target);
 
-		Uri IEventProcessor.AliasId => EventProcessorAliasId;
+		Uri IEventProcessor.Id => EventProcessorId;
 
 	#endregion
 
-		private static Uri GetTarget(string sessionId) => new Uri(BaseUri, sessionId);
+		private bool CanHandleType(Uri? type) => type == null || FullUriComparer.Instance.Equals(type, EventProcessorId) || FullUriComparer.Instance.Equals(type, EventProcessorAliasId);
+
+		private bool CanHandleTarget(Uri? target)
+		{
+			if (target == null)
+			{
+				return true;
+			}
+
+			if (target.IsAbsoluteUri && target.IsLoopback && target.GetComponents(UriComponents.Path, UriFormat.Unescaped).Length == 0)
+			{
+				return true;
+			}
+
+			return !target.IsAbsoluteUri;
+		}
+
+		private static Uri GetTarget(string sessionId) => new Uri(BaseUri, "#_scxml_" + sessionId);
 	}
 }

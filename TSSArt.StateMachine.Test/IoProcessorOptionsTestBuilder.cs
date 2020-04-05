@@ -2,7 +2,7 @@
 
 namespace TSSArt.StateMachine.Test
 {
-	public static class IoProcessorOptionsBuilder
+	public static class IoProcessorOptionsTestBuilder
 	{
 		public delegate void IoProcessorOptionsSetup(ref IoProcessorOptions options);
 

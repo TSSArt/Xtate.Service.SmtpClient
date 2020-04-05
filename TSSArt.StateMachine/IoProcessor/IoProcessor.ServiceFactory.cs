@@ -11,6 +11,8 @@ namespace TSSArt.StateMachine
 
 	#region Interface IServiceFactory
 
+		bool IServiceFactory.CanHandle(Uri type, Uri? source) => FullUriComparer.Instance.Equals(type, ServiceFactoryTypeId) || FullUriComparer.Instance.Equals(type, ServiceFactoryAliasTypeId);
+
 		async ValueTask<IService> IServiceFactory.StartService(Uri? location, InvokeData invokeData, IServiceCommunication serviceCommunication, CancellationToken token)
 		{
 			var sessionId = invokeData.InvokeId;
@@ -45,10 +47,6 @@ namespace TSSArt.StateMachine
 
 			return service;
 		}
-
-		Uri IServiceFactory.TypeId => ServiceFactoryTypeId;
-
-		Uri IServiceFactory.AliasTypeId => ServiceFactoryAliasTypeId;
 
 	#endregion
 	}

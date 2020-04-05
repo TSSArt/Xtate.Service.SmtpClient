@@ -613,4 +613,16 @@
   <data name="Exception_Cannot_find_ResourceLoader_to_load_external_resource" xml:space="preserve">
     <value>Cannot find ResourceLoader to load external resource.</value>
   </data>
+  <data name="Exception_Error_on_event_consumer_side" xml:space="preserve">
+    <value>Error on event consumer side.</value>
+  </data>
+  <data name="Exception_Target_wrong_format" xml:space="preserve">
+    <value>Target wrong format.</value>
+  </data>
+  <data name="Exception_SessionId_is_empty" xml:space="preserve">
+    <value>SessionId is empty.</value>
+  </data>
+  <data name="Exception_NamedEventProcessor_with_name_already_has_been_registered" xml:space="preserve">
+    <value>NamedEventProcessor with name '{0}' already has been registered.</value>
+  </data>
 </root>

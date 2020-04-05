@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using System.Xml;
 using HtmlAgilityPack;
 using MimeKit;
-
 #if NETSTANDARD2_1
 using System.Buffers;
 

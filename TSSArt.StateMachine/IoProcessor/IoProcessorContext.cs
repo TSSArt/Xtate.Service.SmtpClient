@@ -22,7 +22,7 @@ namespace TSSArt.StateMachine
 		private readonly ConcurrentDictionary<(string SessionId, string InvokeId), (string InvokeUniqueId, IService? Service)> _serviceByInvokeId =
 				new ConcurrentDictionary<(string SessionId, string InvokeId), (string InvokeUniqueId, IService? Service)>();
 
-		private readonly ConcurrentDictionary<Uri, IService>                  _serviceByTarget          = new ConcurrentDictionary<Uri, IService>(UriComparer.Instance);
+		private readonly ConcurrentDictionary<Uri, IService>                  _serviceByTarget          = new ConcurrentDictionary<Uri, IService>(FullUriComparer.Instance);
 		private readonly ConcurrentDictionary<string, StateMachineController> _stateMachinesBySessionId = new ConcurrentDictionary<string, StateMachineController>();
 		private readonly CancellationTokenSource                              _stopTokenSource;
 		private readonly CancellationTokenSource                              _suspendTokenSource;
@@ -253,17 +253,8 @@ namespace TSSArt.StateMachine
 				return service;
 			}
 
-			var targetSessionId = ExtractSessionId(target);
-
-			if (_stateMachinesBySessionId.TryGetValue(targetSessionId, out var stateMachineController))
-			{
-				return stateMachineController;
-			}
-
 			throw new StateMachineProcessorException(Resources.Exception_Cannot_find_target);
 		}
-
-		private static string ExtractSessionId(Uri target) => Path.GetFileName(target.LocalPath);
 
 		public async ValueTask WaitAllAsync(CancellationToken token)
 		{

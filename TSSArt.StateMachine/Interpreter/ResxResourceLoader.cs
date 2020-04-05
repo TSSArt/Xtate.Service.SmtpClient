@@ -27,14 +27,14 @@ namespace TSSArt.StateMachine
 		public async ValueTask<Resource> Request(Uri uri, CancellationToken token)
 		{
 			if (uri == null) throw new ArgumentNullException(nameof(uri));
-#if NETSTANDARD2_1
-			await using var stream = GetResourceStream(uri);
-#else
-			using var stream = GetResourceStream(uri);
-#endif
-			using var reader = new StreamReader(stream);
-			var content = await reader.ReadToEndAsync().ConfigureAwait(false); //TODO: ReadToEndAsync replace to support CancellationToken  
-			return new Resource(uri, contentType: default, content);
+
+			var stream = GetResourceStream(uri);
+			await using (stream.ConfigureAwait(false))
+			{
+				using var reader = new StreamReader(stream);
+				var content = await reader.ReadToEndAsync().ConfigureAwait(false); //TODO: ReadToEndAsync replace to support CancellationToken  
+				return new Resource(uri, contentType: default, content);
+			}
 		}
 
 		public ValueTask<XmlReader> RequestXmlReader(Uri uri, XmlReaderSettings? readerSettings = null, XmlParserContext? parserContext = null, CancellationToken token = default)
