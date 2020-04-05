@@ -973,6 +973,15 @@ namespace TSSArt.StateMachine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error on event consumer side..
+        /// </summary>
+        internal static string Exception_Error_on_event_consumer_side {
+            get {
+                return ResourceManager.GetString("Exception_Error_on_event_consumer_side", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Event Target did not specified..
         /// </summary>
         internal static string Exception_Event_Target_did_not_specified {
@@ -1217,6 +1226,15 @@ namespace TSSArt.StateMachine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to NamedEventProcessor with name &apos;{0}&apos; already has been registered..
+        /// </summary>
+        internal static string Exception_NamedEventProcessor_with_name_already_has_been_registered {
+            get {
+                return ResourceManager.GetString("Exception_NamedEventProcessor_with_name_already_has_been_registered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Object can not be modified..
         /// </summary>
         internal static string Exception_Object_can_not_be_modified {
@@ -1286,6 +1304,15 @@ namespace TSSArt.StateMachine {
         internal static string Exception_ServiceAttribute_did_not_provided_for_type {
             get {
                 return ResourceManager.GetString("Exception_ServiceAttribute_did_not_provided_for_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SessionId is empty..
+        /// </summary>
+        internal static string Exception_SessionId_is_empty {
+            get {
+                return ResourceManager.GetString("Exception_SessionId_is_empty", resourceCulture);
             }
         }
         
@@ -1376,6 +1403,15 @@ namespace TSSArt.StateMachine {
         internal static string Exception_Target_should_be_equal_to___parent__or_null {
             get {
                 return ResourceManager.GetString("Exception_Target_should_be_equal_to___parent__or_null", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Target wrong format..
+        /// </summary>
+        internal static string Exception_Target_wrong_format {
+            get {
+                return ResourceManager.GetString("Exception_Target_wrong_format", resourceCulture);
             }
         }
         

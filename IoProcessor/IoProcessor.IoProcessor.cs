@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,16 +7,14 @@ namespace TSSArt.StateMachine
 {
 	public sealed partial class IoProcessor : IIoProcessor
 	{
-		private static readonly Uri InternalTarget = new Uri(uriString: "#_internal", UriKind.Relative);
+		private static readonly Uri                             InternalTarget = new Uri(uriString: "#_internal", UriKind.Relative);
+		private                 ImmutableArray<IEventProcessor> _eventProcessors;
 
-		private readonly Dictionary<Uri, IServiceFactory> _serviceFactories = new Dictionary<Uri, IServiceFactory>(UriComparer.Instance);
-
-		private ImmutableDictionary<Uri, IEventProcessor>? _eventProcessors;
-		private ImmutableArray<IEventProcessor>            _ioProcessors;
+		private ImmutableArray<IServiceFactory> _serviceFactories;
 
 	#region Interface IIoProcessor
 
-		ImmutableArray<IEventProcessor> IIoProcessor.GetIoProcessors() => _ioProcessors;
+		ImmutableArray<IEventProcessor> IIoProcessor.GetIoProcessors() => _eventProcessors;
 
 		async ValueTask IIoProcessor.StartInvoke(string sessionId, InvokeData data, CancellationToken token)
 		{
@@ -25,11 +22,7 @@ namespace TSSArt.StateMachine
 
 			context.ValidateSessionId(sessionId, out var service);
 
-			if (!_serviceFactories.TryGetValue(data.Type, out var factory))
-			{
-				throw new StateMachineProcessorException(Resources.Exception_Invalid_type);
-			}
-
+			var factory = FindServiceFactory(data.Type, data.Source);
 			var serviceCommunication = new ServiceCommunication(service, EventProcessorId, data.InvokeId, data.InvokeUniqueId);
 			var invokedService = await factory.StartService(service.Location, data, serviceCommunication, token).ConfigureAwait(false);
 
@@ -91,7 +84,7 @@ namespace TSSArt.StateMachine
 
 			context.ValidateSessionId(sessionId, out _);
 
-			var eventProcessor = GetEventProcessor(evt.Type);
+			var eventProcessor = GetEventProcessor(evt.Type, evt.Target);
 
 			if (eventProcessor == this)
 			{
@@ -132,74 +125,72 @@ namespace TSSArt.StateMachine
 
 	#endregion
 
+		private IServiceFactory FindServiceFactory(Uri type, Uri? source)
+		{
+			if (!_serviceFactories.IsDefaultOrEmpty)
+			{
+				foreach (var serviceFactory in _serviceFactories)
+				{
+					if (serviceFactory.CanHandle(type, source))
+					{
+						return serviceFactory;
+					}
+				}
+			}
+
+			throw new StateMachineProcessorException(Resources.Exception_Invalid_type);
+		}
+
 		private void IoProcessorInit()
 		{
-			AddServiceFactory(this);
+			var factories = _options.ServiceFactories;
+			var length = !factories.IsDefault ? factories.Length + 1 : 1;
+			var serviceFactories = ImmutableArray.CreateBuilder<IServiceFactory>(length);
 
-			if (!_options.ServiceFactories.IsDefaultOrEmpty)
+			serviceFactories.Add(this);
+
+			if (!factories.IsDefaultOrEmpty)
 			{
-				foreach (var serviceFactory in _options.ServiceFactories)
+				foreach (var serviceFactory in factories)
 				{
-					AddServiceFactory(serviceFactory);
+					serviceFactories.Add(serviceFactory);
 				}
 			}
 
-			void AddServiceFactory(IServiceFactory serviceFactory)
-			{
-				_serviceFactories.Add(serviceFactory.TypeId, serviceFactory);
-
-				var aliasId = serviceFactory.AliasTypeId;
-				if (aliasId != null)
-				{
-					_serviceFactories.Add(aliasId, serviceFactory);
-				}
-			}
+			_serviceFactories = serviceFactories.MoveToImmutable();
 		}
 
 		private async ValueTask IoProcessorStartAsync(CancellationToken token)
 		{
-			var eventProcessors = ImmutableDictionary.Create<Uri, IEventProcessor>(UriComparer.Instance);
-			var ioProcessors = ImmutableArray<IEventProcessor>.Empty;
+			var factories = _options.EventProcessorFactories;
+			var length = !factories.IsDefault ? factories.Length + 1 : 1;
 
-			AddEventProcessor(this);
+			var eventProcessors = ImmutableArray.CreateBuilder<IEventProcessor>(length);
+
+			eventProcessors.Add(this);
 
 			if (!_options.EventProcessorFactories.IsDefaultOrEmpty)
 			{
 				foreach (var eventProcessorFactory in _options.EventProcessorFactories)
 				{
-					AddEventProcessor(await eventProcessorFactory.Create(this, token).ConfigureAwait(false));
+					eventProcessors.Add(await eventProcessorFactory.Create(this, token).ConfigureAwait(false));
 				}
 			}
 
-			void AddEventProcessor(IEventProcessor eventProcessor)
-			{
-				ioProcessors = ioProcessors.Add(eventProcessor);
-
-				eventProcessors = eventProcessors.Add(eventProcessor.Id, eventProcessor);
-
-				var aliasId = eventProcessor.AliasId;
-				if (aliasId != null)
-				{
-					eventProcessors = eventProcessors.Add(aliasId, eventProcessor);
-				}
-			}
-
-			_eventProcessors = eventProcessors;
-			_ioProcessors = ioProcessors;
+			_eventProcessors = eventProcessors.MoveToImmutable();
 		}
 
 		private async ValueTask IoProcessorStopAsync()
 		{
-			var ioProcessors = _ioProcessors;
-			_eventProcessors = null;
-			_ioProcessors = default;
+			var eventProcessors = _eventProcessors;
+			_eventProcessors = default;
 
-			if (ioProcessors.IsDefaultOrEmpty)
+			if (eventProcessors.IsDefaultOrEmpty)
 			{
 				return;
 			}
 
-			foreach (var eventProcessor in ioProcessors)
+			foreach (var eventProcessor in eventProcessors)
 			{
 				if (eventProcessor == this)
 				{
@@ -235,21 +226,19 @@ namespace TSSArt.StateMachine
 			return default;
 		}
 
-		private IEventProcessor GetEventProcessor(Uri? type)
+		private IEventProcessor GetEventProcessor(Uri? type, Uri? target)
 		{
-			if (type == null)
-			{
-				return this;
-			}
-
 			if (_eventProcessors == null)
 			{
 				throw new StateMachineProcessorException(Resources.Exception_IoProcessor_stopped);
 			}
 
-			if (_eventProcessors.TryGetValue(type, out var eventProcessor))
+			foreach (var eventProcessor in _eventProcessors)
 			{
-				return eventProcessor;
+				if (eventProcessor.CanHandle(type, target))
+				{
+					return eventProcessor;
+				}
 			}
 
 			throw new StateMachineProcessorException(Resources.Exception_Invalid_type);

@@ -28,6 +28,7 @@
 		InvokeNode,
 		LocationExpressionNode,
 		LogNode,
+		Message,
 		OnEntryNode,
 		OnExitNode,
 		ParallelNode,
