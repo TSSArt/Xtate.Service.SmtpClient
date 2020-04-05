@@ -31,7 +31,7 @@ namespace TSSArt.StateMachine.EcmaScript
 
 		private Program Parse(string source) => _parser.Parse(source, ParserOptions);
 
-		private string GetErrorMessage(ParserException ex) => @$"{ex.Message} ({ex.Description}). Ln: {ex.LineNumber}. Col: {ex.Column}.";
+		private static string GetErrorMessage(ParserException ex) => @$"{ex.Message} ({ex.Description}). Ln: {ex.LineNumber}. Col: {ex.Column}.";
 
 		protected override void Build(ref IForEach forEach, ref ForEachEntity forEachProperties)
 		{
