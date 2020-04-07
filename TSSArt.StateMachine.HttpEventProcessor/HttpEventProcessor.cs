@@ -4,14 +4,17 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using System.Net.Mime;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
 using TSSArt.StateMachine.Properties;
@@ -26,25 +29,25 @@ namespace TSSArt.StateMachine
 		private const string MediaTypeApplicationFormUrlEncoded = "application/x-www-form-urlencoded";
 		private const string EventNameParameterName             = "_scxmleventname";
 
-		private static readonly ConcurrentDictionary<int, Host> Hosts = new ConcurrentDictionary<int, Host>();
+		private static readonly ConcurrentDictionary<IPEndPoint, Host> Hosts      = new ConcurrentDictionary<IPEndPoint, Host>();
+		private static readonly ImmutableArray<IPAddress>              Interfaces = GetInterfaces();
 
-		private readonly Uri    _baseUri;
-		private readonly string _path;
+		private readonly Uri        _baseUri;
+		private readonly PathString _path;
+		private          IPEndPoint _ipEndPoint;
 
-		public HttpEventProcessor(IEventConsumer eventConsumer, Uri baseUri, string path) : base(eventConsumer)
+		public HttpEventProcessor(IEventConsumer eventConsumer, Uri baseUri, IPEndPoint ipEndPoint) : base(eventConsumer)
 		{
-			if (baseUri == null) throw new ArgumentNullException(nameof(baseUri));
-			if (string.IsNullOrEmpty(path)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(path));
-
-			_baseUri = new Uri(baseUri, path);
-			_path = path;
+			_baseUri = baseUri ?? throw new ArgumentNullException(nameof(baseUri));
+			_path = PathString.FromUriComponent(baseUri);
+			_ipEndPoint = ipEndPoint;
 		}
 
 	#region Interface IAsyncDisposable
 
 		public async ValueTask DisposeAsync()
 		{
-			if (Hosts.TryGetValue(_baseUri.Port, out var host))
+			if (Hosts.TryGetValue(_ipEndPoint, out var host))
 			{
 				await host.RemoveProcessor(this, token: default).ConfigureAwait(false);
 			}
@@ -52,65 +55,65 @@ namespace TSSArt.StateMachine
 
 	#endregion
 
-		private class Host
+		private static ImmutableArray<IPAddress> GetInterfaces()
 		{
-			private ImmutableList<HttpEventProcessor> _processors = ImmutableList<HttpEventProcessor>.Empty;
+			var result = ImmutableArray.CreateBuilder<IPAddress>();
 
-			private readonly IWebHost _webHost;
-
-			public static Host Create(int port) => new Host(port);
-
-			private Host(int port)
+			foreach (var networkInterface in NetworkInterface.GetAllNetworkInterfaces())
 			{
-				_webHost = new WebHostBuilder()
-						   .Configure(builder => builder.Run(HandleRequest))
-						   .UseKestrel(serverOptions => serverOptions.ListenAnyIP(port))
-						   .Build();
-			}
-
-			private async Task HandleRequest(HttpContext context)
-			{
-				foreach (var httpEventProcessor in _processors)
+				var ipInterfaceProperties = networkInterface.GetIPProperties();
+				foreach (var ipInterfaceProperty in ipInterfaceProperties.UnicastAddresses)
 				{
-					if (await httpEventProcessor.Handle(context.Request).ConfigureAwait(false))
-					{
-						return;
-					}
+					result.Add(ipInterfaceProperty.Address);
 				}
 			}
 
-			public async ValueTask AddProcessor(HttpEventProcessor httpEventProcessor, CancellationToken token)
-			{
-				ImmutableList<HttpEventProcessor> preVal, newVal;
-				do
-				{
-					preVal = _processors;
-					newVal = preVal.Add(httpEventProcessor);
-				} while (Interlocked.CompareExchange(ref _processors, newVal, preVal) != preVal);
-
-				if (preVal.Count == 0)
-				{
-					await _webHost.StartAsync(token).ConfigureAwait(false);
-				}
-			}
-
-			public async ValueTask RemoveProcessor(HttpEventProcessor httpEventProcessor, CancellationToken token)
-			{
-				ImmutableList<HttpEventProcessor> preVal, newVal;
-				do
-				{
-					preVal = _processors;
-					newVal = preVal.Remove(httpEventProcessor);
-				} while (Interlocked.CompareExchange(ref _processors, newVal, preVal) != preVal);
-
-				if (newVal.Count == 0)
-				{
-					await _webHost.StopAsync(token).ConfigureAwait(false);
-				}
-			}
+			return result.ToImmutable();
 		}
 
-		public ValueTask Start(CancellationToken token) => Hosts.GetOrAdd(_baseUri.Port, Host.Create).AddProcessor(this, token);
+		public async ValueTask Start(CancellationToken token)
+		{
+			if (_ipEndPoint.Address.Equals(IPAddress.None) && _ipEndPoint.Port == 0)
+			{
+				_ipEndPoint = await FromUri(_baseUri).ConfigureAwait(false);
+			}
+
+			var host = Hosts.GetOrAdd(_ipEndPoint, Host.Create);
+
+			await host.AddProcessor(this, token).ConfigureAwait(false);
+		}
+
+		private async ValueTask<IPEndPoint> FromUri(Uri uri)
+		{
+			if (uri.IsLoopback)
+			{
+				return new IPEndPoint(IPAddress.Loopback, uri.Port);
+			}
+
+			var hostEntry = await Dns.GetHostEntryAsync(uri.DnsSafeHost).ConfigureAwait(false);
+
+			IPAddress? listenAddress = null;
+
+			foreach (var address in hostEntry.AddressList)
+			{
+				if (Interfaces.IndexOf(address) >= 0)
+				{
+					if (listenAddress != null)
+					{
+						throw new StateMachineProcessorException(Resources.Exception_Found_more_then_one_interface_to_listen);
+					}
+
+					listenAddress = address;
+				}
+			}
+
+			if (listenAddress == null)
+			{
+				throw new StateMachineProcessorException(Resources.Exception_Can_t_match_network_interface_to_listen);
+			}
+
+			return new IPEndPoint(listenAddress, uri.Port);
+		}
 
 		protected override Uri GetTarget(string sessionId) => new Uri(_baseUri, sessionId);
 
@@ -321,6 +324,79 @@ namespace TSSArt.StateMachine
 			}
 
 			return default;
+		}
+
+		private class Host
+		{
+			private readonly IWebHost                          _webHost;
+			private          ImmutableList<HttpEventProcessor> _processors = ImmutableList<HttpEventProcessor>.Empty;
+
+			private Host(IPEndPoint ipEndPoint)
+			{
+				_webHost = new WebHostBuilder()
+						   .Configure(builder => builder.Run(HandleRequest))
+						   .UseKestrel(ConfigureOptions)
+						   .Build();
+
+				void ConfigureOptions(KestrelServerOptions options)
+				{
+					if (ipEndPoint.Address.Equals(IPAddress.Any) || ipEndPoint.Address.Equals(IPAddress.IPv6Any))
+					{
+						options.ListenAnyIP(ipEndPoint.Port);
+					}
+					else if (IPAddress.IsLoopback(ipEndPoint.Address))
+					{
+						options.ListenLocalhost(ipEndPoint.Port);
+					}
+					else
+					{
+						options.Listen(ipEndPoint);
+					}
+				}
+			}
+
+			public static Host Create(IPEndPoint ipEndPoint) => new Host(ipEndPoint);
+
+			private async Task HandleRequest(HttpContext context)
+			{
+				foreach (var httpEventProcessor in _processors)
+				{
+					if (await httpEventProcessor.Handle(context.Request).ConfigureAwait(false))
+					{
+						return;
+					}
+				}
+			}
+
+			public async ValueTask AddProcessor(HttpEventProcessor httpEventProcessor, CancellationToken token)
+			{
+				ImmutableList<HttpEventProcessor> preVal, newVal;
+				do
+				{
+					preVal = _processors;
+					newVal = preVal.Add(httpEventProcessor);
+				} while (Interlocked.CompareExchange(ref _processors, newVal, preVal) != preVal);
+
+				if (preVal.Count == 0)
+				{
+					await _webHost.StartAsync(token).ConfigureAwait(false);
+				}
+			}
+
+			public async ValueTask RemoveProcessor(HttpEventProcessor httpEventProcessor, CancellationToken token)
+			{
+				ImmutableList<HttpEventProcessor> preVal, newVal;
+				do
+				{
+					preVal = _processors;
+					newVal = preVal.Remove(httpEventProcessor);
+				} while (Interlocked.CompareExchange(ref _processors, newVal, preVal) != preVal);
+
+				if (newVal.Count == 0)
+				{
+					await _webHost.StopAsync(token).ConfigureAwait(false);
+				}
+			}
 		}
 	}
 }

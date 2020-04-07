@@ -20,7 +20,7 @@ namespace TSSArt.StateMachine.Core.Host
 						  .AddEcmaScript()
 						  .AddCefSharpWebBrowser()
 						  .AddUserInteraction()
-						  .AddHttpEventProcessor(baseUri, path: "/")
+						  .AddHttpEventProcessor(baseUri)
 						  .DisableVerboseValidation()
 						  .AddResourceLoader(ResxResourceLoader.Instance)
 						  .Build();

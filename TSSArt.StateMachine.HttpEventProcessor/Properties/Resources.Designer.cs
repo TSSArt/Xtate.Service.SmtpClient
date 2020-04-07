@@ -61,11 +61,29 @@ namespace TSSArt.StateMachine.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Can&apos;t match network interface to listen..
+        /// </summary>
+        internal static string Exception_Can_t_match_network_interface_to_listen {
+            get {
+                return ResourceManager.GetString("Exception_Can_t_match_network_interface_to_listen", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Data format not supported..
         /// </summary>
         internal static string Exception_Data_format_not_supported {
             get {
                 return ResourceManager.GetString("Exception_Data_format_not_supported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Found more then one interface to listen..
+        /// </summary>
+        internal static string Exception_Found_more_then_one_interface_to_listen {
+            get {
+                return ResourceManager.GetString("Exception_Found_more_then_one_interface_to_listen", resourceCulture);
             }
         }
         

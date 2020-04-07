@@ -29,12 +29,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="validateEmail.xml" />
-    <EmbeddedResource Include="recaptcha.xml" />
-    <EmbeddedResource Include="login.xml" />
-    <EmbeddedResource Include="signup.xml" />
-    <EmbeddedResource Include="captureEmail.xml" />
-    <EmbeddedResource Include="test-tssart-com-sign-up.xml" />
+    <EmbeddedResource Include="Scxml\validateEmail.xml" />
+    <EmbeddedResource Include="Scxml\recaptcha.xml" />
+    <EmbeddedResource Include="Scxml\login.xml" />
+    <EmbeddedResource Include="Scxml\signup.scxml" />
+    <EmbeddedResource Include="Scxml\captureEmail.xml" />
+    <EmbeddedResource Include="Scxml\test-tssart-com-sign-up.xml" />
   </ItemGroup>
 
 </Project>
