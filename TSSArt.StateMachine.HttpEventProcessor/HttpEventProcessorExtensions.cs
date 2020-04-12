@@ -5,7 +5,7 @@ namespace TSSArt.StateMachine
 {
 	public static class HttpEventProcessorExtensions
 	{
-		public static IoProcessorOptionsBuilder AddHttpEventProcessor(this IoProcessorOptionsBuilder builder, Uri baseUri)
+		public static IoProcessorBuilder AddHttpEventProcessor(this IoProcessorBuilder builder, Uri baseUri)
 		{
 			if (builder == null) throw new ArgumentNullException(nameof(builder));
 
@@ -14,7 +14,7 @@ namespace TSSArt.StateMachine
 			return builder;
 		}
 		
-		public static IoProcessorOptionsBuilder AddHttpEventProcessor(this IoProcessorOptionsBuilder builder, Uri baseUri, IPEndPoint ipEndPoint)
+		public static IoProcessorBuilder AddHttpEventProcessor(this IoProcessorBuilder builder, Uri baseUri, IPEndPoint ipEndPoint)
 		{
 			if (builder == null) throw new ArgumentNullException(nameof(builder));
 

@@ -15,7 +15,7 @@ namespace TSSArt.StateMachine.EcmaScript
 		{
 			_obj = obj;
 
-			Extensible = !obj.IsReadOnly;
+			Extensible = obj.Access == DataModelAccess.Writable;
 		}
 
 	#region Interface IObjectWrapper

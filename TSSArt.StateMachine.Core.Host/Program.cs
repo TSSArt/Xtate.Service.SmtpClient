@@ -16,16 +16,14 @@ namespace TSSArt.StateMachine.Core.Host
 
 			var baseUri = new Uri(args.Length > 0 ? args[0] : "http://localhost:5000/");
 
-			var options = new IoProcessorOptionsBuilder()
-						  .AddEcmaScript()
-						  .AddCefSharpWebBrowser()
-						  .AddUserInteraction()
-						  .AddHttpEventProcessor(baseUri)
-						  .DisableVerboseValidation()
-						  .AddResourceLoader(ResxResourceLoader.Instance)
-						  .Build();
-
-			await using var ioProcessor = new IoProcessor(options);
+			await using var ioProcessor = new IoProcessorBuilder()
+										  .AddEcmaScript()
+										  .AddCefSharpWebBrowser()
+										  .AddUserInteraction()
+										  .AddHttpEventProcessor(baseUri)
+										  .DisableVerboseValidation()
+										  .AddResourceLoader(ResxResourceLoader.Instance)
+										  .Build();
 
 			await ioProcessor.StartAsync().ConfigureAwait(false);
 

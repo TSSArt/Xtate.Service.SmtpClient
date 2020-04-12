@@ -10,7 +10,7 @@ namespace TSSArt.StateMachine
 			NameParts = EventName.ToParts(eventName);
 			Origin = origin;
 			OriginType = originType;
-			Data = data;
+			Data = data.AsConstant();
 		}
 
 	#region Interface IEvent

@@ -31,30 +31,25 @@ namespace TSSArt.StateMachine.Services
 
 			if (form.DialogResult == DialogResult.OK)
 			{
-				result["status"] = new DataModelValue("ok");
+				result["status"] = "ok";
 
 				var parameters = new DataModelObject();
 				if (form.Result != null)
 				{
 					foreach (var pair in form.Result)
 					{
-						parameters[pair.Key] = new DataModelValue(pair.Value);
+						parameters[pair.Key] = pair.Value;
 					}
 				}
 
-				parameters.Freeze();
-
-				result["parameters"] = new DataModelValue(parameters);
-				result.Freeze();
+				result["parameters"] = parameters;
 			}
 			else
 			{
-				result["status"] = new DataModelValue("cancel");
+				result["status"] = "cancel";
 			}
 
-			result.Freeze();
-
-			return new DataModelValue(result);
+			return result;
 		}
 	}
 }

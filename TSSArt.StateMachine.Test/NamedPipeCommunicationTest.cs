@@ -15,8 +15,7 @@ namespace TSSArt.StateMachine.Test
 </state>
 <final id='final'>
 	<onentry>
-		<send target='{0}'
-			type='http://www.w3.org/TR/scxml/#SCXMLEventProcessor' event='trigger2'/>
+		<send target='{0}' type='scxml' event='trigger2'/>
     </onentry>
 </final>
 </scxml>";
@@ -36,10 +35,9 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public async Task SameIoProcessorTest()
 		{
-			var srcOpt = new IoProcessorOptionsBuilder().AddNamedEventProcessor(U("src")).AddEcmaScript().Build();
-			var srcPrc = new IoProcessor(srcOpt);
+			var srcPrc = new IoProcessorBuilder().AddNamedEventProcessor(U("src")).AddEcmaScript().Build();
 			await srcPrc.StartAsync();
-			var _ = srcPrc.Execute(sessionId: "srcID", string.Format(SrcScxml, $"pipe:///{U("src")}#_scxml_dstID"));
+			var _ = srcPrc.Execute(sessionId: "srcID", string.Format(SrcScxml, $"iop:///{U("src")}#_scxml_dstID"));
 			var dst = srcPrc.Execute(sessionId: "dstID", DstScxml);
 
 			await srcPrc.Dispatch(sessionId: "srcID", new EventObject("trigger"));
@@ -54,13 +52,11 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public async Task SameAppDomainNoPipesTest()
 		{
-			var srcOpt = new IoProcessorOptionsBuilder().AddNamedEventProcessor(U("src")).Build();
-			var srcPrc = new IoProcessor(srcOpt);
+			var srcPrc = new IoProcessorBuilder().AddNamedEventProcessor(U("src")).Build();
 			await srcPrc.StartAsync();
-			var _ = srcPrc.Execute(sessionId: "srcID", string.Format(SrcScxml, $"pipe:///{U("dst")}#_scxml_dstID"));
+			var _ = srcPrc.Execute(sessionId: "srcID", string.Format(SrcScxml, $"iop:///{U("dst")}#_scxml_dstID"));
 
-			var dstOpt = new IoProcessorOptionsBuilder().AddNamedEventProcessor(U("dst")).AddEcmaScript().Build();
-			var dstPrc = new IoProcessor(dstOpt);
+			var dstPrc = new IoProcessorBuilder().AddNamedEventProcessor(U("dst")).AddEcmaScript().Build();
 			await dstPrc.StartAsync();
 			var dst = dstPrc.Execute(sessionId: "dstID", DstScxml);
 
@@ -78,13 +74,11 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public async Task SameAppDomainPipesTest()
 		{
-			var srcOpt = new IoProcessorOptionsBuilder().AddNamedEventProcessor(host: "MyHost1", U("src")).Build();
-			var srcPrc = new IoProcessor(srcOpt);
+			var srcPrc = new IoProcessorBuilder().AddNamedEventProcessor(host: "MyHost1", U("src")).Build();
 			await srcPrc.StartAsync();
-			var _ = srcPrc.Execute(sessionId: "srcID", string.Format(SrcScxml, $"pipe://./{U("dst")}#_scxml_dstID"));
+			var _ = srcPrc.Execute(sessionId: "srcID", string.Format(SrcScxml, $"iop://./{U("dst")}#_scxml_dstID"));
 
-			var dstOpt = new IoProcessorOptionsBuilder().AddNamedEventProcessor(host: ".", U("dst")).AddEcmaScript().Build();
-			var dstPrc = new IoProcessor(dstOpt);
+			var dstPrc = new IoProcessorBuilder().AddNamedEventProcessor(host: ".", U("dst")).AddEcmaScript().Build();
 			await dstPrc.StartAsync();
 			var dst = dstPrc.Execute(sessionId: "dstID", DstScxml);
 

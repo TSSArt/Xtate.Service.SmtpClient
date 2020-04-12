@@ -35,7 +35,7 @@ namespace TSSArt.StateMachine
 			if (ExpressionEvaluator != null)
 			{
 				var obj = await ExpressionEvaluator.EvaluateObject(executionContext, token).ConfigureAwait(false);
-				data = DataModelValue.FromObject(obj.ToObject()).DeepClone(true);
+				data = DataModelValue.FromObject(obj.ToObject()).AsConstant();
 			}
 
 			await executionContext.Log(_log.Label, data, token).ConfigureAwait(false);

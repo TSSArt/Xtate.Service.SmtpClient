@@ -5,7 +5,7 @@ namespace TSSArt.StateMachine
 {
 	public static class UserInteractionExtensions
 	{
-		public static IoProcessorOptionsBuilder AddUserInteraction(this IoProcessorOptionsBuilder builder)
+		public static IoProcessorBuilder AddUserInteraction(this IoProcessorBuilder builder)
 		{
 			if (builder == null) throw new ArgumentNullException(nameof(builder));
 

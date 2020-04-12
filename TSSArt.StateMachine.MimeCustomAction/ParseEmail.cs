@@ -98,7 +98,7 @@ namespace TSSArt.StateMachine.Services
 
 			if (_pattern == null)
 			{
-				return new DataModelValue(text);
+				return text;
 			}
 
 			var regex = new Regex(_pattern);
@@ -111,16 +111,16 @@ namespace TSSArt.StateMachine.Services
 
 			if (match.Groups.Count == 1)
 			{
-				return new DataModelValue(match.Groups[0].Value);
+				return match.Groups[0].Value;
 			}
 
 			var obj = new DataModelObject();
 			foreach (var name in regex.GetGroupNames())
 			{
-				obj[name] = new DataModelValue(match.Groups[name].Value);
+				obj[name] = match.Groups[name].Value;
 			}
 
-			return new DataModelValue(obj);
+			return obj;
 		}
 
 		private static DataModelValue CaptureEntry(HtmlDocument htmlDocument, string xpath, string attr, string pattern)
@@ -138,7 +138,7 @@ namespace TSSArt.StateMachine.Services
 
 				if (pattern == null)
 				{
-					return new DataModelValue(text);
+					return text;
 				}
 
 				var regex = new Regex(pattern);
@@ -151,18 +151,16 @@ namespace TSSArt.StateMachine.Services
 
 				if (match.Groups.Count == 1)
 				{
-					return new DataModelValue(match.Groups[0].Value);
+					return match.Groups[0].Value;
 				}
 
 				var obj = new DataModelObject();
 				foreach (var name in regex.GetGroupNames())
 				{
-					obj[name] = new DataModelValue(match.Groups[name].Value);
+					obj[name] = match.Groups[name].Value;
 				}
 
-				obj.Freeze();
-
-				return new DataModelValue(obj);
+				return obj;
 			}
 
 			return DataModelValue.Undefined;

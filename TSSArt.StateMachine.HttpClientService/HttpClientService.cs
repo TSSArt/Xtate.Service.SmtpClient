@@ -72,50 +72,38 @@ namespace TSSArt.StateMachine.Services
 			var responseHeaders = new DataModelArray();
 			foreach (var header in response.Headers)
 			{
-				var pair = new DataModelObject { ["name"] = new DataModelValue(header.Key), ["value"] = new DataModelValue(header.Value) };
-				pair.Freeze();
-				responseHeaders.Add(new DataModelValue(pair));
+				responseHeaders.Add(new DataModelObject
+									{
+											["name"] = header.Key, 
+											["value"] = header.Value
+									});
 			}
-
-			responseHeaders.Freeze();
 
 			var responseCookies = new DataModelArray();
 			foreach (var cookie in response.Cookies)
 			{
-				var cookieObj = new DataModelObject
-								{
-										["name"] = new DataModelValue(cookie.Name),
-										["value"] = new DataModelValue(cookie.Value),
-										["path"] = new DataModelValue(cookie.Path),
-										["domain"] = new DataModelValue(cookie.Domain),
-										["httpOnly"] = new DataModelValue(cookie.HttpOnly),
-										["port"] = new DataModelValue(cookie.Port),
-										["secure"] = new DataModelValue(cookie.Secure)
-								};
-
-				if (cookie.Expires != default)
-				{
-					cookieObj["expires"] = new DataModelValue(cookie.Expires);
-				}
-
-				cookieObj.Freeze();
-				responseCookies.Add(new DataModelValue(cookieObj));
+				responseCookies.Add(new DataModelObject
+									{
+											["name"] = cookie.Name,
+											["value"] = cookie.Value,
+											["path"] = cookie.Path,
+											["domain"] = cookie.Domain,
+											["httpOnly"] = cookie.HttpOnly,
+											["port"] = cookie.Port,
+											["secure"] = cookie.Secure,
+											["expires"] = cookie.Expires != default ? cookie.Expires : DataModelValue.Undefined
+									});
 			}
 
-			responseCookies.Freeze();
-
-			var result = new DataModelObject
-						 {
-								 ["statusCode"] = new DataModelValue(response.StatusCode),
-								 ["statusDescription"] = new DataModelValue(response.StatusDescription),
-								 ["webExceptionStatus"] = new DataModelValue(response.WebExceptionStatus),
-								 ["headers"] = new DataModelValue(responseHeaders),
-								 ["cookies"] = new DataModelValue(responseCookies),
-								 ["content"] = response.Content
-						 };
-			result.Freeze();
-
-			return new DataModelValue(result);
+			return new DataModelObject
+				   {
+						   ["statusCode"] = response.StatusCode,
+						   ["statusDescription"] = response.StatusDescription,
+						   ["webExceptionStatus"] = response.WebExceptionStatus,
+						   ["headers"] = responseHeaders,
+						   ["cookies"] = responseCookies,
+						   ["content"] = response.Content
+				   };
 		}
 
 		private static Cookie CreateCookie(DataModelValue val)
@@ -324,9 +312,7 @@ namespace TSSArt.StateMachine.Services
 				}
 			}
 
-			obj.Freeze();
-
-			return new DataModelValue(obj);
+			return obj;
 		}
 
 		private static DataModelValue CaptureEntry(HtmlDocument htmlDocument, string[]? xpaths, string[]? attrs, string? pattern)
@@ -358,9 +344,7 @@ namespace TSSArt.StateMachine.Services
 				}
 			}
 
-			array.Freeze();
-
-			return new DataModelValue(array);
+			return array;
 		}
 
 		private static DataModelValue CaptureInNode(HtmlNode node, string[]? attrs, string? pattern)
@@ -384,9 +368,7 @@ namespace TSSArt.StateMachine.Services
 				obj[attr] = CaptureInText(value, pattern);
 			}
 
-			obj.Freeze();
-
-			return new DataModelValue(obj);
+			return obj;
 		}
 
 		private static string? GetSpecialAttributeValue(HtmlNode node, string attr) =>
@@ -435,7 +417,7 @@ namespace TSSArt.StateMachine.Services
 		{
 			if (pattern == null)
 			{
-				return new DataModelValue(text);
+				return text;
 			}
 
 			var regex = new Regex(pattern);
@@ -448,19 +430,17 @@ namespace TSSArt.StateMachine.Services
 
 			if (match.Groups.Count == 1)
 			{
-				return new DataModelValue(match.Groups[0].Value);
+				return match.Groups[0].Value;
 			}
 
 			var obj = new DataModelObject();
 
 			foreach (var name in regex.GetGroupNames())
 			{
-				obj[name] = new DataModelValue(match.Groups[name].Value);
+				obj[name] = match.Groups[name].Value;
 			}
 
-			obj.Freeze();
-
-			return new DataModelValue(obj);
+			return obj;
 		}
 
 		private struct Response

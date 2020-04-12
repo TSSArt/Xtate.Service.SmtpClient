@@ -298,7 +298,7 @@ namespace TSSArt.StateMachine.Test
 					  {
 							  ["t"] = new DataModelValue("test")
 					  };
-			obj.Freeze();
+			obj.MakeReadOnly();
 			_dataModelObject["a"] = new DataModelValue(obj);
 
 			using var controller = new DataModelObjectPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
@@ -317,7 +317,7 @@ namespace TSSArt.StateMachine.Test
 						{
 								[0] = new DataModelValue("test")
 						};
-			array.Freeze();
+			array.MakeReadOnly();
 			_dataModelObject["a"] = new DataModelValue(array);
 
 			using var controller = new DataModelObjectPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);

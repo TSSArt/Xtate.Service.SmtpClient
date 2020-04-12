@@ -125,7 +125,6 @@ namespace TSSArt.StateMachine
 
 				reader.Read();
 
-				obj.Freeze();
 				return obj;
 			}
 
@@ -171,7 +170,6 @@ namespace TSSArt.StateMachine
 
 				reader.Read();
 
-				array.Freeze();
 				return array;
 			}
 

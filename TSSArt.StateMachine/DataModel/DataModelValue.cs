@@ -235,11 +235,17 @@ namespace TSSArt.StateMachine
 
 		public static bool operator !=(DataModelValue left, DataModelValue right) => !left.Equals(right);
 
-		public DataModelValue DeepClone(bool isReadOnly = false) =>
+		public DataModelValue CloneAsWritable() => DeepClone(DataModelAccess.Writable);
+		
+		public DataModelValue CloneAsReadOnly() => DeepClone(DataModelAccess.ReadOnly);
+		
+		public DataModelValue AsConstant() => DeepClone(DataModelAccess.Constant);
+
+		internal DataModelValue DeepClone(DataModelAccess targetAccess) =>
 				_value switch
 				{
-						DataModelObject _ => new DataModelValue(AsObject()!.DeepClone(isReadOnly)),
-						DataModelArray _ => new DataModelValue(AsArray()!.DeepClone(isReadOnly)),
+						DataModelObject obj => new DataModelValue(obj.DeepClone(targetAccess)),
+						DataModelArray arr => new DataModelValue(arr.DeepClone(targetAccess)),
 						string _ => this,
 						{ } val when val == DateTimeValue => this,
 						{ } val when val == NumberValue => this,
@@ -249,19 +255,31 @@ namespace TSSArt.StateMachine
 						_ => Infrastructure.UnexpectedValue<DataModelValue>()
 				};
 
-		internal bool IsDeepReadOnly() =>
-				_value switch
-				{
-						DataModelObject obj => obj.IsDeepReadOnly(),
-						DataModelArray arr => arr.IsDeepReadOnly(),
-						string _ => true,
-						{ } val when val == DateTimeValue => true,
-						{ } val when val == NumberValue => true,
-						{ } val when val == BooleanValue => true,
-						{ } val when val == NullValue => true,
-						null => true,
-						_ => Infrastructure.UnexpectedValue<bool>()
-				};
+		public void MakeDeepReadOnly()
+		{
+			switch (_value)
+			{
+				case DataModelObject obj:
+					obj.MakeDeepReadOnly();
+					break;
+				case DataModelArray arr:
+					arr.MakeDeepReadOnly();
+					break;
+			}
+		}
+
+		public void MakeDeepConstant()
+		{
+			switch (_value)
+			{
+				case DataModelObject obj:
+					obj.MakeDeepConstant();
+					break;
+				case DataModelArray arr:
+					arr.MakeDeepConstant();
+					break;
+			}
+		}
 
 		public static DataModelValue FromContent(string content, ContentType? contentType)
 		{
@@ -346,10 +364,10 @@ namespace TSSArt.StateMachine
 									  [@"origin"] = new DataModelValue(evt.Origin?.ToString()),
 									  [@"origintype"] = new DataModelValue(evt.OriginType?.ToString()),
 									  [@"invokeid"] = new DataModelValue(evt.InvokeId),
-									  [@"data"] = evt.Data.DeepClone(isReadOnly: true)
+									  [@"data"] = evt.Data.AsConstant()
 							  };
 
-			eventObject.Freeze();
+			eventObject.MakeDeepConstant();
 
 			return new DataModelValue(eventObject);
 
@@ -379,7 +397,7 @@ namespace TSSArt.StateMachine
 										[@"text"] = new DataModelValue(exception.ToString())
 								};
 
-			exceptionData.Freeze();
+			exceptionData.MakeDeepConstant();
 
 			return new DataModelValue(exceptionData);
 		}

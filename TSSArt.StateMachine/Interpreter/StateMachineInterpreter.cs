@@ -59,7 +59,7 @@ namespace TSSArt.StateMachine
 			_errorProcessor = options.ErrorProcessor ?? DefaultErrorProcessor.Instance;
 			_persistenceLevel = options.PersistenceLevel;
 			_notifyStateChanged = options.NotifyStateChanged;
-			_arguments = options.Arguments.DeepClone(true);
+			_arguments = options.Arguments.AsConstant();
 
 			_anyTokenSource = null!;
 			_dataModelHandler = null!;
@@ -1474,7 +1474,7 @@ namespace TSSArt.StateMachine
 			dataModelHandlerObject.SetInternal(property: @"assembly", new DataModelDescriptor(new DataModelValue(type.Assembly.GetName().Name)));
 			dataModelHandlerObject.SetInternal(property: @"version", new DataModelDescriptor(new DataModelValue(version)));
 
-			var vars = new DataModelObject(isReadOnly: true);
+			var vars = new DataModelObject(true);
 			foreach (var pair in dataModelVars)
 			{
 				vars.SetInternal(pair.Key, new DataModelDescriptor(new DataModelValue(pair.Value)));
