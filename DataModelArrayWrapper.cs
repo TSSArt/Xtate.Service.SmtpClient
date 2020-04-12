@@ -15,9 +15,11 @@ namespace TSSArt.StateMachine.EcmaScript
 		{
 			_array = array;
 
-			Extensible = !array.IsReadOnly;
+			var writable = array.Access == DataModelAccess.Writable;
 
-			base.SetOwnProperty(propertyName: @"length", new PropertyDescriptor((uint) _array.Length, !array.IsReadOnly, enumerable: false, configurable: false));
+			Extensible = writable;
+
+			base.SetOwnProperty(propertyName: @"length", new PropertyDescriptor((uint) _array.Length, writable, enumerable: false, configurable: false));
 		}
 
 	#region Interface IObjectWrapper

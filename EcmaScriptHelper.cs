@@ -24,7 +24,7 @@ namespace TSSArt.StateMachine.EcmaScript
 
 		public static PropertyDescriptor CreatePropertyAccessor(Engine engine, DataModelObject obj, string property)
 		{
-			if (obj.IsReadOnly && !obj.Contains(property))
+			if (obj.Access != DataModelAccess.Writable && !obj.Contains(property))
 			{
 				return ReadonlyUndefinedPropertyDescriptor;
 			}
@@ -42,7 +42,7 @@ namespace TSSArt.StateMachine.EcmaScript
 
 		public static PropertyDescriptor CreateArrayIndexAccessor(Engine engine, DataModelArray array, int index)
 		{
-			if (array.IsReadOnly && index >= array.Length)
+			if (array.Access != DataModelAccess.Writable && index >= array.Length)
 			{
 				return ReadonlyUndefinedPropertyDescriptor;
 			}
