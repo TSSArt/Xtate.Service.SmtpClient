@@ -55,9 +55,9 @@ namespace TSSArt.StateMachine
 			if (shrink)
 			{
 				bucket.RemoveSubtree(Bucket.RootKey);
-				if (dataModelObject.IsReadOnly)
+				if (dataModelObject.Access != DataModelAccess.Writable)
 				{
-					bucket.Add(Key.ReadOnly, value: true);
+					bucket.Add(Key.Access, dataModelObject.Access);
 				}
 
 				_record = 0;

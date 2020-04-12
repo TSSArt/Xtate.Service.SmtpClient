@@ -47,27 +47,57 @@ namespace TSSArt.StateMachine
 				return obj;
 			}
 
+			if (baseObject == null)
+			{
+				return GetValue(refId, type);
+			}
+
+			FillObject(refId, type, baseObject);
+
+			return baseObject;
+
+		}
+
+		private void FillObject(int refId, DataModelValueType type, object obj)
+		{
+			var controller = type switch
+			{
+					DataModelValueType.Object => ObjectControllerCreator(_bucket.Nested(refId), obj),
+					DataModelValueType.Array => ArrayControllerCreator(_bucket.Nested(refId), obj),
+					_ => Infrastructure.UnexpectedValue<DataModelPersistingController>()
+			};
+
+			_objects[obj] = new Entry { RefCount = 0, RefId = refId, Controller = controller };
+			_refIds[refId] = obj;
+		}
+
+		private object GetValue(int refId, DataModelValueType type)
+		{
 			var bucket = _bucket.Nested(refId);
-			bucket.TryGet(Key.ReadOnly, out bool isReadOnly);
+			bucket.TryGet(Key.Access, out DataModelAccess access);
 
 			switch (type)
 			{
 				case DataModelValueType.Object:
-					obj = baseObject ?? new DataModelObject(isReadOnly);
-					_objects[obj] = new Entry { RefCount = 0, RefId = refId, Controller = ObjectControllerCreator(bucket, obj) };
-					break;
+					var obj = new DataModelObject();
+					var objController = ObjectControllerCreator(bucket, obj);
+					obj.Access = access;
+					_objects[obj] = new Entry { RefCount = 0, RefId = refId, Controller = objController };
+					_refIds[refId] = obj;
+
+					return obj;
 
 				case DataModelValueType.Array:
-					obj = baseObject ?? new DataModelArray(isReadOnly);
-					_objects[obj] = new Entry { RefCount = 0, RefId = refId, Controller = ArrayControllerCreator(bucket, obj) };
-					break;
+					var arr = new DataModelArray();
+					var arrController = ArrayControllerCreator(bucket, arr);
+					arr.Access = access;
+					_objects[arr] = new Entry { RefCount = 0, RefId = refId, Controller = arrController };
+					_refIds[refId] = arr;
+
+					return arr;
 
 				default: return Infrastructure.UnexpectedValue<object>();
 			}
-
-			_refIds[refId] = obj;
-
-			return obj;
 		}
 
 		private int GetRefId(object obj, Func<Bucket, object, DataModelPersistingController> creator, bool incrementReference)

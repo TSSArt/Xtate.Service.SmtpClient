@@ -23,7 +23,7 @@ namespace TSSArt.StateMachine
 			InvokeUniqueId = invokeUniqueId;
 			Origin = origin;
 			OriginType = originType;
-			Data = data;
+			Data = data.AsConstant();
 		}
 
 		public EventObject(in Bucket bucket)
@@ -44,7 +44,7 @@ namespace TSSArt.StateMachine
 			if (bucket.TryGet(Key.Data, out bool data) && data)
 			{
 				using var tracker = new DataModelReferenceTracker(bucket.Nested(Key.DataReferences));
-				Data = bucket.Nested(Key.DataValue).GetDataModelValue(tracker, baseValue: default);
+				Data = bucket.Nested(Key.DataValue).GetDataModelValue(tracker, baseValue: default).AsConstant();
 			}
 		}
 

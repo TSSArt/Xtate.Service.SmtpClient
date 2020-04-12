@@ -793,6 +793,15 @@ namespace TSSArt.StateMachine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Access can&apos;t be changed..
+        /// </summary>
+        internal static string Exception_Access_can_t_be_changed {
+            get {
+                return ResourceManager.GetString("Exception_Access_can_t_be_changed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Another asynchronous operation in progress..
         /// </summary>
         internal static string Exception_Another_asynchronous_operation_in_progress {

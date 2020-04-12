@@ -28,21 +28,21 @@ namespace TSSArt.StateMachine
 			SetLength
 		}
 
-		public static readonly DataModelArray Empty = new DataModelArray(State.Empty);
+		public static readonly DataModelArray Empty = new DataModelArray(DataModelAccess.Constant);
 
 		private readonly List<DataModelDescriptor> _list;
 
-		private State _state;
-
-		public DataModelArray() : this(State.Writable) { }
-
-		public DataModelArray(bool isReadOnly) : this(isReadOnly ? State.Readonly : State.Writable) { }
+		private DataModelAccess _access;
+		
+		public DataModelArray() : this(DataModelAccess.Writable) { }
 
 		public DataModelArray(int capacity) => _list = new List<DataModelDescriptor>(capacity);
 
-		private DataModelArray(State state)
+		public DataModelArray(bool isReadOnly) : this(isReadOnly ? DataModelAccess.ReadOnly : DataModelAccess.Writable) { }
+
+		private DataModelArray(DataModelAccess access)
 		{
-			_state = state;
+			_access = access;
 			_list = new List<DataModelDescriptor>();
 		}
 
@@ -59,6 +59,40 @@ namespace TSSArt.StateMachine
 		}
 
 		public int Length => _list.Count;
+
+		public DataModelAccess Access
+		{
+			get => _access;
+
+			internal set
+			{
+				if (value == _access)
+				{
+					return;
+				}
+
+				if (value == DataModelAccess.ReadOnly && _access == DataModelAccess.Writable)
+				{
+					_access = DataModelAccess.ReadOnly;
+
+					return;
+				}
+
+				if (value == DataModelAccess.Constant)
+				{
+					foreach (var val in _list)
+					{
+						val.Value.MakeDeepConstant();
+					}
+
+					_access = DataModelAccess.Constant;
+
+					return;
+				}
+
+				throw new StateMachineInfrastructureException(Resources.Exception_Access_can_t_be_changed);
+			}
+		}
 
 	#region Interface ICollection<DataModelValue>
 
@@ -104,7 +138,7 @@ namespace TSSArt.StateMachine
 			return RemoveInternal(new DataModelDescriptor(item));
 		}
 
-		public bool IsReadOnly => _state != State.Writable;
+		bool ICollection<DataModelValue>.IsReadOnly => _access != DataModelAccess.Writable;
 
 		int ICollection<DataModelValue>.Count => _list.Count;
 
@@ -213,11 +247,23 @@ namespace TSSArt.StateMachine
 
 		public event ChangedHandler? Changed;
 
-		public void Freeze() => _state = State.Readonly;
+		public void MakeReadOnly() => Access = DataModelAccess.ReadOnly;
+
+		public void MakeDeepReadOnly()
+		{
+			foreach (var val in _list)
+			{
+				val.Value.MakeDeepReadOnly();
+			}
+
+			Access = DataModelAccess.ReadOnly;
+		}
+
+		public void MakeDeepConstant() => Access = DataModelAccess.Constant;
 
 		internal void AddInternal(DataModelDescriptor descriptor)
 		{
-			if (_state == State.Empty)
+			if (_access == DataModelAccess.Constant)
 			{
 				throw ObjectCantBeModifiedException();
 			}
@@ -229,7 +275,7 @@ namespace TSSArt.StateMachine
 
 		internal void ClearInternal()
 		{
-			if (_state == State.Empty)
+			if (_access == DataModelAccess.Constant)
 			{
 				throw ObjectCantBeModifiedException();
 			}
@@ -241,7 +287,7 @@ namespace TSSArt.StateMachine
 
 		internal bool RemoveInternal(DataModelDescriptor descriptor)
 		{
-			if (_state == State.Empty)
+			if (_access == DataModelAccess.Constant)
 			{
 				throw ObjectCantBeModifiedException();
 			}
@@ -262,7 +308,7 @@ namespace TSSArt.StateMachine
 
 		internal void InsertInternal(int index, DataModelDescriptor descriptor)
 		{
-			if (_state == State.Empty)
+			if (_access == DataModelAccess.Constant)
 			{
 				throw ObjectCantBeModifiedException();
 			}
@@ -279,7 +325,7 @@ namespace TSSArt.StateMachine
 
 		internal void RemoveAtInternal(int index)
 		{
-			if (_state == State.Empty)
+			if (_access == DataModelAccess.Constant)
 			{
 				throw ObjectCantBeModifiedException();
 			}
@@ -294,7 +340,7 @@ namespace TSSArt.StateMachine
 
 		internal void SetInternal(int index, DataModelDescriptor descriptor)
 		{
-			if (_state == State.Empty)
+			if (_access == DataModelAccess.Constant)
 			{
 				throw ObjectCantBeModifiedException();
 			}
@@ -327,14 +373,14 @@ namespace TSSArt.StateMachine
 		{
 			var _ = item;
 
-			return !IsReadOnly;
+			return _access == DataModelAccess.Writable;
 		}
 
-		public bool CanClear() => !IsReadOnly && _list.All(i => !i.IsReadOnly);
+		public bool CanClear() => _access == DataModelAccess.Writable && _list.All(i => !i.IsReadOnly);
 
 		public bool CanRemove(DataModelValue item)
 		{
-			if (IsReadOnly)
+			if (_access != DataModelAccess.Writable)
 			{
 				return false;
 			}
@@ -348,7 +394,7 @@ namespace TSSArt.StateMachine
 		{
 			if (value < 0) throw new ArgumentOutOfRangeException(nameof(value));
 
-			if (IsReadOnly)
+			if (_access != DataModelAccess.Writable)
 			{
 				return false;
 			}
@@ -370,7 +416,7 @@ namespace TSSArt.StateMachine
 
 		internal void SetLengthInternal(int value)
 		{
-			if (_state == State.Empty)
+			if (_access == DataModelAccess.Constant)
 			{
 				throw ObjectCantBeModifiedException();
 			}
@@ -404,7 +450,7 @@ namespace TSSArt.StateMachine
 		{
 			if (index < 0) throw new ArgumentOutOfRangeException(nameof(index));
 
-			if (IsReadOnly)
+			if (_access != DataModelAccess.Writable)
 			{
 				return false;
 			}
@@ -418,7 +464,7 @@ namespace TSSArt.StateMachine
 
 			var _ = value;
 
-			if (IsReadOnly)
+			if (_access != DataModelAccess.Writable)
 			{
 				return false;
 			}
@@ -426,52 +472,29 @@ namespace TSSArt.StateMachine
 			return index >= _list.Count || !_list[index].IsReadOnly;
 		}
 
-		public DataModelArray DeepClone(bool isReadOnly)
+		public DataModelArray DeepClone(DataModelAccess targetAccess)
 		{
-			if (isReadOnly)
+			if (targetAccess == DataModelAccess.Constant)
 			{
 				if (_list.Count == 0)
 				{
 					return Empty;
 				}
 
-				if (IsDeepReadOnly())
+				if (_access == DataModelAccess.Constant)
 				{
 					return this;
 				}
 			}
 
-			var clone = new DataModelArray(isReadOnly);
+			var clone = new DataModelArray(targetAccess);
 
 			foreach (var val in _list)
 			{
-				clone._list.Add(new DataModelDescriptor(val.Value.DeepClone(isReadOnly), isReadOnly));
+				clone._list.Add(new DataModelDescriptor(val.Value.DeepClone(targetAccess), targetAccess != DataModelAccess.Writable));
 			}
 
 			return clone;
-		}
-
-		internal bool IsDeepReadOnly()
-		{
-			if (!IsReadOnly)
-			{
-				return false;
-			}
-
-			foreach (var val in _list)
-			{
-				if (!val.IsReadOnly)
-				{
-					return false;
-				}
-
-				if (!val.Value.IsDeepReadOnly())
-				{
-					return false;
-				}
-			}
-
-			return true;
 		}
 
 		public override string ToString() => ToString(format: null, formatProvider: null);
@@ -501,13 +524,6 @@ namespace TSSArt.StateMachine
 
 			[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
 			public IndexValue[] Items => _dataModelArray._list.Select((d, i) => new IndexValue(i, d)).ToArray();
-		}
-
-		private enum State
-		{
-			Writable,
-			Readonly,
-			Empty
 		}
 
 		private class Dynamic : DynamicObject

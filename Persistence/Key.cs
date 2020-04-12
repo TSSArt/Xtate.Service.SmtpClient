@@ -2,6 +2,7 @@
 {
 	internal enum Key
 	{
+		Access,
 		Action,
 		Array,
 		AutoForward,

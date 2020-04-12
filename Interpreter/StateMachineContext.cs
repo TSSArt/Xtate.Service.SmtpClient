@@ -111,7 +111,7 @@ namespace TSSArt.StateMachine
 								   [@"configuration"] = new DataModelValue(ConfigurationObject),
 								   [@"args"] = arguments
 						   };
-			platform.Freeze();
+			platform.MakeReadOnly();
 
 			var dataModel = new DataModelObject();
 
@@ -136,12 +136,10 @@ namespace TSSArt.StateMachine
 
 				foreach (var ioProcessor in eventProcessors)
 				{
-					var ioProcessorObject = new DataModelObject { [@"location"] = new DataModelValue(ioProcessor.GetTarget(sessionId).ToString()) };
-					ioProcessorObject.Freeze();
-					ioProcessors[ioProcessor.Id.ToString()] = new DataModelValue(ioProcessorObject);
+					ioProcessors[ioProcessor.Id.ToString()] = new DataModelValue(new DataModelObject { [@"location"] = new DataModelValue(ioProcessor.GetTarget(sessionId).ToString()) });
 				}
 
-				ioProcessors.Freeze();
+				ioProcessors.MakeDeepConstant();
 
 				return ioProcessors;
 			}

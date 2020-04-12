@@ -29,14 +29,14 @@ namespace TSSArt.StateMachine
 			{
 				var obj = await contentExpressionEvaluator.EvaluateObject(executionContext, token).ConfigureAwait(false);
 
-				return DataModelValue.FromObject(obj.ToObject()).DeepClone(true);
+				return DataModelValue.FromObject(obj.ToObject()).AsConstant();
 			}
 
 			if (contentBodyEvaluator is IObjectEvaluator objectEvaluator)
 			{
 				var obj = await objectEvaluator.EvaluateObject(executionContext, token).ConfigureAwait(false);
 
-				return DataModelValue.FromObject(obj.ToObject()).DeepClone(true);
+				return DataModelValue.FromObject(obj.ToObject()).AsConstant();
 			}
 
 			if (contentBodyEvaluator is IStringEvaluator stringEvaluator)
@@ -68,7 +68,7 @@ namespace TSSArt.StateMachine
 					var name = locationEvaluator.GetName(executionContext);
 					var value = locationEvaluator.GetValue(executionContext).ToObject();
 
-					attributes[name] = DataModelValue.FromObject(value).DeepClone(true);
+					attributes[name] = DataModelValue.FromObject(value).AsConstant();
 				}
 			}
 
@@ -88,11 +88,9 @@ namespace TSSArt.StateMachine
 						value = param.LocationEvaluator.GetValue(executionContext).ToObject();
 					}
 
-					attributes[name] = DataModelValue.FromObject(value).DeepClone(true);
+					attributes[name] = DataModelValue.FromObject(value).AsConstant();
 				}
 			}
-
-			attributes.Freeze();
 
 			return new DataModelValue(attributes);
 		}

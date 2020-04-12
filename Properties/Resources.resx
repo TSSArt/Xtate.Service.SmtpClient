@@ -625,4 +625,7 @@
   <data name="Exception_NamedEventProcessor_with_name_already_has_been_registered" xml:space="preserve">
     <value>NamedEventProcessor with name '{0}' already has been registered.</value>
   </data>
+  <data name="Exception_Access_can_t_be_changed" xml:space="preserve">
+    <value>Access can't be changed.</value>
+  </data>
 </root>

@@ -6,7 +6,7 @@ using JetBrains.Annotations;
 namespace TSSArt.StateMachine
 {
 	[PublicAPI]
-	public class IoProcessorOptionsBuilder
+	public class IoProcessorBuilder
 	{
 		private ImmutableDictionary<string, string>.Builder?      _configuration;
 		private ImmutableArray<ICustomActionFactory>.Builder?     _customActionFactories;
@@ -20,37 +20,41 @@ namespace TSSArt.StateMachine
 		private TimeSpan                                          _suspendIdlePeriod;
 		private bool                                              _verboseValidation = true;
 
-		public IoProcessorOptions Build() =>
-				new IoProcessorOptions
-				{
-						EventProcessorFactories = _eventProcessorFactories?.ToImmutable() ?? default,
-						ServiceFactories = _serviceFactories?.ToImmutable() ?? default,
-						DataModelHandlerFactories = _dataModelHandlerFactories?.ToImmutable() ?? default,
-						CustomActionFactories = _customActionFactories?.ToImmutable() ?? default,
-						ResourceLoaders = _resourceLoaders?.ToImmutable() ?? default,
-						Configuration = _configuration?.ToImmutable(),
-						Logger = _logger,
-						PersistenceLevel = _persistenceLevel,
-						StorageProvider = _storageProvider,
-						SuspendIdlePeriod = _suspendIdlePeriod,
-						VerboseValidation = _verboseValidation
-				};
+		public IoProcessor Build()
+		{
+			var option = new IoProcessorOptions
+				   {
+						   EventProcessorFactories = _eventProcessorFactories?.ToImmutable() ?? default,
+						   ServiceFactories = _serviceFactories?.ToImmutable() ?? default,
+						   DataModelHandlerFactories = _dataModelHandlerFactories?.ToImmutable() ?? default,
+						   CustomActionFactories = _customActionFactories?.ToImmutable() ?? default,
+						   ResourceLoaders = _resourceLoaders?.ToImmutable() ?? default,
+						   Configuration = _configuration?.ToImmutable(),
+						   Logger = _logger,
+						   PersistenceLevel = _persistenceLevel,
+						   StorageProvider = _storageProvider,
+						   SuspendIdlePeriod = _suspendIdlePeriod,
+						   VerboseValidation = _verboseValidation
+				   };
 
-		public IoProcessorOptionsBuilder SetLogger(ILogger logger)
+			return new IoProcessor(option);
+		}
+
+		public IoProcessorBuilder SetLogger(ILogger logger)
 		{
 			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
 			return this;
 		}
 
-		public IoProcessorOptionsBuilder DisableVerboseValidation()
+		public IoProcessorBuilder DisableVerboseValidation()
 		{
 			_verboseValidation = false;
 
 			return this;
 		}
 
-		public IoProcessorOptionsBuilder SetSuspendIdlePeriod(TimeSpan suspendIdlePeriod)
+		public IoProcessorBuilder SetSuspendIdlePeriod(TimeSpan suspendIdlePeriod)
 		{
 			if (suspendIdlePeriod <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(suspendIdlePeriod));
 
@@ -59,7 +63,7 @@ namespace TSSArt.StateMachine
 			return this;
 		}
 
-		public IoProcessorOptionsBuilder AddResourceLoader(IResourceLoader resourceLoader)
+		public IoProcessorBuilder AddResourceLoader(IResourceLoader resourceLoader)
 		{
 			if (resourceLoader == null) throw new ArgumentNullException(nameof(resourceLoader));
 
@@ -68,7 +72,7 @@ namespace TSSArt.StateMachine
 			return this;
 		}
 
-		public IoProcessorOptionsBuilder SetPersistence(PersistenceLevel persistenceLevel, IStorageProvider storageProvider)
+		public IoProcessorBuilder SetPersistence(PersistenceLevel persistenceLevel, IStorageProvider storageProvider)
 		{
 			if (!Enum.IsDefined(typeof(PersistenceLevel), persistenceLevel)) throw new InvalidEnumArgumentException(nameof(persistenceLevel), (int) persistenceLevel, typeof(PersistenceLevel));
 
@@ -78,7 +82,7 @@ namespace TSSArt.StateMachine
 			return this;
 		}
 
-		public IoProcessorOptionsBuilder AddEventProcessorFactory(IEventProcessorFactory eventProcessorFactory)
+		public IoProcessorBuilder AddEventProcessorFactory(IEventProcessorFactory eventProcessorFactory)
 		{
 			if (eventProcessorFactory == null) throw new ArgumentNullException(nameof(eventProcessorFactory));
 
@@ -87,7 +91,7 @@ namespace TSSArt.StateMachine
 			return this;
 		}
 
-		public IoProcessorOptionsBuilder AddServiceFactory(IServiceFactory serviceFactory)
+		public IoProcessorBuilder AddServiceFactory(IServiceFactory serviceFactory)
 		{
 			if (serviceFactory == null) throw new ArgumentNullException(nameof(serviceFactory));
 
@@ -96,7 +100,7 @@ namespace TSSArt.StateMachine
 			return this;
 		}
 
-		public IoProcessorOptionsBuilder AddDataModelHandlerFactory(IDataModelHandlerFactory dataModelHandlerFactory)
+		public IoProcessorBuilder AddDataModelHandlerFactory(IDataModelHandlerFactory dataModelHandlerFactory)
 		{
 			if (dataModelHandlerFactory == null) throw new ArgumentNullException(nameof(dataModelHandlerFactory));
 
@@ -105,7 +109,7 @@ namespace TSSArt.StateMachine
 			return this;
 		}
 
-		public IoProcessorOptionsBuilder AddCustomActionFactory(ICustomActionFactory customActionFactory)
+		public IoProcessorBuilder AddCustomActionFactory(ICustomActionFactory customActionFactory)
 		{
 			if (customActionFactory == null) throw new ArgumentNullException(nameof(customActionFactory));
 
@@ -114,7 +118,7 @@ namespace TSSArt.StateMachine
 			return this;
 		}
 
-		public IoProcessorOptionsBuilder SetConfigurationValue(string key, string value)
+		public IoProcessorBuilder SetConfigurationValue(string key, string value)
 		{
 			if (key == null) throw new ArgumentNullException(nameof(key));
 
