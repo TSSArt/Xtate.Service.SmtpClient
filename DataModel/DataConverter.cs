@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.Net.Mime;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -93,6 +94,63 @@ namespace TSSArt.StateMachine
 			}
 
 			return new DataModelValue(attributes);
+		}
+
+		public static DataModelValue FromContent(string content, ContentType? contentType)
+		{
+			var _ = contentType;
+
+			return new DataModelValue(content);
+		}
+
+		public static DataModelValue FromEvent(IEvent evt)
+		{
+			if (evt == null) throw new ArgumentNullException(nameof(evt));
+
+			var eventObject = new DataModelObject
+							  {
+									  [@"name"] = new DataModelValue(EventName.ToName(evt.NameParts)),
+									  [@"type"] = new DataModelValue(GetTypeString(evt.Type)),
+									  [@"sendid"] = new DataModelValue(evt.SendId),
+									  [@"origin"] = new DataModelValue(evt.Origin?.ToString()),
+									  [@"origintype"] = new DataModelValue(evt.OriginType?.ToString()),
+									  [@"invokeid"] = new DataModelValue(evt.InvokeId),
+									  [@"data"] = evt.Data.AsConstant()
+							  };
+
+			eventObject.MakeDeepConstant();
+
+			return new DataModelValue(eventObject);
+
+			static string GetTypeString(EventType eventType)
+			{
+				return eventType switch
+				{
+						EventType.Platform => @"platform",
+						EventType.Internal => @"internal",
+						EventType.External => @"external",
+						_ => throw new ArgumentOutOfRangeException(nameof(eventType), eventType, message: null)
+				};
+			}
+		}
+
+		public static DataModelValue FromException(Exception exception)
+		{
+			if (exception == null) throw new ArgumentNullException(nameof(exception));
+
+			var exceptionData = new DataModelObject
+								{
+										[@"message"] = new DataModelValue(exception.Message),
+										[@"typeName"] = new DataModelValue(exception.GetType().Name),
+										[@"source"] = new DataModelValue(exception.Source),
+										[@"typeFullName"] = new DataModelValue(exception.GetType().FullName),
+										[@"stackTrace"] = new DataModelValue(exception.StackTrace),
+										[@"text"] = new DataModelValue(exception.ToString())
+								};
+
+			exceptionData.MakeDeepConstant();
+
+			return new DataModelValue(exceptionData);
 		}
 	}
 }

@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq.Expressions;
-using System.Net.Mime;
 using System.Reflection;
 using JetBrains.Annotations;
 
@@ -143,22 +142,22 @@ namespace TSSArt.StateMachine
 		public static implicit operator DataModelValue(bool val)             => new DataModelValue(val);
 
 		public static DataModelValue FromDataModelObject(DataModelObject? val) => new DataModelValue(val);
-		public static DataModelValue FromDataModelArray(DataModelObject? val)  => new DataModelValue(val);
-		public static DataModelValue FromString(DataModelObject? val)          => new DataModelValue(val);
-		public static DataModelValue FromDouble(DataModelObject? val)          => new DataModelValue(val);
-		public static DataModelValue FromDateTime(DataModelObject? val)        => new DataModelValue(val);
-		public static DataModelValue FromBoolean(DataModelObject? val)         => new DataModelValue(val);
+		public static DataModelValue FromDataModelArray(DataModelArray? val)   => new DataModelValue(val);
+		public static DataModelValue FromString(string? val)                   => new DataModelValue(val);
+		public static DataModelValue FromDouble(double val)                    => new DataModelValue(val);
+		public static DataModelValue FromDateTime(DateTime val)                => new DataModelValue(val);
+		public static DataModelValue FromBoolean(bool val)                     => new DataModelValue(val);
 
-		public static explicit operator DataModelObject?(DataModelValue val) => val.AsObject();
-		public static explicit operator DataModelArray?(DataModelValue val)  => val.AsArray();
-		public static explicit operator string?(DataModelValue val)          => val.AsString();
+		public static explicit operator DataModelObject?(DataModelValue val) => val.AsNullableObject();
+		public static explicit operator DataModelArray?(DataModelValue val)  => val.AsNullableArray();
+		public static explicit operator string?(DataModelValue val)          => val.AsNullableString();
 		public static explicit operator double(DataModelValue val)           => val.AsNumber();
 		public static explicit operator DateTime(DataModelValue val)         => val.AsDateTime();
 		public static explicit operator bool(DataModelValue val)             => val.AsBoolean();
 
-		public static DataModelObject? ToDataModelObject(DataModelValue val) => val.AsObject();
-		public static DataModelArray?  ToDataModelArray(DataModelValue val)  => val.AsArray();
-		public static string?          ToString(DataModelValue val)          => val.AsString();
+		public static DataModelObject? ToDataModelObject(DataModelValue val) => val.AsNullableObject();
+		public static DataModelArray?  ToDataModelArray(DataModelValue val)  => val.AsNullableArray();
+		public static string?          ToString(DataModelValue val)          => val.AsNullableString();
 		public static double           ToDouble(DataModelValue val)          => val.AsNumber();
 		public static DateTime         ToDateTime(DataModelValue val)        => val.AsDateTime();
 		public static bool             ToBoolean(DataModelValue val)         => val.AsBoolean();
@@ -167,7 +166,14 @@ namespace TSSArt.StateMachine
 
 		public bool IsUndefined() => _value == null;
 
-		public DataModelObject? AsObject() =>
+		public DataModelObject AsObject() =>
+				_value switch
+				{
+						DataModelObject obj => obj,
+						_ => throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_DataModelObject)
+				};
+
+		public DataModelObject? AsNullableObject() =>
 				_value switch
 				{
 						DataModelObject obj => obj,
@@ -177,7 +183,14 @@ namespace TSSArt.StateMachine
 
 		public DataModelObject AsObjectOrEmpty() => _value is DataModelObject obj ? obj : DataModelObject.Empty;
 
-		public DataModelArray? AsArray() =>
+		public DataModelArray AsArray() =>
+				_value switch
+				{
+						DataModelArray arr => arr,
+						_ => throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_DataModelArray)
+				};
+
+		public DataModelArray? AsNullableArray() =>
 				_value switch
 				{
 						DataModelArray arr => arr,
@@ -187,7 +200,14 @@ namespace TSSArt.StateMachine
 
 		public DataModelArray AsArrayOrEmpty() => _value is DataModelArray arr ? arr : DataModelArray.Empty;
 
-		public string? AsString() =>
+		public string AsString() =>
+				_value switch
+				{
+						string str => str,
+						_ => throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_String)
+				};
+
+		public string? AsNullableString() =>
 				_value switch
 				{
 						string str => str,
@@ -235,17 +255,32 @@ namespace TSSArt.StateMachine
 
 		public static bool operator !=(DataModelValue left, DataModelValue right) => !left.Equals(right);
 
-		public DataModelValue CloneAsWritable() => DeepClone(DataModelAccess.Writable);
-		
-		public DataModelValue CloneAsReadOnly() => DeepClone(DataModelAccess.ReadOnly);
-		
-		public DataModelValue AsConstant() => DeepClone(DataModelAccess.Constant);
+		public DataModelValue CloneAsWritable()
+		{
+			Dictionary<object, object>? map = null;
 
-		internal DataModelValue DeepClone(DataModelAccess targetAccess) =>
+			return DeepCloneWithMap(DataModelAccess.Writable, ref map);
+		}
+
+		public DataModelValue CloneAsReadOnly()
+		{
+			Dictionary<object, object>? map = null;
+
+			return DeepCloneWithMap(DataModelAccess.ReadOnly, ref map);
+		}
+
+		public DataModelValue AsConstant()
+		{
+			Dictionary<object, object>? map = null;
+
+			return DeepCloneWithMap(DataModelAccess.Constant, ref map);
+		}
+
+		internal DataModelValue DeepCloneWithMap(DataModelAccess targetAccess, ref Dictionary<object, object>? map) =>
 				_value switch
 				{
-						DataModelObject obj => new DataModelValue(obj.DeepClone(targetAccess)),
-						DataModelArray arr => new DataModelValue(arr.DeepClone(targetAccess)),
+						DataModelObject obj => new DataModelValue(obj.DeepCloneWithMap(targetAccess, ref map)),
+						DataModelArray arr => new DataModelValue(arr.DeepCloneWithMap(targetAccess, ref map)),
 						string _ => this,
 						{ } val when val == DateTimeValue => this,
 						{ } val when val == NumberValue => this,
@@ -254,19 +289,6 @@ namespace TSSArt.StateMachine
 						null => this,
 						_ => Infrastructure.UnexpectedValue<DataModelValue>()
 				};
-
-		public void MakeDeepReadOnly()
-		{
-			switch (_value)
-			{
-				case DataModelObject obj:
-					obj.MakeDeepReadOnly();
-					break;
-				case DataModelArray arr:
-					arr.MakeDeepReadOnly();
-					break;
-			}
-		}
 
 		public void MakeDeepConstant()
 		{
@@ -281,16 +303,14 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public static DataModelValue FromContent(string content, ContentType? contentType)
+		public static DataModelValue FromObject(object? value)
 		{
-			var _ = contentType;
+			Dictionary<object, object>? map = null;
 
-			return new DataModelValue(content);
+			return FromObjectWithMap(value, ref map);
 		}
 
-		public static DataModelValue FromInlineContent(string content) => new DataModelValue(content);
-
-		public static DataModelValue FromObject(object? value)
+		private static DataModelValue FromObjectWithMap(object? value, ref Dictionary<object, object>? map)
 		{
 			if (value == null)
 			{
@@ -321,85 +341,53 @@ namespace TSSArt.StateMachine
 				case TypeCode.Object when value is DataModelArray dataModelArray:
 					return new DataModelValue(dataModelArray);
 				case TypeCode.Object when value is IDictionary<string, object> dictionary:
-					return CreateDataModelObject(dictionary);
+					return CreateDataModelObject(dictionary, ref map);
 				case TypeCode.Object when value is IEnumerable array:
-					return CreateDataModelArray(array);
+					return CreateDataModelArray(array, ref map);
 				default: throw new ArgumentException(Resources.Exception_Unsupported_object_type, nameof(value));
 			}
 		}
 
-		private static DataModelValue CreateDataModelObject(IDictionary<string, object> dictionary)
+		private static DataModelValue CreateDataModelObject(IDictionary<string, object> dictionary, ref Dictionary<object, object>? map)
 		{
+			map ??= new Dictionary<object, object>();
+
+			if (map.TryGetValue(dictionary, out var val))
+			{
+				return new DataModelValue((DataModelObject) val);
+			}
+
 			var obj = new DataModelObject();
+
+			map[dictionary] = obj;
 
 			foreach (var pair in dictionary)
 			{
-				obj[pair.Key] = FromObject(pair.Value);
+				obj[pair.Key] = FromObjectWithMap(pair.Value, ref map);
 			}
 
 			return new DataModelValue(obj);
 		}
 
-		private static DataModelValue CreateDataModelArray(IEnumerable array)
+		private static DataModelValue CreateDataModelArray(IEnumerable array, ref Dictionary<object, object>? map)
 		{
+			map ??= new Dictionary<object, object>();
+
+			if (map.TryGetValue(array, out var val))
+			{
+				return new DataModelValue((DataModelArray) val);
+			}
+
 			var arr = new DataModelArray();
 
-			foreach (var val in array)
+			map[array] = arr;
+
+			foreach (var item in array)
 			{
-				arr.Add(FromObject(val));
+				arr.Add(FromObjectWithMap(item, ref map));
 			}
 
 			return new DataModelValue(arr);
-		}
-
-		public static DataModelValue FromEvent(IEvent evt)
-		{
-			if (evt == null) throw new ArgumentNullException(nameof(evt));
-
-			var eventObject = new DataModelObject
-							  {
-									  [@"name"] = new DataModelValue(EventName.ToName(evt.NameParts)),
-									  [@"type"] = new DataModelValue(GetTypeString(evt.Type)),
-									  [@"sendid"] = new DataModelValue(evt.SendId),
-									  [@"origin"] = new DataModelValue(evt.Origin?.ToString()),
-									  [@"origintype"] = new DataModelValue(evt.OriginType?.ToString()),
-									  [@"invokeid"] = new DataModelValue(evt.InvokeId),
-									  [@"data"] = evt.Data.AsConstant()
-							  };
-
-			eventObject.MakeDeepConstant();
-
-			return new DataModelValue(eventObject);
-
-			static string GetTypeString(EventType eventType)
-			{
-				return eventType switch
-				{
-						EventType.Platform => @"platform",
-						EventType.Internal => @"internal",
-						EventType.External => @"external",
-						_ => throw new ArgumentOutOfRangeException(nameof(eventType), eventType, message: null)
-				};
-			}
-		}
-
-		public static DataModelValue FromException(Exception exception)
-		{
-			if (exception == null) throw new ArgumentNullException(nameof(exception));
-
-			var exceptionData = new DataModelObject
-								{
-										[@"message"] = new DataModelValue(exception.Message),
-										[@"typeName"] = new DataModelValue(exception.GetType().Name),
-										[@"source"] = new DataModelValue(exception.Source),
-										[@"typeFullName"] = new DataModelValue(exception.GetType().FullName),
-										[@"stackTrace"] = new DataModelValue(exception.StackTrace),
-										[@"text"] = new DataModelValue(exception.ToString())
-								};
-
-			exceptionData.MakeDeepConstant();
-
-			return new DataModelValue(exceptionData);
 		}
 
 		public override string ToString() => ToString(format: null, formatProvider: null);

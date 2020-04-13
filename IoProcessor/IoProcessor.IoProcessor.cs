@@ -42,7 +42,7 @@ namespace TSSArt.StateMachine
 				}
 				catch (Exception ex)
 				{
-					var evt = new EventObject(EventType.External, EventName.ErrorExecution, DataModelValue.FromException(ex), sendId: null, data.InvokeId, data.InvokeUniqueId);
+					var evt = new EventObject(EventType.External, EventName.ErrorExecution, DataConverter.FromException(ex), sendId: null, data.InvokeId, data.InvokeUniqueId);
 					await service.Send(evt, token: default).ConfigureAwait(false);
 				}
 				finally

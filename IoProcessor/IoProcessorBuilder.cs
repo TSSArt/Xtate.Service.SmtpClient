@@ -23,19 +23,19 @@ namespace TSSArt.StateMachine
 		public IoProcessor Build()
 		{
 			var option = new IoProcessorOptions
-				   {
-						   EventProcessorFactories = _eventProcessorFactories?.ToImmutable() ?? default,
-						   ServiceFactories = _serviceFactories?.ToImmutable() ?? default,
-						   DataModelHandlerFactories = _dataModelHandlerFactories?.ToImmutable() ?? default,
-						   CustomActionFactories = _customActionFactories?.ToImmutable() ?? default,
-						   ResourceLoaders = _resourceLoaders?.ToImmutable() ?? default,
-						   Configuration = _configuration?.ToImmutable(),
-						   Logger = _logger,
-						   PersistenceLevel = _persistenceLevel,
-						   StorageProvider = _storageProvider,
-						   SuspendIdlePeriod = _suspendIdlePeriod,
-						   VerboseValidation = _verboseValidation
-				   };
+						 {
+								 EventProcessorFactories = _eventProcessorFactories?.ToImmutable() ?? default,
+								 ServiceFactories = _serviceFactories?.ToImmutable() ?? default,
+								 DataModelHandlerFactories = _dataModelHandlerFactories?.ToImmutable() ?? default,
+								 CustomActionFactories = _customActionFactories?.ToImmutable() ?? default,
+								 ResourceLoaders = _resourceLoaders?.ToImmutable() ?? default,
+								 Configuration = _configuration?.ToImmutable(),
+								 Logger = _logger,
+								 PersistenceLevel = _persistenceLevel,
+								 StorageProvider = _storageProvider,
+								 SuspendIdlePeriod = _suspendIdlePeriod,
+								 VerboseValidation = _verboseValidation
+						 };
 
 			return new IoProcessor(option);
 		}

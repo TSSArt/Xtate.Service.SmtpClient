@@ -464,7 +464,7 @@ namespace TSSArt.StateMachine
 
 			_logger.ProcessingEvent(internalEvent);
 
-			_context.DataModel.SetInternal(property: @"_event", new DataModelDescriptor(DataModelValue.FromEvent(internalEvent), isReadOnly: true));
+			_context.DataModel.SetInternal(property: @"_event", new DataModelDescriptor(DataConverter.FromEvent(internalEvent), isReadOnly: true));
 
 			return SelectTransitions(internalEvent);
 		}
@@ -568,7 +568,7 @@ namespace TSSArt.StateMachine
 
 			_logger.ProcessingEvent(externalEvent);
 
-			_context.DataModel.SetInternal(property: @"_event", new DataModelDescriptor(DataModelValue.FromEvent(externalEvent), isReadOnly: true));
+			_context.DataModel.SetInternal(property: @"_event", new DataModelDescriptor(DataConverter.FromEvent(externalEvent), isReadOnly: true));
 
 			foreach (var state in _context.Configuration)
 			{
@@ -1253,7 +1253,7 @@ namespace TSSArt.StateMachine
 					_ => Infrastructure.UnexpectedValue<ImmutableArray<IIdentifier>>()
 			};
 
-			var eventObject = new EventObject(EventType.Platform, nameParts, DataModelValue.FromException(exception), sendId);
+			var eventObject = new EventObject(EventType.Platform, nameParts, DataConverter.FromException(exception), sendId);
 
 			_context.InternalQueue.Enqueue(eventObject);
 
@@ -1344,7 +1344,7 @@ namespace TSSArt.StateMachine
 				return;
 			}
 
-			var dictionary = _arguments.AsObject()!;
+			var dictionary = _arguments.AsObject();
 			foreach (var node in rootDataModel.Data)
 			{
 				await InitializeData(node, dictionary[node.Id]).ConfigureAwait(false);
@@ -1381,7 +1381,7 @@ namespace TSSArt.StateMachine
 				{
 					var resource = await Load().ConfigureAwait(false);
 
-					return DataModelValue.FromContent(resource.Content, resource.ContentType);
+					return DataConverter.FromContent(resource.Content, resource.ContentType);
 				}
 
 				if (data.ExpressionEvaluator != null)
@@ -1393,7 +1393,7 @@ namespace TSSArt.StateMachine
 
 				if (data.InlineContent != null)
 				{
-					return DataModelValue.FromInlineContent(data.InlineContent);
+					return data.InlineContent;
 				}
 
 				return DataModelValue.Undefined;
