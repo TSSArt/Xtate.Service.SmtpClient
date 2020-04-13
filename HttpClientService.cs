@@ -59,7 +59,7 @@ namespace TSSArt.StateMachine.Services
 			{
 				if (val.Type == DataModelValueType.Array)
 				{
-					return val.AsArray().Select(p => p.AsStringOrDefault()!).Where(s => !string.IsNullOrEmpty(s)).ToArray();
+					return val.AsArray().Select(p => p.AsString()).Where(s => !string.IsNullOrEmpty(s)).ToArray();
 				}
 
 				var str = val.AsStringOrDefault();
@@ -74,7 +74,7 @@ namespace TSSArt.StateMachine.Services
 			{
 				responseHeaders.Add(new DataModelObject
 									{
-											["name"] = header.Key, 
+											["name"] = header.Key,
 											["value"] = header.Value
 									});
 			}
