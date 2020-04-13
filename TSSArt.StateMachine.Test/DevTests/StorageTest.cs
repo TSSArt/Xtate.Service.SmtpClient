@@ -494,7 +494,7 @@ namespace TSSArt.StateMachine.Test
 			var bucket = new Bucket(storage);
 
 			// ReSharper disable once StringLiteralTypo
-			var s = "aeiouçéüß";
+			const string s = "aeiouçéüß";
 			bucket.Add(s, s);
 			var flag = bucket.TryGet(s, out string val);
 			Assert.IsTrue(flag);

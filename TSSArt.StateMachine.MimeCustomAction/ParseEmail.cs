@@ -47,7 +47,7 @@ namespace TSSArt.StateMachine.Services
 		{
 			if (context == null) throw new ArgumentNullException(nameof(context));
 
-			var content = context.DataModel[_source].AsString();
+			var content = context.DataModel[_source].AsNullableString();
 
 			if (content != null)
 			{

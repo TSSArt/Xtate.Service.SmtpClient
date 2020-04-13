@@ -21,7 +21,7 @@ namespace TSSArt.StateMachine.Test
 		private Mock<ILogger>                _logger;
 		private InterpreterOptions           _options;
 
-		private IStateMachine GetStateMachine(string scxml)
+		private static IStateMachine GetStateMachine(string scxml)
 		{
 			using var textReader = new StringReader(scxml);
 			using var reader = XmlReader.Create(textReader);

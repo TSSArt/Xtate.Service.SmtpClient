@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Net;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	public static class HttpEventProcessorExtensions
 	{
 		public static IoProcessorBuilder AddHttpEventProcessor(this IoProcessorBuilder builder, Uri baseUri)
@@ -13,7 +15,7 @@ namespace TSSArt.StateMachine
 
 			return builder;
 		}
-		
+
 		public static IoProcessorBuilder AddHttpEventProcessor(this IoProcessorBuilder builder, Uri baseUri, IPEndPoint ipEndPoint)
 		{
 			if (builder == null) throw new ArgumentNullException(nameof(builder));

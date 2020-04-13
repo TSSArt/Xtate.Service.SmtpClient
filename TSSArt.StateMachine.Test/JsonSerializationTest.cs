@@ -8,7 +8,7 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public void DeserializationJsonTest()
 		{
-			var json1 = @"
+			const string json1 = @"
 {
 ""name"":""val"",
   ""data"": {

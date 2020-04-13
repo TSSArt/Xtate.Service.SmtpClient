@@ -55,7 +55,6 @@ namespace TSSArt.StateMachine
 			FillObject(refId, type, baseObject);
 
 			return baseObject;
-
 		}
 
 		private void FillObject(int refId, DataModelValueType type, object obj)
@@ -124,8 +123,8 @@ namespace TSSArt.StateMachine
 		public int GetRefId(DataModelValue value) =>
 				value.Type switch
 				{
-						DataModelValueType.Object => GetRefId(value.AsObject()!, ObjectControllerCreator, incrementReference: false),
-						DataModelValueType.Array => GetRefId(value.AsArray()!, ArrayControllerCreator, incrementReference: false),
+						DataModelValueType.Object => GetRefId(value.AsObject(), ObjectControllerCreator, incrementReference: false),
+						DataModelValueType.Array => GetRefId(value.AsArray(), ArrayControllerCreator, incrementReference: false),
 						_ => Infrastructure.UnexpectedValue<int>()
 				};
 
@@ -134,10 +133,10 @@ namespace TSSArt.StateMachine
 			switch (value.Type)
 			{
 				case DataModelValueType.Object:
-					GetRefId(value.AsObject()!, ObjectControllerCreator, incrementReference: true);
+					GetRefId(value.AsObject(), ObjectControllerCreator, incrementReference: true);
 					break;
 				case DataModelValueType.Array:
-					GetRefId(value.AsArray()!, ArrayControllerCreator, incrementReference: true);
+					GetRefId(value.AsArray(), ArrayControllerCreator, incrementReference: true);
 					break;
 			}
 		}
@@ -150,10 +149,10 @@ namespace TSSArt.StateMachine
 			switch (value.Type)
 			{
 				case DataModelValueType.Object:
-					Remove(value.AsObject()!);
+					Remove(value.AsObject());
 					break;
 				case DataModelValueType.Array:
-					Remove(value.AsArray()!);
+					Remove(value.AsArray());
 					break;
 			}
 

@@ -55,12 +55,12 @@ namespace TSSArt.StateMachine
 
 				if (value == DataModelAccess.Constant)
 				{
+					_access = DataModelAccess.Constant;
+
 					foreach (var pair in _properties)
 					{
 						pair.Value.Value.MakeDeepConstant();
 					}
-
-					_access = DataModelAccess.Constant;
 
 					return;
 				}
@@ -126,18 +126,8 @@ namespace TSSArt.StateMachine
 
 		public void MakeReadOnly() => Access = DataModelAccess.ReadOnly;
 
-		public void MakeDeepReadOnly()
-		{
-			foreach (var pair in _properties)
-			{
-				pair.Value.Value.MakeDeepReadOnly();
-			}
-
-			Access = DataModelAccess.ReadOnly;
-		}
-
 		public void MakeDeepConstant() => Access = DataModelAccess.Constant;
-		
+
 		private static Exception ObjectCantBeModifiedException() => new InvalidOperationException(Resources.Exception_Object_can_not_be_modified);
 
 		internal DataModelDescriptor GetDescriptor(string property) => _properties.TryGetValue(property, out var descriptor) ? descriptor : new DataModelDescriptor(DataModelValue.Undefined);
@@ -201,6 +191,13 @@ namespace TSSArt.StateMachine
 
 		public DataModelObject DeepClone(DataModelAccess targetAccess)
 		{
+			Dictionary<object, object>? map = null;
+
+			return DeepCloneWithMap(targetAccess, ref map);
+		}
+
+		internal DataModelObject DeepCloneWithMap(DataModelAccess targetAccess, ref Dictionary<object, object>? map)
+		{
 			if (targetAccess == DataModelAccess.Constant)
 			{
 				if (_properties.Count == 0)
@@ -214,16 +211,25 @@ namespace TSSArt.StateMachine
 				}
 			}
 
+			map ??= new Dictionary<object, object>();
+
+			if (map.TryGetValue(this, out var val))
+			{
+				return (DataModelObject) val;
+			}
+
 			var clone = new DataModelObject(targetAccess);
+
+			map[this] = clone;
 
 			foreach (var pair in _properties)
 			{
-				clone._properties[pair.Key] = new DataModelDescriptor(pair.Value.Value.DeepClone(targetAccess), targetAccess != DataModelAccess.Writable);
+				clone._properties[pair.Key] = new DataModelDescriptor(pair.Value.Value.DeepCloneWithMap(targetAccess, ref map), targetAccess != DataModelAccess.Writable);
 			}
 
 			return clone;
 		}
-		
+
 		public override string ToString() => ToString(format: null, formatProvider: null);
 
 		[DebuggerDisplay(value: "{" + nameof(_value) + "}", Name = "{" + nameof(_name) + ",nq}")]

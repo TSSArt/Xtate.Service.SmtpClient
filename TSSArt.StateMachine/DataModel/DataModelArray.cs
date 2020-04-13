@@ -33,7 +33,7 @@ namespace TSSArt.StateMachine
 		private readonly List<DataModelDescriptor> _list;
 
 		private DataModelAccess _access;
-		
+
 		public DataModelArray() : this(DataModelAccess.Writable) { }
 
 		public DataModelArray(int capacity) => _list = new List<DataModelDescriptor>(capacity);
@@ -80,12 +80,12 @@ namespace TSSArt.StateMachine
 
 				if (value == DataModelAccess.Constant)
 				{
+					_access = DataModelAccess.Constant;
+
 					foreach (var val in _list)
 					{
 						val.Value.MakeDeepConstant();
 					}
-
-					_access = DataModelAccess.Constant;
 
 					return;
 				}
@@ -248,16 +248,6 @@ namespace TSSArt.StateMachine
 		public event ChangedHandler? Changed;
 
 		public void MakeReadOnly() => Access = DataModelAccess.ReadOnly;
-
-		public void MakeDeepReadOnly()
-		{
-			foreach (var val in _list)
-			{
-				val.Value.MakeDeepReadOnly();
-			}
-
-			Access = DataModelAccess.ReadOnly;
-		}
 
 		public void MakeDeepConstant() => Access = DataModelAccess.Constant;
 
@@ -474,6 +464,13 @@ namespace TSSArt.StateMachine
 
 		public DataModelArray DeepClone(DataModelAccess targetAccess)
 		{
+			Dictionary<object, object>? map = null;
+
+			return DeepCloneWithMap(targetAccess, ref map);
+		}
+
+		internal DataModelArray DeepCloneWithMap(DataModelAccess targetAccess, ref Dictionary<object, object>? map)
+		{
 			if (targetAccess == DataModelAccess.Constant)
 			{
 				if (_list.Count == 0)
@@ -487,11 +484,20 @@ namespace TSSArt.StateMachine
 				}
 			}
 
+			map ??= new Dictionary<object, object>();
+
+			if (map.TryGetValue(this, out var val))
+			{
+				return (DataModelArray) val;
+			}
+
 			var clone = new DataModelArray(targetAccess);
 
-			foreach (var val in _list)
+			map[this] = clone;
+
+			foreach (var item in _list)
 			{
-				clone._list.Add(new DataModelDescriptor(val.Value.DeepClone(targetAccess), targetAccess != DataModelAccess.Writable));
+				clone._list.Add(new DataModelDescriptor(item.Value.DeepCloneWithMap(targetAccess, ref map), targetAccess != DataModelAccess.Writable));
 			}
 
 			return clone;

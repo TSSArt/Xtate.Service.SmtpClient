@@ -7,7 +7,7 @@ namespace TSSArt.StateMachine.Test
 	[TestClass]
 	public class ScxmlToDomTest
 	{
-		private IStateMachine GetStateMachine(string scxml)
+		private static IStateMachine GetStateMachine(string scxml)
 		{
 			using var textReader = new StringReader(scxml);
 			using var reader = XmlReader.Create(textReader);

@@ -83,7 +83,7 @@ namespace TSSArt.StateMachine
 			await host.AddProcessor(this, token).ConfigureAwait(false);
 		}
 
-		private async ValueTask<IPEndPoint> FromUri(Uri uri)
+		private static async ValueTask<IPEndPoint> FromUri(Uri uri)
 		{
 			if (uri.IsLoopback)
 			{
@@ -165,7 +165,7 @@ namespace TSSArt.StateMachine
 
 			if (dataType == DataModelValueType.Object)
 			{
-				var dataModelObject = data.AsObject()!;
+				var dataModelObject = data.AsObject();
 
 				if (IsStringDictionary(dataModelObject))
 				{

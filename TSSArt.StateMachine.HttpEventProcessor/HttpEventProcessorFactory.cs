@@ -7,7 +7,7 @@ namespace TSSArt.StateMachine
 {
 	public sealed class HttpEventProcessorFactory : IEventProcessorFactory
 	{
-		private readonly Uri         _baseUri;
+		private readonly Uri        _baseUri;
 		private readonly IPEndPoint _ipEndPoint;
 
 		public HttpEventProcessorFactory(Uri baseUri, IPEndPoint ipEndPoint)

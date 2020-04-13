@@ -51,7 +51,7 @@ namespace TSSArt.StateMachine
 			}
 			else if (InlineContent != null)
 			{
-				value = DataModelValue.FromInlineContent(InlineContent);
+				value = new DataModelValue(InlineContent);
 			}
 
 			LocationEvaluator.SetValue(value, executionContext);

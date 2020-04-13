@@ -33,7 +33,7 @@ namespace TSSArt.StateMachine
 		{
 			if (context == null) throw new ArgumentNullException(nameof(context));
 
-			var source = context.DataModel[_source].AsString();
+			var source = context.DataModel[_source].AsNullableString();
 
 			if (source == null)
 			{

@@ -16,7 +16,7 @@ namespace TSSArt.StateMachine.Test
 	[TestClass]
 	public class IoProcessorTest
 	{
-		private XmlReader GetStateMachineBase(string scxml)
+		private static XmlReader GetStateMachineBase(string scxml)
 		{
 			var textReader = new StringReader(scxml);
 			return XmlReader.Create(textReader, new XmlReaderSettings { CloseInput = true });
@@ -120,6 +120,7 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 		[Ignore("Makes HTTP request. Not a unit test.")]
 		public async Task HttpInvokeHttpSendEmailTest()
 		{
+			// ReSharper disable StringLiteralTypo
 			var stateMachine = StateMachineGenerator.FromInnerScxml_EcmaScript(@"
 <datamodel>
 	<data id=""email"" />
@@ -172,6 +173,7 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 <final id='finErr'>
 	<donedata><content expr='_event.data'/></donedata>
 </final>");
+			// ReSharper restore StringLiteralTypo
 
 			var options = new IoProcessorOptions
 						  {
@@ -186,40 +188,6 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 
 			Console.WriteLine(DataModelConverter.ToJson(result));
 			Assert.IsFalse(result.IsUndefined());
-		}
-	}
-
-	public class StateMachineProvider : IResourceLoader
-	{
-	#region Interface IResourceLoader
-
-		public bool CanHandle(Uri uri) => true;
-
-		public ValueTask<Resource> Request(Uri uri, CancellationToken token) => throw new NotSupportedException();
-
-		public ValueTask<XmlReader> RequestXmlReader(Uri uri, XmlReaderSettings readerSettings = null, XmlParserContext parserContext = null, CancellationToken token = default) =>
-				new ValueTask<XmlReader>(XmlReader.Create(uri.ToString(), readerSettings, parserContext));
-
-	#endregion
-
-		public ValueTask<IStateMachine> GetStateMachine(Uri source)
-		{
-			using var stream = new FileStream(source.AbsolutePath, FileMode.Open);
-			var xmlReader = XmlReader.Create(stream);
-
-			var director = new ScxmlDirector(xmlReader, BuilderFactory.Instance, DefaultErrorProcessor.Instance);
-
-			return new ValueTask<IStateMachine>(director.ConstructStateMachine(StateMachineValidator.Instance));
-		}
-
-		public ValueTask<IStateMachine> GetStateMachine(string scxml)
-		{
-			var reader = new StringReader(scxml);
-			var xmlReader = XmlReader.Create(reader);
-
-			var director = new ScxmlDirector(xmlReader, BuilderFactory.Instance, DefaultErrorProcessor.Instance);
-
-			return new ValueTask<IStateMachine>(director.ConstructStateMachine(StateMachineValidator.Instance));
 		}
 	}
 }
