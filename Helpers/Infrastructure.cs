@@ -5,6 +5,7 @@ using JetBrains.Annotations;
 namespace TSSArt.StateMachine
 {
 	[PublicAPI]
+	[ExcludeFromCodeCoverage]
 	public static class Infrastructure
 	{
 		[AssertionMethod]
