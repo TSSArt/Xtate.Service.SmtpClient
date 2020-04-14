@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TSSArt.StateMachine.Test.DevTests
@@ -7,100 +8,157 @@ namespace TSSArt.StateMachine.Test.DevTests
 	public class DataModelValueTest
 	{
 		[TestMethod]
+		public void DataModelObjectNullTest()
+		{
+			// arrange
+			DataModelObject nullVal = null;
+
+			// act
+			// ReSharper disable once ExpressionIsAlwaysNull
+			var v = (DataModelValue) nullVal;
+
+			// assert
+			Assert.AreEqual(DataModelValue.Null, v);
+			Assert.AreEqual(expected: null, v.AsNullableObject());
+		}
+
+		[TestMethod]
+		public void DataModelArrayNullTest()
+		{
+			// arrange
+			DataModelArray nullVal = null;
+
+			// act
+			// ReSharper disable once ExpressionIsAlwaysNull
+			var v = (DataModelValue) nullVal;
+
+			// assert
+			Assert.AreEqual(DataModelValue.Null, v);
+			Assert.AreEqual(expected: null, v.AsNullableArray());
+		}
+
+		[TestMethod]
+		public void DataModelStringNullTest()
+		{
+			// arrange
+			string nullVal = null;
+
+			// act
+			// ReSharper disable once ExpressionIsAlwaysNull
+			var v = (DataModelValue) nullVal;
+
+			// assert
+			Assert.AreEqual(DataModelValue.Null, v);
+			Assert.AreEqual(expected: null, v.AsNullableString());
+		}
+
+		[TestMethod]
+		public void EqualityInequalityTest()
+		{
+			Assert.AreEqual(DataModelValue.Undefined, actual: default);
+			Assert.AreEqual(DataModelValue.Undefined, DataModelValue.Undefined);
+			Assert.AreEqual(DataModelValue.Null, DataModelValue.Null);
+			Assert.AreNotEqual(DataModelValue.Null, DataModelValue.Undefined);
+			Assert.AreNotEqual(DataModelValue.Undefined, DataModelValue.Null);
+		}
+
+		[TestMethod]
+		public void TypesTest()
+		{
+			Assert.AreEqual(DataModelValueType.Undefined, DataModelValue.Undefined.Type);
+			Assert.AreEqual(DataModelValueType.Null, DataModelValue.Null.Type);
+			Assert.AreEqual(DataModelValueType.String, DataModelValue.FromString("str").Type);
+			Assert.AreEqual(DataModelValueType.Boolean, DataModelValue.FromBoolean(false).Type);
+			Assert.AreEqual(DataModelValueType.Number, DataModelValue.FromDouble(0).Type);
+			Assert.AreEqual(DataModelValueType.DateTime, DataModelValue.FromDateTime(DateTime.MinValue).Type);
+			Assert.AreEqual(DataModelValueType.Object, DataModelValue.FromDataModelObject(new DataModelObject()).Type);
+			Assert.AreEqual(DataModelValueType.Array, DataModelValue.FromDataModelArray(new DataModelArray()).Type);
+		}
+
+		[TestMethod]
 		public void FromObjectDictionaryCycleRefTest()
 		{
+			// arrange
 			var dict = new Dictionary<string, object>();
-
 			dict["self"] = dict;
-			dict["value"] = "str";
 
-			var v = DataModelValue.FromObject(dict);
+			// act
+			var dst = DataModelValue.FromObject(dict);
 
-			Assert.AreEqual(expected: "str", v.AsObject()["value"]);
-			Assert.AreEqual(expected: "str", v.AsObject()["self"].AsObject()["value"]);
-			Assert.AreSame(v.AsObject(), v.AsObject()["self"].AsObject());
+			// assert
+			Assert.AreSame(dst.AsObject(), dst.AsObject()["self"].AsObject());
 		}
 
 		[TestMethod]
 		public void FromObjectArrayCycleRefTest()
 		{
-			var arr = new object[2];
-
+			// arrange
+			var arr = new object[1];
 			arr[0] = arr;
-			arr[1] = "str";
 
-			var v = DataModelValue.FromObject(arr);
+			// act
+			var dst = DataModelValue.FromObject(arr);
 
-			Assert.AreEqual(expected: "str", v.AsArray()[1]);
-			Assert.AreEqual(expected: "str", v.AsArray()[0].AsArray()[1]);
-			Assert.AreSame(v.AsArray(), v.AsArray()[0].AsArray());
+			Assert.AreSame(dst.AsArray(), dst.AsArray()[0].AsArray());
 		}
 
 		[TestMethod]
 		public void DeepCloneDictionaryCycleRefTest()
 		{
+			// arrange
 			var dict = new DataModelObject();
-
 			dict["self"] = dict;
-			dict["value"] = "str";
-
 			var src = (DataModelValue) dict;
 
+			// act
 			var dst = src.CloneAsWritable();
 
-			Assert.AreEqual(expected: "str", dst.AsObject()["value"]);
-			Assert.AreEqual(expected: "str", dst.AsObject()["self"].AsObject()["value"]);
+			// assert
 			Assert.AreSame(dst.AsObject(), dst.AsObject()["self"].AsObject());
 		}
 
 		[TestMethod]
 		public void DeepCloneArrayCycleRefTest()
 		{
+			// arrange
 			var arr = new DataModelArray();
-
 			arr[0] = arr;
-			arr[1] = "str";
-
 			var src = (DataModelValue) arr;
 
+			// act
 			var dst = src.CloneAsWritable();
 
-			Assert.AreEqual(expected: "str", dst.AsArray()[1]);
-			Assert.AreEqual(expected: "str", dst.AsArray()[0].AsArray()[1]);
+			// assert
 			Assert.AreSame(dst.AsArray(), dst.AsArray()[0].AsArray());
 		}
 
 		[TestMethod]
 		public void MakeDeepConstantMakeDeepReadOnlyDictionaryCycleRefTest()
 		{
+			// arrange
 			var dict = new DataModelObject();
-
 			dict["self"] = dict;
-			dict["value"] = "str";
-
 			var src = (DataModelValue) dict;
 
+			// act
 			src.MakeDeepConstant();
 
-			Assert.AreEqual(expected: "str", src.AsObject()["value"]);
-			Assert.AreEqual(expected: "str", src.AsObject()["self"].AsObject()["value"]);
+			// assert
 			Assert.AreSame(src.AsObject(), src.AsObject()["self"].AsObject());
 		}
 
 		[TestMethod]
 		public void MakeDeepConstantMakeDeepReadOnlyArrayCycleRefTest()
 		{
+			// arrange
 			var arr = new DataModelArray();
-
 			arr[0] = arr;
-			arr[1] = "str";
-
 			var src = (DataModelValue) arr;
 
+			// act
 			src.MakeDeepConstant();
 
-			Assert.AreEqual(expected: "str", src.AsArray()[1]);
-			Assert.AreEqual(expected: "str", src.AsArray()[0].AsArray()[1]);
+			// assert
 			Assert.AreSame(src.AsArray(), src.AsArray()[0].AsArray());
 		}
 	}

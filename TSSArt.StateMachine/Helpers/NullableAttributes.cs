@@ -60,7 +60,7 @@ namespace System.Diagnostics.CodeAnalysis
     { }
 
     /// <summary>Specifies that when a method returns <see cref="ReturnValue"/>, the parameter may be null even if the corresponding type disallows it.</summary>
-    [AttributeUsage(AttributeTargets.Parameter, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Parameter, Inherited = false), ExcludeFromCodeCoverage]
 #if INTERNAL_NULLABLE_ATTRIBUTES
     internal
 #else
@@ -79,7 +79,7 @@ namespace System.Diagnostics.CodeAnalysis
     }
 
     /// <summary>Specifies that when a method returns <see cref="ReturnValue"/>, the parameter will not be null even if the corresponding type allows it.</summary>
-    [AttributeUsage(AttributeTargets.Parameter, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Parameter, Inherited = false), ExcludeFromCodeCoverage]
 #if INTERNAL_NULLABLE_ATTRIBUTES
     internal
 #else
@@ -117,7 +117,7 @@ namespace System.Diagnostics.CodeAnalysis
     }
 
     /// <summary>Applied to a method that will never return under any circumstance.</summary>
-    [AttributeUsage(AttributeTargets.Method, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Method, Inherited = false), ExcludeFromCodeCoverage]
 #if INTERNAL_NULLABLE_ATTRIBUTES
     internal
 #else
@@ -127,7 +127,7 @@ namespace System.Diagnostics.CodeAnalysis
     { }
 
     /// <summary>Specifies that the method will not return if the associated Boolean parameter is passed the specified value.</summary>
-    [AttributeUsage(AttributeTargets.Parameter, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Parameter, Inherited = false), ExcludeFromCodeCoverage]
 #if INTERNAL_NULLABLE_ATTRIBUTES
     internal
 #else

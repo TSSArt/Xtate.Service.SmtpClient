@@ -27,13 +27,13 @@ namespace TSSArt.StateMachine
 	[DebuggerDisplay(value: "{ToObject()} ({Type})")]
 	public readonly struct DataModelValue : IObject, IEquatable<DataModelValue>, IFormattable, IDynamicMetaObjectProvider
 	{
-		public static readonly DataModelValue Undefined;
-		public static readonly DataModelValue Null = new DataModelValue((string?) null);
-
 		private static readonly object NullValue     = new object();
 		private static readonly object NumberValue   = new object();
 		private static readonly object DateTimeValue = new object();
 		private static readonly object BooleanValue  = new object();
+
+		public static readonly DataModelValue Undefined;
+		public static readonly DataModelValue Null = new DataModelValue((string?) null);
 
 		private readonly long    _int64;
 		private readonly object? _value;
