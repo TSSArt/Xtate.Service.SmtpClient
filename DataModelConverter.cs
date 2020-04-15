@@ -8,34 +8,72 @@ using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[Flags]
+	[PublicAPI]
+	public enum DataModelConverterOptions
+	{
+		None = 0,
+
+		/// <summary>
+		/// Serialization of undefined value will cause an exception. Array with undefined element will cause an exception. Properties with undefined values in object will be skipped.
+		/// </summary>
+		UndefinedNotAllowed = 0,
+
+		/// <summary>
+		/// Undefined value will serialize to empty string. Undefined elements in array will be skipped. Properties with undefined values in object will be skipped.
+		/// </summary>
+		UndefinedToSkip = 1,
+
+		/// <summary>
+		/// Undefined value will serialize to (null) value. Undefined elements in array will be serialized as (null). Properties with undefined values in object will be serialized as properties with (null).
+		/// </summary>
+		UndefinedToNull = 2,
+
+		/// <summary>
+		/// Undefined value will serialize to (null) value. Undefined elements in array will be serialized as (null). Properties with undefined values in object will be skipped.
+		/// </summary>
+		UndefinedToSkipOrNull = UndefinedToSkip | UndefinedToNull,
+
+		WriteIndented = 4
+	}
+
 	[PublicAPI]
 	public static class DataModelConverter
 	{
-		private static readonly JsonSerializerOptions Options = new JsonSerializerOptions
-																{
-																		Converters =
-																		{
-																				new JsonValueConverter(),
-																				new JsonObjectConverter(),
-																				new JsonArrayConverter()
-																		},
-																		WriteIndented = true
-																};
+		private static readonly JsonSerializerOptions DefaultOptions = CreateOptions(DataModelConverterOptions.None);
+		private static          JsonSerializerOptions GetOptions(DataModelConverterOptions options) => options == DataModelConverterOptions.None ? DefaultOptions : CreateOptions(options);
 
-		public static string ToJson(DataModelValue value) => JsonSerializer.Serialize(value, Options);
+		private static JsonSerializerOptions CreateOptions(DataModelConverterOptions options) =>
+				new JsonSerializerOptions
+				{
+						Converters =
+						{
+								new JsonValueConverter(options),
+								new JsonObjectConverter(options),
+								new JsonArrayConverter(options)
+						},
+						WriteIndented = (options & DataModelConverterOptions.WriteIndented) != 0
+				};
 
-		public static byte[] ToJsonUtf8Bytes(DataModelValue value) => JsonSerializer.SerializeToUtf8Bytes(value, Options);
+		public static string ToJson(DataModelValue value, DataModelConverterOptions options = default) => JsonSerializer.Serialize(value, GetOptions(options));
 
-		public static Task ToJsonAsync(Stream stream, DataModelValue value, CancellationToken token = default) => JsonSerializer.SerializeAsync(stream, value, Options, token);
+		public static byte[] ToJsonUtf8Bytes(DataModelValue value, DataModelConverterOptions options = default) => JsonSerializer.SerializeToUtf8Bytes(value, GetOptions(options));
 
-		public static DataModelValue FromJson(string json) => JsonSerializer.Deserialize<DataModelValue>(json, Options);
+		public static Task ToJsonAsync(Stream stream, DataModelValue value, DataModelConverterOptions options = default, CancellationToken token = default) =>
+				JsonSerializer.SerializeAsync(stream, value, GetOptions(options), token);
 
-		public static DataModelValue FromJson(ReadOnlySpan<byte> utf8Json) => JsonSerializer.Deserialize<DataModelValue>(utf8Json, Options);
+		public static DataModelValue FromJson(string json) => JsonSerializer.Deserialize<DataModelValue>(json, DefaultOptions);
 
-		public static ValueTask<DataModelValue> FromJsonAsync(Stream stream, CancellationToken token = default) => JsonSerializer.DeserializeAsync<DataModelValue>(stream, Options, token);
+		public static DataModelValue FromJson(ReadOnlySpan<byte> utf8Json) => JsonSerializer.Deserialize<DataModelValue>(utf8Json, DefaultOptions);
+
+		public static ValueTask<DataModelValue> FromJsonAsync(Stream stream, CancellationToken token = default) => JsonSerializer.DeserializeAsync<DataModelValue>(stream, DefaultOptions, token);
 
 		private class JsonValueConverter : JsonConverter<DataModelValue>
 		{
+			private readonly DataModelConverterOptions _options;
+
+			public JsonValueConverter(DataModelConverterOptions options) => _options = options;
+
 			public override DataModelValue Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 			{
 				switch (reader.TokenType)
@@ -61,7 +99,7 @@ namespace TSSArt.StateMachine
 					case JsonTokenType.StartArray:
 						return new DataModelValue(JsonSerializer.Deserialize<DataModelArray>(ref reader, options));
 
-					default: return Infrastructure.UnexpectedValue<DataModelValue>();
+					default: throw new JsonException(Resources.Exception_Not_expected_token_type);
 				}
 			}
 
@@ -69,46 +107,63 @@ namespace TSSArt.StateMachine
 			{
 				switch (value.Type)
 				{
-					case DataModelValueType.Undefined:
+					case DataModelValueType.Undefined when (_options & DataModelConverterOptions.UndefinedToNull) != 0:
 						writer.WriteNullValue();
 						break;
+
+					case DataModelValueType.Undefined when (_options & DataModelConverterOptions.UndefinedToSkip) == 0:
+						throw new JsonException(Resources.Exception_Undefined_value_not_allowed);
+
+					case DataModelValueType.Undefined:
+						break;
+
 					case DataModelValueType.Null:
 						writer.WriteNullValue();
 						break;
+
 					case DataModelValueType.String:
 						writer.WriteStringValue(value.AsString());
 						break;
+
 					case DataModelValueType.Number:
 						writer.WriteNumberValue(value.AsNumber());
 						break;
+
 					case DataModelValueType.DateTime:
 						writer.WriteStringValue(value.AsDateTime());
 						break;
+
 					case DataModelValueType.Boolean:
 						writer.WriteBooleanValue(value.AsBoolean());
 						break;
+
 					case DataModelValueType.Object:
 						JsonSerializer.Serialize(writer, value.AsObject(), options);
 						break;
+
 					case DataModelValueType.Array:
 						JsonSerializer.Serialize(writer, value.AsArray(), options);
 						break;
+
 					default:
-						Infrastructure.UnexpectedValue();
-						break;
+						throw new JsonException(Resources.Exception_Unknown_type_for_serialization);
 				}
 			}
 		}
 
 		private class JsonObjectConverter : JsonConverter<DataModelObject>
 		{
+			private readonly DataModelConverterOptions _options;
+
+			public JsonObjectConverter(DataModelConverterOptions options) => _options = options;
+
 			public override DataModelObject Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 			{
 				var obj = new DataModelObject();
 
 				if (reader.TokenType != JsonTokenType.StartObject)
 				{
-					throw new JsonException();
+					throw new JsonException(Resources.Exception_Not_expected_token_type);
 				}
 
 				reader.Read();
@@ -140,6 +195,11 @@ namespace TSSArt.StateMachine
 						writer.WritePropertyName(name);
 						JsonSerializer.Serialize(writer, value, options);
 					}
+					else if ((_options & DataModelConverterOptions.UndefinedToSkipOrNull) == DataModelConverterOptions.UndefinedToNull)
+					{
+						writer.WritePropertyName(name);
+						writer.WriteNullValue();
+					}
 				}
 
 				writer.WriteEndObject();
@@ -148,13 +208,17 @@ namespace TSSArt.StateMachine
 
 		private class JsonArrayConverter : JsonConverter<DataModelArray>
 		{
+			private readonly DataModelConverterOptions _options;
+
+			public JsonArrayConverter(DataModelConverterOptions options) => _options = options;
+
 			public override DataModelArray Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 			{
 				var array = new DataModelArray();
 
 				if (reader.TokenType != JsonTokenType.StartArray)
 				{
-					throw new JsonException();
+					throw new JsonException(Resources.Exception_Not_expected_token_type);
 				}
 
 				reader.Read();
@@ -184,6 +248,14 @@ namespace TSSArt.StateMachine
 					if (!value.IsUndefined())
 					{
 						JsonSerializer.Serialize(writer, value, options);
+					}
+					else if ((_options & DataModelConverterOptions.UndefinedToNull) != 0)
+					{
+						writer.WriteNullValue();
+					}
+					else if ((_options & DataModelConverterOptions.UndefinedToSkip) == 0)
+					{
+						throw new JsonException(Resources.Exception_Undefined_value_not_allowed);
 					}
 				}
 
