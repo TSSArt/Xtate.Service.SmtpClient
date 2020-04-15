@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq.Expressions;
@@ -392,6 +393,8 @@ namespace TSSArt.StateMachine
 
 		public override string ToString() => ToString(format: null, formatProvider: null);
 
+		[PublicAPI]
+		[ExcludeFromCodeCoverage]
 		private class DebugView
 		{
 			[DebuggerBrowsable(DebuggerBrowsableState.Never)]

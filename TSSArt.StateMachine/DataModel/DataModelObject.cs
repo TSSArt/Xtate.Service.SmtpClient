@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -249,6 +250,7 @@ namespace TSSArt.StateMachine
 		}
 
 		[PublicAPI]
+		[ExcludeFromCodeCoverage]
 		private class DebugView
 		{
 			private readonly DataModelObject _dataModelObject;
