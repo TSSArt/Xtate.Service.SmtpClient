@@ -161,5 +161,18 @@ namespace TSSArt.StateMachine.Test.DevTests
 			// assert
 			Assert.AreSame(src.AsArray(), src.AsArray()[0].AsArray());
 		}
+
+		[TestMethod]
+		public void AnonymousTypeTest()
+		{
+			// arrange
+			var at = new { Key = "Name" };
+
+			// act
+			var v = DataModelValue.FromObject(at);
+
+			// assert
+			Assert.AreEqual(expected: "Name", v.AsObject()["Key"].AsString());
+		}
 	}
 }

@@ -29,20 +29,19 @@ namespace TSSArt.StateMachine.IntegrationTest
 
 			await ioProcessor.StartAsync().ConfigureAwait(false);
 
-			dynamic prms = new DataModelObject();
-			prms.loginUrl = "https://test.tssart.com/wp-login.php";
-			prms.username = "tadex1";
-			prms.password = "123456";
+			var prms = new
+					   {
+							   loginUrl = "https://test.tssart.com/wp-login.php",
+							   username = "tadex1",
+							   password = "123456"
+					   };
 
-			var task = ioProcessor.Execute(new Uri(ScxmlBase, relativeUri: "signup.scxml"), prms);
+			var task = ioProcessor.Execute(new Uri(ScxmlBase, relativeUri: "signup.scxml"), DataModelValue.FromObject(prms));
 
-			var result = await task.ConfigureAwait(false);
+			dynamic result = await task.ConfigureAwait(false);
 
-			dynamic prms2 = new DataModelObject();
-			prms2.profileUrl = "https://test.tssart.com/wp-admin/profile.php";
-			prms2.cookies = result.data.cookies;
-
-			var task2 = ioProcessor.Execute(new Uri(ScxmlBase, relativeUri: "captureEmail.scxml"), new DataModelValue(prms2));
+			var prms2 = new { profileUrl = "https://test.tssart.com/wp-admin/profile.php", result.data.cookies };
+			var task2 = ioProcessor.Execute(new Uri(ScxmlBase, relativeUri: "captureEmail.scxml"), DataModelValue.FromObject(prms2));
 
 			dynamic _ = await task2.ConfigureAwait(false);
 
