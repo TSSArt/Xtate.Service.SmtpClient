@@ -7,6 +7,7 @@ using System.Dynamic;
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
@@ -135,12 +136,12 @@ namespace TSSArt.StateMachine
 
 	#endregion
 
-		public static implicit operator DataModelValue(DataModelObject? val) => new DataModelValue(val);
-		public static implicit operator DataModelValue(DataModelArray? val)  => new DataModelValue(val);
-		public static implicit operator DataModelValue(string? val)          => new DataModelValue(val);
-		public static implicit operator DataModelValue(double val)           => new DataModelValue(val);
-		public static implicit operator DataModelValue(DateTime val)         => new DataModelValue(val);
-		public static implicit operator DataModelValue(bool val)             => new DataModelValue(val);
+		public static implicit operator DataModelValue(DataModelObject? val) => FromDataModelObject(val);
+		public static implicit operator DataModelValue(DataModelArray? val)  => FromDataModelArray(val);
+		public static implicit operator DataModelValue(string? val)          => FromString(val);
+		public static implicit operator DataModelValue(double val)           => FromDouble(val);
+		public static implicit operator DataModelValue(DateTime val)         => FromDateTime(val);
+		public static implicit operator DataModelValue(bool val)             => FromBoolean(val);
 
 		public static DataModelValue FromDataModelObject(DataModelObject? val) => new DataModelValue(val);
 		public static DataModelValue FromDataModelArray(DataModelArray? val)   => new DataModelValue(val);
@@ -149,12 +150,12 @@ namespace TSSArt.StateMachine
 		public static DataModelValue FromDateTime(DateTime val)                => new DataModelValue(val);
 		public static DataModelValue FromBoolean(bool val)                     => new DataModelValue(val);
 
-		public static explicit operator DataModelObject?(DataModelValue val) => val.AsNullableObject();
-		public static explicit operator DataModelArray?(DataModelValue val)  => val.AsNullableArray();
-		public static explicit operator string?(DataModelValue val)          => val.AsNullableString();
-		public static explicit operator double(DataModelValue val)           => val.AsNumber();
-		public static explicit operator DateTime(DataModelValue val)         => val.AsDateTime();
-		public static explicit operator bool(DataModelValue val)             => val.AsBoolean();
+		public static explicit operator DataModelObject?(DataModelValue val) => ToDataModelObject(val);
+		public static explicit operator DataModelArray?(DataModelValue val)  => ToDataModelArray(val);
+		public static explicit operator string?(DataModelValue val)          => ToString(val);
+		public static explicit operator double(DataModelValue val)           => ToDouble(val);
+		public static explicit operator DateTime(DataModelValue val)         => ToDateTime(val);
+		public static explicit operator bool(DataModelValue val)             => ToBoolean(val);
 
 		public static DataModelObject? ToDataModelObject(DataModelValue val) => val.AsNullableObject();
 		public static DataModelArray?  ToDataModelArray(DataModelValue val)  => val.AsNullableArray();
@@ -318,7 +319,8 @@ namespace TSSArt.StateMachine
 				return Null;
 			}
 
-			switch (System.Type.GetTypeCode(value.GetType()))
+			var type = value.GetType();
+			switch (System.Type.GetTypeCode(type))
 			{
 				case TypeCode.SByte:
 				case TypeCode.Int16:
@@ -345,8 +347,33 @@ namespace TSSArt.StateMachine
 					return CreateDataModelObject(dictionary, ref map);
 				case TypeCode.Object when value is IEnumerable array:
 					return CreateDataModelArray(array, ref map);
+				case TypeCode.Object when IsAnonymousTypeValue(type):
+					return CreateDataModelObjectFromObjectProperties(type, value, ref map);
 				default: throw new ArgumentException(Resources.Exception_Unsupported_object_type, nameof(value));
 			}
+		}
+
+		private static bool IsAnonymousTypeValue(Type type) => type.Name.Contains("AnonymousType") && type.GetCustomAttributes(typeof(CompilerGeneratedAttribute), inherit: false).Length > 0;
+
+		private static DataModelValue CreateDataModelObjectFromObjectProperties(Type type, object value, ref Dictionary<object, object>? map)
+		{
+			map ??= new Dictionary<object, object>();
+
+			if (map.TryGetValue(value, out var val))
+			{
+				return new DataModelValue((DataModelObject) val);
+			}
+
+			var obj = new DataModelObject();
+
+			map[value] = obj;
+
+			foreach (var propertyInfo in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
+			{
+				obj[propertyInfo.Name] = FromObjectWithMap(propertyInfo.GetValue(value), ref map);
+			}
+
+			return new DataModelValue(obj);
 		}
 
 		private static DataModelValue CreateDataModelObject(IDictionary<string, object> dictionary, ref Dictionary<object, object>? map)
