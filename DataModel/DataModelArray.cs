@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
 using System.Globalization;
 using System.Linq;
@@ -505,6 +506,7 @@ namespace TSSArt.StateMachine
 
 		public override string ToString() => ToString(format: null, formatProvider: null);
 
+		[ExcludeFromCodeCoverage]
 		[DebuggerDisplay(value: "{" + nameof(_value) + "}", Name = "[{" + nameof(_index) + "}]")]
 		private struct IndexValue
 		{
@@ -521,6 +523,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
+		[ExcludeFromCodeCoverage]
 		[PublicAPI]
 		private class DebugView
 		{

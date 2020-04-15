@@ -88,10 +88,7 @@ namespace TSSArt.StateMachine
 
 		public async ValueTask Start(IExecutionContext executionContext, CancellationToken token)
 		{
-			if (_stateId == null)
-			{
-				throw new StateMachineInfrastructureException(Resources.Exception_StateId_not_initialized);
-			}
+			Infrastructure.Assert(_stateId != null, Resources.Exception_StateId_not_initialized);
 
 			(InvokeId, InvokeUniqueId) = await _startInvokeEvaluator.Start(_stateId, executionContext, token).ConfigureAwait(false);
 		}

@@ -1,8 +1,10 @@
-﻿using JetBrains.Annotations;
+﻿using System.Diagnostics.CodeAnalysis;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
 	[PublicAPI]
+	[ExcludeFromCodeCoverage]
 	internal static class Res
 	{
 		public static string Format(string format, object arg)                            => string.Format(Resources.Culture, format, arg);
