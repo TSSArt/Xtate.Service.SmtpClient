@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Jint.Parser.Ast;
 using JintIdentifier = Jint.Parser.Ast.Identifier;
 
@@ -46,11 +48,16 @@ namespace TSSArt.StateMachine.EcmaScript
 
 	#region Interface ILocationEvaluator
 
-		public IObject GetValue(IExecutionContext executionContext) => new EcmaScriptObject(executionContext.Engine().Eval(_program, startNewScope: true));
+		public ValueTask<IObject> GetValue(IExecutionContext executionContext, CancellationToken token)
+		{
+			var obj = new EcmaScriptObject(executionContext.Engine().Eval(_program, startNewScope: true));
+
+			return new ValueTask<IObject>(obj);
+		}
 
 		public string GetName(IExecutionContext executionContext) => _name ?? throw new StateMachineExecutionException(Resources.Exception_Name_of_Location_Expression_can_t_be_evaluated);
 
-		public void SetValue(IObject value, IExecutionContext executionContext)
+		public ValueTask SetValue(IObject value, IExecutionContext executionContext, CancellationToken token)
 		{
 			var rightValue = value is EcmaScriptObject ecmaScriptObject ? ecmaScriptObject.JsValue : value.ToObject();
 			var assignmentExpression = new AssignmentExpression
@@ -62,6 +69,8 @@ namespace TSSArt.StateMachine.EcmaScript
 									   };
 
 			executionContext.Engine().Exec(assignmentExpression, startNewScope: false);
+
+			return default;
 		}
 
 		public void DeclareLocalVariable(IExecutionContext executionContext)
