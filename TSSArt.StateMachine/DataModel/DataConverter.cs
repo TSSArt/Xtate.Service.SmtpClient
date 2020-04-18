@@ -67,7 +67,7 @@ namespace TSSArt.StateMachine
 				foreach (var locationEvaluator in nameEvaluatorList)
 				{
 					var name = locationEvaluator.GetName(executionContext);
-					var value = locationEvaluator.GetValue(executionContext).ToObject();
+					var value = await locationEvaluator.GetValue(executionContext, token).ConfigureAwait(false);
 
 					attributes[name] = DataModelValue.FromObject(value).AsConstant();
 				}
@@ -86,7 +86,7 @@ namespace TSSArt.StateMachine
 					}
 					else if (param.LocationEvaluator != null)
 					{
-						value = param.LocationEvaluator.GetValue(executionContext).ToObject();
+						value = await param.LocationEvaluator.GetValue(executionContext, token).ConfigureAwait(false);
 					}
 
 					attributes[name] = DataModelValue.FromObject(value).AsConstant();

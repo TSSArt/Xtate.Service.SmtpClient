@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Xml;
+
 #if NETSTANDARD2_1
 using System.Buffers;
 
@@ -12,38 +12,37 @@ namespace TSSArt.StateMachine
 {
 	public class Base64DecodeAction : CustomActionBase
 	{
-		private readonly string _destination;
-		private readonly string _source;
+		private const string Content     = "content";
+		private const string ContentExpr = "contentexpr";
+		private const string Result      = "result";
 
-		public Base64DecodeAction(XmlReader xmlReader)
+		public Base64DecodeAction(XmlReader xmlReader, ICustomActionContext access) : base(access)
 		{
 			if (xmlReader == null) throw new ArgumentNullException(nameof(xmlReader));
 
-			_source = xmlReader.GetAttribute("source");
-			_destination = xmlReader.GetAttribute("destination");
+			RegisterArgument(Content, xmlReader.GetAttribute(ContentExpr), xmlReader.GetAttribute(Content));
+			RegisterResultLocation(xmlReader.GetAttribute(Result));
 		}
 
 		internal static void FillXmlNameTable(XmlNameTable xmlNameTable)
 		{
-			xmlNameTable.Add("source");
-			xmlNameTable.Add("destination");
+			xmlNameTable.Add(Content);
+			xmlNameTable.Add(ContentExpr);
+			xmlNameTable.Add(Result);
 		}
 
-		public override ValueTask Execute(IExecutionContext context, CancellationToken token)
+		protected override DataModelValue Evaluate(IReadOnlyDictionary<string, DataModelValue> arguments)
 		{
-			if (context == null) throw new ArgumentNullException(nameof(context));
+			if (arguments == null) throw new ArgumentNullException(nameof(arguments));
 
-			var source = context.DataModel[_source].AsNullableString();
-
-			if (source == null)
+			var content = arguments[Content];
+			if (content.IsUndefinedOrNull())
 			{
-				context.DataModel[_destination] = DataModelValue.Null;
-
-				return default;
+				return content;
 			}
 
 #if NETSTANDARD2_1
-			var result = OptimizedDecode(source);
+			return OptimizedDecode(content.AsString());
 
 			static string OptimizedDecode(string str)
 			{
@@ -63,11 +62,8 @@ namespace TSSArt.StateMachine
 				}
 			}
 #else
-			var result = Encoding.UTF8.GetString(Convert.FromBase64String(source));
+			return Encoding.UTF8.GetString(Convert.FromBase64String(content.AsString()));
 #endif
-			context.DataModel[_destination] = new DataModelValue(result);
-
-			return default;
 		}
 	}
 }

@@ -39,6 +39,7 @@
 		Item,
 		Label,
 		Location,
+		LocationList,
 		Name,
 		NameList,
 		OnEntry,
@@ -75,6 +76,7 @@
 		TypeExpression,
 		TypeInfo,
 		Uri,
+		ValueList,
 		Version
 	}
 }

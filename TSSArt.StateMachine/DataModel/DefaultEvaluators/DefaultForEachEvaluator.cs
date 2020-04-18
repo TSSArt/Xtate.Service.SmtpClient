@@ -47,9 +47,12 @@ namespace TSSArt.StateMachine
 			{
 				var instance = array[i];
 
-				ItemEvaluator.SetValue(instance, executionContext);
+				await ItemEvaluator.SetValue(instance, executionContext, token).ConfigureAwait(false);
 
-				IndexEvaluator?.SetValue(new DefaultObject(i), executionContext);
+				if (IndexEvaluator != null)
+				{
+					await IndexEvaluator.SetValue(new DefaultObject(i), executionContext, token).ConfigureAwait(false);
+				}
 
 				foreach (var execEvaluator in ActionEvaluatorList)
 				{

@@ -1,47 +1,44 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Xml;
 
 namespace TSSArt.StateMachine
 {
 	public class FormatAction : CustomActionBase
 	{
+		private const string Template     = "template";
+		private const string TemplateExpr = "templateexpr";
+		private const string Result       = "result";
+		private const string ArgsExpr     = "argsexpr";
+
 		private static readonly Regex RegexReplacer = new Regex(pattern: @"\{\#(\w+)\#\}", RegexOptions.Compiled);
 
-		private readonly string _arguments;
-		private readonly string _destination;
-		private readonly string _template;
-
-		public FormatAction(XmlReader xmlReader)
+		public FormatAction(XmlReader xmlReader, ICustomActionContext access) : base(access)
 		{
 			if (xmlReader == null) throw new ArgumentNullException(nameof(xmlReader));
 
-			_template = xmlReader.GetAttribute("template");
-			_destination = xmlReader.GetAttribute("destination");
-			_arguments = xmlReader.GetAttribute("arguments");
+			RegisterArgument(Template, xmlReader.GetAttribute(TemplateExpr), xmlReader.GetAttribute(Template));
+			RegisterArgument(ArgsExpr, xmlReader.GetAttribute(ArgsExpr));
+			RegisterResultLocation(xmlReader.GetAttribute(Result));
 		}
 
 		internal static void FillXmlNameTable(XmlNameTable xmlNameTable)
 		{
-			xmlNameTable.Add("template");
-			xmlNameTable.Add("destination");
-			xmlNameTable.Add("arguments");
+			xmlNameTable.Add(Template);
+			xmlNameTable.Add(TemplateExpr);
+			xmlNameTable.Add(Result);
+			xmlNameTable.Add(ArgsExpr);
 		}
 
-		public override ValueTask Execute(IExecutionContext context, CancellationToken token)
+		protected override DataModelValue Evaluate(IReadOnlyDictionary<string, DataModelValue> arguments)
 		{
-			if (context == null) throw new ArgumentNullException(nameof(context));
+			if (arguments == null) throw new ArgumentNullException(nameof(arguments));
 
-			var source = context.DataModel[_template].AsString();
-			var arguments = context.DataModel[_arguments].AsObjectOrEmpty();
+			var template = arguments[Template].AsString();
+			var args = arguments[ArgsExpr].AsObjectOrEmpty();
 
-			var result = RegexReplacer.Replace(source, m => arguments[m.Groups[1].Value].AsStringOrDefault());
-
-			context.DataModel[_destination] = new DataModelValue(result);
-
-			return default;
+			return RegexReplacer.Replace(template, m => args[m.Groups[1].Value].AsStringOrDefault());
 		}
 	}
 }

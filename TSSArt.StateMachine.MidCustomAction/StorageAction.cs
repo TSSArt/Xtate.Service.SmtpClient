@@ -2,28 +2,30 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Xml;
 
 namespace TSSArt.StateMachine
 {
 	public class StorageAction : CustomActionBase
 	{
-		private readonly string  _location;
+		private const    string  Location  = "location";
+		private const    string  Operation = "operation";
+		private const    string  Template  = "template";
+		private const    string  Rule      = "rule";
 		private readonly string? _operation;
 		private readonly string? _rule;
 		private readonly string? _template;
 
-		public StorageAction(XmlReader xmlReader)
+		public StorageAction(XmlReader xmlReader, ICustomActionContext access) : base(access)
 		{
 			if (xmlReader == null) throw new ArgumentNullException(nameof(xmlReader));
 
-			_location = xmlReader.GetAttribute("location");
-			_operation = xmlReader.GetAttribute("operation")?.ToUpperInvariant();
-			_template = xmlReader.GetAttribute("template")?.ToUpperInvariant();
-			_rule = xmlReader.GetAttribute("rule");
+			RegisterArgument(Location, xmlReader.GetAttribute(Location));
+			RegisterResultLocation(xmlReader.GetAttribute(Location));
 
+			_operation = xmlReader.GetAttribute(Operation)?.ToUpperInvariant();
+			_template = xmlReader.GetAttribute(Template)?.ToUpperInvariant();
+			_rule = xmlReader.GetAttribute(Rule);
 
 			//<storage xmlns="http://tssart.com/scxml/customaction/mid" location="username"
 			//operation="create" template="userid" rule="[a-z]{1,20}" />
@@ -33,24 +35,22 @@ namespace TSSArt.StateMachine
 
 		internal static void FillXmlNameTable(XmlNameTable xmlNameTable)
 		{
-			xmlNameTable.Add("location");
-			xmlNameTable.Add("operation");
-			xmlNameTable.Add("template");
-			xmlNameTable.Add("rule");
+			xmlNameTable.Add(Location);
+			xmlNameTable.Add(Operation);
+			xmlNameTable.Add(Template);
+			xmlNameTable.Add(Rule);
 		}
 
-		public override ValueTask Execute(IExecutionContext context, CancellationToken token)
+		protected override DataModelValue Evaluate(IReadOnlyDictionary<string, DataModelValue> arguments)
 		{
-			if (context == null) throw new ArgumentNullException(nameof(context));
+			if (arguments == null) throw new ArgumentNullException(nameof(arguments));
+
 
 			if (_operation == "CREATE")
 			{
-				var locationValue = context.DataModel[_location];
+				var locationValue = arguments[Location];
 				var lastValue = locationValue.AsStringOrDefault() ?? string.Empty;
-				var value = CreateValue(lastValue);
-				context.DataModel[_location] = new DataModelValue(value);
-
-				return default;
+				return CreateValue(lastValue);
 			}
 
 			throw new NotSupportedException($"Unknown operation [{_operation}]");

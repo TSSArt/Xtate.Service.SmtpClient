@@ -8,7 +8,8 @@ namespace TSSArt.StateMachine
 {
 	public abstract class CustomActionFactoryBase : ICustomActionFactory
 	{
-		private readonly Dictionary<string, Func<XmlReader, CustomActionBase>> _actions = new Dictionary<string, Func<XmlReader, CustomActionBase>>();
+		private readonly Dictionary<string, Func<XmlReader, ICustomActionContext, CustomActionBase>> _actions =
+				new Dictionary<string, Func<XmlReader, ICustomActionContext, CustomActionBase>>();
 
 		private readonly string _namespace;
 
@@ -28,9 +29,11 @@ namespace TSSArt.StateMachine
 
 		public bool CanHandle(string ns, string name) => ns == _namespace && _actions.ContainsKey(name);
 
-		public ICustomActionExecutor CreateExecutor(string xml)
+		public ICustomActionExecutor CreateExecutor(ICustomActionContext customActionContext)
 		{
-			using var stringReader = new StringReader(xml);
+			if (customActionContext == null) throw new ArgumentNullException(nameof(customActionContext));
+
+			using var stringReader = new StringReader(customActionContext.Xml);
 
 			var nameTable = new NameTable();
 			FillXmlNameTable(nameTable);
@@ -41,7 +44,7 @@ namespace TSSArt.StateMachine
 
 			xmlReader.MoveToContent();
 
-			return _actions[xmlReader.LocalName](xmlReader);
+			return _actions[xmlReader.LocalName](xmlReader, customActionContext);
 		}
 
 		void ICustomActionFactory.FillXmlNameTable(XmlNameTable xmlNameTable) => FillXmlNameTable(xmlNameTable);
@@ -60,7 +63,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected void Register(string name, Func<XmlReader, CustomActionBase> executorFactory)
+		protected void Register(string name, Func<XmlReader, ICustomActionContext, CustomActionBase> executorFactory)
 		{
 			if (name == null) throw new ArgumentNullException(nameof(name));
 			if (executorFactory == null) throw new ArgumentNullException(nameof(executorFactory));

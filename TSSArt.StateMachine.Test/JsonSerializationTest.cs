@@ -97,7 +97,7 @@ namespace TSSArt.StateMachine.Test
 			// assert
 			Assert.AreEqual(expected: "null", json);
 		}
-		
+
 		[TestMethod]
 		public void UndefinedInObjectToNullTest()
 		{
@@ -111,7 +111,7 @@ namespace TSSArt.StateMachine.Test
 			// assert
 			Assert.AreEqual(expected: "{\"undef\":null}", json);
 		}
-		
+
 		[TestMethod]
 		public void UndefinedInArrayToNullTest()
 		{
@@ -138,7 +138,7 @@ namespace TSSArt.StateMachine.Test
 			// assert
 			Assert.AreEqual(expected: "", json);
 		}
-		
+
 		[TestMethod]
 		public void UndefinedInObjectToSkipTest()
 		{
@@ -152,7 +152,7 @@ namespace TSSArt.StateMachine.Test
 			// assert
 			Assert.AreEqual(expected: "{}", json);
 		}
-		
+
 		[TestMethod]
 		public void UndefinedInArrayToSkipTest()
 		{
@@ -179,7 +179,7 @@ namespace TSSArt.StateMachine.Test
 			// assert
 			Assert.AreEqual(expected: "null", json);
 		}
-		
+
 		[TestMethod]
 		public void UndefinedInObjectToSkipOrNullTest()
 		{
@@ -193,7 +193,7 @@ namespace TSSArt.StateMachine.Test
 			// assert
 			Assert.AreEqual(expected: "{}", json);
 		}
-		
+
 		[TestMethod]
 		public void UndefinedInArrayToSkipOrNullTest()
 		{

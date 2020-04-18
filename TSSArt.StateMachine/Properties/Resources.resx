@@ -628,4 +628,7 @@
   <data name="Exception_Access_can_t_be_changed" xml:space="preserve">
     <value>Access can't be changed.</value>
   </data>
+  <data name="Exception_Registration_should_no_occure_after_initialization" xml:space="preserve">
+    <value>Registration should no occure after initialization.</value>
+  </data>
 </root>

@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Collections.Generic;
 using System.Xml;
 using Microsoft.AspNetCore.WebUtilities;
 
@@ -8,45 +7,46 @@ namespace TSSArt.StateMachine
 {
 	public class ParseUrlAction : CustomActionBase
 	{
-		private readonly string _destination;
-		private readonly string _parameter;
-		private readonly string _source;
+		private const string Url           = "url";
+		private const string UrlExpr       = "urlexpr";
+		private const string Parameter     = "parameter";
+		private const string ParameterExpr = "parameterexpr";
+		private const string Result        = "result";
 
-		public ParseUrlAction(XmlReader xmlReader)
+		public ParseUrlAction(XmlReader xmlReader, ICustomActionContext access) : base(access)
 		{
 			if (xmlReader == null) throw new ArgumentNullException(nameof(xmlReader));
 
-			_source = xmlReader.GetAttribute("source");
-			_destination = xmlReader.GetAttribute("destination");
-			_parameter = xmlReader.GetAttribute("parameter");
+			RegisterArgument(Url, xmlReader.GetAttribute(UrlExpr), xmlReader.GetAttribute(Url));
+			RegisterArgument(Parameter, xmlReader.GetAttribute(ParameterExpr), xmlReader.GetAttribute(Parameter));
+			RegisterResultLocation(xmlReader.GetAttribute(Result));
 		}
 
 		internal static void FillXmlNameTable(XmlNameTable xmlNameTable)
 		{
-			xmlNameTable.Add("source");
-			xmlNameTable.Add("destination");
-			xmlNameTable.Add("parameter");
+			xmlNameTable.Add(Url);
+			xmlNameTable.Add(UrlExpr);
+			xmlNameTable.Add(Parameter);
+			xmlNameTable.Add(ParameterExpr);
+			xmlNameTable.Add(Result);
 		}
 
-		public override ValueTask Execute(IExecutionContext context, CancellationToken token)
+		protected override DataModelValue Evaluate(IReadOnlyDictionary<string, DataModelValue> arguments)
 		{
-			if (context == null) throw new ArgumentNullException(nameof(context));
+			if (arguments == null) throw new ArgumentNullException(nameof(arguments));
 
-			var source = context.DataModel[_source].AsString();
+			var uri = new Uri(arguments[Url].AsString(), UriKind.RelativeOrAbsolute);
+			var parameter = arguments[Parameter].AsStringOrDefault();
+			var parameters = QueryHelpers.ParseNullableQuery(uri.OriginalString);
 
-			var uri = new Uri(source, UriKind.RelativeOrAbsolute);
-
-			if (!string.IsNullOrEmpty(_parameter))
+			if (parameter == null)
 			{
-				var parameters = QueryHelpers.ParseNullableQuery(uri.OriginalString);
-				var values = parameters[_parameter];
-				if (values.Count > 0)
-				{
-					context.DataModel[_destination] = new DataModelValue(values[0]);
-				}
+				return parameters.ToDataModelObject(p => p.Key, p => p.Value.ToString());
 			}
 
-			return default;
+			var values = parameters[parameter];
+
+			return values.Count > 0 ? values[0] : DataModelValue.Null;
 		}
 	}
 }

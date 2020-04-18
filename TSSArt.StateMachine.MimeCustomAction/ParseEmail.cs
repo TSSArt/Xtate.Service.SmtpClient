@@ -1,13 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Xml;
 using HtmlAgilityPack;
 using MimeKit;
+
 #if NETSTANDARD2_1
 using System.Buffers;
 
@@ -17,47 +17,53 @@ namespace TSSArt.StateMachine.Services
 {
 	public class ParseEmail : CustomActionBase
 	{
-		private readonly string _attr;
-		private readonly string _destination;
-		private readonly string _pattern;
-		private readonly string _source;
-		private readonly string _xpath;
+		private const string Content     = "content";
+		private const string ContentExpr = "contentexpr";
+		private const string Xpath       = "xpath";
+		private const string XpathExpr   = "xpathexpr";
+		private const string Attr        = "attr";
+		private const string AttrExpr    = "attrexpr";
+		private const string Regex       = "regex";
+		private const string RegexExpr   = "regexexpr";
+		private const string Result      = "result";
 
-		public ParseEmail(XmlReader xmlReader)
+		public ParseEmail(XmlReader xmlReader, ICustomActionContext access) : base(access)
 		{
 			if (xmlReader == null) throw new ArgumentNullException(nameof(xmlReader));
 
-			_source = xmlReader.GetAttribute("source");
-			_destination = xmlReader.GetAttribute("destination");
-			_xpath = xmlReader.GetAttribute("xpath");
-			_attr = xmlReader.GetAttribute("attr");
-			_pattern = xmlReader.GetAttribute("regex");
+			RegisterArgument(Content, xmlReader.GetAttribute(ContentExpr), xmlReader.GetAttribute(Content));
+			RegisterArgument(Xpath, xmlReader.GetAttribute(XpathExpr), xmlReader.GetAttribute(Xpath));
+			RegisterArgument(Attr, xmlReader.GetAttribute(AttrExpr), xmlReader.GetAttribute(Attr));
+			RegisterArgument(Regex, xmlReader.GetAttribute(RegexExpr), xmlReader.GetAttribute(Regex));
+			RegisterResultLocation(xmlReader.GetAttribute(Result));
 		}
 
 		internal static void FillXmlNameTable(XmlNameTable xmlNameTable)
 		{
-			xmlNameTable.Add("source");
-			xmlNameTable.Add("destination");
-			xmlNameTable.Add("xpath");
-			xmlNameTable.Add("attr");
-			xmlNameTable.Add("regex");
+			xmlNameTable.Add(Content);
+			xmlNameTable.Add(ContentExpr);
+			xmlNameTable.Add(Xpath);
+			xmlNameTable.Add(XpathExpr);
+			xmlNameTable.Add(Attr);
+			xmlNameTable.Add(AttrExpr);
+			xmlNameTable.Add(Regex);
+			xmlNameTable.Add(RegexExpr);
+			xmlNameTable.Add(Result);
 		}
 
-		public override ValueTask Execute(IExecutionContext context, CancellationToken token)
+		protected override DataModelValue Evaluate(IReadOnlyDictionary<string, DataModelValue> args)
 		{
-			if (context == null) throw new ArgumentNullException(nameof(context));
+			if (args == null) throw new ArgumentNullException(nameof(args));
 
-			var content = context.DataModel[_source].AsNullableString();
+			var source = args[Content].AsStringOrDefault();
+			var xpath = args[Xpath].AsStringOrDefault();
+			var attr = args[Attr].AsStringOrDefault();
+			var pattern = args[Regex].AsStringOrDefault();
 
-			if (content != null)
-			{
-				context.DataModel[_destination] = Parse(content);
-			}
-
-			return default;
+			return source != null ? Parse(source, xpath, attr, pattern) : DataModelValue.Null;
 		}
 
-		private DataModelValue Parse(string content)
+		private static DataModelValue Parse(string content, string? xpath, string? attr, string? pattern)
 		{
 			MimeMessage message;
 
@@ -88,7 +94,7 @@ namespace TSSArt.StateMachine.Services
 
 				htmlDocument.Load(html);
 
-				return CaptureEntry(htmlDocument, _xpath, _attr, _pattern);
+				return CaptureEntry(htmlDocument, xpath, attr, pattern);
 			}
 
 			if (text == null)
@@ -96,12 +102,12 @@ namespace TSSArt.StateMachine.Services
 				return DataModelValue.Undefined;
 			}
 
-			if (_pattern == null)
+			if (pattern == null)
 			{
 				return text;
 			}
 
-			var regex = new Regex(_pattern);
+			var regex = new Regex(pattern);
 			var match = regex.Match(text);
 
 			if (!match.Success)
@@ -123,7 +129,7 @@ namespace TSSArt.StateMachine.Services
 			return obj;
 		}
 
-		private static DataModelValue CaptureEntry(HtmlDocument htmlDocument, string xpath, string attr, string pattern)
+		private static DataModelValue CaptureEntry(HtmlDocument htmlDocument, string? xpath, string? attr, string? pattern)
 		{
 			var nodes = xpath != null ? htmlDocument.DocumentNode.SelectNodes(xpath) : Enumerable.Repeat(htmlDocument.DocumentNode, count: 1);
 

@@ -10,7 +10,7 @@ namespace TSSArt.StateMachine
 
 		private MidCustomActionFactory()
 		{
-			Register(name: "storage", xmlReader => new StorageAction(xmlReader));
+			Register(name: "storage", (xmlReader, context) => new StorageAction(xmlReader, context));
 		}
 
 		protected override void FillXmlNameTable(XmlNameTable xmlNameTable)

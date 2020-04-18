@@ -8,6 +8,6 @@ namespace TSSArt.StateMachine
 
 		bool CanHandle(string ns, string name);
 
-		ICustomActionExecutor CreateExecutor(string xml);
+		ICustomActionExecutor CreateExecutor(ICustomActionContext customActionContext);
 	}
 }

@@ -173,6 +173,7 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 <final id='finErr'>
 	<donedata><content expr='_event.data'/></donedata>
 </final>");
+
 			// ReSharper restore StringLiteralTypo
 
 			var options = new IoProcessorOptions

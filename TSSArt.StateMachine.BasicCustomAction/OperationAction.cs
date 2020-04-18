@@ -1,48 +1,52 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Xml;
 
 namespace TSSArt.StateMachine
 {
 	public class OperationAction : CustomActionBase
 	{
-		private readonly string _left;
-		private readonly string _op;
-		private readonly string _result;
-		private readonly string _right;
+		private const string Left      = "left";
+		private const string LeftExpr  = "leftexpr";
+		private const string Right     = "right";
+		private const string RightExpr = "rightexpr";
+		private const string Operation = "op";
+		private const string Result    = "result";
 
-		public OperationAction(XmlReader xmlReader)
+		private readonly string _op;
+
+		public OperationAction(XmlReader xmlReader, ICustomActionContext access) : base(access)
 		{
 			if (xmlReader == null) throw new ArgumentNullException(nameof(xmlReader));
 
-			_left = xmlReader.GetAttribute("left");
-			_right = xmlReader.GetAttribute("right");
-			_op = xmlReader.GetAttribute("op");
-			_result = xmlReader.GetAttribute("result");
+			_op = xmlReader.GetAttribute(Operation);
+
+			RegisterArgument(Left, xmlReader.GetAttribute(LeftExpr), xmlReader.GetAttribute(Left));
+			RegisterArgument(Right, xmlReader.GetAttribute(RightExpr), xmlReader.GetAttribute(Right));
+			RegisterResultLocation(xmlReader.GetAttribute(Result));
 		}
 
 		internal static void FillXmlNameTable(XmlNameTable xmlNameTable)
 		{
-			xmlNameTable.Add("left");
-			xmlNameTable.Add("right");
-			xmlNameTable.Add("op");
-			xmlNameTable.Add("result");
+			xmlNameTable.Add(Left);
+			xmlNameTable.Add(LeftExpr);
+			xmlNameTable.Add(Right);
+			xmlNameTable.Add(RightExpr);
+			xmlNameTable.Add(Operation);
+			xmlNameTable.Add(Result);
 		}
 
-		public override ValueTask Execute(IExecutionContext context, CancellationToken token)
+		protected override DataModelValue Evaluate(IReadOnlyDictionary<string, DataModelValue> arguments)
 		{
-			if (context == null) throw new ArgumentNullException(nameof(context));
+			if (arguments == null) throw new ArgumentNullException(nameof(arguments));
 
-			context.DataModel[_result] = _op switch
+			return _op switch
 			{
-					"emailMatch" => new DataModelValue(EmailMatch(context.DataModel[_left].AsStringOrDefault(), context.DataModel[_right])),
+					"emailMatch" => new DataModelValue(EmailMatch(arguments[Left].AsStringOrDefault(), arguments[Right])),
 					_ => Infrastructure.UnexpectedValue<DataModelValue>()
 			};
-
-			return default;
 		}
 
 		private static bool EmailMatch(string? email, string? pattern)

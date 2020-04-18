@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
@@ -6,16 +7,25 @@ using JetBrains.Annotations;
 namespace TSSArt.StateMachine
 {
 	[PublicAPI]
-	public class DefaultCustomActionEvaluator : ICustomAction, IExecEvaluator, IAncestorProvider, ICustomActionConsumer
+	public class DefaultCustomActionEvaluator : ICustomAction, IExecEvaluator, IAncestorProvider
 	{
-		private readonly CustomAction           _customAction;
-		private          ICustomActionExecutor? _executor;
+		private readonly CustomAction            _customAction;
+		private readonly ICustomActionDispatcher _customActionDispatcher;
 
 		public DefaultCustomActionEvaluator(in CustomAction customAction)
 		{
-			Infrastructure.Assert(customAction.Xml != null);
-
 			_customAction = customAction;
+
+			var customActionDispatcher = customAction.Ancestor?.As<ICustomActionDispatcher>();
+
+			Infrastructure.Assert(customActionDispatcher != null, Resources.Assertion_Custom_action_does_not_configured);
+
+			var locations = customAction.Locations.AsArrayOf<ILocationExpression, ILocationEvaluator>(true);
+			var values = customAction.Values.AsArrayOf<IValueExpression, IObjectEvaluator>(true);
+
+			customActionDispatcher.SetEvaluators(locations, values);
+
+			_customActionDispatcher = customActionDispatcher;
 		}
 
 	#region Interface IAncestorProvider
@@ -26,13 +36,11 @@ namespace TSSArt.StateMachine
 
 	#region Interface ICustomAction
 
-		public string Xml => _customAction.Xml!;
+		public string? Xml => _customAction.Xml;
 
-	#endregion
+		public ImmutableArray<ILocationExpression> Locations => _customAction.Locations;
 
-	#region Interface ICustomActionConsumer
-
-		public void SetExecutor(ICustomActionExecutor executor) => _executor = executor;
+		public ImmutableArray<IValueExpression> Values => _customAction.Values;
 
 	#endregion
 
@@ -42,9 +50,9 @@ namespace TSSArt.StateMachine
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
 
-			Infrastructure.Assert(_executor != null, Resources.Assertion_Custom_action_does_not_configured);
+			Infrastructure.Assert(_customActionDispatcher != null, Resources.Assertion_Custom_action_does_not_configured);
 
-			return _executor.Execute(executionContext, token);
+			return _customActionDispatcher.Execute(executionContext, token);
 		}
 
 	#endregion

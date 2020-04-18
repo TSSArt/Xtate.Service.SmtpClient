@@ -272,7 +272,9 @@ namespace TSSArt.StateMachine
 						? new CustomAction
 						  {
 								  Ancestor = new EntityData(bucket),
-								  Xml = bucket.GetString(Key.Content)
+								  Xml = bucket.GetString(Key.Content),
+								  Locations = bucket.RestoreList(Key.LocationList, RestoreLocationExpression),
+								  Values = bucket.RestoreList(Key.ValueList, RestoreValueExpression)
 						  }
 						: (ICustomAction?) null;
 

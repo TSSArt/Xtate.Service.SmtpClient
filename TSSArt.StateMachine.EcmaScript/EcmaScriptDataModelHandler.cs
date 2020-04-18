@@ -40,6 +40,13 @@ namespace TSSArt.StateMachine.EcmaScript
 			forEach = new EcmaScriptForEachEvaluator(forEachProperties);
 		}
 
+		protected override void Build(ref ICustomAction customAction, ref CustomAction customActionProperties)
+		{
+			base.Build(ref customAction, ref customActionProperties);
+
+			customAction = new EcmaScriptCustomActionEvaluator(customActionProperties);
+		}
+
 		protected override void Build(ref IValueExpression valueExpression, ref ValueExpression valueExpressionProperties)
 		{
 			if (valueExpressionProperties.Expression != null)

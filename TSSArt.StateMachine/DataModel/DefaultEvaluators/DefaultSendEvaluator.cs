@@ -56,7 +56,10 @@ namespace TSSArt.StateMachine
 
 			var sendId = _send.Id ?? IdGenerator.NewSendId();
 
-			IdLocationEvaluator?.SetValue(new DefaultObject(sendId), executionContext);
+			if (IdLocationEvaluator != null)
+			{
+				await IdLocationEvaluator.SetValue(new DefaultObject(sendId), executionContext, token).ConfigureAwait(false);
+			}
 
 			var name = EventExpressionEvaluator != null ? await EventExpressionEvaluator.EvaluateString(executionContext, token).ConfigureAwait(false) : _send.EventName;
 			var data = await DataConverter.GetData(ContentBodyEvaluator, ContentExpressionEvaluator, NameEvaluatorList, ParameterList, executionContext, token).ConfigureAwait(false);

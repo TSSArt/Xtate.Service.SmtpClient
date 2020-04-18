@@ -10,10 +10,10 @@ namespace TSSArt.StateMachine
 
 		private BasicCustomActionFactory()
 		{
-			Register(name: "base64decode", xmlReader => new Base64DecodeAction(xmlReader));
-			Register(name: "parseUrl", xmlReader => new ParseUrlAction(xmlReader));
-			Register(name: "format", xmlReader => new FormatAction(xmlReader));
-			Register(name: "operation", xmlReader => new OperationAction(xmlReader));
+			Register(name: "base64decode", (xmlReader, context) => new Base64DecodeAction(xmlReader, context));
+			Register(name: "parseUrl", (xmlReader, context) => new ParseUrlAction(xmlReader, context));
+			Register(name: "format", (xmlReader, context) => new FormatAction(xmlReader, context));
+			Register(name: "operation", (xmlReader, context) => new OperationAction(xmlReader, context));
 		}
 
 		protected override void FillXmlNameTable(XmlNameTable xmlNameTable)

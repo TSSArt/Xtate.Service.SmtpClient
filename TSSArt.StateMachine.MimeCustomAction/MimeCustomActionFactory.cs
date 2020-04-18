@@ -10,7 +10,7 @@ namespace TSSArt.StateMachine.Services
 
 		private MimeCustomActionFactory()
 		{
-			Register(name: "parseEmail", xmlReader => new ParseEmail(xmlReader));
+			Register(name: "parseEmail", (xmlReader, context) => new ParseEmail(xmlReader, context));
 		}
 
 		protected override void FillXmlNameTable(XmlNameTable xmlNameTable)

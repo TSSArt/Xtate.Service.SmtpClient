@@ -15,22 +15,26 @@ namespace TSSArt.StateMachine
 		None = 0,
 
 		/// <summary>
-		/// Serialization of undefined value will cause an exception. Array with undefined element will cause an exception. Properties with undefined values in object will be skipped.
+		///     Serialization of undefined value will cause an exception. Array with undefined element will cause an exception.
+		///     Properties with undefined values in object will be skipped.
 		/// </summary>
 		UndefinedNotAllowed = 0,
 
 		/// <summary>
-		/// Undefined value will serialize to empty string. Undefined elements in array will be skipped. Properties with undefined values in object will be skipped.
+		///     Undefined value will serialize to empty string. Undefined elements in array will be skipped. Properties with
+		///     undefined values in object will be skipped.
 		/// </summary>
 		UndefinedToSkip = 1,
 
 		/// <summary>
-		/// Undefined value will serialize to (null) value. Undefined elements in array will be serialized as (null). Properties with undefined values in object will be serialized as properties with (null).
+		///     Undefined value will serialize to (null) value. Undefined elements in array will be serialized as (null).
+		///     Properties with undefined values in object will be serialized as properties with (null).
 		/// </summary>
 		UndefinedToNull = 2,
 
 		/// <summary>
-		/// Undefined value will serialize to (null) value. Undefined elements in array will be serialized as (null). Properties with undefined values in object will be skipped.
+		///     Undefined value will serialize to (null) value. Undefined elements in array will be serialized as (null).
+		///     Properties with undefined values in object will be skipped.
 		/// </summary>
 		UndefinedToSkipOrNull = UndefinedToSkip | UndefinedToNull,
 
