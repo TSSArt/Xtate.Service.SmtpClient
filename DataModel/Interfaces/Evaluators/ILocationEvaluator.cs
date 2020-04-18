@@ -1,4 +1,6 @@
-﻿using JetBrains.Annotations;
+﻿using System.Threading;
+using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
@@ -7,9 +9,9 @@ namespace TSSArt.StateMachine
 	{
 		void DeclareLocalVariable(IExecutionContext executionContext);
 
-		void SetValue(IObject value, IExecutionContext executionContext);
+		ValueTask SetValue(IObject value, IExecutionContext executionContext, CancellationToken token);
 
-		IObject GetValue(IExecutionContext executionContext);
+		ValueTask<IObject> GetValue(IExecutionContext executionContext, CancellationToken token);
 
 		string GetName(IExecutionContext executionContext);
 	}

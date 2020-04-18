@@ -76,7 +76,10 @@ namespace TSSArt.StateMachine
 			var invokeId = _invoke.Id ?? IdGenerator.NewInvokeId(stateId);
 			var invokeUniqueId = _invoke.Id != null ? IdGenerator.NewInvokeUniqueId() : invokeId;
 
-			IdLocationEvaluator?.SetValue(new DefaultObject(invokeId), executionContext);
+			if (IdLocationEvaluator != null)
+			{
+				await IdLocationEvaluator.SetValue(new DefaultObject(invokeId), executionContext, token).ConfigureAwait(false);
+			}
 
 			var type = TypeExpressionEvaluator != null ? ToUri(await TypeExpressionEvaluator.EvaluateString(executionContext, token).ConfigureAwait(false)) : _invoke.Type;
 			var source = SourceExpressionEvaluator != null ? ToUri(await SourceExpressionEvaluator.EvaluateString(executionContext, token).ConfigureAwait(false)) : _invoke.Source;

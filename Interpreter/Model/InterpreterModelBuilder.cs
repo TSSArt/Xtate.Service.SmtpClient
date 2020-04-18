@@ -1,36 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml;
 
 namespace TSSArt.StateMachine
 {
 	internal sealed class InterpreterModelBuilder : StateMachineVisitor
 	{
-		private readonly ImmutableArray<ICustomActionFactory>     _customActionFactories;
-		private readonly IDataModelHandler                        _dataModelHandler;
-		private readonly LinkedList<int>                          _documentIdList;
-		private readonly List<IEntity>                            _entities;
-		private readonly IErrorProcessor                          _errorProcessor;
-		private readonly Dictionary<IIdentifier, StateEntityNode> _idMap;
-		private readonly IStateMachine                            _stateMachine;
-		private readonly List<TransitionNode>                     _targetMap;
-		private          int                                      _counter;
-		private          ImmutableArray<DataModelNode>.Builder?   _dataModelNodeArray;
-		private          int                                      _deepLevel;
-
-		private List<(Uri Uri, IExternalScriptConsumer Consumer)>? _externalScriptList;
-		private bool                                               _inParallel;
+		private readonly IDataModelHandler                                  _dataModelHandler;
+		private readonly LinkedList<int>                                    _documentIdList;
+		private readonly List<IEntity>                                      _entities;
+		private readonly IErrorProcessor                                    _errorProcessor;
+		private readonly Dictionary<IIdentifier, StateEntityNode>           _idMap;
+		private readonly PreDataModelProcessor                              _preDataModelProcessor;
+		private readonly IStateMachine                                      _stateMachine;
+		private readonly List<TransitionNode>                               _targetMap;
+		private          int                                                _counter;
+		private          ImmutableArray<DataModelNode>.Builder?             _dataModelNodeArray;
+		private          int                                                _deepLevel;
+		private          List<(Uri Uri, IExternalScriptConsumer Consumer)>? _externalScriptList;
+		private          bool                                               _inParallel;
 
 		public InterpreterModelBuilder(IStateMachine stateMachine, IDataModelHandler dataModelHandler, ImmutableArray<ICustomActionFactory> customActionProviders, IErrorProcessor errorProcessor)
 		{
 			_stateMachine = stateMachine ?? throw new ArgumentNullException(nameof(stateMachine));
 			_dataModelHandler = dataModelHandler ?? throw new ArgumentNullException(nameof(dataModelHandler));
-			_customActionFactories = customActionProviders;
 			_errorProcessor = errorProcessor;
+			_preDataModelProcessor = new PreDataModelProcessor(customActionProviders);
 			_idMap = new Dictionary<IIdentifier, StateEntityNode>(IdentifierEqualityComparer.Instance);
 			_entities = new List<IEntity>();
 			_targetMap = new List<TransitionNode>();
@@ -395,39 +392,8 @@ namespace TSSArt.StateMachine
 
 			base.Build(ref customAction, ref customActionProperties);
 
-			var customActionNode = new CustomActionNode(documentId, customActionProperties);
-			customAction = customActionNode;
-
+			customAction = new CustomActionNode(documentId, customActionProperties);
 			RegisterEntity(customAction);
-
-			if (customAction.Is<ICustomActionConsumer>(out var consumer))
-			{
-				consumer.SetExecutor(GetExecutor(customActionNode.Xml));
-			}
-		}
-
-		private ICustomActionExecutor GetExecutor(string xml)
-		{
-			if (!_customActionFactories.IsDefaultOrEmpty)
-			{
-				using var stringReader = new StringReader(xml);
-				using var xmlReader = XmlReader.Create(stringReader);
-
-				xmlReader.MoveToContent();
-
-				var namespaceUri = xmlReader.NamespaceURI;
-				var name = xmlReader.LocalName;
-
-				foreach (var handler in _customActionFactories)
-				{
-					if (handler.CanHandle(namespaceUri, name))
-					{
-						return handler.CreateExecutor(xml);
-					}
-				}
-			}
-
-			return CustomActionBase.NoExecutorInstance;
 		}
 
 		protected override void Build(ref IExternalDataExpression externalDataExpression, ref ExternalDataExpression externalDataExpressionProperties)
@@ -659,6 +625,7 @@ namespace TSSArt.StateMachine
 		{
 			if (_deepLevel == 0)
 			{
+				_preDataModelProcessor.Process(ref executableEntity);
 				_dataModelHandler.Process(ref executableEntity);
 			}
 

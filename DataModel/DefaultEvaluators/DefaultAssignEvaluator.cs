@@ -54,7 +54,7 @@ namespace TSSArt.StateMachine
 				value = new DataModelValue(InlineContent);
 			}
 
-			LocationEvaluator.SetValue(value, executionContext);
+			await LocationEvaluator.SetValue(value, executionContext, token).ConfigureAwait(false);
 		}
 
 	#endregion

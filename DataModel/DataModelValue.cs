@@ -339,6 +339,8 @@ namespace TSSArt.StateMachine
 				case TypeCode.String: return new DataModelValue((string) value);
 				case TypeCode.Object when value is DataModelValue dataModelValue:
 					return dataModelValue;
+				case TypeCode.Object when value is IObject obj:
+					return FromObjectWithMap(obj.ToObject(), ref map);
 				case TypeCode.Object when value is DataModelObject dataModelObject:
 					return new DataModelValue(dataModelObject);
 				case TypeCode.Object when value is DataModelArray dataModelArray:

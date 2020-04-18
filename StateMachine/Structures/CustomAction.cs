@@ -1,4 +1,6 @@
-﻿namespace TSSArt.StateMachine
+﻿using System.Collections.Immutable;
+
+namespace TSSArt.StateMachine
 {
 	public struct CustomAction : ICustomAction, IVisitorEntity<CustomAction, ICustomAction>, IAncestorProvider
 	{
@@ -14,6 +16,10 @@
 
 		public string? Xml { get; set; }
 
+		public ImmutableArray<ILocationExpression> Locations { get; set; }
+
+		public ImmutableArray<IValueExpression> Values { get; set; }
+
 	#endregion
 
 	#region Interface IVisitorEntity<CustomAction,ICustomAction>
@@ -22,9 +28,14 @@
 		{
 			Ancestor = source;
 			Xml = source.Xml;
+			Locations = source.Locations;
+			Values = source.Values;
 		}
 
-		bool IVisitorEntity<CustomAction, ICustomAction>.RefEquals(in CustomAction other) => ReferenceEquals(Xml, other.Xml);
+		bool IVisitorEntity<CustomAction, ICustomAction>.RefEquals(in CustomAction other) =>
+				ReferenceEquals(Xml, other.Xml) &&
+				Locations == other.Locations &&
+				Values == other.Values;
 
 	#endregion
 	}
