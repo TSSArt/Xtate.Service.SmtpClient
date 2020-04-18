@@ -55,7 +55,7 @@
     <EmbeddedResource Include="Scxml\dialog.scxml" />
   </ItemGroup>
 
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+  <Target Name="KillProcess" BeforeTargets="PrepareForPublish">
     <Exec Command="taskkill /f /im $(TargetName).exe 2&gt;nul 1&gt;nul &amp; exit 0" />
   </Target>
 
