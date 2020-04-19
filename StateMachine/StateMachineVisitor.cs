@@ -165,15 +165,7 @@ namespace TSSArt.StateMachine
 
 			public IEnumerator<T> GetEnumerator() => ModifiedItems != null ? ModifiedItems.GetEnumerator() : ((IEnumerable<T>) _items).GetEnumerator();
 
-			public void Add([AllowNull] T item)
-			{
-				if (ModifiedItems == null)
-				{
-					ModifiedItems = _items.ToBuilder();
-				}
-
-				ModifiedItems.Add(item!);
-			}
+			public void Add([AllowNull] T item) => (ModifiedItems ??= _items.ToBuilder()).Add(item!);
 
 			public void Clear()
 			{
@@ -193,25 +185,9 @@ namespace TSSArt.StateMachine
 				}
 			}
 
-			public void Insert(int index, T item)
-			{
-				if (ModifiedItems == null)
-				{
-					ModifiedItems = _items.ToBuilder();
-				}
+			public void Insert(int index, T item) => (ModifiedItems ??= _items.ToBuilder()).Insert(index, item);
 
-				ModifiedItems.Insert(index, item);
-			}
-
-			public void RemoveAt(int index)
-			{
-				if (ModifiedItems == null)
-				{
-					ModifiedItems = _items.ToBuilder();
-				}
-
-				ModifiedItems.RemoveAt(index);
-			}
+			public void RemoveAt(int index) => (ModifiedItems ??= _items.ToBuilder()).RemoveAt(index);
 		}
 
 	#region Visit(ref IT entity)

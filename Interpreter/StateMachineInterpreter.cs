@@ -83,7 +83,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public static ValueTask<DataModelValue> RunAsync(string sessionId, IStateMachine stateMachine, ChannelReader<IEvent> eventChannel, in InterpreterOptions options = default)
+		public static ValueTask<DataModelValue> RunAsync(string sessionId, IStateMachine? stateMachine, ChannelReader<IEvent> eventChannel, in InterpreterOptions options = default)
 		{
 			if (sessionId == null) throw new ArgumentNullException(nameof(sessionId));
 			if (eventChannel == null) throw new ArgumentNullException(nameof(eventChannel));
@@ -91,7 +91,7 @@ namespace TSSArt.StateMachine
 			return new StateMachineInterpreter(sessionId, eventChannel, options).Run(stateMachine);
 		}
 
-		private async ValueTask<InterpreterModel> BuildInterpreterModel(IStateMachine stateMachine)
+		private async ValueTask<InterpreterModel> BuildInterpreterModel(IStateMachine? stateMachine)
 		{
 			var wrapperErrorProcessor = new WrapperErrorProcessor(_errorProcessor);
 
@@ -101,6 +101,8 @@ namespace TSSArt.StateMachine
 			{
 				return interpreterModel;
 			}
+
+			Infrastructure.Assert(stateMachine != null);
 
 			var dataModelHandlerFactory = GetDataModelHandlerFactory(stateMachine.DataModelType, _dataModelHandlerFactories, wrapperErrorProcessor);
 			_dataModelHandler = dataModelHandlerFactory.CreateHandler(wrapperErrorProcessor);
@@ -121,7 +123,7 @@ namespace TSSArt.StateMachine
 			return interpreterModel;
 		}
 
-		private async ValueTask<InterpreterModel?> TryRestoreInterpreterModel(IStateMachine stateMachine, IErrorProcessor errorProcessor)
+		private async ValueTask<InterpreterModel?> TryRestoreInterpreterModel(IStateMachine? stateMachine, IErrorProcessor errorProcessor)
 		{
 			var storage = await _storageProvider.GetTransactionalStorage(partition: default, StateMachineDefinitionStorageKey, _stopToken).ConfigureAwait(false);
 			await using (storage.ConfigureAwait(false))
@@ -341,7 +343,7 @@ namespace TSSArt.StateMachine
 		private ValueTask NotifyExited()   => _notifyStateChanged?.OnChanged(StateMachineInterpreterState.Exited) ?? default;
 		private ValueTask NotifyWaiting()  => _notifyStateChanged?.OnChanged(StateMachineInterpreterState.Waiting) ?? default;
 
-		private async ValueTask<DataModelValue> Run(IStateMachine stateMachine)
+		private async ValueTask<DataModelValue> Run(IStateMachine? stateMachine)
 		{
 			_model = await BuildInterpreterModel(stateMachine).ConfigureAwait(false);
 			_context = await CreateContext().ConfigureAwait(false);
@@ -1551,10 +1553,7 @@ namespace TSSArt.StateMachine
 					return;
 				}
 
-				if (_data == null)
-				{
-					_data = ArrayPool<int>.Shared.Rent(IterationCount);
-				}
+				_data ??= ArrayPool<int>.Shared.Rent(IterationCount);
 
 				if (_index >= IterationCount)
 				{
