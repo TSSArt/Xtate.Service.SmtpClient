@@ -14,10 +14,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Scxml\autorun.scxml" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
   </ItemGroup>
@@ -54,9 +50,5 @@
     <EmbeddedResource Include="Scxml\autorun.scxml" />
     <EmbeddedResource Include="Scxml\dialog.scxml" />
   </ItemGroup>
-
-  <Target Name="KillProcess" BeforeTargets="PrepareForPublish">
-    <Exec Command="taskkill /f /im $(TargetName).exe 2&gt;nul 1&gt;nul &amp; exit 0" />
-  </Target>
 
 </Project>

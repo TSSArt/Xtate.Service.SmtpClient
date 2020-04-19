@@ -81,7 +81,7 @@ namespace TSSArt.StateMachine.Test
 		public void ScxmlSerializerTest()
 		{
 			var dataModelHandler = EcmaScriptDataModelHandler.Factory.CreateHandler(DefaultErrorProcessor.Instance);
-			var interpreterModelBuilder = new InterpreterModelBuilder(_stateMachine, dataModelHandler, customActionProviders: default, errorProcessor: default);
+			var interpreterModelBuilder = new InterpreterModelBuilder(_stateMachine, dataModelHandler, customActionProviders: default, DefaultErrorProcessor.Instance);
 			var interpreterModel = interpreterModelBuilder.Build();
 			var text = new StringWriter();
 			using (var xmlWriter = XmlWriter.Create(text, new XmlWriterSettings { Encoding = Encoding.UTF8, Indent = true }))

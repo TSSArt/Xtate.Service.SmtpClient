@@ -31,7 +31,7 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public void SaveInterpreterModelTest()
 		{
-			var model = new InterpreterModelBuilder(_allStateMachine, _dataModelHandler, customActionProviders: default, errorProcessor: default).Build();
+			var model = new InterpreterModelBuilder(_allStateMachine, _dataModelHandler, customActionProviders: default, DefaultErrorProcessor.Instance).Build();
 			var storeSupport = model.Root.As<IStoreSupport>();
 
 			var storage = new InMemoryStorage(false);
@@ -43,7 +43,7 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public void SaveRestoreInterpreterModelWithStorageRecreateTest()
 		{
-			var model = new InterpreterModelBuilder(_allStateMachine, _dataModelHandler, customActionProviders: default, errorProcessor: default).Build();
+			var model = new InterpreterModelBuilder(_allStateMachine, _dataModelHandler, customActionProviders: default, DefaultErrorProcessor.Instance).Build();
 			var storeSupport = model.Root.As<IStoreSupport>();
 
 			byte[] transactionLog;
@@ -62,7 +62,7 @@ namespace TSSArt.StateMachine.Test
 				restoredStateMachine = new StateMachineReader().Build(new Bucket(newStorage));
 			}
 
-			new InterpreterModelBuilder(restoredStateMachine, _dataModelHandler, customActionProviders: default, errorProcessor: default).Build();
+			new InterpreterModelBuilder(restoredStateMachine, _dataModelHandler, customActionProviders: default, DefaultErrorProcessor.Instance).Build();
 		}
 
 		[TestMethod]
@@ -75,7 +75,7 @@ namespace TSSArt.StateMachine.Test
 					.EndState()
 					.Build();
 
-			var model = new InterpreterModelBuilder(_allStateMachine, _dataModelHandler, customActionProviders: default, errorProcessor: default).Build();
+			var model = new InterpreterModelBuilder(_allStateMachine, _dataModelHandler, customActionProviders: default, DefaultErrorProcessor.Instance).Build();
 			var storeSupport = model.Root.As<IStoreSupport>();
 
 			byte[] transactionLog;
@@ -92,7 +92,7 @@ namespace TSSArt.StateMachine.Test
 				restoredStateMachine = new StateMachineReader().Build(new Bucket(newStorage), model.EntityMap);
 			}
 
-			new InterpreterModelBuilder(restoredStateMachine, _dataModelHandler, customActionProviders: default, errorProcessor: default).Build();
+			new InterpreterModelBuilder(restoredStateMachine, _dataModelHandler, customActionProviders: default, DefaultErrorProcessor.Instance).Build();
 		}
 	}
 }

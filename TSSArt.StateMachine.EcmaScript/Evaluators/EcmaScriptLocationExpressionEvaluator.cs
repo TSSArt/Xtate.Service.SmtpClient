@@ -113,7 +113,7 @@ namespace TSSArt.StateMachine.EcmaScript
 
 			return expressionStatement.Expression switch
 			{
-					JintIdentifier identifier => (Expression) identifier,
+					JintIdentifier identifier => identifier,
 					MemberExpression memberExpression => memberExpression,
 					_ => null
 			};

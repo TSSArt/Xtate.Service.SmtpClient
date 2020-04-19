@@ -256,7 +256,7 @@ namespace TSSArt.StateMachine.Test
 			var stateMachine = director.ConstructStateMachine(StateMachineValidator.Instance);
 
 			var dataModelHandler = EcmaScriptDataModelHandler.Factory.CreateHandler(DefaultErrorProcessor.Instance);
-			var imBuilder = new InterpreterModelBuilder(stateMachine, dataModelHandler, customActionProviders: default, errorProcessor: default);
+			var imBuilder = new InterpreterModelBuilder(stateMachine, dataModelHandler, customActionProviders: default, DefaultErrorProcessor.Instance);
 			var model = imBuilder.Build();
 			var storeSupport = model.Root.As<IStoreSupport>();
 

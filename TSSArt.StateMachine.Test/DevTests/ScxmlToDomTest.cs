@@ -147,8 +147,8 @@ namespace TSSArt.StateMachine.Test
 		public void RootElementInitialTest()
 		{
 			var sm = GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' initial=' trg2  trg1 '><state/></scxml>");
-			Assert.AreEqual((Identifier) "trg2", sm.Initial.Transition.Target[0]);
-			Assert.AreEqual((Identifier) "trg1", sm.Initial.Transition.Target[1]);
+			Assert.AreEqual((Identifier) "trg2", sm.Initial!.Transition!.Target[0]);
+			Assert.AreEqual((Identifier) "trg1", sm.Initial!.Transition!.Target[1]);
 			Assert.AreEqual(expected: 2, sm.Initial.Transition.Target.Length);
 		}
 
@@ -183,12 +183,12 @@ namespace TSSArt.StateMachine.Test
 			Assert.AreEqual(expected: "", sm.DataModel.Data[1].InlineContent);
 
 			Assert.AreEqual(expected: "c", sm.DataModel.Data[2].Id);
-			Assert.AreEqual(expected: "c-src", sm.DataModel.Data[2].Source.Uri.ToString());
+			Assert.AreEqual(expected: "c-src", sm.DataModel.Data[2].Source!.Uri!.ToString());
 			Assert.IsNull(sm.DataModel.Data[2].Expression);
 
 			Assert.AreEqual(expected: "d", sm.DataModel.Data[3].Id);
 			Assert.IsNull(sm.DataModel.Data[3].Source);
-			Assert.AreEqual(expected: "d-expr", sm.DataModel.Data[3].Expression.Expression);
+			Assert.AreEqual(expected: "d-expr", sm.DataModel.Data[3].Expression!.Expression);
 
 			Assert.AreEqual(expected: "e", sm.DataModel.Data[4].Id);
 			Assert.IsNull(sm.DataModel.Data[4].Source);
@@ -243,7 +243,7 @@ namespace TSSArt.StateMachine.Test
 			var sm = GetStateMachineXyzDataModel("<script/>");
 			Assert.IsInstanceOfType(sm.Script, typeof(IScript));
 			var script = (IScript) sm.Script;
-			Assert.IsNull(script.Content);
+			Assert.IsNull(script!.Content);
 			Assert.IsNull(script.Source);
 		}
 
@@ -253,9 +253,9 @@ namespace TSSArt.StateMachine.Test
 			var sm = GetStateMachineXyzDataModel("<script><any_script xmlns='aaa'>345</any_script></script>");
 			Assert.IsInstanceOfType(sm.Script, typeof(IScript));
 			var script = (IScript) sm.Script;
-			Assert.IsInstanceOfType(script.Content, typeof(IScriptExpression));
+			Assert.IsInstanceOfType(script!.Content, typeof(IScriptExpression));
 			var scriptExpression = script.Content;
-			Assert.AreEqual(expected: "<any_script xmlns=\"aaa\">345</any_script>", scriptExpression.Expression);
+			Assert.AreEqual(expected: "<any_script xmlns=\"aaa\">345</any_script>", scriptExpression!.Expression);
 			Assert.IsNull(script.Source);
 		}
 
@@ -265,9 +265,9 @@ namespace TSSArt.StateMachine.Test
 			var sm = GetStateMachineXyzDataModel("<script src='s-src'/>");
 			Assert.IsInstanceOfType(sm.Script, typeof(IScript));
 			var script = (IScript) sm.Script;
-			Assert.IsInstanceOfType(script.Source, typeof(IExternalScriptExpression));
+			Assert.IsInstanceOfType(script!.Source, typeof(IExternalScriptExpression));
 			var externalScriptExpression = script.Source;
-			Assert.AreEqual(expected: "s-src", externalScriptExpression.Uri.ToString());
+			Assert.AreEqual(expected: "s-src", externalScriptExpression!.Uri!.ToString());
 			Assert.IsNull(script.Content);
 		}
 
@@ -332,8 +332,8 @@ namespace TSSArt.StateMachine.Test
 		{
 			var sm = GetStateMachineWithRoot("<state initial='id id2'><parallel/></state>");
 			Assert.IsNull(((IState) sm.States[0]).Id);
-			Assert.AreEqual((Identifier) "id", ((IState) sm.States[0]).Initial.Transition.Target[0]);
-			Assert.AreEqual((Identifier) "id2", ((IState) sm.States[0]).Initial.Transition.Target[1]);
+			Assert.AreEqual((Identifier) "id", ((IState) sm.States[0]).Initial!.Transition!.Target[0]);
+			Assert.AreEqual((Identifier) "id2", ((IState) sm.States[0]).Initial!.Transition!.Target[1]);
 		}
 
 		[TestMethod]
