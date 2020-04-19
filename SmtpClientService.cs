@@ -13,8 +13,8 @@ namespace TSSArt.StateMachine.Services
 		{
 			var parameters = Parameters.AsObjectOrEmpty();
 			var host = parameters["server"].AsString();
-			var port = (int?) parameters["port"].AsNumberOrDefault() ?? 25;
-			using var client = new SmtpClient(host, port);
+			var port = parameters["port"].AsNumberOrDefault();
+			using var client = new SmtpClient(host, port.HasValue ? (int) port.Value : 25);
 
 			var fromEmail = parameters["from"].AsStringOrDefault();
 			var fromName = parameters["fromName"].AsStringOrDefault();
