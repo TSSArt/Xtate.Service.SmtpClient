@@ -61,6 +61,15 @@ namespace TSSArt.StateMachine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cycle reference detected..
+        /// </summary>
+        internal static string Exception_Cycle_reference_detected {
+            get {
+                return ResourceManager.GetString("Exception_Cycle_reference_detected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Not expected token type.
         /// </summary>
         internal static string Exception_Not_expected_token_type {

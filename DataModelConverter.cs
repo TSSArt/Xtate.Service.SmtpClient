@@ -56,7 +56,8 @@ namespace TSSArt.StateMachine
 								new JsonObjectConverter(options),
 								new JsonArrayConverter(options)
 						},
-						WriteIndented = (options & DataModelConverterOptions.WriteIndented) != 0
+						WriteIndented = (options & DataModelConverterOptions.WriteIndented) != 0,
+						MaxDepth = 64
 				};
 
 		public static string ToJson(DataModelValue value, DataModelConverterOptions options = default) => JsonSerializer.Serialize(value, GetOptions(options));
@@ -189,6 +190,11 @@ namespace TSSArt.StateMachine
 
 			public override void Write(Utf8JsonWriter writer, DataModelObject obj, JsonSerializerOptions options)
 			{
+				if (writer.CurrentDepth > options.MaxDepth)
+				{
+					throw new JsonException(Resources.Exception_Cycle_reference_detected);
+				}
+
 				writer.WriteStartObject();
 
 				foreach (var name in obj.Properties)

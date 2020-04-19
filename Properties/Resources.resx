@@ -126,4 +126,7 @@
   <data name="Exception_Undefined_value_not_allowed" xml:space="preserve">
     <value>Undefined value not allowed</value>
   </data>
+  <data name="Exception_Cycle_reference_detected" xml:space="preserve">
+    <value>Cycle reference detected.</value>
+  </data>
 </root>
