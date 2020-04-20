@@ -376,10 +376,7 @@ namespace TSSArt.StateMachine
 				}
 				else
 				{
-					if (_externalScriptList == null)
-					{
-						_externalScriptList = new List<(Uri Uri, IExternalScriptConsumer Consumer)>();
-					}
+					_externalScriptList ??= new List<(Uri Uri, IExternalScriptConsumer Consumer)>();
 
 					_externalScriptList.Add((externalScriptExpressionNode.Uri, consumer));
 				}

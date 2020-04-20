@@ -1281,11 +1281,11 @@ namespace TSSArt.StateMachine {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Registration should no occure after initialization..
+        ///   Looks up a localized string similar to Registration should no occur after initialization..
         /// </summary>
-        internal static string Exception_Registration_should_no_occure_after_initialization {
+        internal static string Exception_Registration_should_no_occur_after_initialization {
             get {
-                return ResourceManager.GetString("Exception_Registration_should_no_occure_after_initialization", resourceCulture);
+                return ResourceManager.GetString("Exception_Registration_should_no_occur_after_initialization", resourceCulture);
             }
         }
         

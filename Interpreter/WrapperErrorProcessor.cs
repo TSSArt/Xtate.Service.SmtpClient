@@ -15,12 +15,7 @@ namespace TSSArt.StateMachine
 
 		public void AddError(ErrorItem errorItem)
 		{
-			if (errorItem == null) throw new ArgumentNullException(nameof(errorItem));
-
-			if (_error == null)
-			{
-				_error = errorItem;
-			}
+			_error ??= errorItem ?? throw new ArgumentNullException(nameof(errorItem));
 
 			_errorProcessor.AddError(errorItem);
 		}
