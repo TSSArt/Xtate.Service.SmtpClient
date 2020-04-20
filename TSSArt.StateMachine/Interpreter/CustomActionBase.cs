@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	public class CustomActionBase : ICustomActionExecutor
 	{
 		internal static readonly ICustomActionExecutor NoExecutorInstance = new CustomActionBase(null!);

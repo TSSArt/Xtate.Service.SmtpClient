@@ -192,10 +192,7 @@ namespace TSSArt.StateMachine
 			{
 				if (_owner != null)
 				{
-					if (_buffers == null)
-					{
-						_buffers = new List<(IMemoryOwner<byte> Owner, int Size)>();
-					}
+					_buffers ??= new List<(IMemoryOwner<byte> Owner, int Size)>();
 
 					_buffers.Add((_owner, _owner.Memory.Length - _buffer.Length));
 				}
@@ -340,10 +337,7 @@ namespace TSSArt.StateMachine
 
 				if (_owner != null)
 				{
-					if (_buffers == null)
-					{
-						_buffers = new List<(IMemoryOwner<byte> Owner, int Size)>();
-					}
+					_buffers ??= new List<(IMemoryOwner<byte> Owner, int Size)>();
 
 					_buffers.Add((_owner, 0));
 				}
@@ -353,7 +347,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private struct Entry : IComparable<Entry>
+		private readonly struct Entry : IComparable<Entry>
 		{
 			public readonly ReadOnlyMemory<byte> Key;
 			public readonly ReadOnlyMemory<byte> Value;

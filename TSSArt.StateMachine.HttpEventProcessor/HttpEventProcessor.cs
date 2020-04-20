@@ -151,39 +151,43 @@ namespace TSSArt.StateMachine
 			var data = evt.Data;
 			var dataType = data.Type;
 
-			if (dataType == DataModelValueType.Undefined || dataType == DataModelValueType.Null)
+			// ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
+			switch (dataType)
 			{
-				eventNameInContent = evt.NameParts != null;
-				return eventNameInContent ? new FormUrlEncodedContent(GetParameters(evt.NameParts, dataModelObject: null)) : null;
-			}
+				case DataModelValueType.Undefined:
+				case DataModelValueType.Null:
+					eventNameInContent = evt.NameParts != null;
 
-			if (dataType == DataModelValueType.String)
-			{
-				eventNameInContent = false;
-				return new StringContent(data.AsString(), Encoding.UTF8, MediaTypeTextPlain);
-			}
+					return eventNameInContent ? new FormUrlEncodedContent(GetParameters(evt.NameParts, dataModelObject: null)) : null;
 
-			if (dataType == DataModelValueType.Object)
-			{
-				var dataModelObject = data.AsObject();
+				case DataModelValueType.String:
+					eventNameInContent = false;
 
-				if (IsStringDictionary(dataModelObject))
+					return new StringContent(data.AsString(), Encoding.UTF8, MediaTypeTextPlain);
+
+				case DataModelValueType.Object:
 				{
-					eventNameInContent = true;
-					return new FormUrlEncodedContent(GetParameters(evt.NameParts, dataModelObject));
+					var dataModelObject = data.AsObject();
+
+					if (IsStringDictionary(dataModelObject))
+					{
+						eventNameInContent = true;
+						return new FormUrlEncodedContent(GetParameters(evt.NameParts, dataModelObject));
+					}
+
+					eventNameInContent = false;
+
+					return new StringContent(DataModelConverter.ToJson(data), Encoding.UTF8, MediaTypeApplicationJson);
 				}
 
-				eventNameInContent = false;
-				return new StringContent(DataModelConverter.ToJson(data), Encoding.UTF8, MediaTypeApplicationJson);
-			}
+				case DataModelValueType.Array:
+					eventNameInContent = false;
 
-			if (dataType == DataModelValueType.Array)
-			{
-				eventNameInContent = false;
-				return new StringContent(DataModelConverter.ToJson(data), Encoding.UTF8, MediaTypeApplicationJson);
-			}
+					return new StringContent(DataModelConverter.ToJson(data), Encoding.UTF8, MediaTypeApplicationJson);
 
-			throw new NotSupportedException(Resources.Exception_Data_format_not_supported);
+				default:
+					throw new NotSupportedException(Resources.Exception_Data_format_not_supported);
+			}
 		}
 
 		private static bool IsStringDictionary(DataModelObject dataModelObject)

@@ -42,7 +42,7 @@ namespace TSSArt.StateMachine.Test
 			await ioProcessor.StartAsync();
 			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("TSSArt.StateMachine.Test.Resources.All.xml");
 			var reader = new StreamReader(stream ?? throw new InvalidOperationException());
-			var _ = ioProcessor.Execute(reader.ReadToEnd());
+			var _ = ioProcessor.Execute(await reader.ReadToEndAsync());
 		}
 
 		[TestMethod]

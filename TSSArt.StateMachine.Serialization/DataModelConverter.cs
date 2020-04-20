@@ -81,31 +81,18 @@ namespace TSSArt.StateMachine
 
 			public override DataModelValue Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
 			{
-				switch (reader.TokenType)
+				// ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
+				return reader.TokenType switch
 				{
-					case JsonTokenType.True: return new DataModelValue(true);
-					case JsonTokenType.False: return new DataModelValue(false);
-					case JsonTokenType.Null: return DataModelValue.Null;
-
-					case JsonTokenType.String:
-						if (reader.TryGetDateTime(out var datetime))
-						{
-							return new DataModelValue(datetime);
-						}
-
-						return new DataModelValue(reader.GetString());
-
-					case JsonTokenType.Number:
-						return new DataModelValue(reader.GetDouble());
-
-					case JsonTokenType.StartObject:
-						return new DataModelValue(JsonSerializer.Deserialize<DataModelObject>(ref reader, options));
-
-					case JsonTokenType.StartArray:
-						return new DataModelValue(JsonSerializer.Deserialize<DataModelArray>(ref reader, options));
-
-					default: throw new JsonException(Resources.Exception_Not_expected_token_type);
-				}
+						JsonTokenType.True => new DataModelValue(true),
+						JsonTokenType.False => new DataModelValue(false),
+						JsonTokenType.Null => DataModelValue.Null,
+						JsonTokenType.String => reader.TryGetDateTime(out var datetime) ? new DataModelValue(datetime) : new DataModelValue(reader.GetString()),
+						JsonTokenType.Number => new DataModelValue(reader.GetDouble()),
+						JsonTokenType.StartObject => new DataModelValue(JsonSerializer.Deserialize<DataModelObject>(ref reader, options)),
+						JsonTokenType.StartArray => new DataModelValue(JsonSerializer.Deserialize<DataModelArray>(ref reader, options)),
+						_ => throw new JsonException(Resources.Exception_Not_expected_token_type)
+				};
 			}
 
 			public override void Write(Utf8JsonWriter writer, DataModelValue value, JsonSerializerOptions options)

@@ -197,6 +197,7 @@ namespace TSSArt.StateMachine
 					Infrastructure.Assert(pipeStream.IsConnected);
 
 					var count = await pipeStream.ReadAsync(buffer, offset: 0, buffer.Length, token).ConfigureAwait(false);
+					// ReSharper disable once MethodHasAsyncOverloadWithCancellation
 					memoryStream.Write(buffer, offset: 0, count);
 				} while (!pipeStream.IsMessageComplete);
 			}
@@ -244,7 +245,7 @@ namespace TSSArt.StateMachine
 			return SendEventToPipe(server: ".", _pipeName, string.Empty, eventObject, token);
 		}
 
-		private struct EventMessage : IStoreSupport
+		private readonly struct EventMessage : IStoreSupport
 		{
 			public readonly EventObject Event;
 			public readonly string      SessionId;
@@ -278,7 +279,7 @@ namespace TSSArt.StateMachine
 		#endregion
 		}
 
-		private struct ResponseMessage : IStoreSupport
+		private readonly struct ResponseMessage : IStoreSupport
 		{
 			public readonly Exception? Exception;
 
