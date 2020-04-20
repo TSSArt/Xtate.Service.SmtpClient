@@ -277,23 +277,29 @@ namespace TSSArt.StateMachine.Services
 
 			request.ContentType = contentType;
 
-			var stream = request.GetRequestStream();
+			var stream = await request.GetRequestStreamAsync().ConfigureAwait(false);
 			await using (stream.ConfigureAwait(false))
 			{
-				if (contentType == MediaTypeApplicationFormUrlEncoded)
+				switch (contentType)
 				{
-					using var httpContent = CreateFormUrlEncodedContent(content);
-					await httpContent.CopyToAsync(stream).ConfigureAwait(false);
-				}
-				else if (contentType == MediaTypeApplicationJson)
-				{
-					using var httpContent = CreateJsonContent(content);
-					await httpContent.CopyToAsync(stream).ConfigureAwait(false);
-				}
-				else
-				{
-					using var httpContent = CreateDefaultContent(content);
-					await httpContent.CopyToAsync(stream).ConfigureAwait(false);
+					case MediaTypeApplicationFormUrlEncoded:
+					{
+						using var httpContent = CreateFormUrlEncodedContent(content);
+						await httpContent.CopyToAsync(stream).ConfigureAwait(false);
+						break;
+					}
+					case MediaTypeApplicationJson:
+					{
+						using var httpContent = CreateJsonContent(content);
+						await httpContent.CopyToAsync(stream).ConfigureAwait(false);
+						break;
+					}
+					default:
+					{
+						using var httpContent = CreateDefaultContent(content);
+						await httpContent.CopyToAsync(stream).ConfigureAwait(false);
+						break;
+					}
 				}
 			}
 		}
