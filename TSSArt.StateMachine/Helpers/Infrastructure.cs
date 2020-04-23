@@ -79,9 +79,27 @@ namespace TSSArt.StateMachine
 
 		[AssertionMethod]
 		[DoesNotReturn]
+		public static void UnexpectedValue(string message)
+		{
+			Assert(condition: false, message);
+
+			throw new NotSupportedException();
+		}
+
+		[AssertionMethod]
+		[DoesNotReturn]
 		public static T UnexpectedValue<T>()
 		{
 			Assert(condition: false, Resources.Exception_UnexpectedValue);
+
+			throw new NotSupportedException();
+		}
+
+		[AssertionMethod]
+		[DoesNotReturn]
+		public static T UnexpectedValue<T>(string message)
+		{
+			Assert(condition: false, message);
 
 			throw new NotSupportedException();
 		}

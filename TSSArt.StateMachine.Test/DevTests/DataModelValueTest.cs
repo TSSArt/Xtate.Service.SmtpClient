@@ -70,7 +70,7 @@ namespace TSSArt.StateMachine.Test.DevTests
 			Assert.AreEqual(DataModelValueType.String, DataModelValue.FromString("str").Type);
 			Assert.AreEqual(DataModelValueType.Boolean, DataModelValue.FromBoolean(false).Type);
 			Assert.AreEqual(DataModelValueType.Number, DataModelValue.FromDouble(0).Type);
-			Assert.AreEqual(DataModelValueType.DateTime, DataModelValue.FromDateTime(DateTime.MinValue).Type);
+			Assert.AreEqual(DataModelValueType.DateTime, DataModelValue.FromDateTimeOffset(DateTimeOffset.MinValue).Type);
 			Assert.AreEqual(DataModelValueType.Object, DataModelValue.FromDataModelObject(new DataModelObject()).Type);
 			Assert.AreEqual(DataModelValueType.Array, DataModelValue.FromDataModelArray(new DataModelArray()).Type);
 		}

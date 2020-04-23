@@ -79,21 +79,19 @@ namespace TSSArt.StateMachine
 
 			public JsonValueConverter(DataModelConverterOptions options) => _options = options;
 
-			public override DataModelValue Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-			{
-				// ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
-				return reader.TokenType switch
-				{
-						JsonTokenType.True => new DataModelValue(true),
-						JsonTokenType.False => new DataModelValue(false),
-						JsonTokenType.Null => DataModelValue.Null,
-						JsonTokenType.String => reader.TryGetDateTime(out var datetime) ? new DataModelValue(datetime) : new DataModelValue(reader.GetString()),
-						JsonTokenType.Number => new DataModelValue(reader.GetDouble()),
-						JsonTokenType.StartObject => new DataModelValue(JsonSerializer.Deserialize<DataModelObject>(ref reader, options)),
-						JsonTokenType.StartArray => new DataModelValue(JsonSerializer.Deserialize<DataModelArray>(ref reader, options)),
-						_ => throw new JsonException(Resources.Exception_Not_expected_token_type)
-				};
-			}
+			public override DataModelValue Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
+					reader.TokenType switch
+					{
+							JsonTokenType.True => true,
+							JsonTokenType.False => false,
+							JsonTokenType.Null => DataModelValue.Null,
+							JsonTokenType.String when reader.TryGetDateTimeOffset(out var datetime) => datetime,
+							JsonTokenType.String => reader.GetString(),
+							JsonTokenType.Number => reader.GetDouble(),
+							JsonTokenType.StartObject => JsonSerializer.Deserialize<DataModelObject>(ref reader, options),
+							JsonTokenType.StartArray => JsonSerializer.Deserialize<DataModelArray>(ref reader, options),
+							_ => Infrastructure.UnexpectedValue<DataModelValue>(Resources.Exception_Not_expected_token_type)
+					};
 
 			public override void Write(Utf8JsonWriter writer, DataModelValue value, JsonSerializerOptions options)
 			{
@@ -138,7 +136,8 @@ namespace TSSArt.StateMachine
 						break;
 
 					default:
-						throw new JsonException(Resources.Exception_Unknown_type_for_serialization);
+						Infrastructure.UnexpectedValue(Resources.Exception_Unknown_type_for_serialization);
+						break;
 				}
 			}
 		}
@@ -153,10 +152,7 @@ namespace TSSArt.StateMachine
 			{
 				var obj = new DataModelObject();
 
-				if (reader.TokenType != JsonTokenType.StartObject)
-				{
-					throw new JsonException(Resources.Exception_Not_expected_token_type);
-				}
+				Infrastructure.Assert(reader.TokenType == JsonTokenType.StartObject);
 
 				reader.Read();
 
@@ -213,10 +209,7 @@ namespace TSSArt.StateMachine
 			{
 				var array = new DataModelArray();
 
-				if (reader.TokenType != JsonTokenType.StartArray)
-				{
-					throw new JsonException(Resources.Exception_Not_expected_token_type);
-				}
+				Infrastructure.Assert(reader.TokenType == JsonTokenType.StartArray);
 
 				reader.Read();
 

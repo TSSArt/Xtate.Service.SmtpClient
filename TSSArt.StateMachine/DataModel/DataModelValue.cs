@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Dynamic;
@@ -29,10 +30,9 @@ namespace TSSArt.StateMachine
 	[DebuggerDisplay(value: "{ToObject()} ({Type})")]
 	public readonly struct DataModelValue : IObject, IEquatable<DataModelValue>, IFormattable, IDynamicMetaObjectProvider
 	{
-		private static readonly object NullValue     = new object();
-		private static readonly object NumberValue   = new object();
-		private static readonly object DateTimeValue = new object();
-		private static readonly object BooleanValue  = new object();
+		private static readonly object NullValue    = new object();
+		private static readonly object NumberValue  = new object();
+		private static readonly object BooleanValue = new object();
 
 		public static readonly DataModelValue Undefined;
 		public static readonly DataModelValue Null = new DataModelValue((string?) null);
@@ -64,10 +64,10 @@ namespace TSSArt.StateMachine
 			_int64 = BitConverter.DoubleToInt64Bits(value);
 		}
 
-		public DataModelValue(DateTime value)
+		public DataModelValue(DateTimeOffset value)
 		{
-			_value = DateTimeValue;
-			_int64 = value.Ticks + ((long) value.Kind << 62);
+			_value = DateTimeValue.Get(value.Offset);
+			_int64 = value.Ticks;
 		}
 
 		public DataModelValue(bool value)
@@ -82,7 +82,7 @@ namespace TSSArt.StateMachine
 						DataModelObject _ => DataModelValueType.Object,
 						DataModelArray _ => DataModelValueType.Array,
 						string _ => DataModelValueType.String,
-						{ } val when val == DateTimeValue => DataModelValueType.DateTime,
+						DateTimeValue _ => DataModelValueType.DateTime,
 						{ } val when val == NumberValue => DataModelValueType.Number,
 						{ } val when val == BooleanValue => DataModelValueType.Boolean,
 						{ } val when val == NullValue => DataModelValueType.Null,
@@ -126,7 +126,7 @@ namespace TSSArt.StateMachine
 						DataModelObject obj => obj,
 						DataModelArray arr => arr,
 						string str => str,
-						{ } val when val == DateTimeValue => AsDateTime(),
+						DateTimeValue val => new DateTimeOffset(new DateTime(_int64), val.Offset),
 						{ } val when val == NumberValue => AsNumber(),
 						{ } val when val == BooleanValue => AsBoolean(),
 						{ } val when val == NullValue => null,
@@ -140,28 +140,28 @@ namespace TSSArt.StateMachine
 		public static implicit operator DataModelValue(DataModelArray? val)  => FromDataModelArray(val);
 		public static implicit operator DataModelValue(string? val)          => FromString(val);
 		public static implicit operator DataModelValue(double val)           => FromDouble(val);
-		public static implicit operator DataModelValue(DateTime val)         => FromDateTime(val);
+		public static implicit operator DataModelValue(DateTimeOffset val)   => FromDateTimeOffset(val);
 		public static implicit operator DataModelValue(bool val)             => FromBoolean(val);
 
 		public static DataModelValue FromDataModelObject(DataModelObject? val) => new DataModelValue(val);
 		public static DataModelValue FromDataModelArray(DataModelArray? val)   => new DataModelValue(val);
 		public static DataModelValue FromString(string? val)                   => new DataModelValue(val);
 		public static DataModelValue FromDouble(double val)                    => new DataModelValue(val);
-		public static DataModelValue FromDateTime(DateTime val)                => new DataModelValue(val);
+		public static DataModelValue FromDateTimeOffset(DateTimeOffset val)    => new DataModelValue(val);
 		public static DataModelValue FromBoolean(bool val)                     => new DataModelValue(val);
 
 		public static explicit operator DataModelObject?(DataModelValue val) => ToDataModelObject(val);
 		public static explicit operator DataModelArray?(DataModelValue val)  => ToDataModelArray(val);
 		public static explicit operator string?(DataModelValue val)          => ToString(val);
 		public static explicit operator double(DataModelValue val)           => ToDouble(val);
-		public static explicit operator DateTime(DataModelValue val)         => ToDateTime(val);
+		public static explicit operator DateTimeOffset(DataModelValue val)   => ToDateTimeOffset(val);
 		public static explicit operator bool(DataModelValue val)             => ToBoolean(val);
 
 		public static DataModelObject? ToDataModelObject(DataModelValue val) => val.AsNullableObject();
 		public static DataModelArray?  ToDataModelArray(DataModelValue val)  => val.AsNullableArray();
 		public static string?          ToString(DataModelValue val)          => val.AsNullableString();
 		public static double           ToDouble(DataModelValue val)          => val.AsNumber();
-		public static DateTime         ToDateTime(DataModelValue val)        => val.AsDateTime();
+		public static DateTimeOffset   ToDateTimeOffset(DataModelValue val)  => val.AsDateTime();
 		public static bool             ToBoolean(DataModelValue val)         => val.AsBoolean();
 
 		public bool IsUndefinedOrNull() => _value == null || _value == NullValue;
@@ -239,15 +239,15 @@ namespace TSSArt.StateMachine
 						? _int64 != 0
 						: (bool?) null;
 
-		public DateTime AsDateTime() =>
-				_value == DateTimeValue
-						? new DateTime(_int64 & 0x3FFFFFFFFFFFFFFF, (DateTimeKind) ((_int64 >> 62) & 3))
+		public DateTimeOffset AsDateTime() =>
+				_value is DateTimeValue val
+						? new DateTimeOffset(new DateTime(_int64), val.Offset)
 						: throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_DateTime);
 
-		public DateTime? AsDateTimeOrDefault() =>
-				_value == DateTimeValue
-						? new DateTime(_int64 & 0x3FFFFFFFFFFFFFFF, (DateTimeKind) ((_int64 >> 62) & 3))
-						: (DateTime?) null;
+		public DateTimeOffset? AsDateTimeOrDefault() =>
+				_value is DateTimeValue val
+						? new DateTimeOffset(new DateTime(_int64), val.Offset)
+						: (DateTimeOffset?) null;
 
 		public override bool Equals(object obj) => obj is DataModelValue other && Equals(other);
 
@@ -284,7 +284,7 @@ namespace TSSArt.StateMachine
 						DataModelObject obj => new DataModelValue(obj.DeepCloneWithMap(targetAccess, ref map)),
 						DataModelArray arr => new DataModelValue(arr.DeepCloneWithMap(targetAccess, ref map)),
 						string _ => this,
-						{ } val when val == DateTimeValue => this,
+						DateTimeValue _ => this,
 						{ } val when val == NumberValue => this,
 						{ } val when val == BooleanValue => this,
 						{ } val when val == NullValue => this,
@@ -421,6 +421,44 @@ namespace TSSArt.StateMachine
 		}
 
 		public override string ToString() => ToString(format: null, formatProvider: null);
+
+		private sealed class DateTimeValue
+		{
+			private static readonly TimeSpan MinOffset = new TimeSpan(hours: -14, minutes: 0, seconds: 0);
+			private static readonly TimeSpan MaxOffset = new TimeSpan(hours: 14, minutes: 0, seconds: 0);
+
+			private static ImmutableDictionary<int, DateTimeValue> _cachedOffsets = ImmutableDictionary<int, DateTimeValue>.Empty;
+
+			public DateTimeValue(TimeSpan offset)
+			{
+				Offset = offset;
+			}
+
+			public TimeSpan Offset { get; }
+
+			public static DateTimeValue Get(TimeSpan offset)
+			{
+				Infrastructure.Assert(MinOffset <= offset && offset <= MaxOffset && offset.Ticks % TimeSpan.TicksPerMinute == 0);
+
+				var val = (int) (offset.Ticks / TimeSpan.TicksPerMinute);
+
+				if (val % 15 != 0)
+				{
+					return new DateTimeValue(offset);
+				}
+
+				var cachedOffsets = _cachedOffsets;
+
+				if (!cachedOffsets.TryGetValue(val, out var dateTimeValue))
+				{
+					dateTimeValue = new DateTimeValue(offset);
+
+					_cachedOffsets = cachedOffsets.Add(val, dateTimeValue);
+				}
+
+				return dateTimeValue;
+			}
+		}
 
 		[PublicAPI]
 		[ExcludeFromCodeCoverage]
