@@ -91,7 +91,7 @@ namespace TSSArt.StateMachine.Services
 											["httpOnly"] = cookie.HttpOnly,
 											["port"] = cookie.Port,
 											["secure"] = cookie.Secure,
-											["expires"] = cookie.Expires != default ? cookie.Expires : DataModelValue.Undefined
+											["expires"] = cookie.Expires != default ? (DateTimeOffset)cookie.Expires : DataModelValue.Undefined
 									});
 			}
 
@@ -115,7 +115,7 @@ namespace TSSArt.StateMachine.Services
 								 Value = cookieObj["value"].AsStringOrDefault(),
 								 Path = cookieObj["path"].AsStringOrDefault(),
 								 Domain = cookieObj["domain"].AsStringOrDefault(),
-								 Expires = cookieObj["expires"].AsDateTimeOrDefault() ?? DateTime.MinValue,
+								 Expires = cookieObj["expires"].AsDateTimeOrDefault()?.UtcDateTime ?? default,
 								 HttpOnly = cookieObj["httpOnly"].AsBooleanOrDefault() ?? false,
 								 Secure = cookieObj["secure"].AsBooleanOrDefault() ?? false
 						 };
