@@ -247,11 +247,11 @@ namespace TSSArt.StateMachine
 					case TypeCode.UInt32:
 						return new EnumIntValueConverter<T>();
 
-					case TypeCode.DateTime: return new DateTimeValueConverter<T>();
 					case TypeCode.Double: return new DoubleValueConverter<T>();
 					case TypeCode.Boolean: return new BooleanValueConverter<T>();
 					case TypeCode.String: return new StringValueConverter<T>();
 					case TypeCode.Object when type == typeof(Uri): return new UriValueConverter<T>();
+					case TypeCode.Object when type == typeof(DateTimeOffset): return new DateTimeOffsetValueConverter<T>();
 
 					default: return new UnsupportedConverter<T>(@"value");
 				}
@@ -582,19 +582,21 @@ namespace TSSArt.StateMachine
 			protected override double Get(ReadOnlySpan<byte> bytes) => BitConverter.Int64BitsToDouble(BinaryPrimitives.ReadInt64LittleEndian(bytes));
 		}
 
-		private class DateTimeValueConverter<TValue> : ValueConverterBase<TValue, DateTime>
+		private class DateTimeOffsetValueConverter<TValue> : ValueConverterBase<TValue, DateTimeOffset>
 		{
-			protected override int GetLength(DateTime val) => 8;
+			protected override int GetLength(DateTimeOffset val) => 10;
 
-			protected override void Write(DateTime val, Span<byte> bytes)
+			protected override void Write(DateTimeOffset val, Span<byte> bytes)
 			{
-				BinaryPrimitives.WriteInt64LittleEndian(bytes, val.Ticks + ((long) val.Kind << 62));
+				BinaryPrimitives.WriteInt64LittleEndian(bytes, val.Ticks);
+				BinaryPrimitives.WriteInt16LittleEndian(bytes.Slice(8), (short)(val.Offset.Ticks / TimeSpan.TicksPerMinute));
 			}
 
-			protected override DateTime Get(ReadOnlySpan<byte> bytes)
+			protected override DateTimeOffset Get(ReadOnlySpan<byte> bytes)
 			{
-				var val = BinaryPrimitives.ReadInt64LittleEndian(bytes);
-				return new DateTime(val & 0x3FFFFFFFFFFFFFFF, (DateTimeKind) ((val >> 62) & 3));
+				var ticks = BinaryPrimitives.ReadInt64LittleEndian(bytes);
+				var offsetMinutes = BinaryPrimitives.ReadInt16LittleEndian(bytes.Slice(8));
+				return new DateTimeOffset(new DateTime(ticks), new TimeSpan(hours: 0, offsetMinutes, seconds: 0));
 			}
 		}
 

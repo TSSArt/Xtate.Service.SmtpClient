@@ -85,7 +85,7 @@ namespace TSSArt.StateMachine
 				case DataModelValueType.Null: return DataModelValue.Null;
 				case DataModelValueType.String when bucket.TryGet(Key.Item, out string? value): return new DataModelValue(value);
 				case DataModelValueType.Number when bucket.TryGet(Key.Item, out double value): return new DataModelValue(value);
-				case DataModelValueType.DateTime when bucket.TryGet(Key.Item, out DateTime value): return new DataModelValue(value);
+				case DataModelValueType.DateTime when bucket.TryGet(Key.Item, out DateTimeOffset value): return new DataModelValue(value);
 				case DataModelValueType.Boolean when bucket.TryGet(Key.Item, out bool value): return new DataModelValue(value);
 
 				case DataModelValueType.Object when bucket.TryGet(Key.RefId, out int refId):
