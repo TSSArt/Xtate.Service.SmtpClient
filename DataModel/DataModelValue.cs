@@ -28,7 +28,7 @@ namespace TSSArt.StateMachine
 	[PublicAPI]
 	[DebuggerTypeProxy(typeof(DebugView))]
 	[DebuggerDisplay(value: "{ToObject()} ({Type})")]
-	public readonly struct DataModelValue : IObject, IEquatable<DataModelValue>, IFormattable, IDynamicMetaObjectProvider
+	public readonly struct DataModelValue : IObject, IEquatable<DataModelValue>, IFormattable, IDynamicMetaObjectProvider, IConvertible
 	{
 		private static readonly object NullValue    = new object();
 		private static readonly object NumberValue  = new object();
@@ -90,6 +90,82 @@ namespace TSSArt.StateMachine
 						_ => Infrastructure.UnexpectedValue<DataModelValueType>()
 				};
 
+	#region Interface IConvertible
+
+		TypeCode IConvertible.GetTypeCode() =>
+				Type switch
+				{
+						DataModelValueType.Undefined => TypeCode.Empty,
+						DataModelValueType.Null => TypeCode.Empty,
+						DataModelValueType.String => TypeCode.String,
+						DataModelValueType.Object => TypeCode.Object,
+						DataModelValueType.Array => TypeCode.Object,
+						DataModelValueType.Number => TypeCode.Double,
+						DataModelValueType.DateTime => TypeCode.Object,
+						DataModelValueType.Boolean => TypeCode.Boolean,
+						_ => Infrastructure.UnexpectedValue<TypeCode>()
+				};
+
+		bool IConvertible.ToBoolean(IFormatProvider provider) => Convert.ToBoolean(ToObject(), provider);
+
+		byte IConvertible.ToByte(IFormatProvider provider) => Convert.ToByte(ToObject(), provider);
+
+		char IConvertible.ToChar(IFormatProvider provider) => Convert.ToChar(ToObject(), provider);
+
+		decimal IConvertible.ToDecimal(IFormatProvider provider) => Convert.ToDecimal(ToObject(), provider);
+
+		double IConvertible.ToDouble(IFormatProvider provider) => Convert.ToDouble(ToObject(), provider);
+
+		short IConvertible.ToInt16(IFormatProvider provider) => Convert.ToInt16(ToObject(), provider);
+
+		int IConvertible.ToInt32(IFormatProvider provider) => Convert.ToInt32(ToObject(), provider);
+
+		long IConvertible.ToInt64(IFormatProvider provider) => Convert.ToInt64(ToObject(), provider);
+
+		sbyte IConvertible.ToSByte(IFormatProvider provider) => Convert.ToSByte(ToObject(), provider);
+
+		float IConvertible.ToSingle(IFormatProvider provider) => Convert.ToSingle(ToObject(), provider);
+
+		ushort IConvertible.ToUInt16(IFormatProvider provider) => Convert.ToUInt16(ToObject(), provider);
+
+		uint IConvertible.ToUInt32(IFormatProvider provider) => Convert.ToUInt32(ToObject(), provider);
+
+		ulong IConvertible.ToUInt64(IFormatProvider provider) => Convert.ToUInt64(ToObject(), provider);
+
+		DateTime IConvertible.ToDateTime(IFormatProvider provider) =>
+				Type switch
+				{
+						DataModelValueType.Number => Convert.ToDateTime(AsNumber()),
+						DataModelValueType.DateTime => AsDateTime().UtcDateTime,
+						DataModelValueType.Boolean => Convert.ToDateTime(AsBoolean()),
+						_ => (DateTime) Convert.ChangeType(ToObject(), typeof(DateTime), provider)
+				};
+
+		public string ToString(IFormatProvider provider) => ToString(format: null, provider);
+
+		object IConvertible.ToType(Type conversionType, IFormatProvider provider)
+		{
+			if (conversionType == typeof(string))
+			{
+				return ToString(provider);
+			}
+
+			if (conversionType == typeof(DateTime))
+			{
+				return ((IConvertible) this).ToDateTime(provider);
+			}
+
+			return Type switch
+			{
+					DataModelValueType.Number => ((IConvertible) AsNumber()).ToType(conversionType, provider),
+					DataModelValueType.DateTime => ((IConvertible) AsDateTime().UtcDateTime).ToType(conversionType, provider),
+					DataModelValueType.Boolean => ((IConvertible) AsBoolean()).ToType(conversionType, provider),
+					_ => Convert.ChangeType(ToObject(), conversionType, provider)
+			};
+		}
+
+	#endregion
+
 	#region Interface IDynamicMetaObjectProvider
 
 		DynamicMetaObject IDynamicMetaObjectProvider.GetMetaObject(Expression parameter) => new MetaObject(parameter, this, Dynamic.CreateMetaObject);
@@ -106,14 +182,18 @@ namespace TSSArt.StateMachine
 
 		public string ToString(string? format, IFormatProvider? formatProvider)
 		{
-			var obj = ToObject();
-
-			if (obj is IFormattable formattable)
+			return Type switch
 			{
-				return formattable.ToString(format, formatProvider);
-			}
+					DataModelValueType.Number => AsNumber().ToString(format, formatProvider),
+					DataModelValueType.DateTime => AsDateTime().ToString(format ?? "O", formatProvider),
+					DataModelValueType.Boolean => AsBoolean().ToString(formatProvider),
+					_ => GenericToString(ToObject())
+			};
 
-			return Convert.ToString(obj, formatProvider) ?? string.Empty;
+			string GenericToString(object? obj) =>
+					(format != null && obj is IFormattable formattable
+							? formattable.ToString(format, formatProvider)
+							: Convert.ToString(obj, formatProvider)) ?? string.Empty;
 		}
 
 	#endregion
@@ -429,10 +509,7 @@ namespace TSSArt.StateMachine
 
 			private static ImmutableDictionary<int, DateTimeValue> _cachedOffsets = ImmutableDictionary<int, DateTimeValue>.Empty;
 
-			public DateTimeValue(TimeSpan offset)
-			{
-				Offset = offset;
-			}
+			public DateTimeValue(TimeSpan offset) => Offset = offset;
 
 			public TimeSpan Offset { get; }
 
