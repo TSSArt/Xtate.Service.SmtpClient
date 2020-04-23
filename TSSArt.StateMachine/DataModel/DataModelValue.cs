@@ -185,7 +185,7 @@ namespace TSSArt.StateMachine
 			return Type switch
 			{
 					DataModelValueType.Number => AsNumber().ToString(format, formatProvider),
-					DataModelValueType.DateTime => AsDateTime().ToString(format ?? "O", formatProvider),
+					DataModelValueType.DateTime => AsDateTime().ToString(format ?? "o", formatProvider),
 					DataModelValueType.Boolean => AsBoolean().ToString(formatProvider),
 					_ => GenericToString(ToObject())
 			};
