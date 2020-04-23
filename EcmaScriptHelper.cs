@@ -89,7 +89,7 @@ namespace TSSArt.StateMachine.EcmaScript
 		}
 
 		private static DataModelValue CreateDateTimeOrStringValue(string val) =>
-				DateTime.TryParseExact(val, format: @"o", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None, out var dttm)
+				DateTimeOffset.TryParseExact(val, format: @"o", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None, out var dttm)
 						? new DataModelValue(dttm)
 						: new DataModelValue(val);
 
