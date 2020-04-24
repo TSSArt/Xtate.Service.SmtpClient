@@ -106,39 +106,130 @@ namespace TSSArt.StateMachine
 						_ => Infrastructure.UnexpectedValue<TypeCode>()
 				};
 
-		bool IConvertible.ToBoolean(IFormatProvider provider) => Convert.ToBoolean(ToObject(), provider);
+		bool IConvertible.ToBoolean(IFormatProvider provider) =>
+				Type switch
+				{
+						DataModelValueType.Number => Convert.ToBoolean(AsNumber(), provider),
+						DataModelValueType.DateTime => Convert.ToBoolean(AsDateTime().UtcDateTime, provider),
+						DataModelValueType.Boolean => Convert.ToBoolean(AsBoolean(), provider),
+						_ => Convert.ToBoolean(ToObject(), provider)
+				};
 
-		byte IConvertible.ToByte(IFormatProvider provider) => Convert.ToByte(ToObject(), provider);
+		byte IConvertible.ToByte(IFormatProvider provider) =>
+				Type switch
+				{
+						DataModelValueType.Number => Convert.ToByte(AsNumber(), provider),
+						DataModelValueType.DateTime => Convert.ToByte(AsDateTime().UtcDateTime, provider),
+						DataModelValueType.Boolean => Convert.ToByte(AsBoolean(), provider),
+						_ => Convert.ToByte(ToObject(), provider)
+				};
 
-		char IConvertible.ToChar(IFormatProvider provider) => Convert.ToChar(ToObject(), provider);
+		char IConvertible.ToChar(IFormatProvider provider) =>
+				Type switch
+				{
+						DataModelValueType.Number => Convert.ToChar(AsNumber(), provider),
+						DataModelValueType.DateTime => Convert.ToChar(AsDateTime().UtcDateTime, provider),
+						DataModelValueType.Boolean => Convert.ToChar(AsBoolean(), provider),
+						_ => Convert.ToChar(ToObject(), provider)
+				};
 
-		decimal IConvertible.ToDecimal(IFormatProvider provider) => Convert.ToDecimal(ToObject(), provider);
+		decimal IConvertible.ToDecimal(IFormatProvider provider) =>
+				Type switch
+				{
+						DataModelValueType.Number => Convert.ToDecimal(AsNumber(), provider),
+						DataModelValueType.DateTime => Convert.ToDecimal(AsDateTime().UtcDateTime, provider),
+						DataModelValueType.Boolean => Convert.ToDecimal(AsBoolean(), provider),
+						_ => Convert.ToDecimal(ToObject(), provider)
+				};
 
-		double IConvertible.ToDouble(IFormatProvider provider) => Convert.ToDouble(ToObject(), provider);
+		double IConvertible.ToDouble(IFormatProvider provider) =>
+				Type switch
+				{
+						DataModelValueType.Number => Convert.ToDouble(AsNumber(), provider),
+						DataModelValueType.DateTime => Convert.ToDouble(AsDateTime().UtcDateTime, provider),
+						DataModelValueType.Boolean => Convert.ToDouble(AsBoolean(), provider),
+						_ => Convert.ToDouble(ToObject(), provider)
+				};
 
-		short IConvertible.ToInt16(IFormatProvider provider) => Convert.ToInt16(ToObject(), provider);
+		short IConvertible.ToInt16(IFormatProvider provider) =>
+				Type switch
+				{
+						DataModelValueType.Number => Convert.ToInt16(AsNumber(), provider),
+						DataModelValueType.DateTime => Convert.ToInt16(AsDateTime().UtcDateTime, provider),
+						DataModelValueType.Boolean => Convert.ToInt16(AsBoolean(), provider),
+						_ => Convert.ToInt16(ToObject(), provider)
+				};
 
-		int IConvertible.ToInt32(IFormatProvider provider) => Convert.ToInt32(ToObject(), provider);
+		int IConvertible.ToInt32(IFormatProvider provider) =>
+				Type switch
+				{
+						DataModelValueType.Number => Convert.ToInt32(AsNumber(), provider),
+						DataModelValueType.DateTime => Convert.ToInt32(AsDateTime().UtcDateTime, provider),
+						DataModelValueType.Boolean => Convert.ToInt32(AsBoolean(), provider),
+						_ => Convert.ToInt32(ToObject(), provider)
+				};
 
-		long IConvertible.ToInt64(IFormatProvider provider) => Convert.ToInt64(ToObject(), provider);
+		long IConvertible.ToInt64(IFormatProvider provider) =>
+				Type switch
+				{
+						DataModelValueType.Number => Convert.ToInt64(AsNumber(), provider),
+						DataModelValueType.DateTime => Convert.ToInt64(AsDateTime().UtcDateTime, provider),
+						DataModelValueType.Boolean => Convert.ToInt64(AsBoolean(), provider),
+						_ => Convert.ToInt64(ToObject(), provider)
+				};
 
-		sbyte IConvertible.ToSByte(IFormatProvider provider) => Convert.ToSByte(ToObject(), provider);
+		sbyte IConvertible.ToSByte(IFormatProvider provider) =>
+				Type switch
+				{
+						DataModelValueType.Number => Convert.ToSByte(AsNumber(), provider),
+						DataModelValueType.DateTime => Convert.ToSByte(AsDateTime().UtcDateTime, provider),
+						DataModelValueType.Boolean => Convert.ToSByte(AsBoolean(), provider),
+						_ => Convert.ToSByte(ToObject(), provider)
+				};
 
-		float IConvertible.ToSingle(IFormatProvider provider) => Convert.ToSingle(ToObject(), provider);
+		float IConvertible.ToSingle(IFormatProvider provider) =>
+				Type switch
+				{
+						DataModelValueType.Number => Convert.ToSingle(AsNumber(), provider),
+						DataModelValueType.DateTime => Convert.ToSingle(AsDateTime().UtcDateTime, provider),
+						DataModelValueType.Boolean => Convert.ToSingle(AsBoolean(), provider),
+						_ => Convert.ToSingle(ToObject(), provider)
+				};
 
-		ushort IConvertible.ToUInt16(IFormatProvider provider) => Convert.ToUInt16(ToObject(), provider);
+		ushort IConvertible.ToUInt16(IFormatProvider provider) =>
+				Type switch
+				{
+						DataModelValueType.Number => Convert.ToUInt16(AsNumber(), provider),
+						DataModelValueType.DateTime => Convert.ToUInt16(AsDateTime().UtcDateTime, provider),
+						DataModelValueType.Boolean => Convert.ToUInt16(AsBoolean(), provider),
+						_ => Convert.ToUInt16(ToObject(), provider)
+				};
 
-		uint IConvertible.ToUInt32(IFormatProvider provider) => Convert.ToUInt32(ToObject(), provider);
+		uint IConvertible.ToUInt32(IFormatProvider provider) =>
+				Type switch
+				{
+						DataModelValueType.Number => Convert.ToUInt32(AsNumber(), provider),
+						DataModelValueType.DateTime => Convert.ToUInt32(AsDateTime().UtcDateTime, provider),
+						DataModelValueType.Boolean => Convert.ToUInt32(AsBoolean(), provider),
+						_ => Convert.ToUInt32(ToObject(), provider)
+				};
 
-		ulong IConvertible.ToUInt64(IFormatProvider provider) => Convert.ToUInt64(ToObject(), provider);
+		ulong IConvertible.ToUInt64(IFormatProvider provider) =>
+				Type switch
+				{
+						DataModelValueType.Number => Convert.ToUInt64(AsNumber(), provider),
+						DataModelValueType.DateTime => Convert.ToUInt64(AsDateTime().UtcDateTime, provider),
+						DataModelValueType.Boolean => Convert.ToUInt64(AsBoolean(), provider),
+						_ => Convert.ToUInt64(ToObject(), provider)
+				};
 
 		DateTime IConvertible.ToDateTime(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToDateTime(AsNumber()),
-						DataModelValueType.DateTime => AsDateTime().UtcDateTime,
-						DataModelValueType.Boolean => Convert.ToDateTime(AsBoolean()),
-						_ => (DateTime) Convert.ChangeType(ToObject(), typeof(DateTime), provider)
+						DataModelValueType.Number => Convert.ToDateTime(AsNumber(), provider),
+						DataModelValueType.DateTime => Convert.ToDateTime(AsDateTime().UtcDateTime, provider),
+						DataModelValueType.Boolean => Convert.ToDateTime(AsBoolean(), provider),
+						_ => Convert.ToDateTime(ToObject(), provider)
 				};
 
 		public string ToString(IFormatProvider provider) => ToString(format: null, provider);
@@ -148,11 +239,6 @@ namespace TSSArt.StateMachine
 			if (conversionType == typeof(string))
 			{
 				return ToString(provider);
-			}
-
-			if (conversionType == typeof(DateTime))
-			{
-				return ((IConvertible) this).ToDateTime(provider);
 			}
 
 			return Type switch
@@ -187,10 +273,10 @@ namespace TSSArt.StateMachine
 					DataModelValueType.Number => AsNumber().ToString(format, formatProvider),
 					DataModelValueType.DateTime => AsDateTime().ToString(format ?? "o", formatProvider),
 					DataModelValueType.Boolean => AsBoolean().ToString(formatProvider),
-					_ => GenericToString(ToObject())
+					_ => ObjectToString(ToObject(), format, formatProvider)
 			};
 
-			string GenericToString(object? obj) =>
+			static string ObjectToString(object? obj, string? format, IFormatProvider? formatProvider) =>
 					(format != null && obj is IFormattable formattable
 							? formattable.ToString(format, formatProvider)
 							: Convert.ToString(obj, formatProvider)) ?? string.Empty;
