@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Globalization;
 using System.Reflection;
-using JetBrains.Annotations;
+using TSSArt.StateMachine.Annotations;
 using Jint;
 using Jint.Native;
 using Jint.Native.Array;
