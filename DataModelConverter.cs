@@ -120,7 +120,7 @@ namespace TSSArt.StateMachine
 						break;
 
 					case DataModelValueType.DateTime:
-						writer.WriteStringValue(value.AsDateTime());
+						writer.WriteStringValue(value.AsDateTimeOffset());
 						break;
 
 					case DataModelValueType.Boolean:
