@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using JetBrains.Annotations;
+using TSSArt.StateMachine.Annotations;
 using Jint;
 using Jint.Native;
 using Jint.Parser.Ast;

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
-using JetBrains.Annotations;
+using TSSArt.StateMachine.Annotations;
 
 namespace TSSArt.StateMachine
 {

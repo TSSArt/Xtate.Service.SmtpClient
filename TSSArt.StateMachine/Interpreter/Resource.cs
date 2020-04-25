@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Net.Mime;
-using JetBrains.Annotations;
+using TSSArt.StateMachine.Annotations;
 
 namespace TSSArt.StateMachine
 {

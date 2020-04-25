@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.Xml;
-using JetBrains.Annotations;
+using TSSArt.StateMachine.Annotations;
 
 namespace TSSArt.StateMachine
 {
