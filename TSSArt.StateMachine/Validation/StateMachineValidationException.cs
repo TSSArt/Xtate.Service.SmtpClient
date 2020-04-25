@@ -47,7 +47,7 @@ namespace TSSArt.StateMachine
 					sb.AppendLine();
 				}
 
-				sb.Append(Res.Format(Resources.StateMachineValidationException_Message, index ++, validationMessages.Length, error));
+				sb.Append(Res.Format(Resources.Exception_StateMachineValidationException_Message, index ++, validationMessages.Length, error));
 			}
 
 			return sb.ToString();

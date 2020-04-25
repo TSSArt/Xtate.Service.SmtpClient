@@ -66,7 +66,7 @@ namespace TSSArt.StateMachine
 				}
 				catch (Exception ex)
 				{
-					AddError(Resources.ErrorMessage_Failure_on_raw_content_processing, ex);
+					AddError(Resources.ErrorMessage_FailureContentProcessing, ex);
 				}
 
 				_current = null;
@@ -104,7 +104,7 @@ namespace TSSArt.StateMachine
 					}
 					catch (Exception ex)
 					{
-						AddError(Resources.ErrorMessage_Failure_on_attribute_processing, ex);
+						AddError(Resources.ErrorMessage_FailureAttributeProcessing, ex);
 					}
 				}
 			}
@@ -132,7 +132,7 @@ namespace TSSArt.StateMachine
 					}
 					catch (Exception ex)
 					{
-						AddError(Resources.ErrorMessage_Failure_on_element_processing, ex);
+						AddError(Resources.ErrorMessage_FailureElementProcessing, ex);
 					}
 				}
 				else
@@ -264,7 +264,7 @@ namespace TSSArt.StateMachine
 					{
 						if (!xmlReader.IsStartElement(policy.ElementName, policy.ElementNamespace))
 						{
-							AddError(CreateMessage(Resources.ErrorMessage_Expected_element_was_not_found, policy.ElementNamespace!, policy.ElementName));
+							AddError(CreateMessage(Resources.ErrorMessage_ExpectedElementNotFound, policy.ElementNamespace!, policy.ElementName));
 						}
 					}
 				}
@@ -275,7 +275,7 @@ namespace TSSArt.StateMachine
 					{
 						if (type == AttributeType.SysOptionalFound || type == AttributeType.SysRequiredFound)
 						{
-							AddError(CreateMessage(Resources.ErrorMessage_Found_duplicate_attribute, ns, name));
+							AddError(CreateMessage(Resources.ErrorMessage_FoundDuplicateAttribute, ns, name));
 						}
 
 						_attributes[(ns, name)] = type + (int) AttributeType.SysIncrement;
@@ -304,7 +304,7 @@ namespace TSSArt.StateMachine
 					}
 					else if (!_ignoreUnknownElements)
 					{
-						AddError(CreateMessage(Resources.ErrorMessage_Detected_unknown_element, ns, name));
+						AddError(CreateMessage(Resources.ErrorMessage_DetectedUnknownElement, ns, name));
 					}
 				}
 

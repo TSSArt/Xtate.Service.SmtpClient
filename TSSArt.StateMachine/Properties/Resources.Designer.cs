@@ -63,27 +63,27 @@ namespace TSSArt.StateMachine {
         /// <summary>
         ///   Looks up a localized string similar to Custom action does not configured..
         /// </summary>
-        internal static string Assertion_Custom_action_does_not_configured {
+        internal static string Assertion_CustomActionDoesNotConfigured {
             get {
-                return ResourceManager.GetString("Assertion_Custom_action_does_not_configured", resourceCulture);
+                return ResourceManager.GetString("Assertion_CustomActionDoesNotConfigured", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Objects structure mismatch.
         /// </summary>
-        internal static string Assertion_Objects_structure_mismatch {
+        internal static string Assertion_ObjectsStructureMismatch {
             get {
-                return ResourceManager.GetString("Assertion_Objects_structure_mismatch", resourceCulture);
+                return ResourceManager.GetString("Assertion_ObjectsStructureMismatch", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Validation failed. Result of operation must be true..
         /// </summary>
-        internal static string Assertion_Validation_failed__Result_of_operation_must_be_true_ {
+        internal static string Assertion_ValidationFailed {
             get {
-                return ResourceManager.GetString("Assertion_Validation_failed__Result_of_operation_must_be_true_", resourceCulture);
+                return ResourceManager.GetString("Assertion_ValidationFailed", resourceCulture);
             }
         }
         
@@ -144,81 +144,81 @@ namespace TSSArt.StateMachine {
         /// <summary>
         ///   Looks up a localized string similar to DataModel not supported in NONE data model..
         /// </summary>
-        internal static string ErrorMesasge_DataModel_not_supported_in_NONE_data_model {
+        internal static string ErrorMesasge_DataModelNotSupportedForNone {
             get {
-                return ResourceManager.GetString("ErrorMesasge_DataModel_not_supported_in_NONE_data_model", resourceCulture);
+                return ResourceManager.GetString("ErrorMesasge_DataModelNotSupportedForNone", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to DoneData not supported in NONE data model..
         /// </summary>
-        internal static string ErrorMesasge_DoneData_not_supported_in_NONE_data_model {
+        internal static string ErrorMesasge_DoneDataNotSupportedForNone {
             get {
-                return ResourceManager.GetString("ErrorMesasge_DoneData_not_supported_in_NONE_data_model", resourceCulture);
+                return ResourceManager.GetString("ErrorMesasge_DoneDataNotSupportedForNone", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to ForEach not supported in NONE data model..
         /// </summary>
-        internal static string ErrorMesasge_ForEach_not_supported_in_NONE_data_model_ {
+        internal static string ErrorMesasge_ForEachNotSupportedForNone {
             get {
-                return ResourceManager.GetString("ErrorMesasge_ForEach_not_supported_in_NONE_data_model_", resourceCulture);
+                return ResourceManager.GetString("ErrorMesasge_ForEachNotSupportedForNone", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Incorrect condition expression..
         /// </summary>
-        internal static string ErrorMesasge_Incorrect_condition_expression {
+        internal static string ErrorMesasge_IncorrectConditionExpression {
             get {
-                return ResourceManager.GetString("ErrorMesasge_Incorrect_condition_expression", resourceCulture);
+                return ResourceManager.GetString("ErrorMesasge_IncorrectConditionExpression", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Incorrect format of condition expression for NONE data model..
         /// </summary>
-        internal static string ErrorMesasge_Incorrect_format_of_condition_expression_for_NONE_data_model {
+        internal static string ErrorMesasge_IncorrectConditionExpressionForNone {
             get {
-                return ResourceManager.GetString("ErrorMesasge_Incorrect_format_of_condition_expression_for_NONE_data_model", resourceCulture);
+                return ResourceManager.GetString("ErrorMesasge_IncorrectConditionExpressionForNone", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to &apos;Location expression&apos; not supported in NONE data model..
         /// </summary>
-        internal static string ErrorMesasge_Location_expression__not_supported_in_NONE_data_model {
+        internal static string ErrorMesasge_LocationExpressionNotSupportedForNone {
             get {
-                return ResourceManager.GetString("ErrorMesasge_Location_expression__not_supported_in_NONE_data_model", resourceCulture);
+                return ResourceManager.GetString("ErrorMesasge_LocationExpressionNotSupportedForNone", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Scripting not supported in NONE data model..
         /// </summary>
-        internal static string ErrorMesasge_Scripting_not_supported_in_NONE_data_model_ {
+        internal static string ErrorMesasge_ScriptingNotSupportedForNone {
             get {
-                return ResourceManager.GetString("ErrorMesasge_Scripting_not_supported_in_NONE_data_model_", resourceCulture);
+                return ResourceManager.GetString("ErrorMesasge_ScriptingNotSupportedForNone", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to &apos;Value expression&apos; not supported in NONE data model..
         /// </summary>
-        internal static string ErrorMesasge_Value_expression__not_supported_in_NONE_data_model {
+        internal static string ErrorMesasge_ValueExpressionNotSupportedForNone {
             get {
-                return ResourceManager.GetString("ErrorMesasge_Value_expression__not_supported_in_NONE_data_model", resourceCulture);
+                return ResourceManager.GetString("ErrorMesasge_ValueExpressionNotSupportedForNone", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Array property required for ForEach element.
         /// </summary>
-        internal static string ErrorMessage_ArrayPropertyRequiredForForEachElement {
+        internal static string ErrorMessage_ArrayPropertyRequiredForForEach {
             get {
-                return ResourceManager.GetString("ErrorMessage_ArrayPropertyRequiredForForEachElement", resourceCulture);
+                return ResourceManager.GetString("ErrorMessage_ArrayPropertyRequiredForForEach", resourceCulture);
             }
         }
         
@@ -268,33 +268,6 @@ namespace TSSArt.StateMachine {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Condition property required for ElseIf element..
-        /// </summary>
-        internal static string ErrorMessage_Condition_property_required_for_ElseIf_element {
-            get {
-                return ResourceManager.GetString("ErrorMessage_Condition_property_required_for_ElseIf_element", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Condition property required for ForEach element..
-        /// </summary>
-        internal static string ErrorMessage_Condition_property_required_for_ForEach_element {
-            get {
-                return ResourceManager.GetString("ErrorMessage_Condition_property_required_for_ForEach_element", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Condition property required for If element..
-        /// </summary>
-        internal static string ErrorMessage_Condition_property_required_for_If_element {
-            get {
-                return ResourceManager.GetString("ErrorMessage_Condition_property_required_for_If_element", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Condition expression can&apos;t be null..
         /// </summary>
         internal static string ErrorMessage_ConditionExpressionCantBeNull {
@@ -304,47 +277,47 @@ namespace TSSArt.StateMachine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Condition property required for ElseIf element..
+        /// </summary>
+        internal static string ErrorMessage_ConditionRequiredForElseIf {
+            get {
+                return ResourceManager.GetString("ErrorMessage_ConditionRequiredForElseIf", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Condition property required for ForEach element..
+        /// </summary>
+        internal static string ErrorMessage_ConditionRequiredForForEach {
+            get {
+                return ResourceManager.GetString("ErrorMessage_ConditionRequiredForForEach", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Content value can&apos;t be null..
         /// </summary>
-        internal static string ErrorMessage_Content_value_can_t_be_null {
+        internal static string ErrorMessage_ContentValueCantBeNull {
             get {
-                return ResourceManager.GetString("ErrorMessage_Content_value_can_t_be_null", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Expression or Body should be specified in Content element..
-        /// </summary>
-        internal static string ErrorMessage_ContentItemExpressionAndBodyMissed {
-            get {
-                return ResourceManager.GetString("ErrorMessage_ContentItemExpressionAndBodyMissed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Expression and Body can&apos;t be used at the same time in Content element..
-        /// </summary>
-        internal static string ErrorMessage_ContentItemExpressionAndBodySpecified {
-            get {
-                return ResourceManager.GetString("ErrorMessage_ContentItemExpressionAndBodySpecified", resourceCulture);
+                return ResourceManager.GetString("ErrorMessage_ContentValueCantBeNull", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to DataModel not supported in &apos;runtime&apos; data model..
         /// </summary>
-        internal static string ErrorMessage_DataModelNotSupportedInRuntimeDataModel {
+        internal static string ErrorMessage_DataModelNotSupportedInRuntime {
             get {
-                return ResourceManager.GetString("ErrorMessage_DataModelNotSupportedInRuntimeDataModel", resourceCulture);
+                return ResourceManager.GetString("ErrorMessage_DataModelNotSupportedInRuntime", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Detected unknown element &lt;{0}&gt;..
         /// </summary>
-        internal static string ErrorMessage_Detected_unknown_element {
+        internal static string ErrorMessage_DetectedUnknownElement {
             get {
-                return ResourceManager.GetString("ErrorMessage_Detected_unknown_element", resourceCulture);
+                return ResourceManager.GetString("ErrorMessage_DetectedUnknownElement", resourceCulture);
             }
         }
         
@@ -369,94 +342,108 @@ namespace TSSArt.StateMachine {
         /// <summary>
         ///   Looks up a localized string similar to Event, EventExpression and Content can&apos;t be used at the same time in Send element..
         /// </summary>
-        internal static string ErrorMessage_Event__EventExpression_and_Content_can_t_be_used_at_the_same_time_in_Send_element {
+        internal static string ErrorMessage_EvenExpressionContentInSend {
             get {
-                return ResourceManager.GetString("ErrorMessage_Event__EventExpression_and_Content_can_t_be_used_at_the_same_time_in" +
-                        "_Send_element", resourceCulture);
+                return ResourceManager.GetString("ErrorMessage_EvenExpressionContentInSend", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Event and EventExpression can&apos;t be used at the same time in Send element..
         /// </summary>
-        internal static string ErrorMessage_Event_and_EventExpression_can_t_be_used_at_the_same_time_in_Send_element {
+        internal static string ErrorMessage_EventExpressionInSend {
             get {
-                return ResourceManager.GetString("ErrorMessage_Event_and_EventExpression_can_t_be_used_at_the_same_time_in_Send_ele" +
-                        "ment", resourceCulture);
+                return ResourceManager.GetString("ErrorMessage_EventExpressionInSend", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Event property required for Raise element..
         /// </summary>
-        internal static string ErrorMessage_Event_property_required_for_Raise_element {
+        internal static string ErrorMessage_EventRequiredForRaise {
             get {
-                return ResourceManager.GetString("ErrorMessage_Event_property_required_for_Raise_element", resourceCulture);
+                return ResourceManager.GetString("ErrorMessage_EventRequiredForRaise", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Expected element &apos;{0}&apos; was not found..
         /// </summary>
-        internal static string ErrorMessage_Expected_element_was_not_found {
+        internal static string ErrorMessage_ExpectedElementNotFound {
             get {
-                return ResourceManager.GetString("ErrorMessage_Expected_element_was_not_found", resourceCulture);
+                return ResourceManager.GetString("ErrorMessage_ExpectedElementNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expression or Body should be specified in Content element..
+        /// </summary>
+        internal static string ErrorMessage_ExpressionAndBodyMissedInContent {
+            get {
+                return ResourceManager.GetString("ErrorMessage_ExpressionAndBodyMissedInContent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expression and Body can&apos;t be used at the same time in Content element..
+        /// </summary>
+        internal static string ErrorMessage_ExpressionAndBodySpecifiedInContent {
+            get {
+                return ResourceManager.GetString("ErrorMessage_ExpressionAndBodySpecifiedInContent", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Expression and Location can&apos;t be used at the same time in Param element..
         /// </summary>
-        internal static string ErrorMessage_Expression_and_Location_can_t_be_used_at_the_same_time_in_Param_element {
+        internal static string ErrorMessage_ExpressionLocationInParam {
             get {
-                return ResourceManager.GetString("ErrorMessage_Expression_and_Location_can_t_be_used_at_the_same_time_in_Param_elem" +
-                        "ent", resourceCulture);
+                return ResourceManager.GetString("ErrorMessage_ExpressionLocationInParam", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Expression and Source and Inline content can&apos;t be used at the same time in Data element..
         /// </summary>
-        internal static string ErrorMessage_Expression_and_Source_and_Inline_content_can_t_be_used_at_the_same_time_in_Data_element {
+        internal static string ErrorMessage_ExpressionSourceInData {
             get {
-                return ResourceManager.GetString("ErrorMessage_Expression_and_Source_and_Inline_content_can_t_be_used_at_the_same_t" +
-                        "ime_in_Data_element", resourceCulture);
+                return ResourceManager.GetString("ErrorMessage_ExpressionSourceInData", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Failure on attribute processing..
         /// </summary>
-        internal static string ErrorMessage_Failure_on_attribute_processing {
+        internal static string ErrorMessage_FailureAttributeProcessing {
             get {
-                return ResourceManager.GetString("ErrorMessage_Failure_on_attribute_processing", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failure on element processing..
-        /// </summary>
-        internal static string ErrorMessage_Failure_on_element_processing {
-            get {
-                return ResourceManager.GetString("ErrorMessage_Failure_on_element_processing", resourceCulture);
+                return ResourceManager.GetString("ErrorMessage_FailureAttributeProcessing", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Failure on raw content processing..
         /// </summary>
-        internal static string ErrorMessage_Failure_on_raw_content_processing {
+        internal static string ErrorMessage_FailureContentProcessing {
             get {
-                return ResourceManager.GetString("ErrorMessage_Failure_on_raw_content_processing", resourceCulture);
+                return ResourceManager.GetString("ErrorMessage_FailureContentProcessing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failure on element processing..
+        /// </summary>
+        internal static string ErrorMessage_FailureElementProcessing {
+            get {
+                return ResourceManager.GetString("ErrorMessage_FailureElementProcessing", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Found duplicate attribute &apos;{0}&apos;..
         /// </summary>
-        internal static string ErrorMessage_Found_duplicate_attribute {
+        internal static string ErrorMessage_FoundDuplicateAttribute {
             get {
-                return ResourceManager.GetString("ErrorMessage_Found_duplicate_attribute", resourceCulture);
+                return ResourceManager.GetString("ErrorMessage_FoundDuplicateAttribute", resourceCulture);
             }
         }
         
@@ -613,6 +600,15 @@ namespace TSSArt.StateMachine {
             get {
                 return ResourceManager.GetString("ErrorMessage_NameList_and_Parameters_can_t_be_used_at_the_same_time_in_Invoke_ele" +
                         "ment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Condition property required for If element..
+        /// </summary>
+        internal static string ErrorMessage_onditionRequiredForIf {
+            get {
+                return ResourceManager.GetString("ErrorMessage_onditionRequiredForIf", resourceCulture);
             }
         }
         
@@ -1398,6 +1394,15 @@ namespace TSSArt.StateMachine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Message #{0} of {1}: {2}.
+        /// </summary>
+        internal static string Exception_StateMachineValidationException_Message {
+            get {
+                return ResourceManager.GetString("Exception_StateMachineValidationException_Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Storage not available for read operations.
         /// </summary>
         internal static string Exception_Storage_not_available_for_read_operations {
@@ -1602,15 +1607,6 @@ namespace TSSArt.StateMachine {
         internal static string Exception_ValueCantBeEmpty {
             get {
                 return ResourceManager.GetString("Exception_ValueCantBeEmpty", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Message #{0} of {1}: {2}.
-        /// </summary>
-        internal static string StateMachineValidationException_Message {
-            get {
-                return ResourceManager.GetString("StateMachineValidationException_Message", resourceCulture);
             }
         }
     }
