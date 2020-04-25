@@ -10,17 +10,17 @@ namespace TSSArt.StateMachine
 
 		private NoneDataModelHandler(IErrorProcessor errorProcessor) : base(errorProcessor) { }
 
-		protected override void Visit(ref IForEach forEach) => AddErrorMessage(forEach, Resources.ErrorMesasge_ForEach_not_supported_in_NONE_data_model_);
+		protected override void Visit(ref IForEach forEach) => AddErrorMessage(forEach, Resources.ErrorMesasge_ForEachNotSupportedForNone);
 
-		protected override void Visit(ref IScript script) => AddErrorMessage(script, Resources.ErrorMesasge_Scripting_not_supported_in_NONE_data_model_);
+		protected override void Visit(ref IScript script) => AddErrorMessage(script, Resources.ErrorMesasge_ScriptingNotSupportedForNone);
 
-		protected override void Visit(ref IDataModel dataModel) => AddErrorMessage(dataModel, Resources.ErrorMesasge_DataModel_not_supported_in_NONE_data_model);
+		protected override void Visit(ref IDataModel dataModel) => AddErrorMessage(dataModel, Resources.ErrorMesasge_DataModelNotSupportedForNone);
 
-		protected override void Visit(ref IDoneData doneData) => AddErrorMessage(doneData, Resources.ErrorMesasge_DoneData_not_supported_in_NONE_data_model);
+		protected override void Visit(ref IDoneData doneData) => AddErrorMessage(doneData, Resources.ErrorMesasge_DoneDataNotSupportedForNone);
 
-		protected override void Visit(ref IValueExpression expression) => AddErrorMessage(expression, Resources.ErrorMesasge_Value_expression__not_supported_in_NONE_data_model);
+		protected override void Visit(ref IValueExpression expression) => AddErrorMessage(expression, Resources.ErrorMesasge_ValueExpressionNotSupportedForNone);
 
-		protected override void Visit(ref ILocationExpression expression) => AddErrorMessage(expression, Resources.ErrorMesasge_Location_expression__not_supported_in_NONE_data_model);
+		protected override void Visit(ref ILocationExpression expression) => AddErrorMessage(expression, Resources.ErrorMesasge_LocationExpressionNotSupportedForNone);
 
 		protected override void Build(ref IConditionExpression conditionExpression, ref ConditionExpression properties)
 		{
@@ -30,7 +30,7 @@ namespace TSSArt.StateMachine
 
 			if (!expression.StartsWith(value: @"In(", StringComparison.Ordinal) || !expression.EndsWith(value: @")", StringComparison.Ordinal))
 			{
-				AddErrorMessage(conditionExpression, Resources.ErrorMesasge_Incorrect_format_of_condition_expression_for_NONE_data_model);
+				AddErrorMessage(conditionExpression, Resources.ErrorMesasge_IncorrectConditionExpressionForNone);
 
 				return;
 			}
@@ -43,7 +43,7 @@ namespace TSSArt.StateMachine
 			}
 			catch (ArgumentException ex)
 			{
-				AddErrorMessage(conditionExpression, Resources.ErrorMesasge_Incorrect_condition_expression, ex);
+				AddErrorMessage(conditionExpression, Resources.ErrorMesasge_IncorrectConditionExpression, ex);
 			}
 		}
 

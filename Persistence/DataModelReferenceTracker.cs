@@ -42,7 +42,7 @@ namespace TSSArt.StateMachine
 		{
 			if (_refIds.TryGetValue(refId, out var obj))
 			{
-				Infrastructure.Assert(baseObject == null || baseObject == obj, Resources.Assertion_Objects_structure_mismatch);
+				Infrastructure.Assert(baseObject == null || baseObject == obj, Resources.Assertion_ObjectsStructureMismatch);
 
 				return obj;
 			}

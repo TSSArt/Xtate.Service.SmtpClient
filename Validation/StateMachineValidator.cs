@@ -114,7 +114,7 @@ namespace TSSArt.StateMachine
 
 				if (entity.Value == null)
 				{
-					AddError(entity, Resources.ErrorMessage_Content_value_can_t_be_null);
+					AddError(entity, Resources.ErrorMessage_ContentValueCantBeNull);
 				}
 
 				base.Visit(ref entity);
@@ -126,12 +126,12 @@ namespace TSSArt.StateMachine
 
 				if (entity.Expression == null && entity.Body == null)
 				{
-					AddError(entity, Resources.ErrorMessage_ContentItemExpressionAndBodyMissed);
+					AddError(entity, Resources.ErrorMessage_ExpressionAndBodyMissedInContent);
 				}
 
 				if (entity.Expression != null && entity.Body != null)
 				{
-					AddError(entity, Resources.ErrorMessage_ContentItemExpressionAndBodySpecified);
+					AddError(entity, Resources.ErrorMessage_ExpressionAndBodySpecifiedInContent);
 				}
 
 				base.Visit(ref entity);
@@ -160,7 +160,7 @@ namespace TSSArt.StateMachine
 
 				if (entity.InlineContent != null && entity.Expression != null || entity.InlineContent != null && entity.Source != null || entity.Source != null && entity.Expression != null)
 				{
-					AddError(entity, Resources.ErrorMessage_Expression_and_Source_and_Inline_content_can_t_be_used_at_the_same_time_in_Data_element);
+					AddError(entity, Resources.ErrorMessage_ExpressionSourceInData);
 				}
 
 				base.Visit(ref entity);
@@ -172,7 +172,7 @@ namespace TSSArt.StateMachine
 
 				if (entity.Condition == null)
 				{
-					AddError(entity, Resources.ErrorMessage_Condition_property_required_for_ElseIf_element);
+					AddError(entity, Resources.ErrorMessage_ConditionRequiredForElseIf);
 				}
 
 				base.Visit(ref entity);
@@ -204,12 +204,12 @@ namespace TSSArt.StateMachine
 
 				if (entity.Array == null)
 				{
-					AddError(entity, Resources.ErrorMessage_ArrayPropertyRequiredForForEachElement);
+					AddError(entity, Resources.ErrorMessage_ArrayPropertyRequiredForForEach);
 				}
 
 				if (entity.Item == null)
 				{
-					AddError(entity, Resources.ErrorMessage_Condition_property_required_for_ForEach_element);
+					AddError(entity, Resources.ErrorMessage_ConditionRequiredForForEach);
 				}
 
 				base.Visit(ref entity);
@@ -238,7 +238,7 @@ namespace TSSArt.StateMachine
 
 				if (entity.Condition == null)
 				{
-					AddError(entity, Resources.ErrorMessage_Condition_property_required_for_If_element);
+					AddError(entity, Resources.ErrorMessage_onditionRequiredForIf);
 				}
 
 				var condition = true;
@@ -325,7 +325,7 @@ namespace TSSArt.StateMachine
 
 				if (entity.Expression != null && entity.Location != null)
 				{
-					AddError(entity, Resources.ErrorMessage_Expression_and_Location_can_t_be_used_at_the_same_time_in_Param_element);
+					AddError(entity, Resources.ErrorMessage_ExpressionLocationInParam);
 				}
 
 				base.Visit(ref entity);
@@ -337,7 +337,7 @@ namespace TSSArt.StateMachine
 
 				if (entity.OutgoingEvent == null)
 				{
-					AddError(entity, Resources.ErrorMessage_Event_property_required_for_Raise_element);
+					AddError(entity, Resources.ErrorMessage_EventRequiredForRaise);
 				}
 
 				base.Visit(ref entity);
@@ -361,7 +361,7 @@ namespace TSSArt.StateMachine
 
 				if (entity.EventName != null && entity.EventExpression != null || entity.EventName != null && entity.Content != null || entity.EventExpression != null && entity.Content != null)
 				{
-					AddError(entity, Resources.ErrorMessage_Event__EventExpression_and_Content_can_t_be_used_at_the_same_time_in_Send_element);
+					AddError(entity, Resources.ErrorMessage_EvenExpressionContentInSend);
 				}
 
 				if (entity.Target != null && entity.TargetExpression != null)
@@ -381,7 +381,7 @@ namespace TSSArt.StateMachine
 
 				if (entity.DelayMs != null && entity.DelayExpression != null)
 				{
-					AddError(entity, Resources.ErrorMessage_Event_and_EventExpression_can_t_be_used_at_the_same_time_in_Send_element);
+					AddError(entity, Resources.ErrorMessage_EventExpressionInSend);
 				}
 
 				if (!entity.NameList.IsDefaultOrEmpty && entity.Content != null)

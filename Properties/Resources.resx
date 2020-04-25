@@ -147,7 +147,7 @@
   <data name="ErrorMessage_ScriptingNotSupportedInRuntimeDataModel" xml:space="preserve">
     <value>Scripting not supported in 'runtime' data model.</value>
   </data>
-  <data name="ErrorMessage_DataModelNotSupportedInRuntimeDataModel" xml:space="preserve">
+  <data name="ErrorMessage_DataModelNotSupportedInRuntime" xml:space="preserve">
     <value>DataModel not supported in 'runtime' data model.</value>
   </data>
   <data name="ErrorMessage_RuntimeActionAndPredicateOnlyAllowed" xml:space="preserve">
@@ -165,10 +165,10 @@
   <data name="Exception_ValueCannotBeEmptyList" xml:space="preserve">
     <value>Value cannot be empty list.</value>
   </data>
-  <data name="ErrorMessage_ContentItemExpressionAndBodyMissed" xml:space="preserve">
+  <data name="ErrorMessage_ExpressionAndBodyMissedInContent" xml:space="preserve">
     <value>Expression or Body should be specified in Content element.</value>
   </data>
-  <data name="ErrorMessage_ContentItemExpressionAndBodySpecified" xml:space="preserve">
+  <data name="ErrorMessage_ExpressionAndBodySpecifiedInContent" xml:space="preserve">
     <value>Expression and Body can't be used at the same time in Content element.</value>
   </data>
   <data name="Exception_SendIdIsEmpty" xml:space="preserve">
@@ -219,16 +219,16 @@
   <data name="ErrorMessage_Script_expression_can_t_be_null" xml:space="preserve">
     <value>Script expression can't be null.</value>
   </data>
-  <data name="ErrorMessage_Content_value_can_t_be_null" xml:space="preserve">
+  <data name="ErrorMessage_ContentValueCantBeNull" xml:space="preserve">
     <value>Content value can't be null.</value>
   </data>
   <data name="ErrorMessage_Id_property_required_in_Data_element" xml:space="preserve">
     <value>Id property required in Data element.</value>
   </data>
-  <data name="ErrorMessage_Expression_and_Source_and_Inline_content_can_t_be_used_at_the_same_time_in_Data_element" xml:space="preserve">
+  <data name="ErrorMessage_ExpressionSourceInData" xml:space="preserve">
     <value>Expression and Source and Inline content can't be used at the same time in Data element.</value>
   </data>
-  <data name="ErrorMessage_Condition_property_required_for_ElseIf_element" xml:space="preserve">
+  <data name="ErrorMessage_ConditionRequiredForElseIf" xml:space="preserve">
     <value>Condition property required for ElseIf element.</value>
   </data>
   <data name="ErrorMessage_Raise_can_t_be_used_in_Finalize_element" xml:space="preserve">
@@ -237,10 +237,10 @@
   <data name="ErrorMessage_Send_can_t_be_used_in_Finalize_element" xml:space="preserve">
     <value>Send can't be used in Finalize element.</value>
   </data>
-  <data name="ErrorMessage_ArrayPropertyRequiredForForEachElement" xml:space="preserve">
+  <data name="ErrorMessage_ArrayPropertyRequiredForForEach" xml:space="preserve">
     <value>Array property required for ForEach element</value>
   </data>
-  <data name="ErrorMessage_Condition_property_required_for_ForEach_element" xml:space="preserve">
+  <data name="ErrorMessage_ConditionRequiredForForEach" xml:space="preserve">
     <value>Condition property required for ForEach element.</value>
   </data>
   <data name="ErrorMessage_Transition_must_be_present_in_History_element" xml:space="preserve">
@@ -249,7 +249,7 @@
   <data name="ErrorMessage_Invalid_Type_value_in_History_element" xml:space="preserve">
     <value>Invalid Type value in History element.</value>
   </data>
-  <data name="ErrorMessage_Condition_property_required_for_If_element" xml:space="preserve">
+  <data name="ErrorMessage_onditionRequiredForIf" xml:space="preserve">
     <value>Condition property required for If element.</value>
   </data>
   <data name="ErrorMessage_ElseifCannotFollowElse" xml:space="preserve">
@@ -279,16 +279,16 @@
   <data name="ErrorMessage_Name_attributes_required_in_Param_element" xml:space="preserve">
     <value>Name attributes required in Param element.</value>
   </data>
-  <data name="ErrorMessage_Expression_and_Location_can_t_be_used_at_the_same_time_in_Param_element" xml:space="preserve">
+  <data name="ErrorMessage_ExpressionLocationInParam" xml:space="preserve">
     <value>Expression and Location can't be used at the same time in Param element.</value>
   </data>
-  <data name="ErrorMessage_Event_property_required_for_Raise_element" xml:space="preserve">
+  <data name="ErrorMessage_EventRequiredForRaise" xml:space="preserve">
     <value>Event property required for Raise element.</value>
   </data>
   <data name="ErrorMessage_Source_and_Body_can_t_be_used_at_the_same_time_in_Assign_element" xml:space="preserve">
     <value>Source and Body can't be used at the same time in Assign element.</value>
   </data>
-  <data name="ErrorMessage_Event__EventExpression_and_Content_can_t_be_used_at_the_same_time_in_Send_element" xml:space="preserve">
+  <data name="ErrorMessage_EvenExpressionContentInSend" xml:space="preserve">
     <value>Event, EventExpression and Content can't be used at the same time in Send element.</value>
   </data>
   <data name="ErrorMessage_Target_and_TargetExpression_can_t_be_used_at_the_same_time_in_Send_element" xml:space="preserve">
@@ -300,7 +300,7 @@
   <data name="ErrorMessage_Id_and_IdLocation_can_t_be_used_at_the_same_time_in_Send_element" xml:space="preserve">
     <value>Id and IdLocation can't be used at the same time in Send element.</value>
   </data>
-  <data name="ErrorMessage_Event_and_EventExpression_can_t_be_used_at_the_same_time_in_Send_element" xml:space="preserve">
+  <data name="ErrorMessage_EventExpressionInSend" xml:space="preserve">
     <value>Event and EventExpression can't be used at the same time in Send element.</value>
   </data>
   <data name="ErrorMessage_NameList_and_Content_can_t_be_used_at_the_same_time_in_Send_element" xml:space="preserve">
@@ -333,19 +333,19 @@
   <data name="Exception_UnsupportedScxmlVersion" xml:space="preserve">
     <value>Unsupported SCXML version.</value>
   </data>
-  <data name="ErrorMessage_Failure_on_raw_content_processing" xml:space="preserve">
+  <data name="ErrorMessage_FailureContentProcessing" xml:space="preserve">
     <value>Failure on raw content processing.</value>
   </data>
-  <data name="ErrorMessage_Failure_on_attribute_processing" xml:space="preserve">
+  <data name="ErrorMessage_FailureAttributeProcessing" xml:space="preserve">
     <value>Failure on attribute processing.</value>
   </data>
-  <data name="ErrorMessage_Failure_on_element_processing" xml:space="preserve">
+  <data name="ErrorMessage_FailureElementProcessing" xml:space="preserve">
     <value>Failure on element processing.</value>
   </data>
-  <data name="ErrorMessage_Expected_element_was_not_found" xml:space="preserve">
+  <data name="ErrorMessage_ExpectedElementNotFound" xml:space="preserve">
     <value>Expected element '{0}' was not found.</value>
   </data>
-  <data name="ErrorMessage_Found_duplicate_attribute" xml:space="preserve">
+  <data name="ErrorMessage_FoundDuplicateAttribute" xml:space="preserve">
     <value>Found duplicate attribute '{0}'.</value>
   </data>
   <data name="ErrorMessage_Missed_required_attributes" xml:space="preserve">
@@ -354,7 +354,7 @@
   <data name="ErrorMessage_Only_one_element_allowed" xml:space="preserve">
     <value>Only one &lt;{0}&gt; element allowed.</value>
   </data>
-  <data name="ErrorMessage_Detected_unknown_element" xml:space="preserve">
+  <data name="ErrorMessage_DetectedUnknownElement" xml:space="preserve">
     <value>Detected unknown element &lt;{0}&gt;.</value>
   </data>
   <data name="ErrorMessage_Missed_required_elements" xml:space="preserve">
@@ -417,7 +417,7 @@
   <data name="Exception_Partition_argument_should_be_null" xml:space="preserve">
     <value>Partition argument should be null.</value>
   </data>
-  <data name="Assertion_Objects_structure_mismatch" xml:space="preserve">
+  <data name="Assertion_ObjectsStructureMismatch" xml:space="preserve">
     <value>Objects structure mismatch</value>
   </data>
   <data name="ErrorMessage_Value_expression__does_not_implement_IValueEvaluator_" xml:space="preserve">
@@ -426,31 +426,31 @@
   <data name="ErrorMessage_Location_expression__does_not_implement_ILocationEvaluator" xml:space="preserve">
     <value>'Location expression' does not implement ILocationEvaluator.</value>
   </data>
-  <data name="Assertion_Custom_action_does_not_configured" xml:space="preserve">
+  <data name="Assertion_CustomActionDoesNotConfigured" xml:space="preserve">
     <value>Custom action does not configured.</value>
   </data>
-  <data name="ErrorMesasge_ForEach_not_supported_in_NONE_data_model_" xml:space="preserve">
+  <data name="ErrorMesasge_ForEachNotSupportedForNone" xml:space="preserve">
     <value>ForEach not supported in NONE data model.</value>
   </data>
-  <data name="ErrorMesasge_Scripting_not_supported_in_NONE_data_model_" xml:space="preserve">
+  <data name="ErrorMesasge_ScriptingNotSupportedForNone" xml:space="preserve">
     <value>Scripting not supported in NONE data model.</value>
   </data>
-  <data name="ErrorMesasge_DataModel_not_supported_in_NONE_data_model" xml:space="preserve">
+  <data name="ErrorMesasge_DataModelNotSupportedForNone" xml:space="preserve">
     <value>DataModel not supported in NONE data model.</value>
   </data>
-  <data name="ErrorMesasge_DoneData_not_supported_in_NONE_data_model" xml:space="preserve">
+  <data name="ErrorMesasge_DoneDataNotSupportedForNone" xml:space="preserve">
     <value>DoneData not supported in NONE data model.</value>
   </data>
-  <data name="ErrorMesasge_Value_expression__not_supported_in_NONE_data_model" xml:space="preserve">
+  <data name="ErrorMesasge_ValueExpressionNotSupportedForNone" xml:space="preserve">
     <value>'Value expression' not supported in NONE data model.</value>
   </data>
-  <data name="ErrorMesasge_Location_expression__not_supported_in_NONE_data_model" xml:space="preserve">
+  <data name="ErrorMesasge_LocationExpressionNotSupportedForNone" xml:space="preserve">
     <value>'Location expression' not supported in NONE data model.</value>
   </data>
-  <data name="ErrorMesasge_Incorrect_format_of_condition_expression_for_NONE_data_model" xml:space="preserve">
+  <data name="ErrorMesasge_IncorrectConditionExpressionForNone" xml:space="preserve">
     <value>Incorrect format of condition expression for NONE data model.</value>
   </data>
-  <data name="ErrorMesasge_Incorrect_condition_expression" xml:space="preserve">
+  <data name="ErrorMesasge_IncorrectConditionExpression" xml:space="preserve">
     <value>Incorrect condition expression.</value>
   </data>
   <data name="Exception_Invalid_TypeInfo_value" xml:space="preserve">
@@ -517,7 +517,7 @@
   <data name="Exception_StateMachine_or_Source_or_SCXML_should_be_provided" xml:space="preserve">
     <value>StateMachine or Source or SCXML should be provided.</value>
   </data>
-  <data name="Assertion_Validation_failed__Result_of_operation_must_be_true_" xml:space="preserve">
+  <data name="Assertion_ValidationFailed" xml:space="preserve">
     <value>Validation failed. Result of operation must be true.</value>
   </data>
   <data name="Exception_Cannot_find_target" xml:space="preserve">
@@ -589,7 +589,7 @@
   <data name="Exception_ServiceAttribute_did_not_provided_for_type" xml:space="preserve">
     <value>ServiceAttribute did not provided for type {0}</value>
   </data>
-  <data name="StateMachineValidationException_Message" xml:space="preserve">
+  <data name="Exception_StateMachineValidationException_Message" xml:space="preserve">
     <value>Message #{0} of {1}: {2}</value>
   </data>
   <data name="Exception_Specified_method_is_not_supported_in_type" xml:space="preserve">

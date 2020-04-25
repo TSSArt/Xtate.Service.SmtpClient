@@ -18,7 +18,7 @@ namespace TSSArt.StateMachine
 
 			var customActionDispatcher = customAction.Ancestor?.As<ICustomActionDispatcher>();
 
-			Infrastructure.Assert(customActionDispatcher != null, Resources.Assertion_Custom_action_does_not_configured);
+			Infrastructure.Assert(customActionDispatcher != null, Resources.Assertion_CustomActionDoesNotConfigured);
 
 			var locations = customAction.Locations.AsArrayOf<ILocationExpression, ILocationEvaluator>(true);
 			var values = customAction.Values.AsArrayOf<IValueExpression, IObjectEvaluator>(true);
@@ -50,7 +50,7 @@ namespace TSSArt.StateMachine
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
 
-			Infrastructure.Assert(_customActionDispatcher != null, Resources.Assertion_Custom_action_does_not_configured);
+			Infrastructure.Assert(_customActionDispatcher != null, Resources.Assertion_CustomActionDoesNotConfigured);
 
 			return _customActionDispatcher.Execute(executionContext, token);
 		}

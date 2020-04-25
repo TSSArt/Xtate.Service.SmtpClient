@@ -74,7 +74,7 @@ namespace TSSArt.StateMachine
 				return;
 			}
 
-			Infrastructure.Fail(Resources.Assertion_Validation_failed__Result_of_operation_must_be_true_);
+			Infrastructure.Fail(Resources.Assertion_ValidationFailed);
 		}
 
 		protected virtual StateMachineController CreateStateMachineController(string sessionId, IStateMachineOptions? options, IStateMachine stateMachine, in InterpreterOptions defaultOptions) =>
