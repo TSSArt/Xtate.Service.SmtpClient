@@ -92,6 +92,8 @@ namespace TSSArt.StateMachine
 
 	#region Interface IConvertible
 
+		public string ToString(IFormatProvider provider) => ToString(format: null, provider);
+
 		TypeCode IConvertible.GetTypeCode() =>
 				Type switch
 				{
@@ -109,145 +111,159 @@ namespace TSSArt.StateMachine
 		bool IConvertible.ToBoolean(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToBoolean(AsNumber(), provider),
-						DataModelValueType.DateTime => Convert.ToBoolean(AsDateTime().UtcDateTime, provider),
-						DataModelValueType.Boolean => Convert.ToBoolean(AsBoolean(), provider),
+						DataModelValueType.Number => Convert.ToBoolean(AsNumber()),
+						DataModelValueType.DateTime => Convert.ToBoolean(AsDateTime().UtcDateTime),
+						DataModelValueType.Boolean => Convert.ToBoolean(AsBoolean()),
 						_ => Convert.ToBoolean(ToObject(), provider)
 				};
 
 		byte IConvertible.ToByte(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToByte(AsNumber(), provider),
-						DataModelValueType.DateTime => Convert.ToByte(AsDateTime().UtcDateTime, provider),
-						DataModelValueType.Boolean => Convert.ToByte(AsBoolean(), provider),
+						DataModelValueType.Number => Convert.ToByte(AsNumber()),
+						DataModelValueType.DateTime => Convert.ToByte(AsDateTime().UtcDateTime),
+						DataModelValueType.Boolean => Convert.ToByte(AsBoolean()),
 						_ => Convert.ToByte(ToObject(), provider)
 				};
 
 		char IConvertible.ToChar(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToChar(AsNumber(), provider),
-						DataModelValueType.DateTime => Convert.ToChar(AsDateTime().UtcDateTime, provider),
-						DataModelValueType.Boolean => Convert.ToChar(AsBoolean(), provider),
+						DataModelValueType.Number => Convert.ToChar(AsNumber()),
+						DataModelValueType.DateTime => Convert.ToChar(AsDateTime().UtcDateTime),
+						DataModelValueType.Boolean => Convert.ToChar(AsBoolean()),
 						_ => Convert.ToChar(ToObject(), provider)
 				};
 
 		decimal IConvertible.ToDecimal(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToDecimal(AsNumber(), provider),
-						DataModelValueType.DateTime => Convert.ToDecimal(AsDateTime().UtcDateTime, provider),
-						DataModelValueType.Boolean => Convert.ToDecimal(AsBoolean(), provider),
+						DataModelValueType.Number => Convert.ToDecimal(AsNumber()),
+						DataModelValueType.DateTime => Convert.ToDecimal(AsDateTime().UtcDateTime),
+						DataModelValueType.Boolean => Convert.ToDecimal(AsBoolean()),
 						_ => Convert.ToDecimal(ToObject(), provider)
 				};
 
 		double IConvertible.ToDouble(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToDouble(AsNumber(), provider),
-						DataModelValueType.DateTime => Convert.ToDouble(AsDateTime().UtcDateTime, provider),
-						DataModelValueType.Boolean => Convert.ToDouble(AsBoolean(), provider),
+						DataModelValueType.Number => Convert.ToDouble(AsNumber()),
+						DataModelValueType.DateTime => Convert.ToDouble(AsDateTime().UtcDateTime),
+						DataModelValueType.Boolean => Convert.ToDouble(AsBoolean()),
 						_ => Convert.ToDouble(ToObject(), provider)
 				};
 
 		short IConvertible.ToInt16(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToInt16(AsNumber(), provider),
-						DataModelValueType.DateTime => Convert.ToInt16(AsDateTime().UtcDateTime, provider),
-						DataModelValueType.Boolean => Convert.ToInt16(AsBoolean(), provider),
+						DataModelValueType.Number => Convert.ToInt16(AsNumber()),
+						DataModelValueType.DateTime => Convert.ToInt16(AsDateTime().UtcDateTime),
+						DataModelValueType.Boolean => Convert.ToInt16(AsBoolean()),
 						_ => Convert.ToInt16(ToObject(), provider)
 				};
 
 		int IConvertible.ToInt32(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToInt32(AsNumber(), provider),
-						DataModelValueType.DateTime => Convert.ToInt32(AsDateTime().UtcDateTime, provider),
-						DataModelValueType.Boolean => Convert.ToInt32(AsBoolean(), provider),
+						DataModelValueType.Number => Convert.ToInt32(AsNumber()),
+						DataModelValueType.DateTime => Convert.ToInt32(AsDateTime().UtcDateTime),
+						DataModelValueType.Boolean => Convert.ToInt32(AsBoolean()),
 						_ => Convert.ToInt32(ToObject(), provider)
 				};
 
 		long IConvertible.ToInt64(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToInt64(AsNumber(), provider),
-						DataModelValueType.DateTime => Convert.ToInt64(AsDateTime().UtcDateTime, provider),
-						DataModelValueType.Boolean => Convert.ToInt64(AsBoolean(), provider),
+						DataModelValueType.Number => Convert.ToInt64(AsNumber()),
+						DataModelValueType.DateTime => Convert.ToInt64(AsDateTime().UtcDateTime),
+						DataModelValueType.Boolean => Convert.ToInt64(AsBoolean()),
 						_ => Convert.ToInt64(ToObject(), provider)
 				};
 
 		sbyte IConvertible.ToSByte(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToSByte(AsNumber(), provider),
-						DataModelValueType.DateTime => Convert.ToSByte(AsDateTime().UtcDateTime, provider),
-						DataModelValueType.Boolean => Convert.ToSByte(AsBoolean(), provider),
+						DataModelValueType.Number => Convert.ToSByte(AsNumber()),
+						DataModelValueType.DateTime => Convert.ToSByte(AsDateTime().UtcDateTime),
+						DataModelValueType.Boolean => Convert.ToSByte(AsBoolean()),
 						_ => Convert.ToSByte(ToObject(), provider)
 				};
 
 		float IConvertible.ToSingle(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToSingle(AsNumber(), provider),
-						DataModelValueType.DateTime => Convert.ToSingle(AsDateTime().UtcDateTime, provider),
-						DataModelValueType.Boolean => Convert.ToSingle(AsBoolean(), provider),
+						DataModelValueType.Number => Convert.ToSingle(AsNumber()),
+						DataModelValueType.DateTime => Convert.ToSingle(AsDateTime().UtcDateTime),
+						DataModelValueType.Boolean => Convert.ToSingle(AsBoolean()),
 						_ => Convert.ToSingle(ToObject(), provider)
 				};
 
 		ushort IConvertible.ToUInt16(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToUInt16(AsNumber(), provider),
-						DataModelValueType.DateTime => Convert.ToUInt16(AsDateTime().UtcDateTime, provider),
-						DataModelValueType.Boolean => Convert.ToUInt16(AsBoolean(), provider),
+						DataModelValueType.Number => Convert.ToUInt16(AsNumber()),
+						DataModelValueType.DateTime => Convert.ToUInt16(AsDateTime().UtcDateTime),
+						DataModelValueType.Boolean => Convert.ToUInt16(AsBoolean()),
 						_ => Convert.ToUInt16(ToObject(), provider)
 				};
 
 		uint IConvertible.ToUInt32(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToUInt32(AsNumber(), provider),
-						DataModelValueType.DateTime => Convert.ToUInt32(AsDateTime().UtcDateTime, provider),
-						DataModelValueType.Boolean => Convert.ToUInt32(AsBoolean(), provider),
+						DataModelValueType.Number => Convert.ToUInt32(AsNumber()),
+						DataModelValueType.DateTime => Convert.ToUInt32(AsDateTime().UtcDateTime),
+						DataModelValueType.Boolean => Convert.ToUInt32(AsBoolean()),
 						_ => Convert.ToUInt32(ToObject(), provider)
 				};
 
 		ulong IConvertible.ToUInt64(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToUInt64(AsNumber(), provider),
-						DataModelValueType.DateTime => Convert.ToUInt64(AsDateTime().UtcDateTime, provider),
-						DataModelValueType.Boolean => Convert.ToUInt64(AsBoolean(), provider),
+						DataModelValueType.Number => Convert.ToUInt64(AsNumber()),
+						DataModelValueType.DateTime => Convert.ToUInt64(AsDateTime().UtcDateTime),
+						DataModelValueType.Boolean => Convert.ToUInt64(AsBoolean()),
 						_ => Convert.ToUInt64(ToObject(), provider)
 				};
 
 		DateTime IConvertible.ToDateTime(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToDateTime(AsNumber(), provider),
-						DataModelValueType.DateTime => Convert.ToDateTime(AsDateTime().UtcDateTime, provider),
-						DataModelValueType.Boolean => Convert.ToDateTime(AsBoolean(), provider),
+						DataModelValueType.Number => Convert.ToDateTime(AsNumber()),
+						DataModelValueType.DateTime => Convert.ToDateTime(AsDateTime().UtcDateTime),
+						DataModelValueType.Boolean => Convert.ToDateTime(AsBoolean()),
 						_ => Convert.ToDateTime(ToObject(), provider)
 				};
-
-		public string ToString(IFormatProvider provider) => ToString(format: null, provider);
 
 		object IConvertible.ToType(Type conversionType, IFormatProvider provider)
 		{
 			if (conversionType == typeof(string))
 			{
-				return ToString(provider);
+				return ToString(format: null, provider);
+			}
+
+			if (conversionType == typeof(DateTimeOffset))
+			{
+				return ToDateTimeOffset(this);
 			}
 
 			return Type switch
 			{
-					DataModelValueType.Number => ((IConvertible) AsNumber()).ToType(conversionType, provider),
-					DataModelValueType.DateTime => ((IConvertible) AsDateTime().UtcDateTime).ToType(conversionType, provider),
-					DataModelValueType.Boolean => ((IConvertible) AsBoolean()).ToType(conversionType, provider),
+					DataModelValueType.Number => ToType(AsNumber()),
+					DataModelValueType.DateTime => ToType(AsDateTime().UtcDateTime),
+					DataModelValueType.Boolean => ToType(AsBoolean()),
 					_ => Convert.ChangeType(ToObject(), conversionType, provider)
 			};
+
+			object ToType<T>(T val) where T : IConvertible => val.ToType(conversionType, provider);
+
+			DateTimeOffset ToDateTimeOffset(in DataModelValue val) =>
+					val.Type switch
+					{
+							DataModelValueType.Number => new DateTimeOffset(Convert.ToDateTime(val.AsNumber())),
+							DataModelValueType.DateTime => val.AsDateTime(),
+							DataModelValueType.Boolean => new DateTimeOffset(Convert.ToDateTime(val.AsBoolean())),
+							_ => new DateTimeOffset(Convert.ToDateTime(val.ToObject(), provider))
+					};
 		}
 
 	#endregion
@@ -277,7 +293,7 @@ namespace TSSArt.StateMachine
 			};
 
 			static string ObjectToString(object? obj, string? format, IFormatProvider? formatProvider) =>
-					(format != null && obj is IFormattable formattable
+					(!string.IsNullOrEmpty(format) && obj is IFormattable formattable
 							? formattable.ToString(format, formatProvider)
 							: Convert.ToString(obj, formatProvider)) ?? string.Empty;
 		}
@@ -315,20 +331,6 @@ namespace TSSArt.StateMachine
 		public static DataModelValue FromDouble(double val)                    => new DataModelValue(val);
 		public static DataModelValue FromDateTimeOffset(DateTimeOffset val)    => new DataModelValue(val);
 		public static DataModelValue FromBoolean(bool val)                     => new DataModelValue(val);
-
-		public static explicit operator DataModelObject?(DataModelValue val) => ToDataModelObject(val);
-		public static explicit operator DataModelArray?(DataModelValue val)  => ToDataModelArray(val);
-		public static explicit operator string?(DataModelValue val)          => ToString(val);
-		public static explicit operator double(DataModelValue val)           => ToDouble(val);
-		public static explicit operator DateTimeOffset(DataModelValue val)   => ToDateTimeOffset(val);
-		public static explicit operator bool(DataModelValue val)             => ToBoolean(val);
-
-		public static DataModelObject? ToDataModelObject(DataModelValue val) => val.AsNullableObject();
-		public static DataModelArray?  ToDataModelArray(DataModelValue val)  => val.AsNullableArray();
-		public static string?          ToString(DataModelValue val)          => val.AsNullableString();
-		public static double           ToDouble(DataModelValue val)          => val.AsNumber();
-		public static DateTimeOffset   ToDateTimeOffset(DataModelValue val)  => val.AsDateTime();
-		public static bool             ToBoolean(DataModelValue val)         => val.AsBoolean();
 
 		public bool IsUndefinedOrNull() => _value == null || _value == NullValue;
 
