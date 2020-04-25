@@ -120,7 +120,7 @@ namespace TSSArt.StateMachine
 					break;
 
 				case DataModelValueType.DateTime:
-					bucket.Add(Key.Item, item.AsDateTime());
+					bucket.Add(Key.Item, item.AsDateTimeOffset());
 					break;
 
 				case DataModelValueType.Boolean:

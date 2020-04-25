@@ -175,7 +175,7 @@ namespace TSSArt.StateMachine.Test
 			var _ = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
 			Assert.AreEqual(expected: 1, _restoredDataModelArray.Length);
-			Assert.AreEqual(new DateTime(year: 2000, month: 1, day: 1), _restoredDataModelArray[0].AsDateTime());
+			Assert.AreEqual(new DateTime(year: 2000, month: 1, day: 1), _restoredDataModelArray[0].AsDateTimeOffset());
 		}
 
 		[TestMethod]

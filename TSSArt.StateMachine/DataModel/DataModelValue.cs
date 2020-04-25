@@ -64,11 +64,15 @@ namespace TSSArt.StateMachine
 			_int64 = BitConverter.DoubleToInt64Bits(value);
 		}
 
+		public DataModelValue(int value) : this((double) value) { }
+
 		public DataModelValue(DateTimeOffset value)
 		{
 			_value = DateTimeValue.Get(value.Offset);
 			_int64 = value.Ticks;
 		}
+
+		public DataModelValue(DateTime value) : this((DateTimeOffset) value) { }
 
 		public DataModelValue(bool value)
 		{
@@ -79,14 +83,14 @@ namespace TSSArt.StateMachine
 		public DataModelValueType Type =>
 				_value switch
 				{
-						DataModelObject _ => DataModelValueType.Object,
-						DataModelArray _ => DataModelValueType.Array,
-						string _ => DataModelValueType.String,
-						DateTimeValue _ => DataModelValueType.DateTime,
+						null => DataModelValueType.Undefined,
+						{ } val when val == NullValue => DataModelValueType.Null,
 						{ } val when val == NumberValue => DataModelValueType.Number,
 						{ } val when val == BooleanValue => DataModelValueType.Boolean,
-						{ } val when val == NullValue => DataModelValueType.Null,
-						null => DataModelValueType.Undefined,
+						string _ => DataModelValueType.String,
+						DateTimeValue _ => DataModelValueType.DateTime,
+						DataModelObject _ => DataModelValueType.Object,
+						DataModelArray _ => DataModelValueType.Array,
 						_ => Infrastructure.UnexpectedValue<DataModelValueType>()
 				};
 
@@ -112,7 +116,7 @@ namespace TSSArt.StateMachine
 				Type switch
 				{
 						DataModelValueType.Number => Convert.ToBoolean(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToBoolean(AsDateTime().UtcDateTime),
+						DataModelValueType.DateTime => Convert.ToBoolean(AsDateTime()),
 						DataModelValueType.Boolean => Convert.ToBoolean(AsBoolean()),
 						_ => Convert.ToBoolean(ToObject(), provider)
 				};
@@ -121,7 +125,7 @@ namespace TSSArt.StateMachine
 				Type switch
 				{
 						DataModelValueType.Number => Convert.ToByte(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToByte(AsDateTime().UtcDateTime),
+						DataModelValueType.DateTime => Convert.ToByte(AsDateTime()),
 						DataModelValueType.Boolean => Convert.ToByte(AsBoolean()),
 						_ => Convert.ToByte(ToObject(), provider)
 				};
@@ -130,7 +134,7 @@ namespace TSSArt.StateMachine
 				Type switch
 				{
 						DataModelValueType.Number => Convert.ToChar(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToChar(AsDateTime().UtcDateTime),
+						DataModelValueType.DateTime => Convert.ToChar(AsDateTime()),
 						DataModelValueType.Boolean => Convert.ToChar(AsBoolean()),
 						_ => Convert.ToChar(ToObject(), provider)
 				};
@@ -139,7 +143,7 @@ namespace TSSArt.StateMachine
 				Type switch
 				{
 						DataModelValueType.Number => Convert.ToDecimal(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToDecimal(AsDateTime().UtcDateTime),
+						DataModelValueType.DateTime => Convert.ToDecimal(AsDateTime()),
 						DataModelValueType.Boolean => Convert.ToDecimal(AsBoolean()),
 						_ => Convert.ToDecimal(ToObject(), provider)
 				};
@@ -148,7 +152,7 @@ namespace TSSArt.StateMachine
 				Type switch
 				{
 						DataModelValueType.Number => Convert.ToDouble(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToDouble(AsDateTime().UtcDateTime),
+						DataModelValueType.DateTime => Convert.ToDouble(AsDateTime()),
 						DataModelValueType.Boolean => Convert.ToDouble(AsBoolean()),
 						_ => Convert.ToDouble(ToObject(), provider)
 				};
@@ -157,7 +161,7 @@ namespace TSSArt.StateMachine
 				Type switch
 				{
 						DataModelValueType.Number => Convert.ToInt16(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToInt16(AsDateTime().UtcDateTime),
+						DataModelValueType.DateTime => Convert.ToInt16(AsDateTime()),
 						DataModelValueType.Boolean => Convert.ToInt16(AsBoolean()),
 						_ => Convert.ToInt16(ToObject(), provider)
 				};
@@ -166,7 +170,7 @@ namespace TSSArt.StateMachine
 				Type switch
 				{
 						DataModelValueType.Number => Convert.ToInt32(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToInt32(AsDateTime().UtcDateTime),
+						DataModelValueType.DateTime => Convert.ToInt32(AsDateTime()),
 						DataModelValueType.Boolean => Convert.ToInt32(AsBoolean()),
 						_ => Convert.ToInt32(ToObject(), provider)
 				};
@@ -175,7 +179,7 @@ namespace TSSArt.StateMachine
 				Type switch
 				{
 						DataModelValueType.Number => Convert.ToInt64(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToInt64(AsDateTime().UtcDateTime),
+						DataModelValueType.DateTime => Convert.ToInt64(AsDateTime()),
 						DataModelValueType.Boolean => Convert.ToInt64(AsBoolean()),
 						_ => Convert.ToInt64(ToObject(), provider)
 				};
@@ -184,7 +188,7 @@ namespace TSSArt.StateMachine
 				Type switch
 				{
 						DataModelValueType.Number => Convert.ToSByte(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToSByte(AsDateTime().UtcDateTime),
+						DataModelValueType.DateTime => Convert.ToSByte(AsDateTime()),
 						DataModelValueType.Boolean => Convert.ToSByte(AsBoolean()),
 						_ => Convert.ToSByte(ToObject(), provider)
 				};
@@ -193,7 +197,7 @@ namespace TSSArt.StateMachine
 				Type switch
 				{
 						DataModelValueType.Number => Convert.ToSingle(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToSingle(AsDateTime().UtcDateTime),
+						DataModelValueType.DateTime => Convert.ToSingle(AsDateTime()),
 						DataModelValueType.Boolean => Convert.ToSingle(AsBoolean()),
 						_ => Convert.ToSingle(ToObject(), provider)
 				};
@@ -202,7 +206,7 @@ namespace TSSArt.StateMachine
 				Type switch
 				{
 						DataModelValueType.Number => Convert.ToUInt16(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToUInt16(AsDateTime().UtcDateTime),
+						DataModelValueType.DateTime => Convert.ToUInt16(AsDateTime()),
 						DataModelValueType.Boolean => Convert.ToUInt16(AsBoolean()),
 						_ => Convert.ToUInt16(ToObject(), provider)
 				};
@@ -211,7 +215,7 @@ namespace TSSArt.StateMachine
 				Type switch
 				{
 						DataModelValueType.Number => Convert.ToUInt32(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToUInt32(AsDateTime().UtcDateTime),
+						DataModelValueType.DateTime => Convert.ToUInt32(AsDateTime()),
 						DataModelValueType.Boolean => Convert.ToUInt32(AsBoolean()),
 						_ => Convert.ToUInt32(ToObject(), provider)
 				};
@@ -220,7 +224,7 @@ namespace TSSArt.StateMachine
 				Type switch
 				{
 						DataModelValueType.Number => Convert.ToUInt64(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToUInt64(AsDateTime().UtcDateTime),
+						DataModelValueType.DateTime => Convert.ToUInt64(AsDateTime()),
 						DataModelValueType.Boolean => Convert.ToUInt64(AsBoolean()),
 						_ => Convert.ToUInt64(ToObject(), provider)
 				};
@@ -229,7 +233,7 @@ namespace TSSArt.StateMachine
 				Type switch
 				{
 						DataModelValueType.Number => Convert.ToDateTime(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToDateTime(AsDateTime().UtcDateTime),
+						DataModelValueType.DateTime => Convert.ToDateTime(AsDateTime()),
 						DataModelValueType.Boolean => Convert.ToDateTime(AsBoolean()),
 						_ => Convert.ToDateTime(ToObject(), provider)
 				};
@@ -249,7 +253,7 @@ namespace TSSArt.StateMachine
 			return Type switch
 			{
 					DataModelValueType.Number => ToType(AsNumber()),
-					DataModelValueType.DateTime => ToType(AsDateTime().UtcDateTime),
+					DataModelValueType.DateTime => ToType(AsDateTime()),
 					DataModelValueType.Boolean => ToType(AsBoolean()),
 					_ => Convert.ChangeType(ToObject(), conversionType, provider)
 			};
@@ -260,7 +264,7 @@ namespace TSSArt.StateMachine
 					val.Type switch
 					{
 							DataModelValueType.Number => new DateTimeOffset(Convert.ToDateTime(val.AsNumber())),
-							DataModelValueType.DateTime => val.AsDateTime(),
+							DataModelValueType.DateTime => val.AsDateTimeOffset(),
 							DataModelValueType.Boolean => new DateTimeOffset(Convert.ToDateTime(val.AsBoolean())),
 							_ => new DateTimeOffset(Convert.ToDateTime(val.ToObject(), provider))
 					};
@@ -287,7 +291,7 @@ namespace TSSArt.StateMachine
 			return Type switch
 			{
 					DataModelValueType.Number => AsNumber().ToString(format, formatProvider),
-					DataModelValueType.DateTime => AsDateTime().ToString(format ?? "o", formatProvider),
+					DataModelValueType.DateTime => AsDateTimeOffset().ToString(format ?? "o", formatProvider),
 					DataModelValueType.Boolean => AsBoolean().ToString(formatProvider),
 					_ => ObjectToString(ToObject(), format, formatProvider)
 			};
@@ -305,14 +309,14 @@ namespace TSSArt.StateMachine
 		public object? ToObject() =>
 				_value switch
 				{
-						DataModelObject obj => obj,
-						DataModelArray arr => arr,
-						string str => str,
-						DateTimeValue val => new DateTimeOffset(new DateTime(_int64), val.Offset),
+						null => null,
+						{ } val when val == NullValue => null,
 						{ } val when val == NumberValue => AsNumber(),
 						{ } val when val == BooleanValue => AsBoolean(),
-						{ } val when val == NullValue => null,
-						null => null,
+						string str => str,
+						DateTimeValue val => new DateTimeOffset(new DateTime(_int64), val.Offset),
+						DataModelObject obj => obj,
+						DataModelArray arr => arr,
 						_ => Infrastructure.UnexpectedValue<object>()
 				};
 
@@ -322,14 +326,18 @@ namespace TSSArt.StateMachine
 		public static implicit operator DataModelValue(DataModelArray? val)  => FromDataModelArray(val);
 		public static implicit operator DataModelValue(string? val)          => FromString(val);
 		public static implicit operator DataModelValue(double val)           => FromDouble(val);
+		public static implicit operator DataModelValue(int val)              => FromInt32(val);
 		public static implicit operator DataModelValue(DateTimeOffset val)   => FromDateTimeOffset(val);
+		public static implicit operator DataModelValue(DateTime val)         => FromDateTime(val);
 		public static implicit operator DataModelValue(bool val)             => FromBoolean(val);
 
 		public static DataModelValue FromDataModelObject(DataModelObject? val) => new DataModelValue(val);
 		public static DataModelValue FromDataModelArray(DataModelArray? val)   => new DataModelValue(val);
 		public static DataModelValue FromString(string? val)                   => new DataModelValue(val);
 		public static DataModelValue FromDouble(double val)                    => new DataModelValue(val);
+		public static DataModelValue FromInt32(int val)                        => new DataModelValue(val);
 		public static DataModelValue FromDateTimeOffset(DateTimeOffset val)    => new DataModelValue(val);
+		public static DataModelValue FromDateTime(DateTime val)                => new DataModelValue(val);
 		public static DataModelValue FromBoolean(bool val)                     => new DataModelValue(val);
 
 		public bool IsUndefinedOrNull() => _value == null || _value == NullValue;
@@ -397,6 +405,10 @@ namespace TSSArt.StateMachine
 						? BitConverter.Int64BitsToDouble(_int64)
 						: (double?) null;
 
+		public int AsInteger() => (int) AsNumber();
+
+		public int? AsIntegerOrDefault() => (int?) AsNumberOrDefault()!;
+
 		public bool AsBoolean() =>
 				_value == BooleanValue
 						? _int64 != 0
@@ -407,15 +419,19 @@ namespace TSSArt.StateMachine
 						? _int64 != 0
 						: (bool?) null;
 
-		public DateTimeOffset AsDateTime() =>
+		public DateTimeOffset AsDateTimeOffset() =>
 				_value is DateTimeValue val
 						? new DateTimeOffset(new DateTime(_int64), val.Offset)
 						: throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_DateTime);
 
-		public DateTimeOffset? AsDateTimeOrDefault() =>
+		public DateTimeOffset? AsDateTimeOffsetOrDefault() =>
 				_value is DateTimeValue val
 						? new DateTimeOffset(new DateTime(_int64), val.Offset)
 						: (DateTimeOffset?) null;
+
+		public DateTime AsDateTime() => AsDateTimeOffset().UtcDateTime;
+
+		public DateTime? AsDateTimeOrDefault() => AsDateTimeOffsetOrDefault()?.UtcDateTime;
 
 		public override bool Equals(object obj) => obj is DataModelValue other && Equals(other);
 
@@ -451,13 +467,7 @@ namespace TSSArt.StateMachine
 				{
 						DataModelObject obj => new DataModelValue(obj.DeepCloneWithMap(targetAccess, ref map)),
 						DataModelArray arr => new DataModelValue(arr.DeepCloneWithMap(targetAccess, ref map)),
-						string _ => this,
-						DateTimeValue _ => this,
-						{ } val when val == NumberValue => this,
-						{ } val when val == BooleanValue => this,
-						{ } val when val == NullValue => this,
-						null => this,
-						_ => Infrastructure.UnexpectedValue<DataModelValue>()
+						_ => this
 				};
 
 		public void MakeDeepConstant()
@@ -502,23 +512,30 @@ namespace TSSArt.StateMachine
 				case TypeCode.Double:
 				case TypeCode.Decimal:
 					return new DataModelValue(Convert.ToDouble(value, NumberFormatInfo.InvariantInfo));
-				case TypeCode.Boolean: return new DataModelValue((bool) value);
-				case TypeCode.DateTime: return new DataModelValue((DateTime) value);
-				case TypeCode.String: return new DataModelValue((string) value);
-				case TypeCode.Object when value is DataModelValue dataModelValue:
-					return dataModelValue;
-				case TypeCode.Object when value is IObject obj:
-					return FromObjectWithMap(obj.ToObject(), ref map);
-				case TypeCode.Object when value is DataModelObject dataModelObject:
-					return new DataModelValue(dataModelObject);
-				case TypeCode.Object when value is DataModelArray dataModelArray:
-					return new DataModelValue(dataModelArray);
-				case TypeCode.Object when value is IDictionary<string, object> dictionary:
-					return CreateDataModelObject(dictionary, ref map);
-				case TypeCode.Object when value is IEnumerable array:
-					return CreateDataModelArray(array, ref map);
-				case TypeCode.Object when IsAnonymousTypeValue(type):
-					return CreateDataModelObjectFromObjectProperties(type, value, ref map);
+
+				case TypeCode.Boolean:
+					return new DataModelValue((bool) value);
+
+				case TypeCode.DateTime:
+					return new DataModelValue((DateTime) value);
+
+				case TypeCode.String:
+					return new DataModelValue((string) value);
+
+				case TypeCode.Object:
+					return value switch
+					{
+							DateTimeOffset val => new DataModelValue(val),
+							DataModelValue val => val,
+							IObject obj => FromObjectWithMap(obj.ToObject(), ref map),
+							DataModelObject obj => new DataModelValue(obj),
+							DataModelArray arr => new DataModelValue(arr),
+							IDictionary<string, object> dict => CreateDataModelObject(dict, ref map),
+							IEnumerable arr => CreateDataModelArray(arr, ref map),
+							{} when IsAnonymousTypeValue(type) => CreateDataModelObjectFromObjectProperties(type, value, ref map),
+							_ => throw new ArgumentException(Resources.Exception_Unsupported_object_type, nameof(value))
+					};
+
 				default: throw new ArgumentException(Resources.Exception_Unsupported_object_type, nameof(value));
 			}
 		}
@@ -752,6 +769,13 @@ namespace TSSArt.StateMachine
 					case TypeCode.UInt64:
 						result = Convert.ChangeType(_value.AsNumber(), typeCode, NumberFormatInfo.InvariantInfo);
 						return true;
+				}
+
+				if (binder.Type == typeof(DateTimeOffset))
+				{
+					result = _value.AsDateTimeOffset();
+
+					return true;
 				}
 
 				if (binder.Type == typeof(DataModelObject))

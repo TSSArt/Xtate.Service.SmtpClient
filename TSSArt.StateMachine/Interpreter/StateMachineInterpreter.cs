@@ -1224,11 +1224,11 @@ namespace TSSArt.StateMachine
 			await CheckPoint(PersistenceLevel.ExecutableAction).ConfigureAwait(false);
 		}
 
-		private bool IsOperationCancelled(Exception ex)
+		private bool IsOperationCancelled(Exception exception)
 		{
-			return ex switch
+			return exception switch
 			{
-					OperationCanceledException operationCanceledException => (operationCanceledException.CancellationToken == _stopToken),
+					OperationCanceledException ex => ex.CancellationToken == _stopToken,
 					_ => false
 			};
 		}

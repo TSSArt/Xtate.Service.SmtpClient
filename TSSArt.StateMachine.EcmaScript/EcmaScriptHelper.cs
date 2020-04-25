@@ -67,7 +67,7 @@ namespace TSSArt.StateMachine.EcmaScript
 					DataModelValueType.Boolean => new JsValue(value.AsBoolean()),
 					DataModelValueType.String => new JsValue(value.AsString()),
 					DataModelValueType.Number => new JsValue(value.AsNumber()),
-					DataModelValueType.DateTime => new JsValue(value.AsDateTime().ToString(format: @"o", DateTimeFormatInfo.InvariantInfo)),
+					DataModelValueType.DateTime => new JsValue(value.AsDateTimeOffset().ToString(format: @"o", DateTimeFormatInfo.InvariantInfo)),
 					DataModelValueType.Object => new JsValue(new DataModelObjectWrapper(engine, value.AsObject())),
 					DataModelValueType.Array => new JsValue(new DataModelArrayWrapper(engine, value.AsArray())),
 					_ => throw new ArgumentOutOfRangeException(nameof(value), value.Type, Resources.Exception_UnsupportedValueType)

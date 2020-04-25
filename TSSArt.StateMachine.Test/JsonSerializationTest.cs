@@ -16,7 +16,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			// arrange
 			const string json = @"{""name"":""val"",""data"":{""status"":""ok"",""status1"":""ok1"",""parameters"":{""response"":""0378658708""}}}";
-			
+
 			// act
 			dynamic dataModelValue = DataModelConverter.FromJson(json);
 
@@ -297,7 +297,7 @@ namespace TSSArt.StateMachine.Test
 
 			// assert
 			Assert.AreEqual(DataModelValueType.DateTime, val.Type);
-			Assert.AreEqual(new DateTimeOffset(year: 2012, month: 04, day: 23, hour: 18, minute: 25, second: 43, millisecond: 511, TimeSpan.Zero), val.AsDateTime());
+			Assert.AreEqual(new DateTimeOffset(year: 2012, month: 04, day: 23, hour: 18, minute: 25, second: 43, millisecond: 511, TimeSpan.Zero), val.AsDateTimeOffset());
 		}
 
 		[TestMethod]
@@ -310,7 +310,7 @@ namespace TSSArt.StateMachine.Test
 
 			// assert
 			Assert.AreEqual(DataModelValueType.DateTime, val.Type);
-			Assert.AreEqual(new DateTimeOffset(year: 2012, month: 04, day: 23, hour: 18, minute: 25, second: 43, millisecond: 511, TimeSpan.FromHours(5)), val.AsDateTime());
+			Assert.AreEqual(new DateTimeOffset(year: 2012, month: 04, day: 23, hour: 18, minute: 25, second: 43, millisecond: 511, TimeSpan.FromHours(5)), val.AsDateTimeOffset());
 		}
 
 		[TestMethod]
@@ -360,7 +360,7 @@ namespace TSSArt.StateMachine.Test
 			// act => assert
 			Assert.ThrowsException<JsonException>(() => DataModelConverter.FromJson("1/*comment*/"));
 		}
-		
+
 		[TestMethod]
 		public void ReadIncorrectJsonTest()
 		{

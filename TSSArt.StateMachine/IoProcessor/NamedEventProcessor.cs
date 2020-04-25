@@ -197,6 +197,7 @@ namespace TSSArt.StateMachine
 					Infrastructure.Assert(pipeStream.IsConnected);
 
 					var count = await pipeStream.ReadAsync(buffer, offset: 0, buffer.Length, token).ConfigureAwait(false);
+
 					// ReSharper disable once MethodHasAsyncOverloadWithCancellation
 					memoryStream.Write(buffer, offset: 0, count);
 				} while (!pipeStream.IsMessageComplete);
