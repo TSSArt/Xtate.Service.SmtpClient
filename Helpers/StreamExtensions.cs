@@ -1,6 +1,6 @@
 ﻿using System.IO;
 using System.Runtime.CompilerServices;
-using JetBrains.Annotations;
+using TSSArt.StateMachine.Annotations;
 
 #if !NETSTANDARD2_1
 using System.Threading.Tasks;

@@ -2,7 +2,7 @@
 using System.Collections.Immutable;
 using System.Globalization;
 using System.Xml;
-using JetBrains.Annotations;
+using TSSArt.StateMachine.Annotations;
 
 namespace TSSArt.StateMachine
 {

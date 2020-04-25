@@ -1,4 +1,4 @@
-﻿using JetBrains.Annotations;
+﻿using TSSArt.StateMachine.Annotations;
 
 namespace TSSArt.StateMachine
 {
