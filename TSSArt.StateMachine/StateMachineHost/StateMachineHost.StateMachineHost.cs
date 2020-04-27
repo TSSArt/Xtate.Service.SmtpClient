@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -124,6 +125,18 @@ namespace TSSArt.StateMachine
 		}
 
 	#endregion
+
+		private bool IsCurrentContextExists([NotNullWhen(true)] out StateMachineHostContext? context)
+		{
+			context = _context;
+
+			return context != null;
+		}
+
+		private IErrorProcessor CreateErrorProcessor(string sessionId, IStateMachine? stateMachine, Uri? source, string? scxml) =>
+				_options.VerboseValidation ? new DetailedErrorProcessor(sessionId, stateMachine, source, scxml) : DefaultErrorProcessor.Instance;
+
+		private StateMachineHostContext GetCurrentContext() => _context ?? throw new InvalidOperationException(Resources.Exception_IO_Processor_has_not_been_started);
 
 		private IServiceFactory FindServiceFactory(Uri type, Uri? source)
 		{
