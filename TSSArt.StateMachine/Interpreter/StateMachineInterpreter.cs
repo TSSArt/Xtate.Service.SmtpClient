@@ -188,6 +188,7 @@ namespace TSSArt.StateMachine
 					var memoryStorage = new InMemoryStorage();
 					root.Store(new Bucket(memoryStorage));
 
+					// ReSharper disable once SuggestVarOrType_Elsewhere
 					Span<byte> span = stackalloc byte[memoryStorage.GetTransactionLogSize()];
 					memoryStorage.WriteTransactionLogToSpan(span);
 

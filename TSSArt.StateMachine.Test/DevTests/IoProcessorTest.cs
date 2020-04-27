@@ -22,7 +22,7 @@ namespace TSSArt.StateMachine.Test
 			return XmlReader.Create(textReader, new XmlReaderSettings { CloseInput = true });
 		}
 
-		private XmlReader GetStateMachine(string xml) => GetStateMachineBase("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' datamodel='ecmascript'>" + xml + "</scxml>");
+		private static XmlReader GetStateMachine(string xml) => GetStateMachineBase("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' datamodel='ecmascript'>" + xml + "</scxml>");
 
 		[TestMethod]
 		public async Task SimpleTest()

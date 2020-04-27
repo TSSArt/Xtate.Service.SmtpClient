@@ -211,7 +211,7 @@ namespace TSSArt.StateMachine.Test
 		public void ToJsonUtf8BytesTest()
 		{
 			// arrange
-			var val = "test";
+			const string val = "test";
 
 			// act
 			var bytes = DataModelConverter.ToJsonUtf8Bytes(val);
@@ -224,7 +224,7 @@ namespace TSSArt.StateMachine.Test
 		public async Task ToJsonAsync()
 		{
 			// arrange
-			var val = "test";
+			const string val = "test";
 			var stream = new MemoryStream();
 
 			// act

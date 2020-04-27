@@ -14,9 +14,9 @@ namespace TSSArt.StateMachine.Test
 			return new ScxmlDirector(reader, BuilderFactory.Instance, DefaultErrorProcessor.Instance).ConstructStateMachine(StateMachineValidator.Instance);
 		}
 
-		private IStateMachine GetStateMachineWithRoot(string xml) => GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0'>" + xml + "</scxml>");
+		private static IStateMachine GetStateMachineWithRoot(string xml) => GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0'>" + xml + "</scxml>");
 
-		private IStateMachine GetStateMachineXyzDataModel(string xml) => GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' datamodel='xyz'>" + xml + "</scxml>");
+		private static IStateMachine GetStateMachineXyzDataModel(string xml) => GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' datamodel='xyz'>" + xml + "</scxml>");
 
 		[TestMethod]
 		public void RootElementEmptyTest()

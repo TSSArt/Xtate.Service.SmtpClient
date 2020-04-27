@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using TSSArt.StateMachine.Annotations;
 
 namespace TSSArt.StateMachine
 {

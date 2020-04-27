@@ -30,7 +30,7 @@ namespace TSSArt.StateMachine.Test
 </final>
 </scxml>";
 
-		private string U(string v, [CallerMemberName] string member = null) => v + "_" + member;
+		private static string U(string v, [CallerMemberName] string member = null) => v + "_" + member;
 
 		[TestMethod]
 		public async Task SameIoProcessorTest()
