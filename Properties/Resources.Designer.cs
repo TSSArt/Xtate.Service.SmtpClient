@@ -996,15 +996,6 @@ namespace TSSArt.StateMachine {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to EventProcessorAttribute was not provided for type {0}..
-        /// </summary>
-        internal static string Exception_EventProcessorAttributeWasNotProvided {
-            get {
-                return ResourceManager.GetString("Exception_EventProcessorAttributeWasNotProvided", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to External communication does not configured for state machine interpreter..
         /// </summary>
         internal static string Exception_External_communication_does_not_configured_for_state_machine_interpreter {
@@ -1141,6 +1132,15 @@ namespace TSSArt.StateMachine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to IoProcessorAttribute was not provided for type {0}..
+        /// </summary>
+        internal static string Exception_IoProcessorAttributeWasNotProvided {
+            get {
+                return ResourceManager.GetString("Exception_IoProcessorAttributeWasNotProvided", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Item can&apos;t be null..
         /// </summary>
         internal static string Exception_Item_can_t_be_null {
@@ -1222,11 +1222,11 @@ namespace TSSArt.StateMachine {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to NamedEventProcessor with name &apos;{0}&apos; already has been registered..
+        ///   Looks up a localized string similar to NamedIoProcessor with name &apos;{0}&apos; already has been registered..
         /// </summary>
-        internal static string Exception_NamedEventProcessor_with_name_already_has_been_registered {
+        internal static string Exception_NamedIoProcessor_with_name_already_has_been_registered {
             get {
-                return ResourceManager.GetString("Exception_NamedEventProcessor_with_name_already_has_been_registered", resourceCulture);
+                return ResourceManager.GetString("Exception_NamedIoProcessor_with_name_already_has_been_registered", resourceCulture);
             }
         }
         

@@ -8,10 +8,10 @@ namespace TSSArt.StateMachine
 	[PublicAPI]
 	public sealed partial class StateMachineHost : IAsyncDisposable
 	{
-		private readonly StateMachineHostOptions _options;
-		private bool                     _asyncOperationInProgress;
-		private StateMachineHostContext? _context;
-		private bool                     _disposed;
+		private readonly StateMachineHostOptions  _options;
+		private          bool                     _asyncOperationInProgress;
+		private          StateMachineHostContext? _context;
+		private          bool                     _disposed;
 
 		public StateMachineHost(StateMachineHostOptions options)
 		{

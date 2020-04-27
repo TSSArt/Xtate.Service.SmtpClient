@@ -11,7 +11,7 @@ namespace TSSArt.StateMachine
 		private ImmutableDictionary<string, string>.Builder?      _configuration;
 		private ImmutableArray<ICustomActionFactory>.Builder?     _customActionFactories;
 		private ImmutableArray<IDataModelHandlerFactory>.Builder? _dataModelHandlerFactories;
-		private ImmutableArray<IEventProcessorFactory>.Builder?   _eventProcessorFactories;
+		private ImmutableArray<IIoProcessorFactory>.Builder?      _ioProcessorFactories;
 		private ILogger?                                          _logger;
 		private PersistenceLevel                                  _persistenceLevel;
 		private ImmutableArray<IResourceLoader>.Builder?          _resourceLoaders;
@@ -24,7 +24,7 @@ namespace TSSArt.StateMachine
 		{
 			var option = new StateMachineHostOptions
 						 {
-								 EventProcessorFactories = _eventProcessorFactories?.ToImmutable() ?? default,
+								 IoProcessorFactories = _ioProcessorFactories?.ToImmutable() ?? default,
 								 ServiceFactories = _serviceFactories?.ToImmutable() ?? default,
 								 DataModelHandlerFactories = _dataModelHandlerFactories?.ToImmutable() ?? default,
 								 CustomActionFactories = _customActionFactories?.ToImmutable() ?? default,
@@ -82,11 +82,11 @@ namespace TSSArt.StateMachine
 			return this;
 		}
 
-		public StateMachineHostBuilder AddEventProcessorFactory(IEventProcessorFactory eventProcessorFactory)
+		public StateMachineHostBuilder AddIoProcessorFactory(IIoProcessorFactory ioProcessorFactory)
 		{
-			if (eventProcessorFactory == null) throw new ArgumentNullException(nameof(eventProcessorFactory));
+			if (ioProcessorFactory == null) throw new ArgumentNullException(nameof(ioProcessorFactory));
 
-			(_eventProcessorFactories ??= ImmutableArray.CreateBuilder<IEventProcessorFactory>()).Add(eventProcessorFactory);
+			(_ioProcessorFactories ??= ImmutableArray.CreateBuilder<IIoProcessorFactory>()).Add(ioProcessorFactory);
 
 			return this;
 		}

@@ -21,7 +21,7 @@ namespace TSSArt.StateMachine
 			_sessionId = sessionId;
 		}
 
-		public ImmutableArray<IEventProcessor> GetIoProcessors() => _externalCommunication?.GetIoProcessors() ?? default;
+		public ImmutableArray<IIoProcessor> GetIoProcessors() => _externalCommunication?.GetIoProcessors() ?? default;
 
 		public bool IsCommunicationError(Exception exception, out string? sendId)
 		{

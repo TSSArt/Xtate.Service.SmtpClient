@@ -7,7 +7,7 @@ using TSSArt.StateMachine.Annotations;
 namespace TSSArt.StateMachine
 {
 	[PublicAPI]
-	public sealed class NamedEventProcessorFactory : IEventProcessorFactory
+	public sealed class NamedIoProcessorFactory : IIoProcessorFactory
 	{
 		private const int FreeSlotsCount = 2;
 
@@ -16,7 +16,7 @@ namespace TSSArt.StateMachine
 		private readonly string _host;
 		private readonly string _name;
 
-		public NamedEventProcessorFactory(string name)
+		public NamedIoProcessorFactory(string name)
 		{
 			if (string.IsNullOrEmpty(name)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(name));
 
@@ -24,7 +24,7 @@ namespace TSSArt.StateMachine
 			_host = HostName;
 		}
 
-		public NamedEventProcessorFactory(string host, string name)
+		public NamedIoProcessorFactory(string host, string name)
 		{
 			if (string.IsNullOrEmpty(host)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(host));
 			if (string.IsNullOrEmpty(name)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(name));
@@ -33,13 +33,13 @@ namespace TSSArt.StateMachine
 			_name = name;
 		}
 
-	#region Interface IEventProcessorFactory
+	#region Interface IIoProcessorFactory
 
-		public async ValueTask<IEventProcessor> Create(IEventConsumer eventConsumer, CancellationToken token)
+		public async ValueTask<IIoProcessor> Create(IEventConsumer eventConsumer, CancellationToken token)
 		{
 			if (eventConsumer == null) throw new ArgumentNullException(nameof(eventConsumer));
 
-			var processor = new NamedEventProcessor(eventConsumer, _host, _name);
+			var processor = new NamedIoProcessor(eventConsumer, _host, _name);
 
 			for (var i = 0; i < FreeSlotsCount; i ++)
 			{

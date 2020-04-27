@@ -9,14 +9,14 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public sealed class NamedEventProcessor : IEventProcessor, IDisposable
+	public sealed class NamedIoProcessor : IIoProcessor, IDisposable
 	{
 		private const int         BufferSize         = 4096;
 		private const string      PipePrefix         = "#SCXML#_";
 		private const PipeOptions DefaultPipeOptions = PipeOptions.WriteThrough | PipeOptions.Asynchronous;
 
-		private static readonly Uri EventProcessorId      = new Uri("http://www.w3.org/TR/scxml/#SCXMLEventProcessor");
-		private static readonly Uri EventProcessorAliasId = new Uri(uriString: "scxml", UriKind.Relative);
+		private static readonly Uri IoProcessorId      = new Uri("http://www.w3.org/TR/scxml/#SCXMLEventProcessor");
+		private static readonly Uri IoProcessorAliasId = new Uri(uriString: "scxml", UriKind.Relative);
 
 		private static readonly ConcurrentDictionary<string, IEventConsumer> InProcConsumers = new ConcurrentDictionary<string, IEventConsumer>();
 
@@ -28,7 +28,7 @@ namespace TSSArt.StateMachine
 
 		private readonly CancellationTokenSource _stopTokenSource = new CancellationTokenSource();
 
-		public NamedEventProcessor(IEventConsumer eventConsumer, string host, string name)
+		public NamedIoProcessor(IEventConsumer eventConsumer, string host, string name)
 		{
 			if (host == null) throw new ArgumentNullException(nameof(host));
 
@@ -40,7 +40,7 @@ namespace TSSArt.StateMachine
 
 			if (!InProcConsumers.TryAdd(name, eventConsumer))
 			{
-				throw new StateMachineProcessorException(Res.Format(Resources.Exception_NamedEventProcessor_with_name_already_has_been_registered, name));
+				throw new StateMachineProcessorException(Res.Format(Resources.Exception_NamedIoProcessor_with_name_already_has_been_registered, name));
 			}
 		}
 
@@ -57,16 +57,15 @@ namespace TSSArt.StateMachine
 
 	#endregion
 
-	#region Interface IEventProcessor
+	#region Interface IIoProcessor
 
-		Uri IEventProcessor.GetTarget(string sessionId) => GetTarget(sessionId);
+		Uri IIoProcessor.GetTarget(string sessionId) => GetTarget(sessionId);
 
-		ValueTask IEventProcessor.Dispatch(string sessionId, IOutgoingEvent evt, CancellationToken token) => OutgoingEvent(sessionId, evt, token);
+		ValueTask IIoProcessor.Dispatch(string sessionId, IOutgoingEvent evt, CancellationToken token) => OutgoingEvent(sessionId, evt, token);
 
-		bool IEventProcessor.CanHandle(Uri? type, Uri? target) =>
-				type == null || FullUriComparer.Instance.Equals(type, EventProcessorId) || FullUriComparer.Instance.Equals(type, EventProcessorAliasId);
+		bool IIoProcessor.CanHandle(Uri? type, Uri? target) => type == null || FullUriComparer.Instance.Equals(type, IoProcessorId) || FullUriComparer.Instance.Equals(type, IoProcessorAliasId);
 
-		Uri IEventProcessor.Id => EventProcessorId;
+		Uri IIoProcessor.Id => IoProcessorId;
 
 	#endregion
 
@@ -84,7 +83,7 @@ namespace TSSArt.StateMachine
 			var name = evt.Target.GetComponents(UriComponents.Path, UriFormat.Unescaped);
 
 			var targetSessionId = ExtractSessionId(evt.Target);
-			var eventObject = new EventObject(EventType.External, evt, GetTarget(sessionId, isLoopback), EventProcessorId);
+			var eventObject = new EventObject(EventType.External, evt, GetTarget(sessionId, isLoopback), IoProcessorId);
 
 			if (isLoopback && InProcConsumers.TryGetValue(name, out var eventConsumer))
 			{

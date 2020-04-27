@@ -7,14 +7,14 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class StateMachineHostPersistedContext : StateMachineHostContext
 	{
-		private const    string   HostPartition = "StateMachineHost";
-		private const    string   ContextKey           = "context";
-		private const    int      StateMachinesKey     = 0;
-		private const    int      InvokedServicesKey   = 1;
+		private const    string   HostPartition      = "StateMachineHost";
+		private const    string   ContextKey         = "context";
+		private const    int      StateMachinesKey   = 0;
+		private const    int      InvokedServicesKey = 1;
 		private readonly TimeSpan _idlePeriod;
 
 		private readonly Dictionary<(string SessionId, string InvokeId), InvokedServiceMeta> _invokedServices = new Dictionary<(string SessionId, string InvokeId), InvokedServiceMeta>();
-		private readonly IStateMachineHost                                                        _stateMachineHost;
+		private readonly IStateMachineHost                                                   _stateMachineHost;
 		private readonly SemaphoreSlim                                                       _lockInvokedServices = new SemaphoreSlim(initialCount: 1, maxCount: 1);
 		private readonly SemaphoreSlim                                                       _lockStateMachines   = new SemaphoreSlim(initialCount: 1, maxCount: 1);
 

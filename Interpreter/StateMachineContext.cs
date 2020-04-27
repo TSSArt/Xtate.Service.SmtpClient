@@ -125,16 +125,16 @@ namespace TSSArt.StateMachine
 
 			DataModelObject GetIoProcessors()
 			{
-				var eventProcessors = _externalCommunication.GetIoProcessors();
+				var ioProcessors = _externalCommunication.GetIoProcessors();
 
-				if (eventProcessors.IsDefaultOrEmpty)
+				if (ioProcessors.IsDefaultOrEmpty)
 				{
 					return DataModelObject.Empty;
 				}
 
 				var dictionary = new DataModelObject();
 
-				foreach (var ioProcessor in eventProcessors)
+				foreach (var ioProcessor in ioProcessors)
 				{
 					dictionary[ioProcessor.Id.ToString()] = new DataModelValue(new DataModelObject { [@"location"] = new DataModelValue(ioProcessor.GetTarget(sessionId).ToString()) });
 				}

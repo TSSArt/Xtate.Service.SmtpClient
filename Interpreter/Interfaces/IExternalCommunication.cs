@@ -36,7 +36,7 @@ namespace TSSArt.StateMachine
 
 	public interface IExternalCommunication
 	{
-		ImmutableArray<IEventProcessor> GetIoProcessors();
+		ImmutableArray<IIoProcessor> GetIoProcessors();
 
 		ValueTask             StartInvoke(InvokeData invokeData, CancellationToken token);
 		ValueTask             CancelInvoke(string invokeId, CancellationToken token);

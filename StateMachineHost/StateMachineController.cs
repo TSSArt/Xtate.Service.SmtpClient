@@ -18,7 +18,7 @@ namespace TSSArt.StateMachine
 		private readonly InterpreterOptions                   _defaultOptions;
 		private readonly CancellationTokenSource              _destroyTokenSource;
 		private readonly TimeSpan                             _idlePeriod;
-		private readonly IStateMachineHost                         _stateMachineHost;
+		private readonly IStateMachineHost                    _stateMachineHost;
 		private readonly ILogger                              _logger;
 		private readonly HashSet<ScheduledEvent>              _scheduledEvents = new HashSet<ScheduledEvent>();
 		private readonly IStateMachine                        _stateMachine;
@@ -28,7 +28,8 @@ namespace TSSArt.StateMachine
 		private CancellationTokenSource? _suspendOnIdleTokenSource;
 		private CancellationTokenSource? _suspendTokenSource;
 
-		public StateMachineController(string sessionId, IStateMachineOptions? options, IStateMachine stateMachine, IStateMachineHost stateMachineHost, TimeSpan idlePeriod, in InterpreterOptions defaultOptions)
+		public StateMachineController(string sessionId, IStateMachineOptions? options, IStateMachine stateMachine, IStateMachineHost stateMachineHost, TimeSpan idlePeriod,
+									  in InterpreterOptions defaultOptions)
 		{
 			SessionId = sessionId;
 			Location = stateMachine.Is<ILocation>(out var location) ? location.Uri : null;
@@ -71,7 +72,7 @@ namespace TSSArt.StateMachine
 
 	#region Interface IExternalCommunication
 
-		ImmutableArray<IEventProcessor> IExternalCommunication.GetIoProcessors() => _stateMachineHost.GetIoProcessors();
+		ImmutableArray<IIoProcessor> IExternalCommunication.GetIoProcessors() => _stateMachineHost.GetIoProcessors();
 
 		async ValueTask<SendStatus> IExternalCommunication.TrySendEvent(IOutgoingEvent evt, CancellationToken token)
 		{

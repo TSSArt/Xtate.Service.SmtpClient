@@ -4,11 +4,11 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public sealed partial class StateMachineHost : IEventProcessor, IEventConsumer
+	public sealed partial class StateMachineHost : IIoProcessor, IEventConsumer
 	{
-		private static readonly Uri BaseUri               = new Uri("ioprocessor:///");
-		private static readonly Uri EventProcessorId      = new Uri("http://www.w3.org/TR/scxml/#SCXMLEventProcessor");
-		private static readonly Uri EventProcessorAliasId = new Uri(uriString: "scxml", UriKind.Relative);
+		private static readonly Uri BaseUri            = new Uri("ioprocessor:///");
+		private static readonly Uri IoProcessorId      = new Uri("http://www.w3.org/TR/scxml/#SCXMLEventProcessor");
+		private static readonly Uri IoProcessorAliasId = new Uri(uriString: "scxml", UriKind.Relative);
 
 	#region Interface IEventConsumer
 
@@ -21,11 +21,11 @@ namespace TSSArt.StateMachine
 
 	#endregion
 
-	#region Interface IEventProcessor
+	#region Interface IIoProcessor
 
-		Uri IEventProcessor.GetTarget(string sessionId) => GetTarget(sessionId);
+		Uri IIoProcessor.GetTarget(string sessionId) => GetTarget(sessionId);
 
-		ValueTask IEventProcessor.Dispatch(string sessionId, IOutgoingEvent evt, CancellationToken token)
+		ValueTask IIoProcessor.Dispatch(string sessionId, IOutgoingEvent evt, CancellationToken token)
 		{
 			if (evt.Target == null)
 			{
@@ -34,18 +34,18 @@ namespace TSSArt.StateMachine
 
 			var service = GetCurrentContext().GetService(sessionId, new Uri(evt.Target.Fragment));
 
-			var serviceEvent = new EventObject(EventType.External, evt, GetTarget(sessionId), EventProcessorId);
+			var serviceEvent = new EventObject(EventType.External, evt, GetTarget(sessionId), IoProcessorId);
 
 			return service.Send(serviceEvent, token);
 		}
 
-		bool IEventProcessor.CanHandle(Uri? type, Uri? target) => CanHandleType(type) && CanHandleTarget(target);
+		bool IIoProcessor.CanHandle(Uri? type, Uri? target) => CanHandleType(type) && CanHandleTarget(target);
 
-		Uri IEventProcessor.Id => EventProcessorId;
+		Uri IIoProcessor.Id => IoProcessorId;
 
 	#endregion
 
-		private bool CanHandleType(Uri? type) => type == null || FullUriComparer.Instance.Equals(type, EventProcessorId) || FullUriComparer.Instance.Equals(type, EventProcessorAliasId);
+		private bool CanHandleType(Uri? type) => type == null || FullUriComparer.Instance.Equals(type, IoProcessorId) || FullUriComparer.Instance.Equals(type, IoProcessorAliasId);
 
 		private bool CanHandleTarget(Uri? target)
 		{

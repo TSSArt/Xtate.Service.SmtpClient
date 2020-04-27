@@ -7,7 +7,7 @@ namespace TSSArt.StateMachine
 	[PublicAPI]
 	public class StateMachineHostOptions
 	{
-		public ImmutableArray<IEventProcessorFactory>   EventProcessorFactories   { get; set; }
+		public ImmutableArray<IIoProcessorFactory>      IoProcessorFactories      { get; set; }
 		public ImmutableArray<IServiceFactory>          ServiceFactories          { get; set; }
 		public ImmutableArray<IDataModelHandlerFactory> DataModelHandlerFactories { get; set; }
 		public ImmutableArray<ICustomActionFactory>     CustomActionFactories     { get; set; }

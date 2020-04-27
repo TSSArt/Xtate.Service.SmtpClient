@@ -153,8 +153,8 @@
   <data name="ErrorMessage_RuntimeActionAndPredicateOnlyAllowed" xml:space="preserve">
     <value>RuntimeAction and RuntimePredicate objects only allowed as action and condition in 'runtime' data model.</value>
   </data>
-  <data name="Exception_EventProcessorAttributeWasNotProvided" xml:space="preserve">
-    <value>EventProcessorAttribute was not provided for type {0}.</value>
+  <data name="Exception_IoProcessorAttributeWasNotProvided" xml:space="preserve">
+    <value>IoProcessorAttribute was not provided for type {0}.</value>
   </data>
   <data name="Exception_CustomActionProviderAttributeWasNotProvided" xml:space="preserve">
     <value>CustomActionProviderAttribute was not provided for type {0}.</value>
@@ -622,8 +622,8 @@
   <data name="Exception_SessionId_is_empty" xml:space="preserve">
     <value>SessionId is empty.</value>
   </data>
-  <data name="Exception_NamedEventProcessor_with_name_already_has_been_registered" xml:space="preserve">
-    <value>NamedEventProcessor with name '{0}' already has been registered.</value>
+  <data name="Exception_NamedIoProcessor_with_name_already_has_been_registered" xml:space="preserve">
+    <value>NamedIoProcessor with name '{0}' already has been registered.</value>
   </data>
   <data name="Exception_Access_can_t_be_changed" xml:space="preserve">
     <value>Access can't be changed.</value>

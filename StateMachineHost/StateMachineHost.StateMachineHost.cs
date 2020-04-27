@@ -8,14 +8,14 @@ namespace TSSArt.StateMachine
 {
 	public sealed partial class StateMachineHost : IStateMachineHost
 	{
-		private static readonly Uri                             InternalTarget = new Uri(uriString: "#_internal", UriKind.Relative);
-		private                 ImmutableArray<IEventProcessor> _eventProcessors;
+		private static readonly Uri                          InternalTarget = new Uri(uriString: "#_internal", UriKind.Relative);
+		private                 ImmutableArray<IIoProcessor> _ioProcessors;
 
 		private ImmutableArray<IServiceFactory> _serviceFactories;
 
 	#region Interface IStateMachineHost
 
-		ImmutableArray<IEventProcessor> IStateMachineHost.GetIoProcessors() => _eventProcessors;
+		ImmutableArray<IIoProcessor> IStateMachineHost.GetIoProcessors() => _ioProcessors;
 
 		async ValueTask IStateMachineHost.StartInvoke(string sessionId, InvokeData data, CancellationToken token)
 		{
@@ -24,7 +24,7 @@ namespace TSSArt.StateMachine
 			context.ValidateSessionId(sessionId, out var service);
 
 			var factory = FindServiceFactory(data.Type, data.Source);
-			var serviceCommunication = new ServiceCommunication(service, EventProcessorId, data.InvokeId, data.InvokeUniqueId);
+			var serviceCommunication = new ServiceCommunication(service, IoProcessorId, data.InvokeId, data.InvokeUniqueId);
 			var invokedService = await factory.StartService(service.Location, data, serviceCommunication, token).ConfigureAwait(false);
 
 			await context.AddService(sessionId, data.InvokeId, data.InvokeUniqueId, invokedService, token).ConfigureAwait(false);
@@ -85,9 +85,9 @@ namespace TSSArt.StateMachine
 
 			context.ValidateSessionId(sessionId, out _);
 
-			var eventProcessor = GetEventProcessor(evt.Type, evt.Target);
+			var ioProcessor = GetIoProcessor(evt.Type, evt.Target);
 
-			if (eventProcessor == this)
+			if (ioProcessor == this)
 			{
 				if (evt.Target == InternalTarget)
 				{
@@ -105,7 +105,7 @@ namespace TSSArt.StateMachine
 				return SendStatus.ToSchedule;
 			}
 
-			await eventProcessor.Dispatch(sessionId, evt, token).ConfigureAwait(false);
+			await ioProcessor.Dispatch(sessionId, evt, token).ConfigureAwait(false);
 
 			return SendStatus.Sent;
 		}
@@ -175,48 +175,48 @@ namespace TSSArt.StateMachine
 
 		private async ValueTask StateMachineHostStartAsync(CancellationToken token)
 		{
-			var factories = _options.EventProcessorFactories;
+			var factories = _options.IoProcessorFactories;
 			var length = !factories.IsDefault ? factories.Length + 1 : 1;
 
-			var eventProcessors = ImmutableArray.CreateBuilder<IEventProcessor>(length);
+			var ioProcessors = ImmutableArray.CreateBuilder<IIoProcessor>(length);
 
-			eventProcessors.Add(this);
+			ioProcessors.Add(this);
 
-			if (!_options.EventProcessorFactories.IsDefaultOrEmpty)
+			if (!_options.IoProcessorFactories.IsDefaultOrEmpty)
 			{
-				foreach (var eventProcessorFactory in _options.EventProcessorFactories)
+				foreach (var ioProcessorFactory in _options.IoProcessorFactories)
 				{
-					eventProcessors.Add(await eventProcessorFactory.Create(this, token).ConfigureAwait(false));
+					ioProcessors.Add(await ioProcessorFactory.Create(this, token).ConfigureAwait(false));
 				}
 			}
 
-			_eventProcessors = eventProcessors.MoveToImmutable();
+			_ioProcessors = ioProcessors.MoveToImmutable();
 		}
 
 		private async ValueTask StateMachineHostStopAsync()
 		{
-			var eventProcessors = _eventProcessors;
-			_eventProcessors = default;
+			var ioProcessors = _ioProcessors;
+			_ioProcessors = default;
 
-			if (eventProcessors.IsDefaultOrEmpty)
+			if (ioProcessors.IsDefaultOrEmpty)
 			{
 				return;
 			}
 
-			foreach (var eventProcessor in eventProcessors)
+			foreach (var ioProcessor in ioProcessors)
 			{
-				if (eventProcessor == this)
+				if (ioProcessor == this)
 				{
 					continue;
 				}
 
-				if (eventProcessor is IAsyncDisposable asyncDisposable)
+				if (ioProcessor is IAsyncDisposable asyncDisposable)
 				{
 					await asyncDisposable.DisposeAsync().ConfigureAwait(false);
 				}
 
 				// ReSharper disable once SuspiciousTypeConversion.Global
-				else if (eventProcessor is IDisposable disposable)
+				else if (ioProcessor is IDisposable disposable)
 				{
 					disposable.Dispose();
 				}
@@ -239,18 +239,18 @@ namespace TSSArt.StateMachine
 			return default;
 		}
 
-		private IEventProcessor GetEventProcessor(Uri? type, Uri? target)
+		private IIoProcessor GetIoProcessor(Uri? type, Uri? target)
 		{
-			if (_eventProcessors == null)
+			if (_ioProcessors == null)
 			{
 				throw new StateMachineProcessorException(Resources.Exception_StateMachineHost_stopped);
 			}
 
-			foreach (var eventProcessor in _eventProcessors)
+			foreach (var ioProcessor in _ioProcessors)
 			{
-				if (eventProcessor.CanHandle(type, target))
+				if (ioProcessor.CanHandle(type, target))
 				{
-					return eventProcessor;
+					return ioProcessor;
 				}
 			}
 
