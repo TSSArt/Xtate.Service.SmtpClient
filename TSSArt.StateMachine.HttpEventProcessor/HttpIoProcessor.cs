@@ -21,8 +21,8 @@ using TSSArt.StateMachine.Properties;
 
 namespace TSSArt.StateMachine
 {
-	[EventProcessor("http://www.w3.org/TR/scxml/#BasicHTTPEventProcessor", Alias = "http")]
-	public sealed class HttpEventProcessor : EventProcessorBase, IAsyncDisposable
+	[IoProcessor("http://www.w3.org/TR/scxml/#BasicHTTPEventProcessor", Alias = "http")]
+	public sealed class HttpIoProcessor : IoProcessorBase, IAsyncDisposable
 	{
 		private const string MediaTypeTextPlain                 = "text/plain";
 		private const string MediaTypeApplicationJson           = "application/json";
@@ -36,7 +36,7 @@ namespace TSSArt.StateMachine
 		private readonly PathString _path;
 		private          IPEndPoint _ipEndPoint;
 
-		public HttpEventProcessor(IEventConsumer eventConsumer, Uri baseUri, IPEndPoint ipEndPoint) : base(eventConsumer)
+		public HttpIoProcessor(IEventConsumer eventConsumer, Uri baseUri, IPEndPoint ipEndPoint) : base(eventConsumer)
 		{
 			_baseUri = baseUri ?? throw new ArgumentNullException(nameof(baseUri));
 			_path = PathString.FromUriComponent(baseUri);
@@ -289,7 +289,7 @@ namespace TSSArt.StateMachine
 
 			eventName ??= eventNameInContent ?? request.Method;
 
-			return new EventObject(eventName, origin, EventProcessorId, data);
+			return new EventObject(eventName, origin, IoProcessorId, data);
 		}
 
 		private static DataModelValue CreateData(string mediaType, string body, out string? eventName)
@@ -332,8 +332,8 @@ namespace TSSArt.StateMachine
 
 		private class Host
 		{
-			private readonly IWebHost                          _webHost;
-			private          ImmutableList<HttpEventProcessor> _processors = ImmutableList<HttpEventProcessor>.Empty;
+			private readonly IWebHost                       _webHost;
+			private          ImmutableList<HttpIoProcessor> _processors = ImmutableList<HttpIoProcessor>.Empty;
 
 			private Host(IPEndPoint ipEndPoint)
 			{
@@ -363,22 +363,22 @@ namespace TSSArt.StateMachine
 
 			private async Task HandleRequest(HttpContext context)
 			{
-				foreach (var httpEventProcessor in _processors)
+				foreach (var httpIoProcessor in _processors)
 				{
-					if (await httpEventProcessor.Handle(context.Request).ConfigureAwait(false))
+					if (await httpIoProcessor.Handle(context.Request).ConfigureAwait(false))
 					{
 						return;
 					}
 				}
 			}
 
-			public async ValueTask AddProcessor(HttpEventProcessor httpEventProcessor, CancellationToken token)
+			public async ValueTask AddProcessor(HttpIoProcessor httpIoProcessor, CancellationToken token)
 			{
-				ImmutableList<HttpEventProcessor> preVal, newVal;
+				ImmutableList<HttpIoProcessor> preVal, newVal;
 				do
 				{
 					preVal = _processors;
-					newVal = preVal.Add(httpEventProcessor);
+					newVal = preVal.Add(httpIoProcessor);
 				} while (Interlocked.CompareExchange(ref _processors, newVal, preVal) != preVal);
 
 				if (preVal.Count == 0)
@@ -387,13 +387,13 @@ namespace TSSArt.StateMachine
 				}
 			}
 
-			public async ValueTask RemoveProcessor(HttpEventProcessor httpEventProcessor, CancellationToken token)
+			public async ValueTask RemoveProcessor(HttpIoProcessor httpIoProcessor, CancellationToken token)
 			{
-				ImmutableList<HttpEventProcessor> preVal, newVal;
+				ImmutableList<HttpIoProcessor> preVal, newVal;
 				do
 				{
 					preVal = _processors;
-					newVal = preVal.Remove(httpEventProcessor);
+					newVal = preVal.Remove(httpIoProcessor);
 				} while (Interlocked.CompareExchange(ref _processors, newVal, preVal) != preVal);
 
 				if (newVal.Count == 0)

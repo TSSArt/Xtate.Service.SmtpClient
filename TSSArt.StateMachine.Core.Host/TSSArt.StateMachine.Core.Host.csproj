@@ -39,7 +39,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TSSArt.StateMachine.EcmaScript\TSSArt.StateMachine.EcmaScript.csproj" />
-    <ProjectReference Include="..\TSSArt.StateMachine.HttpEventProcessor\TSSArt.StateMachine.HttpEventProcessor.csproj" />
+    <ProjectReference Include="..\TSSArt.StateMachine.HttpEventProcessor\TSSArt.StateMachine.HttpIoProcessor.csproj" />
     <ProjectReference Include="..\TSSArt.StateMachine.UserInteractionService\TSSArt.StateMachine.UserInteractionService.csproj" />
     <ProjectReference Include="..\TSSArt.StateMachine.WebBrowserService.CefSharp\TSSArt.StateMachine.WebBrowserService.CefSharp.csproj" />
     <ProjectReference Include="..\TSSArt.StateMachine.WebBrowserService\TSSArt.StateMachine.WebBrowserService.csproj" />

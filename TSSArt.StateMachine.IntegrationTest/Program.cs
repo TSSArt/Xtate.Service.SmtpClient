@@ -15,17 +15,17 @@ namespace TSSArt.StateMachine.IntegrationTest
 			Trace.Listeners.Add(new ConsoleTraceListener());
 
 			await using var stateMachineHost = new StateMachineHostBuilder()
-										  .AddEcmaScript()
-										  .AddHttpEventProcessor(new Uri(args.Length > 0 ? args[0] : "http://localhost:5001/"))
-										  .AddServiceFactory(HttpClientService.Factory)
-										  .AddServiceFactory(SmtpClientService.Factory)
-										  .AddCustomActionFactory(BasicCustomActionFactory.Instance)
-										  .AddCustomActionFactory(MimeCustomActionFactory.Instance)
-										  .AddCustomActionFactory(MidCustomActionFactory.Instance)
-										  .AddResourceLoader(ResxResourceLoader.Instance)
-										  .SetConfigurationValue(key: "uiEndpoint", value: "http://localhost:5000/dialog")
-										  .SetConfigurationValue(key: "mailEndpoint", value: "http://mid.dev.tssart.com/MailServer/Web2/api/Mail/")
-										  .Build();
+											   .AddEcmaScript()
+											   .AddHttpIoProcessor(new Uri(args.Length > 0 ? args[0] : "http://localhost:5001/"))
+											   .AddServiceFactory(HttpClientService.Factory)
+											   .AddServiceFactory(SmtpClientService.Factory)
+											   .AddCustomActionFactory(BasicCustomActionFactory.Instance)
+											   .AddCustomActionFactory(MimeCustomActionFactory.Instance)
+											   .AddCustomActionFactory(MidCustomActionFactory.Instance)
+											   .AddResourceLoader(ResxResourceLoader.Instance)
+											   .SetConfigurationValue(key: "uiEndpoint", value: "http://localhost:5000/dialog")
+											   .SetConfigurationValue(key: "mailEndpoint", value: "http://mid.dev.tssart.com/MailServer/Web2/api/Mail/")
+											   .Build();
 
 			await stateMachineHost.StartAsync().ConfigureAwait(false);
 

@@ -3,9 +3,9 @@
 namespace TSSArt.StateMachine
 {
 	[AttributeUsage(AttributeTargets.Class)]
-	public sealed class EventProcessorAttribute : Attribute
+	public sealed class IoProcessorAttribute : Attribute
 	{
-		public EventProcessorAttribute(string type)
+		public IoProcessorAttribute(string type)
 		{
 			if (string.IsNullOrEmpty(type)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(type));
 

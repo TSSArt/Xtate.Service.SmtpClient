@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public interface IEventProcessor
+	public interface IIoProcessor
 	{
 		Uri Id { get; }
 

@@ -17,13 +17,13 @@ namespace TSSArt.StateMachine.Core.Host
 			var baseUri = new Uri(args.Length > 0 ? args[0] : "http://localhost:5000/");
 
 			await using var stateMachineHost = new StateMachineHostBuilder()
-										  .AddEcmaScript()
-										  .AddCefSharpWebBrowser()
-										  .AddUserInteraction()
-										  .AddHttpEventProcessor(baseUri)
-										  .DisableVerboseValidation()
-										  .AddResourceLoader(ResxResourceLoader.Instance)
-										  .Build();
+											   .AddEcmaScript()
+											   .AddCefSharpWebBrowser()
+											   .AddUserInteraction()
+											   .AddHttpIoProcessor(baseUri)
+											   .DisableVerboseValidation()
+											   .AddResourceLoader(ResxResourceLoader.Instance)
+											   .Build();
 
 			await stateMachineHost.StartAsync().ConfigureAwait(false);
 

@@ -19,7 +19,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSSArt.StateMachine.Core.Ho
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSSArt.StateMachine.WebBrowserService.CefSharp", "TSSArt.StateMachine.WebBrowserService.CefSharp\TSSArt.StateMachine.WebBrowserService.CefSharp.csproj", "{7C9091CA-23ED-40CC-932F-457C65183225}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSSArt.StateMachine.HttpEventProcessor", "TSSArt.StateMachine.HttpEventProcessor\TSSArt.StateMachine.HttpEventProcessor.csproj", "{37FE1167-45D2-4271-8220-70A324FE8F15}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSSArt.StateMachine.HttpIoProcessor", "TSSArt.StateMachine.HttpEventProcessor\TSSArt.StateMachine.HttpIoProcessor.csproj", "{37FE1167-45D2-4271-8220-70A324FE8F15}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{8747DC9D-B873-4100-A0B6-6C9896C8AFB7}"
 EndProject
@@ -27,7 +27,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{8C4F1FDA
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DataModels", "DataModels", "{ADD222EE-F50B-40E7-8E64-47D64CBFA5CF}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "EventProcessors", "EventProcessors", "{1104C194-66D1-49CC-BFB3-E005C9B93A33}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "IoProcessors", "IoProcessors", "{1104C194-66D1-49CC-BFB3-E005C9B93A33}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{7AD15206-BB14-4639-B070-D38FA8108559}"
 EndProject

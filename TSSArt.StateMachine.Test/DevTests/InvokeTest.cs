@@ -63,7 +63,7 @@ namespace TSSArt.StateMachine.Test
 							};
 
 			_externalCommunicationMock = new Mock<IExternalCommunication>();
-			_externalCommunicationMock.Setup(e => e.GetIoProcessors()).Returns(ImmutableArray<IEventProcessor>.Empty);
+			_externalCommunicationMock.Setup(e => e.GetIoProcessors()).Returns(ImmutableArray<IIoProcessor>.Empty);
 			_externalCommunicationMock.Setup(e => e.IsInvokeActive(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
 			_loggerMock = new Mock<ILogger>();
 
