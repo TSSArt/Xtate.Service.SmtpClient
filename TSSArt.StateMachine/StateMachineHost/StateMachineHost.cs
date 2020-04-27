@@ -7,19 +7,19 @@ using TSSArt.StateMachine.Annotations;
 namespace TSSArt.StateMachine
 {
 	[PublicAPI]
-	public sealed partial class IoProcessor : IAsyncDisposable
+	public sealed partial class StateMachineHost : IAsyncDisposable
 	{
-		private readonly IoProcessorOptions _options;
+		private readonly StateMachineHostOptions _options;
 		private          bool               _asyncOperationInProgress;
 
-		private IoProcessorContext? _context;
+		private StateMachineHostContext? _context;
 		private bool                _disposed;
 
-		public IoProcessor(IoProcessorOptions options)
+		public StateMachineHost(StateMachineHostOptions options)
 		{
 			_options = options ?? throw new ArgumentNullException(nameof(options));
 
-			IoProcessorInit();
+			StateMachineHostInit();
 		}
 
 	#region Interface IAsyncDisposable
@@ -39,7 +39,7 @@ namespace TSSArt.StateMachine
 				await context.DisposeAsync().ConfigureAwait(false);
 			}
 
-			await IoProcessorStopAsync().ConfigureAwait(false);
+			await StateMachineHostStopAsync().ConfigureAwait(false);
 
 			_disposed = true;
 		}
@@ -59,14 +59,14 @@ namespace TSSArt.StateMachine
 			}
 
 			var context = _options.StorageProvider != null
-					? new IoProcessorPersistedContext(this, _options)
-					: new IoProcessorContext(this, _options);
+					? new StateMachineHostPersistedContext(this, _options)
+					: new StateMachineHostContext(this, _options);
 
 			try
 			{
 				_asyncOperationInProgress = true;
 
-				await IoProcessorStartAsync(token).ConfigureAwait(false);
+				await StateMachineHostStartAsync(token).ConfigureAwait(false);
 				await context.InitializeAsync(token).ConfigureAwait(false);
 
 				_context = context;
@@ -110,7 +110,7 @@ namespace TSSArt.StateMachine
 			finally
 			{
 				await context.DisposeAsync().ConfigureAwait(false);
-				await IoProcessorStopAsync().ConfigureAwait(false);
+				await StateMachineHostStopAsync().ConfigureAwait(false);
 
 				_asyncOperationInProgress = false;
 			}
@@ -158,9 +158,9 @@ namespace TSSArt.StateMachine
 		private IErrorProcessor CreateErrorProcessor(string sessionId, IStateMachine? stateMachine, Uri? source, string? scxml) =>
 				_options.VerboseValidation ? new DetailedErrorProcessor(sessionId, stateMachine, source, scxml) : DefaultErrorProcessor.Instance;
 
-		private IoProcessorContext GetCurrentContext() => _context ?? throw new InvalidOperationException(Resources.Exception_IO_Processor_has_not_been_started);
+		private StateMachineHostContext GetCurrentContext() => _context ?? throw new InvalidOperationException(Resources.Exception_IO_Processor_has_not_been_started);
 
-		private bool IsCurrentContextExists([NotNullWhen(true)] out IoProcessorContext? context)
+		private bool IsCurrentContextExists([NotNullWhen(true)] out StateMachineHostContext? context)
 		{
 			context = _context;
 

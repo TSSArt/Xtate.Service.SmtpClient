@@ -16,7 +16,7 @@ namespace TSSArt.StateMachine.Core.Host
 
 			var baseUri = new Uri(args.Length > 0 ? args[0] : "http://localhost:5000/");
 
-			await using var ioProcessor = new IoProcessorBuilder()
+			await using var stateMachineHost = new StateMachineHostBuilder()
 										  .AddEcmaScript()
 										  .AddCefSharpWebBrowser()
 										  .AddUserInteraction()
@@ -25,14 +25,14 @@ namespace TSSArt.StateMachine.Core.Host
 										  .AddResourceLoader(ResxResourceLoader.Instance)
 										  .Build();
 
-			await ioProcessor.StartAsync().ConfigureAwait(false);
+			await stateMachineHost.StartAsync().ConfigureAwait(false);
 
 			var name = Assembly.GetExecutingAssembly().GetName().Name;
-			var autorun = ioProcessor.Execute(new Uri($"resx://{name}/{name}/Scxml/autorun.scxml"));
+			var autorun = stateMachineHost.Execute(new Uri($"resx://{name}/{name}/Scxml/autorun.scxml"));
 
 			Application.Run();
 
-			await ioProcessor.StopAsync().ConfigureAwait(false);
+			await stateMachineHost.StopAsync().ConfigureAwait(false);
 			await autorun.ConfigureAwait(false);
 		}
 	}

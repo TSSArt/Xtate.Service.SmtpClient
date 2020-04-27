@@ -14,7 +14,7 @@ using TSSArt.StateMachine.Services;
 namespace TSSArt.StateMachine.Test
 {
 	[TestClass]
-	public class IoProcessorTest
+	public class StateMachineHostTest
 	{
 		private static XmlReader GetStateMachineBase(string scxml)
 		{
@@ -32,17 +32,17 @@ namespace TSSArt.StateMachine.Test
 			var task = new ValueTask<Resource>(new Resource(new Uri("http://none"), new ContentType(), content: "content"));
 			resourceLoaderMock.Setup(e => e.Request(It.IsAny<Uri>(), It.IsAny<CancellationToken>())).Returns(task);
 
-			var options = new IoProcessorOptions
+			var options = new StateMachineHostOptions
 						  {
 								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
 								  ResourceLoaders = ImmutableArray.Create(resourceLoaderMock.Object)
 						  };
 
-			var ioProcessor = new IoProcessor(options);
-			await ioProcessor.StartAsync();
+			var stateMachineHost = new StateMachineHost(options);
+			await stateMachineHost.StartAsync();
 			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("TSSArt.StateMachine.Test.Resources.All.xml");
 			var reader = new StreamReader(stream ?? throw new InvalidOperationException());
-			var _ = ioProcessor.Execute(await reader.ReadToEndAsync());
+			var _ = stateMachineHost.Execute(await reader.ReadToEndAsync());
 		}
 
 		[TestMethod]
@@ -56,15 +56,15 @@ namespace TSSArt.StateMachine.Test
 
 			stateMachineProviderMock.Setup(x => x.CanHandle(It.IsAny<Uri>())).Returns(true);
 
-			var options = new IoProcessorOptions
+			var options = new StateMachineHostOptions
 						  {
 								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
 								  ResourceLoaders = ImmutableArray.Create(stateMachineProviderMock.Object)
 						  };
 
-			var ioProcessor = new IoProcessor(options);
-			await ioProcessor.StartAsync();
-			var result = await ioProcessor.Execute(new Uri("scxml://a"));
+			var stateMachineHost = new StateMachineHost(options);
+			await stateMachineHost.StartAsync();
+			var result = await stateMachineHost.Execute(new Uri("scxml://a"));
 
 			Assert.AreEqual(expected: 111.0, result.AsNumber());
 		}
@@ -101,16 +101,16 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 			stateMachineProviderMock.Setup(x => x.RequestXmlReader(new Uri("scxml://a"), It.IsAny<XmlReaderSettings>(), It.IsAny<XmlParserContext>(), It.IsAny<CancellationToken>()))
 									.Returns(new ValueTask<XmlReader>(stateMachine));
 
-			var options = new IoProcessorOptions
+			var options = new StateMachineHostOptions
 						  {
 								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
 								  ServiceFactories = ImmutableArray.Create(HttpClientService.Factory),
 								  ResourceLoaders = ImmutableArray.Create(stateMachineProviderMock.Object)
 						  };
 
-			var ioProcessor = new IoProcessor(options);
+			var stateMachineHost = new StateMachineHost(options);
 
-			var result = await ioProcessor.Execute(new Uri("scxml://a"));
+			var result = await stateMachineHost.Execute(new Uri("scxml://a"));
 
 			Console.WriteLine(DataModelConverter.ToJson(result));
 			Assert.IsFalse(result.IsUndefined());
@@ -176,16 +176,16 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 
 			// ReSharper restore StringLiteralTypo
 
-			var options = new IoProcessorOptions
+			var options = new StateMachineHostOptions
 						  {
 								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
 								  ServiceFactories = ImmutableArray.Create(HttpClientService.Factory, SmtpClientService.Factory /*WebBrowserService.GetFactory<CefSharpWebBrowserService>()*/),
 								  CustomActionFactories = ImmutableArray.Create(BasicCustomActionFactory.Instance, MimeCustomActionFactory.Instance)
 						  };
 
-			var ioProcessor = new IoProcessor(options);
+			var stateMachineHost = new StateMachineHost(options);
 
-			var result = await ioProcessor.Execute(stateMachine);
+			var result = await stateMachineHost.Execute(stateMachine);
 
 			Console.WriteLine(DataModelConverter.ToJson(result));
 			Assert.IsFalse(result.IsUndefined());

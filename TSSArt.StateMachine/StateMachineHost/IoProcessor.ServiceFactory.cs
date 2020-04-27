@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public sealed partial class IoProcessor : IServiceFactory
+	public sealed partial class StateMachineHost : IServiceFactory
 	{
 		private static readonly Uri ServiceFactoryTypeId      = new Uri("http://www.w3.org/TR/scxml/");
 		private static readonly Uri ServiceFactoryAliasTypeId = new Uri(uriString: "scxml", UriKind.Relative);

@@ -6,7 +6,7 @@ using TSSArt.StateMachine.Annotations;
 namespace TSSArt.StateMachine
 {
 	[PublicAPI]
-	public class IoProcessorBuilder
+	public class StateMachineHostBuilder
 	{
 		private ImmutableDictionary<string, string>.Builder?      _configuration;
 		private ImmutableArray<ICustomActionFactory>.Builder?     _customActionFactories;
@@ -20,9 +20,9 @@ namespace TSSArt.StateMachine
 		private TimeSpan                                          _suspendIdlePeriod;
 		private bool                                              _verboseValidation = true;
 
-		public IoProcessor Build()
+		public StateMachineHost Build()
 		{
-			var option = new IoProcessorOptions
+			var option = new StateMachineHostOptions
 						 {
 								 EventProcessorFactories = _eventProcessorFactories?.ToImmutable() ?? default,
 								 ServiceFactories = _serviceFactories?.ToImmutable() ?? default,
@@ -37,24 +37,24 @@ namespace TSSArt.StateMachine
 								 VerboseValidation = _verboseValidation
 						 };
 
-			return new IoProcessor(option);
+			return new StateMachineHost(option);
 		}
 
-		public IoProcessorBuilder SetLogger(ILogger logger)
+		public StateMachineHostBuilder SetLogger(ILogger logger)
 		{
 			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
 			return this;
 		}
 
-		public IoProcessorBuilder DisableVerboseValidation()
+		public StateMachineHostBuilder DisableVerboseValidation()
 		{
 			_verboseValidation = false;
 
 			return this;
 		}
 
-		public IoProcessorBuilder SetSuspendIdlePeriod(TimeSpan suspendIdlePeriod)
+		public StateMachineHostBuilder SetSuspendIdlePeriod(TimeSpan suspendIdlePeriod)
 		{
 			if (suspendIdlePeriod <= TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(suspendIdlePeriod));
 
@@ -63,7 +63,7 @@ namespace TSSArt.StateMachine
 			return this;
 		}
 
-		public IoProcessorBuilder AddResourceLoader(IResourceLoader resourceLoader)
+		public StateMachineHostBuilder AddResourceLoader(IResourceLoader resourceLoader)
 		{
 			if (resourceLoader == null) throw new ArgumentNullException(nameof(resourceLoader));
 
@@ -72,7 +72,7 @@ namespace TSSArt.StateMachine
 			return this;
 		}
 
-		public IoProcessorBuilder SetPersistence(PersistenceLevel persistenceLevel, IStorageProvider storageProvider)
+		public StateMachineHostBuilder SetPersistence(PersistenceLevel persistenceLevel, IStorageProvider storageProvider)
 		{
 			if (!Enum.IsDefined(typeof(PersistenceLevel), persistenceLevel)) throw new InvalidEnumArgumentException(nameof(persistenceLevel), (int) persistenceLevel, typeof(PersistenceLevel));
 
@@ -82,7 +82,7 @@ namespace TSSArt.StateMachine
 			return this;
 		}
 
-		public IoProcessorBuilder AddEventProcessorFactory(IEventProcessorFactory eventProcessorFactory)
+		public StateMachineHostBuilder AddEventProcessorFactory(IEventProcessorFactory eventProcessorFactory)
 		{
 			if (eventProcessorFactory == null) throw new ArgumentNullException(nameof(eventProcessorFactory));
 
@@ -91,7 +91,7 @@ namespace TSSArt.StateMachine
 			return this;
 		}
 
-		public IoProcessorBuilder AddServiceFactory(IServiceFactory serviceFactory)
+		public StateMachineHostBuilder AddServiceFactory(IServiceFactory serviceFactory)
 		{
 			if (serviceFactory == null) throw new ArgumentNullException(nameof(serviceFactory));
 
@@ -100,7 +100,7 @@ namespace TSSArt.StateMachine
 			return this;
 		}
 
-		public IoProcessorBuilder AddDataModelHandlerFactory(IDataModelHandlerFactory dataModelHandlerFactory)
+		public StateMachineHostBuilder AddDataModelHandlerFactory(IDataModelHandlerFactory dataModelHandlerFactory)
 		{
 			if (dataModelHandlerFactory == null) throw new ArgumentNullException(nameof(dataModelHandlerFactory));
 
@@ -109,7 +109,7 @@ namespace TSSArt.StateMachine
 			return this;
 		}
 
-		public IoProcessorBuilder AddCustomActionFactory(ICustomActionFactory customActionFactory)
+		public StateMachineHostBuilder AddCustomActionFactory(ICustomActionFactory customActionFactory)
 		{
 			if (customActionFactory == null) throw new ArgumentNullException(nameof(customActionFactory));
 
@@ -118,7 +118,7 @@ namespace TSSArt.StateMachine
 			return this;
 		}
 
-		public IoProcessorBuilder SetConfigurationValue(string key, string value)
+		public StateMachineHostBuilder SetConfigurationValue(string key, string value)
 		{
 			if (key == null) throw new ArgumentNullException(nameof(key));
 

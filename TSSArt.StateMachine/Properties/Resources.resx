@@ -562,8 +562,8 @@
   <data name="Exception_Internal_events_can_t_be_delayed" xml:space="preserve">
     <value>Internal events can't be delayed.</value>
   </data>
-  <data name="Exception_IoProcessor_stopped" xml:space="preserve">
-    <value>IoProcessor stopped.</value>
+  <data name="Exception_StateMachineHost_stopped" xml:space="preserve">
+    <value>StateMachineHost stopped.</value>
   </data>
   <data name="Exception_Invalid_InvokeId" xml:space="preserve">
     <value>Invalid InvokeId.</value>

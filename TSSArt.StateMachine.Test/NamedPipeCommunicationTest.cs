@@ -33,9 +33,9 @@ namespace TSSArt.StateMachine.Test
 		private static string U(string v, [CallerMemberName] string member = null) => v + "_" + member;
 
 		[TestMethod]
-		public async Task SameIoProcessorTest()
+		public async Task SameStateMachineHostTest()
 		{
-			var srcPrc = new IoProcessorBuilder().AddNamedEventProcessor(U("src")).AddEcmaScript().Build();
+			var srcPrc = new StateMachineHostBuilder().AddNamedEventProcessor(U("src")).AddEcmaScript().Build();
 			await srcPrc.StartAsync();
 			var _ = srcPrc.Execute(sessionId: "srcID", string.Format(SrcScxml, $"iop:///{U("src")}#_scxml_dstID"));
 			var dst = srcPrc.Execute(sessionId: "dstID", DstScxml);
@@ -52,11 +52,11 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public async Task SameAppDomainNoPipesTest()
 		{
-			var srcPrc = new IoProcessorBuilder().AddNamedEventProcessor(U("src")).Build();
+			var srcPrc = new StateMachineHostBuilder().AddNamedEventProcessor(U("src")).Build();
 			await srcPrc.StartAsync();
 			var _ = srcPrc.Execute(sessionId: "srcID", string.Format(SrcScxml, $"iop:///{U("dst")}#_scxml_dstID"));
 
-			var dstPrc = new IoProcessorBuilder().AddNamedEventProcessor(U("dst")).AddEcmaScript().Build();
+			var dstPrc = new StateMachineHostBuilder().AddNamedEventProcessor(U("dst")).AddEcmaScript().Build();
 			await dstPrc.StartAsync();
 			var dst = dstPrc.Execute(sessionId: "dstID", DstScxml);
 
@@ -74,11 +74,11 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public async Task SameAppDomainPipesTest()
 		{
-			var srcPrc = new IoProcessorBuilder().AddNamedEventProcessor(host: "MyHost1", U("src")).Build();
+			var srcPrc = new StateMachineHostBuilder().AddNamedEventProcessor(host: "MyHost1", U("src")).Build();
 			await srcPrc.StartAsync();
 			var _ = srcPrc.Execute(sessionId: "srcID", string.Format(SrcScxml, $"iop://./{U("dst")}#_scxml_dstID"));
 
-			var dstPrc = new IoProcessorBuilder().AddNamedEventProcessor(host: ".", U("dst")).AddEcmaScript().Build();
+			var dstPrc = new StateMachineHostBuilder().AddNamedEventProcessor(host: ".", U("dst")).AddEcmaScript().Build();
 			await dstPrc.StartAsync();
 			var dst = dstPrc.Execute(sessionId: "dstID", DstScxml);
 

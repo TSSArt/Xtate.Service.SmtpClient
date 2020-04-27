@@ -2,13 +2,13 @@
 
 namespace TSSArt.StateMachine.Test
 {
-	public static class IoProcessorOptionsTestBuilder
+	public static class StateMachineHostOptionsTestBuilder
 	{
-		public delegate void IoProcessorOptionsSetup(ref IoProcessorOptions options);
+		public delegate void StateMachineHostOptionsSetup(ref StateMachineHostOptions options);
 
-		public static IoProcessorOptions Create(IoProcessorOptionsSetup build)
+		public static StateMachineHostOptions Create(StateMachineHostOptionsSetup build)
 		{
-			var options = new IoProcessorOptions
+			var options = new StateMachineHostOptions
 						  {
 								  DataModelHandlerFactories = ImmutableArray<IDataModelHandlerFactory>.Empty,
 								  EventProcessorFactories = ImmutableArray<IEventProcessorFactory>.Empty,

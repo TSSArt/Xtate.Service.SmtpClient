@@ -16,12 +16,12 @@ namespace TSSArt.StateMachine.Test
 							   .EndFinal()
 							   .Build();
 
-			await using var ioProcessor = new IoProcessor(new IoProcessorOptions());
+			await using var stateMachineHost = new StateMachineHost(new StateMachineHostOptions());
 
-			await ioProcessor.StartAsync();
+			await stateMachineHost.StartAsync();
 
 			// Act
-			var result = await ioProcessor.Execute(stateMachine);
+			var result = await stateMachineHost.Execute(stateMachine);
 
 			//Assert
 			Assert.AreEqual(expected: 22, result.AsNumber());
@@ -42,12 +42,12 @@ namespace TSSArt.StateMachine.Test
 							   .EndFinal()
 							   .Build();
 
-			await using var ioProcessor = new IoProcessor(new IoProcessorOptions());
+			await using var stateMachineHost = new StateMachineHost(new StateMachineHostOptions());
 
-			await ioProcessor.StartAsync();
+			await stateMachineHost.StartAsync();
 
 			// Act
-			var result = await ioProcessor.Execute(stateMachine, new DataModelValue(33));
+			var result = await stateMachineHost.Execute(stateMachine, new DataModelValue(33));
 
 			//Assert
 			Assert.AreEqual(expected: 33, result.AsNumber());

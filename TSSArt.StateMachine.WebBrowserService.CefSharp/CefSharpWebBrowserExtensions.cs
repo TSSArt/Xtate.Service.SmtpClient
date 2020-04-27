@@ -5,7 +5,7 @@ namespace TSSArt.StateMachine
 {
 	public static class CefSharpWebBrowserExtensions
 	{
-		public static IoProcessorBuilder AddCefSharpWebBrowser(this IoProcessorBuilder builder)
+		public static StateMachineHostBuilder AddCefSharpWebBrowser(this StateMachineHostBuilder builder)
 		{
 			if (builder == null) throw new ArgumentNullException(nameof(builder));
 

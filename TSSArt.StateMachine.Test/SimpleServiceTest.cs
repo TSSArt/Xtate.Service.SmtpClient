@@ -35,18 +35,18 @@ namespace TSSArt.StateMachine.Test
 
 			var stateMachine = StateMachineGenerator.FromInnerScxml_EcmaScript(scxml);
 
-			var options = IoProcessorOptionsTestBuilder.Create((ref IoProcessorOptions o) =>
+			var options = StateMachineHostOptionsTestBuilder.Create((ref StateMachineHostOptions o) =>
 															   {
 																   o.DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory);
 																   o.ServiceFactories = ImmutableArray.Create(SimpleServiceFactory<PassthroughService>.Instance);
 															   });
 
-			await using var ioProcessor = new IoProcessor(options);
+			await using var stateMachineHost = new StateMachineHost(options);
 
-			await ioProcessor.StartAsync();
+			await stateMachineHost.StartAsync();
 
 			// Act
-			dynamic result = await ioProcessor.Execute(stateMachine);
+			dynamic result = await stateMachineHost.Execute(stateMachine);
 
 			//Assert
 			Assert.AreEqual("value1", result.str);

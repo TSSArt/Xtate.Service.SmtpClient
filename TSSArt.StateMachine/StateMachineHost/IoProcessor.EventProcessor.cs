@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public sealed partial class IoProcessor : IEventProcessor, IEventConsumer
+	public sealed partial class StateMachineHost : IEventProcessor, IEventConsumer
 	{
 		private static readonly Uri BaseUri               = new Uri("ioprocessor:///");
 		private static readonly Uri EventProcessorId      = new Uri("http://www.w3.org/TR/scxml/#SCXMLEventProcessor");

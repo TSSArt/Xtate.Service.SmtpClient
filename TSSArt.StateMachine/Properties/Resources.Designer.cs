@@ -1141,15 +1141,6 @@ namespace TSSArt.StateMachine {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to IoProcessor stopped..
-        /// </summary>
-        internal static string Exception_IoProcessor_stopped {
-            get {
-                return ResourceManager.GetString("Exception_IoProcessor_stopped", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Item can&apos;t be null..
         /// </summary>
         internal static string Exception_Item_can_t_be_null {
@@ -1390,6 +1381,15 @@ namespace TSSArt.StateMachine {
         internal static string Exception_StateMachine_or_Source_or_SCXML_should_be_provided {
             get {
                 return ResourceManager.GetString("Exception_StateMachine_or_Source_or_SCXML_should_be_provided", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to StateMachineHost stopped..
+        /// </summary>
+        internal static string Exception_StateMachineHost_stopped {
+            get {
+                return ResourceManager.GetString("Exception_StateMachineHost_stopped", resourceCulture);
             }
         }
         

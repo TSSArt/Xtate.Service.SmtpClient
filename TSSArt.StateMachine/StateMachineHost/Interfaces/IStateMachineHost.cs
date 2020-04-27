@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	internal interface IIoProcessor
+	internal interface IStateMachineHost
 	{
 		ImmutableArray<IEventProcessor> GetIoProcessors();
 		ValueTask<SendStatus>           DispatchEvent(string sessionId, IOutgoingEvent evt, bool skipDelay, CancellationToken token);

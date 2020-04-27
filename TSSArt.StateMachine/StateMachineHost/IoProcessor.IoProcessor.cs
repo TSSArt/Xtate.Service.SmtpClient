@@ -5,18 +5,18 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	public sealed partial class IoProcessor : IIoProcessor
+	public sealed partial class StateMachineHost : IStateMachineHost
 	{
 		private static readonly Uri                             InternalTarget = new Uri(uriString: "#_internal", UriKind.Relative);
 		private                 ImmutableArray<IEventProcessor> _eventProcessors;
 
 		private ImmutableArray<IServiceFactory> _serviceFactories;
 
-	#region Interface IIoProcessor
+	#region Interface IStateMachineHost
 
-		ImmutableArray<IEventProcessor> IIoProcessor.GetIoProcessors() => _eventProcessors;
+		ImmutableArray<IEventProcessor> IStateMachineHost.GetIoProcessors() => _eventProcessors;
 
-		async ValueTask IIoProcessor.StartInvoke(string sessionId, InvokeData data, CancellationToken token)
+		async ValueTask IStateMachineHost.StartInvoke(string sessionId, InvokeData data, CancellationToken token)
 		{
 			var context = GetCurrentContext();
 
@@ -57,7 +57,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		async ValueTask IIoProcessor.CancelInvoke(string sessionId, string invokeId, CancellationToken token)
+		async ValueTask IStateMachineHost.CancelInvoke(string sessionId, string invokeId, CancellationToken token)
 		{
 			var context = GetCurrentContext();
 
@@ -73,10 +73,10 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		bool IIoProcessor.IsInvokeActive(string sessionId, string invokeId, string invokeUniqueId) =>
+		bool IStateMachineHost.IsInvokeActive(string sessionId, string invokeId, string invokeUniqueId) =>
 				IsCurrentContextExists(out var context) && context.TryGetService(sessionId, invokeId, out var pair) && pair.InvokeUniqueId == invokeUniqueId;
 
-		async ValueTask<SendStatus> IIoProcessor.DispatchEvent(string sessionId, IOutgoingEvent evt, bool skipDelay, CancellationToken token)
+		async ValueTask<SendStatus> IStateMachineHost.DispatchEvent(string sessionId, IOutgoingEvent evt, bool skipDelay, CancellationToken token)
 		{
 			if (evt == null) throw new ArgumentNullException(nameof(evt));
 
@@ -109,7 +109,7 @@ namespace TSSArt.StateMachine
 			return SendStatus.Sent;
 		}
 
-		ValueTask IIoProcessor.ForwardEvent(string sessionId, IEvent evt, string invokeId, CancellationToken token)
+		ValueTask IStateMachineHost.ForwardEvent(string sessionId, IEvent evt, string invokeId, CancellationToken token)
 		{
 			var context = GetCurrentContext();
 
@@ -141,7 +141,7 @@ namespace TSSArt.StateMachine
 			throw new StateMachineProcessorException(Resources.Exception_Invalid_type);
 		}
 
-		private void IoProcessorInit()
+		private void StateMachineHostInit()
 		{
 			var factories = _options.ServiceFactories;
 			var length = !factories.IsDefault ? factories.Length + 1 : 1;
@@ -160,7 +160,7 @@ namespace TSSArt.StateMachine
 			_serviceFactories = serviceFactories.MoveToImmutable();
 		}
 
-		private async ValueTask IoProcessorStartAsync(CancellationToken token)
+		private async ValueTask StateMachineHostStartAsync(CancellationToken token)
 		{
 			var factories = _options.EventProcessorFactories;
 			var length = !factories.IsDefault ? factories.Length + 1 : 1;
@@ -180,7 +180,7 @@ namespace TSSArt.StateMachine
 			_eventProcessors = eventProcessors.MoveToImmutable();
 		}
 
-		private async ValueTask IoProcessorStopAsync()
+		private async ValueTask StateMachineHostStopAsync()
 		{
 			var eventProcessors = _eventProcessors;
 			_eventProcessors = default;
@@ -230,7 +230,7 @@ namespace TSSArt.StateMachine
 		{
 			if (_eventProcessors == null)
 			{
-				throw new StateMachineProcessorException(Resources.Exception_IoProcessor_stopped);
+				throw new StateMachineProcessorException(Resources.Exception_StateMachineHost_stopped);
 			}
 
 			foreach (var eventProcessor in _eventProcessors)
