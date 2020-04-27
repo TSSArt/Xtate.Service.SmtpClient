@@ -220,9 +220,11 @@ namespace TSSArt.StateMachine
 				_elements.Add((ns, name), (located, type));
 			}
 
-			public Action<TDirector, TEntity>? AttributeLocated(string ns, string name) => _attributes.TryGetValue((ns, name), out var val) ? val.located : null;
+			public Action<TDirector, TEntity>? AttributeLocated(string ns, string name) =>
+					_attributes.TryGetValue((ns, name), out (Action<TDirector, TEntity> located, AttributeType type) val) ? val.located : null;
 
-			public Action<TDirector, TEntity>? ElementLocated(string ns, string name) => _elements.TryGetValue((ns, name), out var val) ? val.located : UnknownElementAction;
+			public Action<TDirector, TEntity>? ElementLocated(string ns, string name) =>
+					_elements.TryGetValue((ns, name), out (Action<TDirector, TEntity> located, ElementType type) val) ? val.located : UnknownElementAction;
 
 			public ValidationContext CreateValidationContext(XmlReader xmlReader, IErrorProcessor errorProcessor) => new ValidationContext(this, xmlReader, errorProcessor);
 
