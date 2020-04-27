@@ -132,16 +132,16 @@ namespace TSSArt.StateMachine
 					return DataModelObject.Empty;
 				}
 
-				var ioProcessors = new DataModelObject();
+				var dictionary = new DataModelObject();
 
 				foreach (var ioProcessor in eventProcessors)
 				{
-					ioProcessors[ioProcessor.Id.ToString()] = new DataModelValue(new DataModelObject { [@"location"] = new DataModelValue(ioProcessor.GetTarget(sessionId).ToString()) });
+					dictionary[ioProcessor.Id.ToString()] = new DataModelValue(new DataModelObject { [@"location"] = new DataModelValue(ioProcessor.GetTarget(sessionId).ToString()) });
 				}
 
-				ioProcessors.MakeDeepConstant();
+				dictionary.MakeDeepConstant();
 
-				return ioProcessors;
+				return dictionary;
 			}
 		}
 

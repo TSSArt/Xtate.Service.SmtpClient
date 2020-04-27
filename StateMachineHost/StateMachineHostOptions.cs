@@ -5,7 +5,7 @@ using TSSArt.StateMachine.Annotations;
 namespace TSSArt.StateMachine
 {
 	[PublicAPI]
-	public class IoProcessorOptions
+	public class StateMachineHostOptions
 	{
 		public ImmutableArray<IEventProcessorFactory>   EventProcessorFactories   { get; set; }
 		public ImmutableArray<IServiceFactory>          ServiceFactories          { get; set; }

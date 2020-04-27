@@ -7,15 +7,15 @@ using System.Xml;
 
 namespace TSSArt.StateMachine
 {
-	internal class IoProcessorContext : IAsyncDisposable
+	internal class StateMachineHostContext : IAsyncDisposable
 	{
 		private static readonly Uri ParentTarget = new Uri(uriString: "#_parent", UriKind.Relative);
 
 		private static readonly XmlReaderSettings DefaultSyncXmlReaderSettings  = new XmlReaderSettings { Async = false, CloseInput = true };
 		private static readonly XmlReaderSettings DefaultAsyncXmlReaderSettings = new XmlReaderSettings { Async = true, CloseInput = true };
 
-		private readonly IIoProcessor       _ioProcessor;
-		private readonly IoProcessorOptions _options;
+		private readonly IStateMachineHost       _stateMachineHost;
+		private readonly StateMachineHostOptions _options;
 
 		private readonly ConcurrentDictionary<string, IService> _parentServiceBySessionId = new ConcurrentDictionary<string, IService>();
 
@@ -27,9 +27,9 @@ namespace TSSArt.StateMachine
 		private readonly CancellationTokenSource                              _stopTokenSource;
 		private readonly CancellationTokenSource                              _suspendTokenSource;
 
-		public IoProcessorContext(IIoProcessor ioProcessor, in IoProcessorOptions options)
+		public StateMachineHostContext(IStateMachineHost stateMachineHost, in StateMachineHostOptions options)
 		{
-			_ioProcessor = ioProcessor;
+			_stateMachineHost = stateMachineHost;
 			_options = options;
 			_suspendTokenSource = new CancellationTokenSource();
 			_stopTokenSource = new CancellationTokenSource();
@@ -78,7 +78,7 @@ namespace TSSArt.StateMachine
 		}
 
 		protected virtual StateMachineController CreateStateMachineController(string sessionId, IStateMachineOptions? options, IStateMachine stateMachine, in InterpreterOptions defaultOptions) =>
-				new StateMachineController(sessionId, options, stateMachine, _ioProcessor, _options.SuspendIdlePeriod, defaultOptions);
+				new StateMachineController(sessionId, options, stateMachine, _stateMachineHost, _options.SuspendIdlePeriod, defaultOptions);
 
 		private static XmlReaderSettings GetXmlReaderSettings(bool useAsync = false) => useAsync ? DefaultAsyncXmlReaderSettings : DefaultSyncXmlReaderSettings;
 

@@ -6,7 +6,7 @@ namespace TSSArt.StateMachine
 	[PublicAPI]
 	public static class NamedEventProcessorExtensions
 	{
-		public static IoProcessorBuilder AddNamedEventProcessor(this IoProcessorBuilder builder, string name)
+		public static StateMachineHostBuilder AddNamedEventProcessor(this StateMachineHostBuilder builder, string name)
 		{
 			if (builder == null) throw new ArgumentNullException(nameof(builder));
 
@@ -15,7 +15,7 @@ namespace TSSArt.StateMachine
 			return builder;
 		}
 
-		public static IoProcessorBuilder AddNamedEventProcessor(this IoProcessorBuilder builder, string host, string name)
+		public static StateMachineHostBuilder AddNamedEventProcessor(this StateMachineHostBuilder builder, string host, string name)
 		{
 			if (builder == null) throw new ArgumentNullException(nameof(builder));
 

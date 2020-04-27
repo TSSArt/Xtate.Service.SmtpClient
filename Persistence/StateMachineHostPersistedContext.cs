@@ -5,16 +5,16 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	internal sealed class IoProcessorPersistedContext : IoProcessorContext
+	internal sealed class StateMachineHostPersistedContext : StateMachineHostContext
 	{
-		private const    string   IoProcessorPartition = "IoProcessor";
+		private const    string   HostPartition = "StateMachineHost";
 		private const    string   ContextKey           = "context";
 		private const    int      StateMachinesKey     = 0;
 		private const    int      InvokedServicesKey   = 1;
 		private readonly TimeSpan _idlePeriod;
 
 		private readonly Dictionary<(string SessionId, string InvokeId), InvokedServiceMeta> _invokedServices = new Dictionary<(string SessionId, string InvokeId), InvokedServiceMeta>();
-		private readonly IIoProcessor                                                        _ioProcessor;
+		private readonly IStateMachineHost                                                        _stateMachineHost;
 		private readonly SemaphoreSlim                                                       _lockInvokedServices = new SemaphoreSlim(initialCount: 1, maxCount: 1);
 		private readonly SemaphoreSlim                                                       _lockStateMachines   = new SemaphoreSlim(initialCount: 1, maxCount: 1);
 
@@ -26,11 +26,11 @@ namespace TSSArt.StateMachine
 
 		private ITransactionalStorage? _storage;
 
-		public IoProcessorPersistedContext(IIoProcessor ioProcessor, in IoProcessorOptions options) : base(ioProcessor, options)
+		public StateMachineHostPersistedContext(IStateMachineHost stateMachineHost, in StateMachineHostOptions options) : base(stateMachineHost, options)
 		{
 			Infrastructure.Assert(options.StorageProvider != null);
 
-			_ioProcessor = ioProcessor;
+			_stateMachineHost = stateMachineHost;
 			_storageProvider = options.StorageProvider;
 			_idlePeriod = options.SuspendIdlePeriod;
 		}
@@ -39,7 +39,7 @@ namespace TSSArt.StateMachine
 		{
 			try
 			{
-				_storage = await _storageProvider.GetTransactionalStorage(IoProcessorPartition, ContextKey, token).ConfigureAwait(false);
+				_storage = await _storageProvider.GetTransactionalStorage(HostPartition, ContextKey, token).ConfigureAwait(false);
 
 				await LoadStateMachines(token).ConfigureAwait(false);
 				await LoadInvokedServices(token).ConfigureAwait(false);
@@ -156,7 +156,7 @@ namespace TSSArt.StateMachine
 
 		protected override StateMachineController CreateStateMachineController(string sessionId, IStateMachineOptions? options, IStateMachine stateMachine, in InterpreterOptions defaultOptions) =>
 				options.IsStateMachinePersistable()
-						? new StateMachinePersistedController(sessionId, options, stateMachine, _ioProcessor, _storageProvider, _idlePeriod, in defaultOptions)
+						? new StateMachinePersistedController(sessionId, options, stateMachine, _stateMachineHost, _storageProvider, _idlePeriod, in defaultOptions)
 						: base.CreateStateMachineController(sessionId, options, stateMachine, in defaultOptions);
 
 		public override async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, IStateMachineOptions? options, IStateMachine? stateMachine, Uri? source,
