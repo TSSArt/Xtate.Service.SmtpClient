@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using TSSArt.StateMachine.Annotations;
@@ -10,10 +9,9 @@ namespace TSSArt.StateMachine
 	public sealed partial class StateMachineHost : IAsyncDisposable
 	{
 		private readonly StateMachineHostOptions _options;
-		private          bool               _asyncOperationInProgress;
-
+		private bool                     _asyncOperationInProgress;
 		private StateMachineHostContext? _context;
-		private bool                _disposed;
+		private bool                     _disposed;
 
 		public StateMachineHost(StateMachineHostOptions options)
 		{
@@ -24,7 +22,7 @@ namespace TSSArt.StateMachine
 
 	#region Interface IAsyncDisposable
 
-		public async ValueTask DisposeAsync()
+		async ValueTask IAsyncDisposable.DisposeAsync()
 		{
 			if (_disposed)
 			{
@@ -153,18 +151,6 @@ namespace TSSArt.StateMachine
 					await context.DestroyStateMachine(sessionId).ConfigureAwait(false);
 				}
 			}
-		}
-
-		private IErrorProcessor CreateErrorProcessor(string sessionId, IStateMachine? stateMachine, Uri? source, string? scxml) =>
-				_options.VerboseValidation ? new DetailedErrorProcessor(sessionId, stateMachine, source, scxml) : DefaultErrorProcessor.Instance;
-
-		private StateMachineHostContext GetCurrentContext() => _context ?? throw new InvalidOperationException(Resources.Exception_IO_Processor_has_not_been_started);
-
-		private bool IsCurrentContextExists([NotNullWhen(true)] out StateMachineHostContext? context)
-		{
-			context = _context;
-
-			return context != null;
 		}
 	}
 }
