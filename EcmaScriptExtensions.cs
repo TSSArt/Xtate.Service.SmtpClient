@@ -4,7 +4,7 @@ namespace TSSArt.StateMachine.EcmaScript
 {
 	public static class EcmaScriptExtensions
 	{
-		public static IoProcessorBuilder AddEcmaScript(this IoProcessorBuilder builder)
+		public static StateMachineHostBuilder AddEcmaScript(this StateMachineHostBuilder builder)
 		{
 			if (builder == null) throw new ArgumentNullException(nameof(builder));
 
