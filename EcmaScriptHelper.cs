@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Globalization;
 using System.Reflection;
-using TSSArt.StateMachine.Annotations;
 using Jint;
 using Jint.Native;
 using Jint.Native.Array;
@@ -9,6 +8,7 @@ using Jint.Native.Object;
 using Jint.Runtime;
 using Jint.Runtime.Descriptors;
 using Jint.Runtime.Interop;
+using TSSArt.StateMachine.Annotations;
 
 namespace TSSArt.StateMachine.EcmaScript
 {
