@@ -514,9 +514,6 @@
   <data name="Exception_Incorrect_encoding" xml:space="preserve">
     <value>Incorrect encoding.</value>
   </data>
-  <data name="Exception_StateMachine_or_Source_or_SCXML_should_be_provided" xml:space="preserve">
-    <value>StateMachine or Source or SCXML should be provided.</value>
-  </data>
   <data name="Assertion_ValidationFailed" xml:space="preserve">
     <value>Validation failed. Result of operation must be true.</value>
   </data>
@@ -630,5 +627,41 @@
   </data>
   <data name="Exception_Registration_should_no_occur_after_initialization" xml:space="preserve">
     <value>Registration should no occur after initialization.</value>
+  </data>
+  <data name="Exception_Can_t_get_access_to_IHost_interface" xml:space="preserve">
+    <value>Can't get access to IHost interface.</value>
+  </data>
+  <data name="ErrorMessage_Error_on_creation_CustomAction_executor" xml:space="preserve">
+    <value>Error on creation CustomAction executor.</value>
+  </data>
+  <data name="ErrorMessage_src_and_srcexpr_attributes_should_not_be_assigned_in_Start_element" xml:space="preserve">
+    <value>[src] and [srcexpr] attributes should not be assigned in Start element.</value>
+  </data>
+  <data name="ErrorMessage_source__has_invalid_URI_format" xml:space="preserve">
+    <value>[source] has invalid URI format.</value>
+  </data>
+  <data name="ErrorMessage_At_least_one_source_must_be_specified" xml:space="preserve">
+    <value>At least one source must be specified</value>
+  </data>
+  <data name="StartAction_Execute_Source_not_specified" xml:space="preserve">
+    <value>Source not specified.</value>
+  </data>
+  <data name="ErrorMessage_Custom_action_executor_can_t_be_found" xml:space="preserve">
+    <value>Custom action executor can't be found.</value>
+  </data>
+  <data name="Exception_StateMachine_origin_missed" xml:space="preserve">
+    <value>StateMachine origin missed.</value>
+  </data>
+  <data name="Exception_Value_is_not_SCXML" xml:space="preserve">
+    <value>Value is not SCXML.</value>
+  </data>
+  <data name="Exception_Value_is_not_Source" xml:space="preserve">
+    <value>Value is not Source.</value>
+  </data>
+  <data name="Exception_Value_is_not_StateMachine" xml:space="preserve">
+    <value>Value is not StateMachine.</value>
+  </data>
+  <data name="Exception_Resource_not_found" xml:space="preserve">
+    <value>Resource '{0}' not found.</value>
   </data>
 </root>

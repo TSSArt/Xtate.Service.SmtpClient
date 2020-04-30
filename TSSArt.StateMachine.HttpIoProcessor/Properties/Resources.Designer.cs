@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace TSSArt.StateMachine.Properties {
+namespace TSSArt.StateMachine {
     using System;
     
     

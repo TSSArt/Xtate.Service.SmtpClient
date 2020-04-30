@@ -129,6 +129,12 @@ namespace TSSArt.StateMachine
 
 		public void MakeDeepConstant() => Access = DataModelAccess.Constant;
 
+		public DataModelObject CloneAsWritable() => DeepClone(DataModelAccess.Writable);
+
+		public DataModelObject CloneAsReadOnly() => DeepClone(DataModelAccess.ReadOnly);
+
+		public DataModelObject AsConstant() => DeepClone(DataModelAccess.Constant);
+
 		private static Exception ObjectCantBeModifiedException() => new InvalidOperationException(Resources.Exception_Object_can_not_be_modified);
 
 		internal DataModelDescriptor GetDescriptor(string property) => _properties.TryGetValue(property, out var descriptor) ? descriptor : new DataModelDescriptor(DataModelValue.Undefined);
@@ -269,7 +275,7 @@ namespace TSSArt.StateMachine
 		{
 			private static readonly IDynamicMetaObjectProvider Instance = new Dynamic(default!);
 
-			private static readonly ConstructorInfo ConstructorInfo = typeof(Dynamic).GetConstructor(new[] { typeof(DataModelObject) });
+			private static readonly ConstructorInfo ConstructorInfo = typeof(Dynamic).GetConstructor(new[] { typeof(DataModelObject) })!;
 
 			private readonly DataModelObject _obj;
 

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Xml;
+using TSSArt.StateMachine.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	[CustomActionProvider("http://tssart.com/scxml/customaction/mid")]
 	public class MidCustomActionFactory : CustomActionFactoryBase
 	{

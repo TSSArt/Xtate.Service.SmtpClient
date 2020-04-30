@@ -40,18 +40,14 @@ namespace TSSArt.StateMachine.Test
 
 		private async Task RunStateMachine(Func<string, IStateMachine> getter, string innerXml)
 		{
+			// arrange
 			var stateMachine = getter(innerXml);
 
-			try
-			{
-				await StateMachineInterpreter.RunAsync(IdGenerator.NewSessionId(), stateMachine, _eventChannel, _options);
+			// act
+			async Task Action() => await StateMachineInterpreter.RunAsync(IdGenerator.NewSessionId(), stateMachine, _eventChannel, _options);
 
-				Assert.Fail("StateMachineQueueClosedException should be raised");
-			}
-			catch (StateMachineQueueClosedException)
-			{
-				// ignore
-			}
+			// assert
+			await Assert.ThrowsExceptionAsync<StateMachineQueueClosedException>(Action);
 		}
 
 		[TestInitialize]

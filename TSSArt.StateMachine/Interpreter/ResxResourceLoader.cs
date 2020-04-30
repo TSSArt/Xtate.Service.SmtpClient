@@ -21,7 +21,7 @@ namespace TSSArt.StateMachine
 		{
 			if (uri == null) throw new ArgumentNullException(nameof(uri));
 
-			return uri.Scheme == "res" || uri.Scheme == "resx";
+			return uri.IsAbsoluteUri && (uri.Scheme == "res" || uri.Scheme == "resx");
 		}
 
 		public async ValueTask<Resource> Request(Uri uri, CancellationToken token)
@@ -69,7 +69,14 @@ namespace TSSArt.StateMachine
 			var assembly = Assembly.Load(assemblyName);
 			var name = uri.GetComponents(UriComponents.Path, UriFormat.Unescaped).Replace(oldChar: '/', newChar: '.');
 
-			return assembly.GetManifestResourceStream(name);
+			var stream = assembly.GetManifestResourceStream(name);
+
+			if (stream == null)
+			{
+				throw new StateMachineResourceNotFoundException(Res.Format(Resources.Exception_Resource_not_found, uri));
+			}
+
+			return stream;
 		}
 	}
 }

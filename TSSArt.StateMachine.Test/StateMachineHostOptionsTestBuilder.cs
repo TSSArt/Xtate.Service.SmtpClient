@@ -4,7 +4,7 @@ namespace TSSArt.StateMachine.Test
 {
 	public static class StateMachineHostOptionsTestBuilder
 	{
-		public delegate void StateMachineHostOptionsSetup(ref StateMachineHostOptions options);
+		public delegate void StateMachineHostOptionsSetup(StateMachineHostOptions options);
 
 		public static StateMachineHostOptions Create(StateMachineHostOptionsSetup build)
 		{
@@ -15,7 +15,7 @@ namespace TSSArt.StateMachine.Test
 								  ServiceFactories = ImmutableArray<IServiceFactory>.Empty
 						  };
 
-			build(ref options);
+			build(options);
 
 			return options;
 		}

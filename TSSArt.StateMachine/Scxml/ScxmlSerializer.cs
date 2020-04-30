@@ -562,7 +562,10 @@ namespace TSSArt.StateMachine
 
 			_writer.WriteStartElement("param");
 
-			_writer.WriteAttributeString(localName: "name", entity.Name);
+			if (entity.Name != null)
+			{
+				_writer.WriteAttributeString(localName: "name", entity.Name);
+			}
 
 			if (entity.Expression?.Expression != null)
 			{

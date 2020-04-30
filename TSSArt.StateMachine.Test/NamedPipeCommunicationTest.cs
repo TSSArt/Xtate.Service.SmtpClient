@@ -37,8 +37,8 @@ namespace TSSArt.StateMachine.Test
 		{
 			var srcPrc = new StateMachineHostBuilder().AddNamedIoProcessor(U("src")).AddEcmaScript().Build();
 			await srcPrc.StartAsync();
-			var _ = srcPrc.Execute(sessionId: "srcID", string.Format(SrcScxml, $"iop:///{U("src")}#_scxml_dstID"));
-			var dst = srcPrc.Execute(sessionId: "dstID", DstScxml);
+			var _ = srcPrc.Execute(string.Format(SrcScxml, $"iop:///{U("src")}#_scxml_dstID"), sessionId: "srcID");
+			var dst = srcPrc.Execute(DstScxml, sessionId: "dstID");
 
 			await srcPrc.Dispatch(sessionId: "srcID", new EventObject("trigger"));
 
@@ -54,11 +54,11 @@ namespace TSSArt.StateMachine.Test
 		{
 			var srcPrc = new StateMachineHostBuilder().AddNamedIoProcessor(U("src")).Build();
 			await srcPrc.StartAsync();
-			var _ = srcPrc.Execute(sessionId: "srcID", string.Format(SrcScxml, $"iop:///{U("dst")}#_scxml_dstID"));
+			var _ = srcPrc.Execute(string.Format(SrcScxml, $"iop:///{U("dst")}#_scxml_dstID"), sessionId: "srcID");
 
 			var dstPrc = new StateMachineHostBuilder().AddNamedIoProcessor(U("dst")).AddEcmaScript().Build();
 			await dstPrc.StartAsync();
-			var dst = dstPrc.Execute(sessionId: "dstID", DstScxml);
+			var dst = dstPrc.Execute(DstScxml, sessionId: "dstID");
 
 
 			await srcPrc.Dispatch(sessionId: "srcID", new EventObject("trigger"));
@@ -76,11 +76,11 @@ namespace TSSArt.StateMachine.Test
 		{
 			var srcPrc = new StateMachineHostBuilder().AddNamedIoProcessor(host: "MyHost1", U("src")).Build();
 			await srcPrc.StartAsync();
-			var _ = srcPrc.Execute(sessionId: "srcID", string.Format(SrcScxml, $"iop://./{U("dst")}#_scxml_dstID"));
+			var _ = srcPrc.Execute(string.Format(SrcScxml, $"iop://./{U("dst")}#_scxml_dstID"), sessionId: "srcID");
 
 			var dstPrc = new StateMachineHostBuilder().AddNamedIoProcessor(host: ".", U("dst")).AddEcmaScript().Build();
 			await dstPrc.StartAsync();
-			var dst = dstPrc.Execute(sessionId: "dstID", DstScxml);
+			var dst = dstPrc.Execute(DstScxml, sessionId: "dstID");
 
 
 			await srcPrc.Dispatch(sessionId: "srcID", new EventObject("trigger"));

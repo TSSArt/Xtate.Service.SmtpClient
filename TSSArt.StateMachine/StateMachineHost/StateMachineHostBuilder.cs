@@ -18,6 +18,7 @@ namespace TSSArt.StateMachine
 		private ImmutableArray<IServiceFactory>.Builder?          _serviceFactories;
 		private IStorageProvider?                                 _storageProvider;
 		private TimeSpan                                          _suspendIdlePeriod;
+		private Uri?                                              _baseUri;
 		private bool                                              _verboseValidation = true;
 
 		public StateMachineHost Build()
@@ -30,6 +31,7 @@ namespace TSSArt.StateMachine
 								 CustomActionFactories = _customActionFactories?.ToImmutable() ?? default,
 								 ResourceLoaders = _resourceLoaders?.ToImmutable() ?? default,
 								 Configuration = _configuration?.ToImmutable(),
+								 BaseUri = _baseUri,
 								 Logger = _logger,
 								 PersistenceLevel = _persistenceLevel,
 								 StorageProvider = _storageProvider,
@@ -123,6 +125,13 @@ namespace TSSArt.StateMachine
 			if (key == null) throw new ArgumentNullException(nameof(key));
 
 			(_configuration ??= ImmutableDictionary.CreateBuilder<string, string>())[key] = value ?? throw new ArgumentNullException(nameof(value));
+
+			return this;
+		}
+
+		public StateMachineHostBuilder SetBaseUri(Uri uri)
+		{
+			_baseUri = uri ?? throw new ArgumentNullException(nameof(uri));
 
 			return this;
 		}

@@ -27,7 +27,7 @@ namespace TSSArt.StateMachine
 			_stateMachine = stateMachine ?? throw new ArgumentNullException(nameof(stateMachine));
 			_dataModelHandler = dataModelHandler ?? throw new ArgumentNullException(nameof(dataModelHandler));
 			_errorProcessor = errorProcessor;
-			_preDataModelProcessor = new PreDataModelProcessor(customActionProviders);
+			_preDataModelProcessor = new PreDataModelProcessor(errorProcessor, customActionProviders);
 			_idMap = new Dictionary<IIdentifier, StateEntityNode>(IdentifierEqualityComparer.Instance);
 			_entities = new List<IEntity>();
 			_targetMap = new List<TransitionNode>();
@@ -205,10 +205,7 @@ namespace TSSArt.StateMachine
 				newState = new StateNode(documentId, stateProperties);
 			}
 
-			if (newState.Id != null)
-			{
-				_idMap.Add(newState.Id, newState);
-			}
+			_idMap.Add(newState.Id, newState);
 
 			state = newState;
 			RegisterEntity(state);
@@ -223,10 +220,7 @@ namespace TSSArt.StateMachine
 			CounterAfter(saved);
 
 			var newParallel = new ParallelNode(documentId, parallelProperties);
-			if (newParallel.Id != null)
-			{
-				_idMap.Add(newParallel.Id, newParallel);
-			}
+			_idMap.Add(newParallel.Id, newParallel);
 
 			parallel = newParallel;
 			RegisterEntity(parallel);
@@ -241,10 +235,7 @@ namespace TSSArt.StateMachine
 			CounterAfter(saved);
 
 			var newFinal = new FinalNode(documentId, finalProperties);
-			if (newFinal.Id != null)
-			{
-				_idMap.Add(newFinal.Id, newFinal);
-			}
+			_idMap.Add(newFinal.Id, newFinal);
 
 			final = newFinal;
 			RegisterEntity(final);
@@ -257,10 +248,7 @@ namespace TSSArt.StateMachine
 			base.Build(ref history, ref historyProperties);
 
 			var newHistory = new HistoryNode(documentId, historyProperties);
-			if (newHistory.Id != null)
-			{
-				_idMap.Add(newHistory.Id, newHistory);
-			}
+			_idMap.Add(newHistory.Id, newHistory);
 
 			history = newHistory;
 			RegisterEntity(history);

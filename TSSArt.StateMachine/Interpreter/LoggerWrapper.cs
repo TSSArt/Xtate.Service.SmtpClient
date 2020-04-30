@@ -70,10 +70,10 @@ namespace TSSArt.StateMachine
 
 		public void ProcessingEvent(IEvent evt)
 		{
+			if (evt == null) throw new ArgumentNullException(nameof(evt));
+
 			if (_logger.IsTracingEnabled)
 			{
-				if (evt == null) throw new ArgumentNullException(nameof(evt));
-
 				_logger.TraceProcessingEvent(_sessionId, evt.Type, EventName.ToName(evt.NameParts), evt.SendId, evt.InvokeId,
 											 evt.Data, evt.OriginType?.ToString(), evt.Origin?.ToString());
 			}
@@ -81,30 +81,30 @@ namespace TSSArt.StateMachine
 
 		public void EnteringState(StateEntityNode state)
 		{
+			if (state == null) throw new ArgumentNullException(nameof(state));
+
 			if (_logger.IsTracingEnabled)
 			{
-				if (state == null) throw new ArgumentNullException(nameof(state));
-
 				_logger.TraceEnteringState(_sessionId, state.Id.As<string>());
 			}
 		}
 
 		public void ExitingState(StateEntityNode state)
 		{
+			if (state == null) throw new ArgumentNullException(nameof(state));
+
 			if (_logger.IsTracingEnabled)
 			{
-				if (state == null) throw new ArgumentNullException(nameof(state));
-
 				_logger.TraceExitingState(_sessionId, state.Id.As<string>());
 			}
 		}
 
 		public void PerformingTransition(TransitionNode transition)
 		{
+			if (transition == null) throw new ArgumentNullException(nameof(transition));
+
 			if (_logger.IsTracingEnabled)
 			{
-				if (transition == null) throw new ArgumentNullException(nameof(transition));
-
 				_logger.TracePerformingTransition(_sessionId, transition.Type.ToString(), ToString(transition.EventDescriptors), ToString(transition.Target));
 			}
 		}

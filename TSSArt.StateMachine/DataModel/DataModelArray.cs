@@ -252,6 +252,12 @@ namespace TSSArt.StateMachine
 
 		public void MakeDeepConstant() => Access = DataModelAccess.Constant;
 
+		public DataModelArray CloneAsWritable() => DeepClone(DataModelAccess.Writable);
+
+		public DataModelArray CloneAsReadOnly() => DeepClone(DataModelAccess.ReadOnly);
+
+		public DataModelArray AsConstant() => DeepClone(DataModelAccess.Constant);
+
 		internal void AddInternal(DataModelDescriptor descriptor)
 		{
 			if (_access == DataModelAccess.Constant)
@@ -539,7 +545,7 @@ namespace TSSArt.StateMachine
 		{
 			private static readonly IDynamicMetaObjectProvider Instance = new Dynamic(default!);
 
-			private static readonly ConstructorInfo ConstructorInfo = typeof(Dynamic).GetConstructor(new[] { typeof(DataModelArray) });
+			private static readonly ConstructorInfo ConstructorInfo = typeof(Dynamic).GetConstructor(new[] { typeof(DataModelArray) })!;
 
 			private readonly DataModelArray _arr;
 

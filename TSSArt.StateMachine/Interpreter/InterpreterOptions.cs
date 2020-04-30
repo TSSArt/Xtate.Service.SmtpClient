@@ -8,7 +8,9 @@ namespace TSSArt.StateMachine
 		public ImmutableArray<IDataModelHandlerFactory> DataModelHandlerFactories { get; set; }
 		public ImmutableArray<ICustomActionFactory>     CustomActionProviders     { get; set; }
 		public ImmutableArray<IResourceLoader>          ResourceLoaders           { get; set; }
-		public ImmutableDictionary<string, string>?     Configuration             { get; set; }
+		public DataModelObject?                         Host                      { get; set; }
+		public DataModelObject?                         Configuration             { get; set; }
+		public ImmutableDictionary<object, object>?     ContextRuntimeItems       { get; set; }
 		public DataModelValue                           Arguments                 { get; set; }
 		public IExternalCommunication?                  ExternalCommunication     { get; set; }
 		public INotifyStateChanged?                     NotifyStateChanged        { get; set; }

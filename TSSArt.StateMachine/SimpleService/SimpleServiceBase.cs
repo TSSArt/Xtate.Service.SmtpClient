@@ -20,7 +20,7 @@ namespace TSSArt.StateMachine
 			ServiceCommunication = null!;
 		}
 
-		protected Uri?                  Location             { get; private set; }
+		protected Uri?                  BaseUri              { get; private set; }
 		protected IServiceCommunication ServiceCommunication { get; private set; }
 
 		protected Uri?           Source     => _invokeData?.Source;
@@ -55,9 +55,9 @@ namespace TSSArt.StateMachine
 
 	#endregion
 
-		internal void Start(Uri? location, InvokeData invokeData, IServiceCommunication serviceCommunication)
+		internal void Start(Uri? baseUri, InvokeData invokeData, IServiceCommunication serviceCommunication)
 		{
-			Location = location;
+			BaseUri = baseUri;
 			_invokeData = invokeData;
 			ServiceCommunication = serviceCommunication;
 

@@ -35,7 +35,7 @@ namespace TSSArt.StateMachine.Test
 
 			var stateMachine = StateMachineGenerator.FromInnerScxml_EcmaScript(scxml);
 
-			var options = StateMachineHostOptionsTestBuilder.Create((ref StateMachineHostOptions o) =>
+			var options = StateMachineHostOptionsTestBuilder.Create(o =>
 																	{
 																		o.DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory);
 																		o.ServiceFactories = ImmutableArray.Create(SimpleServiceFactory<PassthroughService>.Instance);
