@@ -9,7 +9,9 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class CustomActionDispatcher : ICustomAction, ICustomActionDispatcher, ICustomActionContext
 	{
-		private readonly CustomAction _customAction;
+		private readonly ImmutableArray<ICustomActionFactory> _customActionFactories;
+		private readonly IErrorProcessor                      _errorProcessor;
+		private readonly CustomAction                         _customAction;
 
 		private ICustomActionExecutor?                       _executor;
 		private ImmutableArray<ILocationEvaluator>           _locationEvaluators;
@@ -17,8 +19,10 @@ namespace TSSArt.StateMachine
 		private ImmutableArray<IObjectEvaluator>             _objectEvaluators;
 		private ImmutableArray<IValueExpression>.Builder?    _values;
 
-		public CustomActionDispatcher(in CustomAction customAction)
+		public CustomActionDispatcher(ImmutableArray<ICustomActionFactory> customActionFactories, IErrorProcessor errorProcessor, in CustomAction customAction)
 		{
+			_customActionFactories = customActionFactories;
+			_errorProcessor = errorProcessor;
 			_customAction = customAction;
 
 			Infrastructure.Assert(customAction.Xml != null);
@@ -30,7 +34,7 @@ namespace TSSArt.StateMachine
 
 		public ImmutableArray<IValueExpression> Values { get; private set; }
 
-		string? ICustomAction.Xml => _customAction.Xml;
+		public string Xml => _customAction.Xml!;
 
 	#endregion
 
@@ -72,6 +76,11 @@ namespace TSSArt.StateMachine
 
 		string ICustomActionContext.Xml => _customAction.Xml!;
 
+		void ICustomActionContext.AddValidationError<T>(string message, Exception? exception)
+		{
+			_errorProcessor.AddError<T>(this, message, exception);
+		}
+
 	#endregion
 
 	#region Interface ICustomActionDispatcher
@@ -93,38 +102,54 @@ namespace TSSArt.StateMachine
 
 	#endregion
 
-		public void SetupExecutor(ImmutableArray<ICustomActionFactory> customActionProviders)
+		public void SetupExecutor()
 		{
-			var executor = GetExecutor(customActionProviders);
-
-			Locations = _locations?.ToImmutable() ?? default;
-			Values = _values?.ToImmutable() ?? default;
-
-			_executor = executor;
-		}
-
-		private ICustomActionExecutor GetExecutor(ImmutableArray<ICustomActionFactory> customActionFactories)
-		{
-			if (!customActionFactories.IsDefaultOrEmpty)
+			try
 			{
-				using var stringReader = new StringReader(_customAction.Xml);
-				using var xmlReader = XmlReader.Create(stringReader);
+				var executor = GetExecutor();
 
-				xmlReader.MoveToContent();
-
-				var namespaceUri = xmlReader.NamespaceURI;
-				var name = xmlReader.LocalName;
-
-				foreach (var factory in customActionFactories)
+				if (executor == null)
 				{
-					if (factory.CanHandle(namespaceUri, name))
-					{
-						return factory.CreateExecutor(this);
-					}
+					_errorProcessor.AddError<CustomActionDispatcher>(this, Resources.ErrorMessage_Custom_action_executor_can_t_be_found);
 				}
+
+				Locations = _locations?.ToImmutable() ?? default;
+				Values = _values?.ToImmutable() ?? default;
+
+				_executor = executor;
+			}
+			catch (Exception ex)
+			{
+				_errorProcessor.AddError<PreDataModelProcessor>(this, Resources.ErrorMessage_Error_on_creation_CustomAction_executor, ex);
 			}
 
-			return CustomActionBase.NoExecutorInstance;
+			_executor ??= NoActionExecutor.Instance;
+		}
+
+		private ICustomActionExecutor? GetExecutor()
+		{
+			if (_customActionFactories.IsDefaultOrEmpty)
+			{
+				return null;
+			}
+
+			using var stringReader = new StringReader(Xml);
+			using var xmlReader = XmlReader.Create(stringReader);
+
+			xmlReader.MoveToContent();
+
+			var namespaceUri = xmlReader.NamespaceURI;
+			var name = xmlReader.LocalName;
+
+			foreach (var factory in _customActionFactories)
+			{
+				if (factory.CanHandle(namespaceUri, name))
+				{
+					return factory.CreateExecutor(this);
+				}
+			}
+			
+			return null;
 		}
 
 		private class LocationAssigner : ILocationAssigner, ILocationExpression
@@ -200,6 +225,13 @@ namespace TSSArt.StateMachine
 			public string Expression { get; }
 
 		#endregion
+		}
+
+		private class NoActionExecutor : ICustomActionExecutor
+		{
+			public static readonly ICustomActionExecutor Instance = new NoActionExecutor();
+
+			public ValueTask Execute(IExecutionContext executionContext, CancellationToken token) => Infrastructure.Fail<ValueTask>();
 		}
 	}
 }

@@ -7,19 +7,15 @@ namespace TSSArt.StateMachine
 	[PublicAPI]
 	public sealed class DetailedErrorProcessor : IErrorProcessor
 	{
-		private readonly string?        _scxml;
-		private readonly string?        _sessionId;
-		private readonly Uri?           _source;
-		private readonly IStateMachine? _stateMachine;
+		private readonly string?            _sessionId;
+		private readonly StateMachineOrigin _origin;
 
 		private ImmutableArray<ErrorItem>.Builder? _errors;
 
-		public DetailedErrorProcessor(string? sessionId, IStateMachine? stateMachine, Uri? source, string? scxml)
+		public DetailedErrorProcessor(string? sessionId, StateMachineOrigin origin)
 		{
 			_sessionId = sessionId;
-			_stateMachine = stateMachine;
-			_source = source;
-			_scxml = scxml;
+			_origin = origin;
 		}
 
 	#region Interface IErrorProcessor
@@ -31,7 +27,7 @@ namespace TSSArt.StateMachine
 
 			if (errors != null)
 			{
-				throw new StateMachineValidationException(errors.ToImmutable(), _sessionId, _stateMachine, _source, _scxml);
+				throw new StateMachineValidationException(errors.ToImmutable(), _sessionId, _origin);
 			}
 		}
 

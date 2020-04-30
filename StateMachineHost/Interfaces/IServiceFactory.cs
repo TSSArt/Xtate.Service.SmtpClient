@@ -8,6 +8,6 @@ namespace TSSArt.StateMachine
 	{
 		bool CanHandle(Uri type, Uri? source);
 
-		ValueTask<IService> StartService(Uri? location, InvokeData invokeData, IServiceCommunication serviceCommunication, CancellationToken token);
+		ValueTask<IService> StartService(Uri? baseUri, InvokeData invokeData, IServiceCommunication serviceCommunication, CancellationToken token);
 	}
 }

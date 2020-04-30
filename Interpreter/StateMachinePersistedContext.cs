@@ -18,8 +18,9 @@ namespace TSSArt.StateMachine
 		private bool _disposed;
 
 		public StateMachinePersistedContext(string? stateMachineName, string sessionId, DataModelValue arguments, ITransactionalStorage storage,
-											ImmutableDictionary<int, IEntity> entityMap, LoggerWrapper logger, ExternalCommunicationWrapper externalCommunication)
-				: base(stateMachineName, sessionId, arguments, logger, externalCommunication)
+											ImmutableDictionary<int, IEntity> entityMap, LoggerWrapper logger, ExternalCommunicationWrapper externalCommunication,
+											ImmutableDictionary<object, object> contextRuntimeItems)
+				: base(stateMachineName, sessionId, arguments, logger, externalCommunication, contextRuntimeItems)
 		{
 			_storage = storage;
 			var bucket = new Bucket(storage);

@@ -250,6 +250,15 @@ namespace TSSArt.StateMachine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to At least one source must be specified.
+        /// </summary>
+        internal static string ErrorMessage_At_least_one_source_must_be_specified {
+            get {
+                return ResourceManager.GetString("ErrorMessage_At_least_one_source_must_be_specified", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to SendId or SendIdExpression should be specified in Cancel element..
         /// </summary>
         internal static string ErrorMessage_CancelItemSendIdAndExpressionMissed {
@@ -304,6 +313,15 @@ namespace TSSArt.StateMachine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Custom action executor can&apos;t be found..
+        /// </summary>
+        internal static string ErrorMessage_Custom_action_executor_can_t_be_found {
+            get {
+                return ResourceManager.GetString("ErrorMessage_Custom_action_executor_can_t_be_found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to DataModel not supported in &apos;runtime&apos; data model..
         /// </summary>
         internal static string ErrorMessage_DataModelNotSupportedInRuntime {
@@ -336,6 +354,15 @@ namespace TSSArt.StateMachine {
         internal static string ErrorMessage_ElseifCannotFollowElse {
             get {
                 return ResourceManager.GetString("ErrorMessage_ElseifCannotFollowElse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error on creation CustomAction executor..
+        /// </summary>
+        internal static string ErrorMessage_Error_on_creation_CustomAction_executor {
+            get {
+                return ResourceManager.GetString("ErrorMessage_Error_on_creation_CustomAction_executor", resourceCulture);
             }
         }
         
@@ -686,6 +713,15 @@ namespace TSSArt.StateMachine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to [source] has invalid URI format..
+        /// </summary>
+        internal static string ErrorMessage_source__has_invalid_URI_format {
+            get {
+                return ResourceManager.GetString("ErrorMessage_source__has_invalid_URI_format", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Source and Body can&apos;t be used at the same time in Assign element..
         /// </summary>
         internal static string ErrorMessage_Source_and_Body_can_t_be_used_at_the_same_time_in_Assign_element {
@@ -701,6 +737,15 @@ namespace TSSArt.StateMachine {
             get {
                 return ResourceManager.GetString("ErrorMessage_Source_and_SourceExpression_can_t_be_used_at_the_same_time_in_Invoke" +
                         "_element", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [src] and [srcexpr] attributes should not be assigned in Start element..
+        /// </summary>
+        internal static string ErrorMessage_src_and_srcexpr_attributes_should_not_be_assigned_in_Start_element {
+            get {
+                return ResourceManager.GetString("ErrorMessage_src_and_srcexpr_attributes_should_not_be_assigned_in_Start_element", resourceCulture);
             }
         }
         
@@ -839,6 +884,15 @@ namespace TSSArt.StateMachine {
         internal static string Exception_Can_not_register_raw_content_more_than_one_time {
             get {
                 return ResourceManager.GetString("Exception_Can_not_register_raw_content_more_than_one_time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Can&apos;t get access to IHost interface..
+        /// </summary>
+        internal static string Exception_Can_t_get_access_to_IHost_interface {
+            get {
+                return ResourceManager.GetString("Exception_Can_t_get_access_to_IHost_interface", resourceCulture);
             }
         }
         
@@ -1277,6 +1331,15 @@ namespace TSSArt.StateMachine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Resource &apos;{0}&apos; not found..
+        /// </summary>
+        internal static string Exception_Resource_not_found {
+            get {
+                return ResourceManager.GetString("Exception_Resource_not_found", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ResourceLoader did not specified..
         /// </summary>
         internal static string Exception_ResourceLoader_did_not_specified {
@@ -1376,11 +1439,11 @@ namespace TSSArt.StateMachine {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to StateMachine or Source or SCXML should be provided..
+        ///   Looks up a localized string similar to StateMachine origin missed..
         /// </summary>
-        internal static string Exception_StateMachine_or_Source_or_SCXML_should_be_provided {
+        internal static string Exception_StateMachine_origin_missed {
             get {
-                return ResourceManager.GetString("Exception_StateMachine_or_Source_or_SCXML_should_be_provided", resourceCulture);
+                return ResourceManager.GetString("Exception_StateMachine_origin_missed", resourceCulture);
             }
         }
         
@@ -1557,6 +1620,33 @@ namespace TSSArt.StateMachine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Value is not SCXML..
+        /// </summary>
+        internal static string Exception_Value_is_not_SCXML {
+            get {
+                return ResourceManager.GetString("Exception_Value_is_not_SCXML", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Value is not Source..
+        /// </summary>
+        internal static string Exception_Value_is_not_Source {
+            get {
+                return ResourceManager.GetString("Exception_Value_is_not_Source", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Value is not StateMachine..
+        /// </summary>
+        internal static string Exception_Value_is_not_StateMachine {
+            get {
+                return ResourceManager.GetString("Exception_Value_is_not_StateMachine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Value cannot be an empty collection..
         /// </summary>
         internal static string Exception_ValueCannotBeAnEmptyCollection {
@@ -1607,6 +1697,15 @@ namespace TSSArt.StateMachine {
         internal static string Exception_ValueCantBeEmpty {
             get {
                 return ResourceManager.GetString("Exception_ValueCantBeEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Source not specified..
+        /// </summary>
+        internal static string StartAction_Execute_Source_not_specified {
+            get {
+                return ResourceManager.GetString("StartAction_Execute_Source_not_specified", resourceCulture);
             }
         }
     }

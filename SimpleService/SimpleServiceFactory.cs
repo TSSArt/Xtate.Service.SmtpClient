@@ -29,11 +29,11 @@ namespace TSSArt.StateMachine
 
 		bool IServiceFactory.CanHandle(Uri type, Uri? source) => FullUriComparer.Instance.Equals(type, _type) || FullUriComparer.Instance.Equals(type, _alias);
 
-		ValueTask<IService> IServiceFactory.StartService(Uri? location, InvokeData invokeData, IServiceCommunication serviceCommunication, CancellationToken token)
+		ValueTask<IService> IServiceFactory.StartService(Uri? baseUri, InvokeData invokeData, IServiceCommunication serviceCommunication, CancellationToken token)
 		{
 			var service = new TService();
 
-			service.Start(location, invokeData, serviceCommunication);
+			service.Start(baseUri, invokeData, serviceCommunication);
 
 			return new ValueTask<IService>(service);
 		}

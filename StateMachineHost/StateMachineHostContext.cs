@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -14,25 +17,37 @@ namespace TSSArt.StateMachine
 		private static readonly XmlReaderSettings DefaultSyncXmlReaderSettings  = new XmlReaderSettings { Async = false, CloseInput = true };
 		private static readonly XmlReaderSettings DefaultAsyncXmlReaderSettings = new XmlReaderSettings { Async = true, CloseInput = true };
 
-		private readonly IStateMachineHost       _stateMachineHost;
-		private readonly StateMachineHostOptions _options;
-
+		private readonly ImmutableDictionary<object, object>?   _contextRuntimeItems;
+		private readonly StateMachineHostOptions                _options;
 		private readonly ConcurrentDictionary<string, IService> _parentServiceBySessionId = new ConcurrentDictionary<string, IService>();
 
 		private readonly ConcurrentDictionary<(string SessionId, string InvokeId), (string InvokeUniqueId, IService? Service)> _serviceByInvokeId =
 				new ConcurrentDictionary<(string SessionId, string InvokeId), (string InvokeUniqueId, IService? Service)>();
 
-		private readonly ConcurrentDictionary<Uri, IService>                  _serviceByTarget          = new ConcurrentDictionary<Uri, IService>(FullUriComparer.Instance);
+		private readonly ConcurrentDictionary<Uri, IService>                  _serviceByTarget = new ConcurrentDictionary<Uri, IService>(FullUriComparer.Instance);
+		private readonly IStateMachineHost                                    _stateMachineHost;
 		private readonly ConcurrentDictionary<string, StateMachineController> _stateMachinesBySessionId = new ConcurrentDictionary<string, StateMachineController>();
 		private readonly CancellationTokenSource                              _stopTokenSource;
 		private readonly CancellationTokenSource                              _suspendTokenSource;
+		private readonly DataModelObject?                                     _configuration;
 
-		public StateMachineHostContext(IStateMachineHost stateMachineHost, in StateMachineHostOptions options)
+		public StateMachineHostContext(IStateMachineHost stateMachineHost, StateMachineHostOptions options)
 		{
 			_stateMachineHost = stateMachineHost;
 			_options = options;
 			_suspendTokenSource = new CancellationTokenSource();
 			_stopTokenSource = new CancellationTokenSource();
+
+			if (stateMachineHost is IHost host)
+			{
+				_contextRuntimeItems = ImmutableDictionary<object, object>.Empty.Add(typeof(IHost), host);
+			}
+
+			if (options.Configuration?.Count > 0)
+			{
+				_configuration = options.Configuration.ToDataModelObject(p => p.Key, p => p.Value);
+				_configuration.MakeDeepConstant();
+			}
 		}
 
 		protected CancellationToken StopToken => _stopTokenSource.Token;
@@ -51,34 +66,34 @@ namespace TSSArt.StateMachine
 
 		public virtual ValueTask InitializeAsync(CancellationToken token) => default;
 
-		private void FillInterpreterOptions(out InterpreterOptions options)
+		private void FillInterpreterOptions(out InterpreterOptions interpreterOptions)
 		{
-			options = new InterpreterOptions
-					  {
-							  Configuration = _options.Configuration,
-							  PersistenceLevel = _options.PersistenceLevel,
-							  StorageProvider = _options.StorageProvider,
-							  ResourceLoaders = _options.ResourceLoaders,
-							  CustomActionProviders = _options.CustomActionFactories,
-							  StopToken = _stopTokenSource.Token,
-							  SuspendToken = _suspendTokenSource.Token,
-							  Logger = _options.Logger,
-							  DataModelHandlerFactories = _options.DataModelHandlerFactories
-					  };
+			interpreterOptions = new InterpreterOptions
+								 {
+										 Configuration = _configuration,
+										 PersistenceLevel = _options.PersistenceLevel,
+										 StorageProvider = _options.StorageProvider,
+										 ResourceLoaders = _options.ResourceLoaders,
+										 CustomActionProviders = _options.CustomActionFactories,
+										 StopToken = _stopTokenSource.Token,
+										 SuspendToken = _suspendTokenSource.Token,
+										 Logger = _options.Logger,
+										 DataModelHandlerFactories = _options.DataModelHandlerFactories,
+										 ContextRuntimeItems = _contextRuntimeItems
+								 };
 		}
 
 		private static void ValidateTrue(bool result)
 		{
-			if (result)
-			{
-				return;
-			}
+			var condition = result;
 
-			Infrastructure.Fail(Resources.Assertion_ValidationFailed);
+			Infrastructure.Assert(condition, Resources.Assertion_ValidationFailed);
 		}
 
-		protected virtual StateMachineController CreateStateMachineController(string sessionId, IStateMachineOptions? options, IStateMachine stateMachine, in InterpreterOptions defaultOptions) =>
-				new StateMachineController(sessionId, options, stateMachine, _stateMachineHost, _options.SuspendIdlePeriod, defaultOptions);
+		protected virtual StateMachineController CreateStateMachineController(string sessionId, IStateMachine? stateMachine,
+																			  IStateMachineOptions? stateMachineOptions,
+																			  Uri? stateMachineLocation, in InterpreterOptions defaultOptions) =>
+				new StateMachineController(sessionId, stateMachineOptions, stateMachine, stateMachineLocation, _stateMachineHost, _options.SuspendIdlePeriod, defaultOptions);
 
 		private static XmlReaderSettings GetXmlReaderSettings(bool useAsync = false) => useAsync ? DefaultAsyncXmlReaderSettings : DefaultSyncXmlReaderSettings;
 
@@ -102,68 +117,115 @@ namespace TSSArt.StateMachine
 
 		private static IBuilderFactory GetBuilderFactory() => BuilderFactory.Instance;
 
-		protected async ValueTask<IStateMachine> GetStateMachine(IStateMachine? stateMachine, Uri? source, string? scxml, IErrorProcessor errorProcessor, CancellationToken token)
+		private IStateMachine GetStateMachine(string scxml, IErrorProcessor errorProcessor)
 		{
-			if (stateMachine != null)
+			using var stringReader = new StringReader(scxml);
+			using var xmlReader = XmlReader.Create(stringReader, GetXmlReaderSettings(), GetXmlParserContext());
+			var scxmlDirector = new ScxmlDirector(xmlReader, GetBuilderFactory(), errorProcessor);
+
+			return scxmlDirector.ConstructStateMachine();
+		}
+
+		private async ValueTask<IStateMachine> GetStateMachine(Uri source, IErrorProcessor errorProcessor, CancellationToken token)
+		{
+			if (!_options.ResourceLoaders.IsDefaultOrEmpty)
 			{
-				return stateMachine;
-			}
-
-			if (source != null)
-			{
-				using var xmlReader = await GetXmlReader().ConfigureAwait(false);
-				var scxmlDirector = new ScxmlDirector(xmlReader, GetBuilderFactory(), errorProcessor);
-
-				return new StateMachineWithLocation(scxmlDirector.ConstructStateMachine(), source);
-			}
-
-			if (scxml != null)
-			{
-				using var stringReader = new StringReader(scxml);
-				using var xmlReader = XmlReader.Create(stringReader, GetXmlReaderSettings(), GetXmlParserContext());
-				var scxmlDirector = new ScxmlDirector(xmlReader, GetBuilderFactory(), errorProcessor);
-
-				return scxmlDirector.ConstructStateMachine();
-			}
-
-			throw new ArgumentException(Resources.Exception_StateMachine_or_Source_or_SCXML_should_be_provided);
-
-			async ValueTask<XmlReader> GetXmlReader()
-			{
-				if (!_options.ResourceLoaders.IsDefaultOrEmpty)
+				foreach (var resourceLoader in _options.ResourceLoaders)
 				{
-					foreach (var resourceLoader in _options.ResourceLoaders)
+					if (resourceLoader.CanHandle(source))
 					{
-						if (resourceLoader.CanHandle(source))
-						{
-							return await resourceLoader.RequestXmlReader(source, GetXmlReaderSettings(), GetXmlParserContext(), token).ConfigureAwait(false);
-						}
+						using var xmlReader = await resourceLoader.RequestXmlReader(source, GetXmlReaderSettings(), GetXmlParserContext(), token).ConfigureAwait(false);
+						var scxmlDirector = new ScxmlDirector(xmlReader, GetBuilderFactory(), errorProcessor);
+
+						return scxmlDirector.ConstructStateMachine();
 					}
 				}
+			}
 
-				throw new StateMachineProcessorException(Resources.Exception_Cannot_find_ResourceLoader_to_load_external_resource);
+			throw new StateMachineProcessorException(Resources.Exception_Cannot_find_ResourceLoader_to_load_external_resource);
+		}
+
+		protected async ValueTask<(IStateMachine StateMachine, Uri? Location)> LoadStateMachine(StateMachineOrigin origin, Uri? hostBaseUri, IErrorProcessor errorProcessor, CancellationToken token)
+		{
+			var location = CombineUri(hostBaseUri, origin.BaseUri);
+
+			switch (origin.Type)
+			{
+				case StateMachineOriginType.StateMachine:
+					return (origin.AsStateMachine(), location);
+
+				case StateMachineOriginType.Scxml:
+					return (GetStateMachine(origin.AsScxml(), errorProcessor), location);
+
+				case StateMachineOriginType.Source:
+					location = CombineUri(location, origin.AsSource());
+					var stateMachine = await GetStateMachine(location, errorProcessor, token).ConfigureAwait(false);
+					return (stateMachine, location);
+
+				default:
+					throw new ArgumentException(Resources.Exception_StateMachine_origin_missed);
 			}
 		}
 
-		public virtual async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, IStateMachineOptions? options, IStateMachine? stateMachine, Uri? source,
-																						string? scxml, DataModelValue parameters, IErrorProcessor errorProcessor, CancellationToken token)
+		[return: NotNullIfNotNull("relativeUri")]
+		private static Uri? CombineUri(Uri? baseUri, Uri? relativeUri)
 		{
+			if (baseUri != null && baseUri.IsAbsoluteUri && relativeUri != null && !relativeUri.IsAbsoluteUri)
+			{
+				return new Uri(baseUri, relativeUri);
+			}
+
+			return relativeUri;
+		}
+
+		public virtual async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, StateMachineOrigin origin, DataModelValue parameters,
+																						IErrorProcessor errorProcessor, CancellationToken token)
+		{
+			var (stateMachine, location) = await LoadStateMachine(origin, _options.BaseUri, errorProcessor, token).ConfigureAwait(false);
+
 			FillInterpreterOptions(out var interpreterOptions);
 			interpreterOptions.Arguments = parameters;
 			interpreterOptions.ErrorProcessor = errorProcessor;
+			interpreterOptions.Host = CreateHostData(location);
 
-			stateMachine = await GetStateMachine(stateMachine, source, scxml, errorProcessor, token).ConfigureAwait(false);
+			stateMachine.Is<IStateMachineOptions>(out var stateMachineOptions);
 
-			if (options == null)
-			{
-				stateMachine.Is(out options);
-			}
-
-			var stateMachineController = CreateStateMachineController(sessionId, options, stateMachine, interpreterOptions);
-			ValidateTrue(_stateMachinesBySessionId.TryAdd(sessionId, stateMachineController));
-			ValidateTrue(_serviceByTarget.TryAdd(new Uri("#_scxml_" + stateMachineController.SessionId, UriKind.Relative), stateMachineController));
+			var stateMachineController = CreateStateMachineController(sessionId, stateMachine, stateMachineOptions, location, interpreterOptions);
+			RegisterStateMachineController(stateMachineController);
 
 			return stateMachineController;
+		}
+
+		protected StateMachineController AddSavedStateMachine(string sessionId, Uri? stateMachineLocation, IStateMachineOptions stateMachineOptions, IErrorProcessor errorProcessor)
+		{
+			FillInterpreterOptions(out var interpreterOptions);
+			interpreterOptions.ErrorProcessor = errorProcessor;
+			interpreterOptions.Host = CreateHostData(stateMachineLocation);
+
+			var stateMachineController = CreateStateMachineController(sessionId, stateMachine: default, stateMachineOptions, stateMachineLocation, interpreterOptions);
+			RegisterStateMachineController(stateMachineController);
+
+			return stateMachineController;
+		}
+
+		private static DataModelObject? CreateHostData(Uri? stateMachineLocation)
+		{
+			if (stateMachineLocation != null)
+			{
+				var obj = new DataModelObject { ["location"] = stateMachineLocation.ToString() };
+				obj.MakeDeepConstant();
+
+				return obj;
+			}
+
+			return null;
+		}
+
+		private void RegisterStateMachineController(StateMachineController stateMachineController)
+		{
+			var sessionId = stateMachineController.SessionId;
+			ValidateTrue(_stateMachinesBySessionId.TryAdd(sessionId, stateMachineController));
+			ValidateTrue(_serviceByTarget.TryAdd(new Uri("#_scxml_" + sessionId, UriKind.Relative), stateMachineController));
 		}
 
 		public virtual ValueTask DestroyStateMachine(string sessionId)
@@ -258,7 +320,9 @@ namespace TSSArt.StateMachine
 
 		public async ValueTask WaitAllAsync(CancellationToken token)
 		{
-			foreach (var controller in _stateMachinesBySessionId.Values)
+			StateMachineController GetControllerToWait() =>_stateMachinesBySessionId.FirstOrDefault(pair => !pair.Value.Result.IsCompleted).Value;
+
+			for (var controller = GetControllerToWait(); controller != null; controller = GetControllerToWait())
 			{
 				try
 				{

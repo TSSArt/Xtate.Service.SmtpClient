@@ -18,7 +18,9 @@ namespace TSSArt.StateMachine
 		private const    string                                   StateStorageKey                  = "state";
 		private const    string                                   StateMachineDefinitionStorageKey = "smd";
 		private readonly DataModelValue                           _arguments;
-		private readonly ImmutableDictionary<string, string>      _configuration;
+		private readonly DataModelObject                          _configuration;
+		private readonly DataModelObject                          _host;
+		private readonly ImmutableDictionary<object, object>      _contextRuntimeItems;
 		private readonly ImmutableArray<ICustomActionFactory>     _customActionProviders;
 		private readonly ImmutableArray<IDataModelHandlerFactory> _dataModelHandlerFactories;
 		private readonly CancellationToken                        _destroyToken;
@@ -55,7 +57,9 @@ namespace TSSArt.StateMachine
 			_logger = new LoggerWrapper(options.Logger ?? DefaultLogger.Instance, sessionId);
 			_externalCommunication = new ExternalCommunicationWrapper(options.ExternalCommunication, sessionId);
 			_storageProvider = options.StorageProvider ?? NullStorageProvider.Instance;
-			_configuration = options.Configuration ?? ImmutableDictionary<string, string>.Empty;
+			_configuration = options.Configuration?.AsConstant() ?? DataModelObject.Empty;
+			_host = options.Host?.AsConstant() ?? DataModelObject.Empty;
+			_contextRuntimeItems = options.ContextRuntimeItems ?? ImmutableDictionary<object, object>.Empty;
 			_errorProcessor = options.ErrorProcessor ?? DefaultErrorProcessor.Instance;
 			_persistenceLevel = options.PersistenceLevel;
 			_notifyStateChanged = options.NotifyStateChanged;
@@ -112,7 +116,7 @@ namespace TSSArt.StateMachine
 			var interpreterModelBuilder = new InterpreterModelBuilder(stateMachine, _dataModelHandler, _customActionProviders, wrapperErrorProcessor);
 			interpreterModel = await interpreterModelBuilder.Build(_resourceLoaders, _stopToken).ConfigureAwait(false);
 
-			_errorProcessor?.ThrowIfErrors();
+			_errorProcessor.ThrowIfErrors();
 			wrapperErrorProcessor.ThrowIfErrors();
 
 			if (IsPersistingEnabled)
@@ -169,7 +173,7 @@ namespace TSSArt.StateMachine
 
 				var interpreterModelBuilder = new InterpreterModelBuilder(restoredStateMachine, _dataModelHandler, _customActionProviders, wrapperErrorProcessor);
 
-				_errorProcessor?.ThrowIfErrors();
+				_errorProcessor.ThrowIfErrors();
 				wrapperErrorProcessor.ThrowIfErrors();
 
 				return interpreterModelBuilder.Build();
@@ -1206,19 +1210,22 @@ namespace TSSArt.StateMachine
 
 		private async ValueTask RunExecutableEntity(ImmutableArray<IExecEvaluator> action)
 		{
-			foreach (var executableEntity in action)
+			if (!action.IsDefaultOrEmpty)
 			{
-				_stopToken.ThrowIfCancellationRequested();
-
-				try
+				foreach (var executableEntity in action)
 				{
-					await executableEntity.Execute(_context.ExecutionContext, _stopToken).ConfigureAwait(false);
-				}
-				catch (Exception ex) when (IsError(ex))
-				{
-					await Error(executableEntity, ex).ConfigureAwait(false);
+					_stopToken.ThrowIfCancellationRequested();
 
-					break;
+					try
+					{
+						await executableEntity.Execute(_context.ExecutionContext, _stopToken).ConfigureAwait(false);
+					}
+					catch (Exception ex) when (IsError(ex))
+					{
+						await Error(executableEntity, ex).ConfigureAwait(false);
+
+						break;
+					}
 				}
 			}
 
@@ -1427,26 +1434,32 @@ namespace TSSArt.StateMachine
 			if (IsPersistingEnabled)
 			{
 				var storage = await _storageProvider.GetTransactionalStorage(partition: default, StateStorageKey, _stopToken).ConfigureAwait(false);
-				context = new StateMachinePersistedContext(_model.Root.Name, _sessionId, _arguments, storage, _model.EntityMap, _logger, _externalCommunication);
+				context = new StateMachinePersistedContext(_model.Root.Name, _sessionId, _arguments, storage, _model.EntityMap, _logger, _externalCommunication, _contextRuntimeItems);
 			}
 			else
 			{
-				context = new StateMachineContext(_model.Root.Name, _sessionId, _arguments, _logger, _externalCommunication);
+				context = new StateMachineContext(_model.Root.Name, _sessionId, _arguments, _logger, _externalCommunication, _contextRuntimeItems);
 			}
 
 			PopulateInterpreterObject(context.InterpreterObject);
-
-			if (_configuration != null)
-			{
-				PopulateConfigurationObject(_configuration, context.ConfigurationObject);
-			}
 
 			var dataModelVars = new Dictionary<string, string>();
 			_dataModelHandler.ExecutionContextCreated(context.ExecutionContext, dataModelVars);
 
 			PopulateDataModelHandlerObject(context.DataModelHandlerObject, dataModelVars);
 
+			PopulateObject(_host, context.HostObject);
+			PopulateObject(_configuration, context.ConfigurationObject);
+
 			return context;
+		}
+
+		private static void PopulateObject(DataModelObject src, DataModelObject dst)
+		{
+			foreach (var property in src.Properties)
+			{
+				dst.SetInternal(property, new DataModelDescriptor(src[property], isReadOnly: true));
+			}
 		}
 
 		private void PopulateInterpreterObject(DataModelObject interpreterObject)
@@ -1456,16 +1469,6 @@ namespace TSSArt.StateMachine
 
 			interpreterObject.SetInternal(property: @"name", new DataModelDescriptor(new DataModelValue(type.FullName)));
 			interpreterObject.SetInternal(property: @"version", new DataModelDescriptor(new DataModelValue(version)));
-		}
-
-		private static void PopulateConfigurationObject(IReadOnlyDictionary<string, string> configuration, DataModelObject configurationObject)
-		{
-			if (configuration == null) throw new ArgumentNullException(nameof(configuration));
-
-			foreach (var pair in configuration)
-			{
-				configurationObject.SetInternal(pair.Key, new DataModelDescriptor(new DataModelValue(pair.Value)));
-			}
 		}
 
 		private void PopulateDataModelHandlerObject(DataModelObject dataModelHandlerObject, Dictionary<string, string> dataModelVars)

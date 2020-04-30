@@ -11,13 +11,14 @@ namespace TSSArt.StateMachine
 		private const    string   ContextKey         = "context";
 		private const    int      StateMachinesKey   = 0;
 		private const    int      InvokedServicesKey = 1;
+		private readonly Uri?     _baseUri;
 		private readonly TimeSpan _idlePeriod;
 
 		private readonly Dictionary<(string SessionId, string InvokeId), InvokedServiceMeta> _invokedServices = new Dictionary<(string SessionId, string InvokeId), InvokedServiceMeta>();
-		private readonly IStateMachineHost                                                   _stateMachineHost;
-		private readonly SemaphoreSlim                                                       _lockInvokedServices = new SemaphoreSlim(initialCount: 1, maxCount: 1);
-		private readonly SemaphoreSlim                                                       _lockStateMachines   = new SemaphoreSlim(initialCount: 1, maxCount: 1);
 
+		private readonly SemaphoreSlim                        _lockInvokedServices = new SemaphoreSlim(initialCount: 1, maxCount: 1);
+		private readonly SemaphoreSlim                        _lockStateMachines   = new SemaphoreSlim(initialCount: 1, maxCount: 1);
+		private readonly IStateMachineHost                    _stateMachineHost;
 		private readonly Dictionary<string, StateMachineMeta> _stateMachines = new Dictionary<string, StateMachineMeta>();
 		private readonly IStorageProvider                     _storageProvider;
 		private          bool                                 _disposed;
@@ -26,13 +27,14 @@ namespace TSSArt.StateMachine
 
 		private ITransactionalStorage? _storage;
 
-		public StateMachineHostPersistedContext(IStateMachineHost stateMachineHost, in StateMachineHostOptions options) : base(stateMachineHost, options)
+		public StateMachineHostPersistedContext(IStateMachineHost stateMachineHost, StateMachineHostOptions options) : base(stateMachineHost, options)
 		{
 			Infrastructure.Assert(options.StorageProvider != null);
 
 			_stateMachineHost = stateMachineHost;
 			_storageProvider = options.StorageProvider;
 			_idlePeriod = options.SuspendIdlePeriod;
+			_baseUri = options.BaseUri;
 		}
 
 		public override async ValueTask InitializeAsync(CancellationToken token)
@@ -154,37 +156,35 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected override StateMachineController CreateStateMachineController(string sessionId, IStateMachineOptions? options, IStateMachine stateMachine, in InterpreterOptions defaultOptions) =>
-				options.IsStateMachinePersistable()
-						? new StateMachinePersistedController(sessionId, options, stateMachine, _stateMachineHost, _storageProvider, _idlePeriod, in defaultOptions)
-						: base.CreateStateMachineController(sessionId, options, stateMachine, in defaultOptions);
+		protected override StateMachineController CreateStateMachineController(string sessionId, IStateMachine? stateMachine, IStateMachineOptions? stateMachineOptions,
+																			   Uri? stateMachineLocation, in InterpreterOptions defaultOptions) =>
+				stateMachineOptions.IsStateMachinePersistable()
+						? new StateMachinePersistedController(sessionId, stateMachineOptions, stateMachine, stateMachineLocation, _stateMachineHost, _storageProvider, _idlePeriod, in defaultOptions)
+						: base.CreateStateMachineController(sessionId, stateMachine, stateMachineOptions, stateMachineLocation, in defaultOptions);
 
-		public override async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, IStateMachineOptions? options, IStateMachine? stateMachine, Uri? source,
-																						 string? scxml, DataModelValue parameters, IErrorProcessor errorProcessor, CancellationToken token)
+		public override async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, StateMachineOrigin origin, DataModelValue parameters, IErrorProcessor errorProcessor,
+																						 CancellationToken token)
 		{
 			Infrastructure.Assert(_storage != null);
 
-			stateMachine = await GetStateMachine(stateMachine, source, scxml, errorProcessor, token).ConfigureAwait(false);
+			var (stateMachine, location) = await LoadStateMachine(origin, _baseUri, errorProcessor, token).ConfigureAwait(false);
 
-			if (options == null)
-			{
-				stateMachine.Is(out options);
-			}
+			stateMachine.Is<StateMachineOptions>(out var options);
 
 			if (!options.IsStateMachinePersistable())
 			{
-				return await base.CreateAndAddStateMachine(sessionId, options, stateMachine, source: null, scxml: null, parameters, errorProcessor, token).ConfigureAwait(false);
+				return await base.CreateAndAddStateMachine(sessionId, origin, parameters, errorProcessor, token).ConfigureAwait(false);
 			}
 
 			await _lockStateMachines.WaitAsync(token).ConfigureAwait(false);
 			try
 			{
-				var stateMachineController = await base.CreateAndAddStateMachine(sessionId, options, stateMachine, source: null, scxml: null, parameters, errorProcessor, token).ConfigureAwait(false);
+				var stateMachineController = await base.CreateAndAddStateMachine(sessionId, origin, parameters, errorProcessor, token).ConfigureAwait(false);
 
 				var bucket = new Bucket(_storage).Nested(StateMachinesKey);
 				var recordId = _stateMachineRecordId ++;
 
-				var stateMachineMeta = new StateMachineMeta(sessionId, options) { RecordId = recordId, Controller = stateMachineController };
+				var stateMachineMeta = new StateMachineMeta(sessionId, options, location) { RecordId = recordId, Controller = stateMachineController };
 				_stateMachines.Add(sessionId, stateMachineMeta);
 
 				bucket.Add(Bucket.RootKey, _stateMachineRecordId);
@@ -277,12 +277,11 @@ namespace TSSArt.StateMachine
 					var eventBucket = bucket.Nested(i);
 					if (eventBucket.TryGet(Key.TypeInfo, out TypeInfo typeInfo) && typeInfo == TypeInfo.StateMachine)
 					{
-						var stateMachineMeta = new StateMachineMeta(bucket) { RecordId = i };
-						var stateMachineController = await base.CreateAndAddStateMachine(stateMachineMeta.SessionId, stateMachineMeta, stateMachine: null, source: null, scxml: null,
-																						 parameters: default, DefaultErrorProcessor.Instance, token).ConfigureAwait(false);
-						stateMachineMeta.Controller = stateMachineController;
+						var meta = new StateMachineMeta(bucket) { RecordId = i };
+						var stateMachineController = AddSavedStateMachine(meta.SessionId, meta.Location, meta, DefaultErrorProcessor.Instance);
+						meta.Controller = stateMachineController;
 
-						_stateMachines.Add(stateMachineMeta.SessionId, stateMachineMeta);
+						_stateMachines.Add(meta.SessionId, meta);
 					}
 				}
 			}
@@ -368,9 +367,10 @@ namespace TSSArt.StateMachine
 
 		private class StateMachineMeta : IStoreSupport, IStateMachineOptions
 		{
-			public StateMachineMeta(string sessionId, IStateMachineOptions? options)
+			public StateMachineMeta(string sessionId, IStateMachineOptions? options, Uri? stateMachineLocation)
 			{
 				SessionId = sessionId;
+				Location = stateMachineLocation;
 
 				if (options != null)
 				{
@@ -383,6 +383,8 @@ namespace TSSArt.StateMachine
 			public StateMachineMeta(Bucket bucket)
 			{
 				SessionId = bucket.GetString(Key.SessionId) ?? throw new StateMachinePersistenceException(Resources.Exception_Missed_SessionId);
+				Location = bucket.GetUri(Key.Location);
+				Name = bucket.GetString(Key.Name);
 
 				if (bucket.TryGet(Key.OptionPersistenceLevel, out PersistenceLevel persistenceLevel))
 				{
@@ -401,11 +403,13 @@ namespace TSSArt.StateMachine
 			}
 
 			public string                  SessionId  { get; }
+			public Uri?                    Location   { get; }
 			public int                     RecordId   { get; set; }
 			public StateMachineController? Controller { get; set; }
 
 		#region Interface IStateMachineOptions
 
+			public string?           Name                       { get; }
 			public PersistenceLevel? PersistenceLevel           { get; }
 			public bool?             SynchronousEventProcessing { get; }
 			public int?              ExternalQueueSize          { get; }
@@ -418,6 +422,12 @@ namespace TSSArt.StateMachine
 			{
 				bucket.Add(Key.TypeInfo, TypeInfo.StateMachine);
 				bucket.Add(Key.SessionId, SessionId);
+				bucket.Add(Key.Location, Location);
+
+				if (Name != null)
+				{
+					bucket.Add(Key.Name, Name);
+				}
 
 				if (PersistenceLevel != null)
 				{

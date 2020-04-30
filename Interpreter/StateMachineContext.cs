@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,13 +14,15 @@ namespace TSSArt.StateMachine
 		private readonly LoggerWrapper                _logger;
 		private readonly string?                      _stateMachineName;
 
-		public StateMachineContext(string? stateMachineName, string sessionId, DataModelValue arguments, LoggerWrapper logger, ExternalCommunicationWrapper externalCommunication)
+		public StateMachineContext(string? stateMachineName, string sessionId, DataModelValue arguments, LoggerWrapper logger,
+								   ExternalCommunicationWrapper externalCommunication, ImmutableDictionary<object, object> contextRuntimeItems)
 		{
 			_stateMachineName = stateMachineName;
 			_logger = logger;
 			_externalCommunication = externalCommunication;
 
 			DataModel = CreateDataModel(stateMachineName, sessionId, arguments);
+			RuntimeItems = new ContextItems(contextRuntimeItems);
 		}
 
 	#region Interface IAsyncDisposable
@@ -59,7 +62,7 @@ namespace TSSArt.StateMachine
 
 		public ValueTask CancelInvoke(string invokeId, CancellationToken token) => _externalCommunication.CancelInvoke(invokeId, token);
 
-		public IContextItems RuntimeItems { get; } = new ContextItems();
+		public IContextItems RuntimeItems { get; }
 
 	#endregion
 
@@ -80,6 +83,8 @@ namespace TSSArt.StateMachine
 		public DataModelObject InterpreterObject { get; } = new DataModelObject(true);
 
 		public DataModelObject ConfigurationObject { get; } = new DataModelObject(true);
+		
+		public DataModelObject HostObject { get; } = new DataModelObject(true);
 
 		public OrderedSet<StateEntityNode> StatesToInvoke { get; } = new OrderedSet<StateEntityNode>();
 
@@ -109,8 +114,10 @@ namespace TSSArt.StateMachine
 								   [@"interpreter"] = new DataModelValue(InterpreterObject),
 								   [@"datamodel"] = new DataModelValue(DataModelHandlerObject),
 								   [@"configuration"] = new DataModelValue(ConfigurationObject),
+								   [@"host"] = new DataModelValue(HostObject),
 								   [@"args"] = arguments
 						   };
+
 			platform.MakeReadOnly();
 
 			var dataModel = new DataModelObject();
@@ -147,16 +154,19 @@ namespace TSSArt.StateMachine
 
 		private class ContextItems : IContextItems
 		{
-			private readonly Dictionary<object, object> _items = new Dictionary<object, object>();
+			private readonly ImmutableDictionary<object, object> _permanentItems;
+			private readonly Dictionary<object, object>          _items = new Dictionary<object, object>();
+
+			public ContextItems(ImmutableDictionary<object, object> permanentItems) => _permanentItems = permanentItems;
 
 		#region Interface IContextItems
 
 			public object? this[object key]
 			{
-				get => _items.TryGetValue(key, out var value) ? value : null;
+				get => _permanentItems.TryGetValue(key, out var value) ? value : _items.TryGetValue(key, out value) ? value : null;
 				set
 				{
-					if (value != null)
+					if (value != null && !_permanentItems.ContainsKey(key))
 					{
 						_items[key] = value;
 					}

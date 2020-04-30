@@ -13,6 +13,7 @@ namespace TSSArt.StateMachine
 		public ImmutableArray<ICustomActionFactory>     CustomActionFactories     { get; set; }
 		public ImmutableArray<IResourceLoader>          ResourceLoaders           { get; set; }
 		public ImmutableDictionary<string, string>?     Configuration             { get; set; }
+		public Uri?                                     BaseUri                   { get; set; }
 		public ILogger?                                 Logger                    { get; set; }
 		public PersistenceLevel                         PersistenceLevel          { get; set; }
 		public IStorageProvider?                        StorageProvider           { get; set; }

@@ -8,8 +8,8 @@ namespace TSSArt.StateMachine
 {
 	public abstract class CustomActionFactoryBase : ICustomActionFactory
 	{
-		private readonly Dictionary<string, Func<XmlReader, ICustomActionContext, CustomActionBase>> _actions =
-				new Dictionary<string, Func<XmlReader, ICustomActionContext, CustomActionBase>>();
+		private readonly Dictionary<string, Func<XmlReader, ICustomActionContext, ICustomActionExecutor>> _actions =
+				new Dictionary<string, Func<XmlReader, ICustomActionContext, ICustomActionExecutor>>();
 
 		private readonly string _namespace;
 
@@ -63,7 +63,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected void Register(string name, Func<XmlReader, ICustomActionContext, CustomActionBase> executorFactory)
+		protected void Register(string name, Func<XmlReader, ICustomActionContext, ICustomActionExecutor> executorFactory)
 		{
 			if (name == null) throw new ArgumentNullException(nameof(name));
 			if (executorFactory == null) throw new ArgumentNullException(nameof(executorFactory));

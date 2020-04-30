@@ -661,7 +661,7 @@ namespace TSSArt.StateMachine
 		{
 			private static readonly IDynamicMetaObjectProvider Instance = new Dynamic(default);
 
-			private static readonly ConstructorInfo ConstructorInfo = typeof(Dynamic).GetConstructor(new[] { typeof(DataModelValue) });
+			private static readonly ConstructorInfo ConstructorInfo = typeof(Dynamic).GetConstructor(new[] { typeof(DataModelValue) })!;
 
 			private readonly DataModelValue _value;
 

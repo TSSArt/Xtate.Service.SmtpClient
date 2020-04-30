@@ -21,18 +21,20 @@ namespace TSSArt.StateMachine
 		private readonly IStateMachineHost                    _stateMachineHost;
 		private readonly ILogger                              _logger;
 		private readonly HashSet<ScheduledEvent>              _scheduledEvents = new HashSet<ScheduledEvent>();
-		private readonly IStateMachine                        _stateMachine;
+		private readonly IStateMachineOptions?                _options;
+		private readonly IStateMachine?                       _stateMachine;
 		private readonly ConcurrentQueue<ScheduledEvent>      _toDelete = new ConcurrentQueue<ScheduledEvent>();
 
 		private bool                     _disposed;
 		private CancellationTokenSource? _suspendOnIdleTokenSource;
 		private CancellationTokenSource? _suspendTokenSource;
 
-		public StateMachineController(string sessionId, IStateMachineOptions? options, IStateMachine stateMachine, IStateMachineHost stateMachineHost, TimeSpan idlePeriod,
-									  in InterpreterOptions defaultOptions)
+		public StateMachineController(string sessionId, IStateMachineOptions? options, IStateMachine? stateMachine, Uri? stateMachineLocation,
+									  IStateMachineHost stateMachineHost, TimeSpan idlePeriod, in InterpreterOptions defaultOptions)
 		{
 			SessionId = sessionId;
-			Location = stateMachine.Is<ILocation>(out var location) ? location.Uri : null;
+			StateMachineLocation = stateMachineLocation;
+			_options = options;
 			_stateMachine = stateMachine;
 			_stateMachineHost = stateMachineHost;
 			_defaultOptions = defaultOptions;
@@ -48,7 +50,8 @@ namespace TSSArt.StateMachine
 		protected virtual Channel<IEvent> Channel { get; }
 
 		public string SessionId { get; }
-		public Uri?   Location  { get; }
+
+		public Uri? StateMachineLocation { get; }
 
 	#region Interface IAsyncDisposable
 
@@ -312,7 +315,7 @@ namespace TSSArt.StateMachine
 				}
 				catch (Exception ex)
 				{
-					await _logger.LogError(ErrorType.Communication, SessionId, _stateMachine.Name, scheduledEvent.Event.SendId, ex, token: default).ConfigureAwait(false);
+					await _logger.LogError(ErrorType.Communication, SessionId, _options?.Name, scheduledEvent.Event.SendId, ex, token: default).ConfigureAwait(false);
 				}
 			}
 			finally

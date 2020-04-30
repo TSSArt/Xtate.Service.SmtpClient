@@ -126,8 +126,8 @@ namespace TSSArt.StateMachine
 			_node.Storage.Write(CreateFullKey(buf, key), value);
 		}
 
-		public void Add<TKey, TValue>([System.Diagnostics.CodeAnalysis.NotNull]
-									  TKey key, [System.Diagnostics.CodeAnalysis.NotNull]
+		public void Add<TKey, TValue>([NotNull]
+									  TKey key, [NotNull]
 									  TValue value)
 		{
 			if (value == null)
@@ -145,7 +145,7 @@ namespace TSSArt.StateMachine
 			_node.Storage.Write(CreateFullKey(buf, key), bufVal);
 		}
 
-		public void Remove<TKey>([System.Diagnostics.CodeAnalysis.NotNull]
+		public void Remove<TKey>([NotNull]
 								 TKey key)
 		{
 			// ReSharper disable once SuggestVarOrType_Elsewhere
@@ -153,7 +153,7 @@ namespace TSSArt.StateMachine
 			_node.Storage.Write(CreateFullKey(buf, key), ReadOnlySpan<byte>.Empty);
 		}
 
-		public void RemoveSubtree<TKey>([System.Diagnostics.CodeAnalysis.NotNull]
+		public void RemoveSubtree<TKey>([NotNull]
 										TKey key)
 		{
 			// ReSharper disable once SuggestVarOrType_Elsewhere
@@ -161,7 +161,7 @@ namespace TSSArt.StateMachine
 			_node.Storage.Write(ReadOnlySpan<byte>.Empty, CreateFullKey(buf, key));
 		}
 
-		public bool TryGet<TKey>([System.Diagnostics.CodeAnalysis.NotNull]
+		public bool TryGet<TKey>([NotNull]
 								 TKey key, out ReadOnlyMemory<byte> value)
 		{
 			// ReSharper disable once SuggestVarOrType_Elsewhere
@@ -170,7 +170,7 @@ namespace TSSArt.StateMachine
 			return !value.IsEmpty;
 		}
 
-		public bool TryGet<TKey, TValue>([System.Diagnostics.CodeAnalysis.NotNull]
+		public bool TryGet<TKey, TValue>([NotNull]
 										 TKey key, [NotNullWhen(true)] [MaybeNullWhen(false)]
 										 out TValue value)
 		{
@@ -340,13 +340,13 @@ namespace TSSArt.StateMachine
 
 		private abstract class ConverterBase<T>
 		{
-			public abstract int GetLength([System.Diagnostics.CodeAnalysis.NotNull]
+			public abstract int GetLength([NotNull]
 										  T key);
 
-			public abstract void Write([System.Diagnostics.CodeAnalysis.NotNull]
+			public abstract void Write([NotNull]
 									   T key, Span<byte> bytes);
 
-			[return: System.Diagnostics.CodeAnalysis.NotNull]
+			[return: NotNull]
 			public abstract T Read(ReadOnlySpan<byte> bytes);
 		}
 

@@ -45,6 +45,8 @@ namespace TSSArt.StateMachine
 			if (string.IsNullOrEmpty(name)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(name));
 
 			_name = name;
+			_options.Name = name;
+			_injectOptions = true;
 		}
 
 		public void SetBindingType(BindingType bindingType) => _bindingType = bindingType;

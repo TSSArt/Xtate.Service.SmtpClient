@@ -22,9 +22,9 @@ namespace TSSArt.StateMachine
 		private int                    _recordId;
 		private ITransactionalStorage? _storage;
 
-		public StateMachinePersistedController(string sessionId, IStateMachineOptions? options, IStateMachine stateMachine, IStateMachineHost stateMachineHost,
-											   IStorageProvider storageProvider, TimeSpan idlePeriod, in InterpreterOptions defaultOptions)
-				: base(sessionId, options, stateMachine, stateMachineHost, idlePeriod, defaultOptions)
+		public StateMachinePersistedController(string sessionId, IStateMachineOptions? options, IStateMachine? stateMachine, Uri? stateMachineLocation,
+											   IStateMachineHost stateMachineHost, IStorageProvider storageProvider, TimeSpan idlePeriod, in InterpreterOptions defaultOptions)
+				: base(sessionId, options, stateMachine, stateMachineLocation, stateMachineHost, idlePeriod, defaultOptions)
 		{
 			_storageProvider = storageProvider;
 			_stopToken = defaultOptions.StopToken;

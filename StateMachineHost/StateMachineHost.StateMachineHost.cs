@@ -25,7 +25,7 @@ namespace TSSArt.StateMachine
 
 			var factory = FindServiceFactory(data.Type, data.Source);
 			var serviceCommunication = new ServiceCommunication(service, IoProcessorId, data.InvokeId, data.InvokeUniqueId);
-			var invokedService = await factory.StartService(service.Location, data, serviceCommunication, token).ConfigureAwait(false);
+			var invokedService = await factory.StartService(service.StateMachineLocation, data, serviceCommunication, token).ConfigureAwait(false);
 
 			await context.AddService(sessionId, data.InvokeId, data.InvokeUniqueId, invokedService, token).ConfigureAwait(false);
 
@@ -133,8 +133,8 @@ namespace TSSArt.StateMachine
 			return context != null;
 		}
 
-		private IErrorProcessor CreateErrorProcessor(string sessionId, IStateMachine? stateMachine, Uri? source, string? scxml) =>
-				_options.VerboseValidation ? new DetailedErrorProcessor(sessionId, stateMachine, source, scxml) : DefaultErrorProcessor.Instance;
+		private IErrorProcessor CreateErrorProcessor(string sessionId, StateMachineOrigin origin) =>
+				_options.VerboseValidation ? new DetailedErrorProcessor(sessionId, origin) : DefaultErrorProcessor.Instance;
 
 		private StateMachineHostContext GetCurrentContext() => _context ?? throw new InvalidOperationException(Resources.Exception_IO_Processor_has_not_been_started);
 

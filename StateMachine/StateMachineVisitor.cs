@@ -26,7 +26,7 @@ namespace TSSArt.StateMachine
 			return ((Type) entry.obj).Name;
 		}
 
-		private void Enter<T>(T entity) where T : class => _path?.Push((entity, default));
+		private void Enter<T>(T entity) where T : class => _path?.Push((entity, new ImmutableArray<object>()));
 
 		private void Enter<T>(ImmutableArray<T> array) where T : class => _path?.Push((typeof(ImmutableArray<T>), array.CastArray<object>()));
 
@@ -41,7 +41,7 @@ namespace TSSArt.StateMachine
 				throw new InvalidOperationException(message: Resources.Exception_Root_path_can_be_set_only_before_visiting);
 			}
 
-			_path?.Push((root, default));
+			_path?.Push((root, new ImmutableArray<object>()));
 		}
 
 		private ref struct VisitData<TEntity, TIEntity> where TEntity : struct, IVisitorEntity<TEntity, TIEntity>, TIEntity

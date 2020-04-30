@@ -10,8 +10,6 @@ namespace TSSArt.StateMachine
 	[PublicAPI]
 	public class CustomActionBase : ICustomActionExecutor
 	{
-		internal static readonly ICustomActionExecutor NoExecutorInstance = new CustomActionBase(null!);
-
 		private readonly ICustomActionContext         _customActionContext;
 		private          Dictionary<string, object?>? _arguments;
 		private          ILocationAssigner?           _resultLocationAssigner;
@@ -29,13 +27,13 @@ namespace TSSArt.StateMachine
 
 	#endregion
 
-		protected void RegisterArgument(string key, string expression, string? constant = null)
+		protected void RegisterArgument(string key, string? expression, string? constant = null)
 		{
 			_arguments ??= new Dictionary<string, object?>();
 			_arguments.Add(key, expression != null ? (object) _customActionContext.RegisterValueExpression(expression) : constant);
 		}
 
-		protected void RegisterResultLocation(string expression)
+		protected void RegisterResultLocation(string? expression)
 		{
 			if (expression != null)
 			{
@@ -53,17 +51,19 @@ namespace TSSArt.StateMachine
 
 				foreach (var pair in _arguments)
 				{
-					if (pair.Value is IExpressionEvaluator expressionEvaluator)
+					switch (pair.Value)
 					{
-						builder.Add(pair.Key, await expressionEvaluator.Evaluate(executionContext, token).ConfigureAwait(false));
-					}
-					else if (pair.Value is string str)
-					{
-						builder.Add(pair.Key, str);
-					}
-					else
-					{
-						builder.Add(pair.Key, DataModelValue.Undefined);
+						case IExpressionEvaluator expressionEvaluator: 
+							builder.Add(pair.Key, await expressionEvaluator.Evaluate(executionContext, token).ConfigureAwait(false));
+							break;
+						
+						case string str: 
+							builder.Add(pair.Key, str);
+							break;
+						
+						default: 
+							builder.Add(pair.Key, DataModelValue.Undefined);
+							break;
 					}
 				}
 

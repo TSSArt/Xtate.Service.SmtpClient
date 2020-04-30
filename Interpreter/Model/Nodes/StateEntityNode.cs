@@ -84,11 +84,11 @@ namespace TSSArt.StateMachine
 
 		#region Interface IComparer<StateEntityNode>
 
-			public int Compare(StateEntityNode x, StateEntityNode y) => _reverseOrder ? InternalCompare(y, x) : InternalCompare(x, y);
+			public int Compare(StateEntityNode? x, StateEntityNode? y) => _reverseOrder ? InternalCompare(y, x) : InternalCompare(x, y);
 
 		#endregion
 
-			private static int InternalCompare(StateEntityNode x, StateEntityNode y)
+			private static int InternalCompare(StateEntityNode? x, StateEntityNode? y)
 			{
 				if (x == y) return 0;
 				if (y == null) return 1;
