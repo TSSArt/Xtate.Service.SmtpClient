@@ -31,11 +31,11 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public static ValueTask<T> WaitAsync<T>(this ValueTask<T> task, CancellationToken token)
+		public static ValueTask<T> WaitAsync<T>(this ValueTask<T> valueTask, CancellationToken token)
 		{
-			if (task.IsCompleted || !token.CanBeCanceled)
+			if (valueTask.IsCompleted || !token.CanBeCanceled)
 			{
-				return task;
+				return valueTask;
 			}
 
 			if (token.IsCancellationRequested)
@@ -47,7 +47,9 @@ namespace TSSArt.StateMachine
 
 			async ValueTask<T> WaitAsyncLocal()
 			{
-				await Task.WhenAny(task.AsTask(), Task.Delay(millisecondsDelay: -1, token)).ConfigureAwait(false);
+				var task = valueTask.AsTask();
+				
+				await Task.WhenAny(task, Task.Delay(millisecondsDelay: -1, token)).ConfigureAwait(false);
 
 				token.ThrowIfCancellationRequested();
 

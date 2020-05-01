@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using TSSArt.StateMachine.Annotations;
 
 namespace TSSArt.StateMachine
@@ -8,20 +9,7 @@ namespace TSSArt.StateMachine
 	{
 		private readonly string _val;
 
-		private Identifier(string val)
-		{
-			if (string.IsNullOrEmpty(val)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(val));
-
-			_val = val;
-
-			for (var i = 0; i < val.Length; i ++)
-			{
-				if (char.IsWhiteSpace(val, i))
-				{
-					throw new ArgumentException(Resources.Exception_IdentifierCannotContainsWhitespace, nameof(val));
-				}
-			}
-		}
+		private Identifier(string val) => _val = val;
 
 	#region Interface IAncestorProvider
 
@@ -35,10 +23,47 @@ namespace TSSArt.StateMachine
 
 	#endregion
 
-		public static explicit operator Identifier(string val) => new Identifier(val);
+		public static explicit operator Identifier(string val) => FromString(val);
 
-		public static Identifier FromString(string val) => new Identifier(val);
+		public static Identifier FromString(string val)
+		{
+			if (string.IsNullOrEmpty(val)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(val));
+			
+			for (var i = 0; i < val.Length; i ++)
+			{
+				if (char.IsWhiteSpace(val[i]))
+				{
+					throw new ArgumentException(Resources.Exception_IdentifierCannotContainsWhitespace, nameof(val));
+				}
+			}
 
+			return new Identifier(val);
+		}
+
+		public static bool TryCreate(string? val, [NotNullWhen(true)][MaybeNullWhen(false)]out Identifier? identifier)
+		{
+			if (string.IsNullOrEmpty(val))
+			{
+				identifier = null;
+				
+				return false;
+			}
+			
+			for (var i = 0; i < val.Length; i ++)
+			{
+				if (char.IsWhiteSpace(val[i]))
+				{
+					identifier = null;
+			
+					return false;
+				}
+			}
+
+			identifier = new Identifier(val);
+			
+			return true;
+		}
+		
 		public override bool Equals(object obj) => ReferenceEquals(this, obj) || obj is Identifier other && _val.Equals(other._val, StringComparison.Ordinal);
 
 		public override int GetHashCode() => _val.GetHashCode();

@@ -11,11 +11,7 @@ namespace TSSArt.StateMachine
 
 		ValueTask<DataModelValue> IHost.ExecuteStateMachine(StateMachineOrigin origin, DataModelValue parameters, CancellationToken token) => Execute(origin, parameters, token);
 
-		async ValueTask IHost.DestroyStateMachine(string sessionId, CancellationToken token)
-		{
-			var context = GetCurrentContext();
-			await context.DestroyStateMachine(sessionId).ConfigureAwait(false);
-		}
+		ValueTask IHost.DestroyStateMachine(string sessionId, CancellationToken token) => GetCurrentContext().DestroyStateMachine(sessionId);
 
 	#endregion
 

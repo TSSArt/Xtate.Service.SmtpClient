@@ -71,7 +71,20 @@ namespace TSSArt.StateMachine
 
 	#endregion
 
-		public void MapTarget(Dictionary<IIdentifier, StateEntityNode> idMap) => TargetState = ImmutableArray.CreateRange(Target, id => idMap[id]);
+		public bool TryMapTarget(Dictionary<IIdentifier, StateEntityNode> idMap)
+		{
+			TargetState = ImmutableArray.CreateRange(Target, (id, map) => map.TryGetValue(id, out var node) ? node : null!, idMap);
+
+			foreach (var node in TargetState)
+			{
+				if (node == null)
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
 
 		public void SetSource(StateEntityNode source) => Source = source;
 	}

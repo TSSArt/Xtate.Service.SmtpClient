@@ -29,7 +29,6 @@ namespace TSSArt.StateMachine
 
 		public Bucket Nested<TKey>(TKey key)
 		{
-			// ReSharper disable once SuggestVarOrType_Elsewhere
 			Span<byte> buf = stackalloc byte[Helper<TKey>.KeyConverter.GetLength(key)];
 			Helper<TKey>.KeyConverter.Write(key, buf);
 			CreateNewEntry(buf, out var storage);
@@ -121,7 +120,6 @@ namespace TSSArt.StateMachine
 				return;
 			}
 
-			// ReSharper disable once SuggestVarOrType_Elsewhere
 			Span<byte> buf = stackalloc byte[GetFullKeySize(key)];
 			_node.Storage.Write(CreateFullKey(buf, key), value);
 		}
@@ -136,10 +134,8 @@ namespace TSSArt.StateMachine
 				return;
 			}
 
-			// ReSharper disable once SuggestVarOrType_Elsewhere
 			Span<byte> buf = stackalloc byte[GetFullKeySize(key)];
 
-			// ReSharper disable once SuggestVarOrType_Elsewhere
 			Span<byte> bufVal = stackalloc byte[Helper<TValue>.ValueConverter.GetLength(value)];
 			Helper<TValue>.ValueConverter.Write(value, bufVal);
 			_node.Storage.Write(CreateFullKey(buf, key), bufVal);
@@ -148,7 +144,6 @@ namespace TSSArt.StateMachine
 		public void Remove<TKey>([NotNull]
 								 TKey key)
 		{
-			// ReSharper disable once SuggestVarOrType_Elsewhere
 			Span<byte> buf = stackalloc byte[GetFullKeySize(key)];
 			_node.Storage.Write(CreateFullKey(buf, key), ReadOnlySpan<byte>.Empty);
 		}
@@ -156,7 +151,6 @@ namespace TSSArt.StateMachine
 		public void RemoveSubtree<TKey>([NotNull]
 										TKey key)
 		{
-			// ReSharper disable once SuggestVarOrType_Elsewhere
 			Span<byte> buf = stackalloc byte[GetFullKeySize(key)];
 			_node.Storage.Write(ReadOnlySpan<byte>.Empty, CreateFullKey(buf, key));
 		}
@@ -164,7 +158,6 @@ namespace TSSArt.StateMachine
 		public bool TryGet<TKey>([NotNull]
 								 TKey key, out ReadOnlyMemory<byte> value)
 		{
-			// ReSharper disable once SuggestVarOrType_Elsewhere
 			Span<byte> buf = stackalloc byte[GetFullKeySize(key)];
 			value = _node.Storage.Read(CreateFullKey(buf, key));
 			return !value.IsEmpty;
@@ -174,7 +167,6 @@ namespace TSSArt.StateMachine
 										 TKey key, [NotNullWhen(true)] [MaybeNullWhen(false)]
 										 out TValue value)
 		{
-			// ReSharper disable once SuggestVarOrType_Elsewhere
 			Span<byte> buf = stackalloc byte[GetFullKeySize(key)];
 			var memory = _node.Storage.Read(CreateFullKey(buf, key));
 

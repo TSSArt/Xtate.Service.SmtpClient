@@ -14,7 +14,6 @@ namespace TSSArt.StateMachine.Test.DevTests
 			DataModelObject nullVal = null;
 
 			// act
-			// ReSharper disable once ExpressionIsAlwaysNull
 			var v = (DataModelValue) nullVal;
 
 			// assert
@@ -29,7 +28,6 @@ namespace TSSArt.StateMachine.Test.DevTests
 			DataModelArray nullVal = null;
 
 			// act
-			// ReSharper disable once ExpressionIsAlwaysNull
 			var v = (DataModelValue) nullVal;
 
 			// assert
@@ -44,7 +42,6 @@ namespace TSSArt.StateMachine.Test.DevTests
 			string nullVal = null;
 
 			// act
-			// ReSharper disable once ExpressionIsAlwaysNull
 			var v = (DataModelValue) nullVal;
 
 			// assert

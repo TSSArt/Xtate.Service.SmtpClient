@@ -120,7 +120,6 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 		[Ignore("Makes HTTP request. Not a unit test.")]
 		public async Task HttpInvokeHttpSendEmailTest()
 		{
-			// ReSharper disable StringLiteralTypo
 			var stateMachine = StateMachineGenerator.FromInnerScxml_EcmaScript(@"
 <datamodel>
 	<data id=""email"" />
@@ -173,8 +172,6 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 <final id='finErr'>
 	<donedata><content expr='_event.data'/></donedata>
 </final>");
-
-			// ReSharper restore StringLiteralTypo
 
 			var options = new StateMachineHostOptions
 						  {

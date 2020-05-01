@@ -20,7 +20,6 @@ namespace TSSArt.StateMachine.Services
 
 			using var form = new BrowserForm(url != null ? new Uri(url) : null, content);
 
-			// ReSharper disable once AccessToDisposedClosure
 			using var registration = StopToken.Register(() => form.Close(DialogResult.Abort, result: default));
 
 			form.Closed += (sender, args) => Application.ExitThread();

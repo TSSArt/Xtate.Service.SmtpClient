@@ -56,7 +56,6 @@ namespace TSSArt.StateMachine
 				throw new ArgumentOutOfRangeException(nameof(action), action, message: null);
 			}
 
-			// ReSharper disable once SuggestVarOrType_Elsewhere
 			Span<byte> bytes = stackalloc byte[list.Count * 4];
 			for (var i = 0; i < list.Count; i ++)
 			{

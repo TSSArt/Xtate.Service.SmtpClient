@@ -652,8 +652,6 @@ namespace TSSArt.StateMachine
 			public DebugView(DataModelValue dataModelValue) => _dataModelValue = dataModelValue;
 
 			[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-
-			// ReSharper disable once UnusedMember.Local
 			public object? Value => _dataModelValue.ToObject();
 		}
 

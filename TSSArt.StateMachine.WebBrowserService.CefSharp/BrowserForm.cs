@@ -61,7 +61,6 @@ namespace TSSArt.StateMachine.Services
 		{
 			if (request == null) throw new ArgumentNullException(nameof(request));
 
-			// ReSharper disable once SuspiciousTypeConversion.Global
 			if (_url != null && _url.Equals(request.Url))
 			{
 				if (request.Method == "GET")

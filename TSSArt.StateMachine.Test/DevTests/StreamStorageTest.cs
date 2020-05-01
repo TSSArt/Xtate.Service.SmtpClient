@@ -47,7 +47,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			if (count == 0)
 			{
-				throw new ApplicationException("Zero len");
+				throw new ArgumentException("Zero len");
 			}
 
 			var result = await base.ReadAsync(buffer, offset, count, cancellationToken);
@@ -59,12 +59,12 @@ namespace TSSArt.StateMachine.Test
 		{
 			if (count == 0)
 			{
-				throw new ApplicationException("Zero len");
+				throw new ArgumentException("Zero len");
 			}
 
 			if (-- FailWriteCountdown == 0)
 			{
-				throw new ApplicationException();
+				throw new ArgumentException();
 			}
 
 			_capture.WriteAsync(count);

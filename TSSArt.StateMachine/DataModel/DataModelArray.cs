@@ -364,7 +364,7 @@ namespace TSSArt.StateMachine
 			Changed?.Invoke(ChangedAction.Set, index, descriptor);
 		}
 
-		private static Exception ObjectCantBeModifiedException() => new InvalidOperationException(Resources.Exception_Object_can_not_be_modified);
+		private static InvalidOperationException ObjectCantBeModifiedException() => new InvalidOperationException(Resources.Exception_Object_can_not_be_modified);
 
 		public bool CanAdd(DataModelValue item)
 		{

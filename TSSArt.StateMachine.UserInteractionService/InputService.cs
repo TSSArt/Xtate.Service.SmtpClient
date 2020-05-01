@@ -31,7 +31,6 @@ namespace TSSArt.StateMachine.Services
 				form.AddInput(name, location, type);
 			}
 
-			// ReSharper disable once AccessToDisposedClosure
 			using var registration = StopToken.Register(() => form.Close(DialogResult.Abort, result: default));
 
 			form.Closed += (sender, args) => Application.ExitThread();

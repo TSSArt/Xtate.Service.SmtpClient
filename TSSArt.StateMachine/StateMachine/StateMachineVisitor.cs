@@ -151,12 +151,12 @@ namespace TSSArt.StateMachine
 				{
 					if (ModifiedItems != null)
 					{
-						ModifiedItems[index] = value!;
+						ModifiedItems[index] = value;
 					}
 					else if (!ReferenceEquals(_items[index], value))
 					{
 						ModifiedItems = _items.ToBuilder();
-						ModifiedItems[index] = value!;
+						ModifiedItems[index] = value;
 					}
 				}
 			}

@@ -32,10 +32,7 @@ namespace TSSArt.StateMachine
 
 	#region Interface IAsyncDisposable
 
-		public async ValueTask DisposeAsync()
-		{
-			await DisposeAsync(true).ConfigureAwait(false);
-		}
+		public ValueTask DisposeAsync() => DisposeAsync(true);
 
 	#endregion
 

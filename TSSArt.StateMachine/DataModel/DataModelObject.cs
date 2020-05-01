@@ -135,7 +135,7 @@ namespace TSSArt.StateMachine
 
 		public DataModelObject AsConstant() => DeepClone(DataModelAccess.Constant);
 
-		private static Exception ObjectCantBeModifiedException() => new InvalidOperationException(Resources.Exception_Object_can_not_be_modified);
+		private static InvalidOperationException ObjectCantBeModifiedException() => new InvalidOperationException(Resources.Exception_Object_can_not_be_modified);
 
 		internal DataModelDescriptor GetDescriptor(string property) => _properties.TryGetValue(property, out var descriptor) ? descriptor : new DataModelDescriptor(DataModelValue.Undefined);
 

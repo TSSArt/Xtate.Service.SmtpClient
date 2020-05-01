@@ -8,8 +8,6 @@ namespace TSSArt.StateMachine
 
 		public EventDescriptorNode(IEventDescriptor eventDescriptor)
 		{
-			Infrastructure.Assert(eventDescriptor != null);
-
 			_eventDescriptor = eventDescriptor;
 		}
 
