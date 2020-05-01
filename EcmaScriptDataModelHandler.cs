@@ -140,7 +140,6 @@ namespace TSSArt.StateMachine.EcmaScript
 			base.Build(ref scriptExpression, ref scriptExpressionProperties);
 		}
 
-		// ReSharper disable once RedundantAssignment
 		protected override void Build(ref IExternalScriptExpression externalScriptExpression, ref ExternalScriptExpression externalScriptExpressionProperties)
 		{
 			externalScriptExpression = new EcmaScriptExternalScriptExpressionEvaluator(externalScriptExpressionProperties);
@@ -148,7 +147,6 @@ namespace TSSArt.StateMachine.EcmaScript
 			base.Build(ref externalScriptExpression, ref externalScriptExpressionProperties);
 		}
 
-		// ReSharper disable once RedundantAssignment
 		protected override void Build(ref IContentBody contentBody, ref ContentBody contentBodyProperties)
 		{
 			contentBody = new EcmaScriptContentBodyEvaluator(contentBodyProperties);

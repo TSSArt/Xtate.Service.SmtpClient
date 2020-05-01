@@ -36,7 +36,6 @@ namespace TSSArt.StateMachine.EcmaScript
 
 			JsValue Getter() => ConvertToJsValue(engine, obj[property]);
 
-			// ReSharper disable once ImplicitlyCapturedClosure
 			void Setter(JsValue value) => obj[property] = ConvertFromJsValue(value);
 		}
 
@@ -54,7 +53,6 @@ namespace TSSArt.StateMachine.EcmaScript
 
 			JsValue Getter() => ConvertToJsValue(engine, array[index]);
 
-			// ReSharper disable once ImplicitlyCapturedClosure
 			void Setter(JsValue value) => array[index] = ConvertFromJsValue(value);
 		}
 
