@@ -2,7 +2,7 @@
 
 namespace TSSArt.StateMachine
 {
-	internal sealed class EntityQueuePersistingController<T> : IDisposable
+	internal sealed class EntityQueuePersistingController<T> : IDisposable where T : class
 	{
 		private readonly Bucket         _bucket;
 		private readonly EntityQueue<T> _entityQueue;
@@ -43,7 +43,7 @@ namespace TSSArt.StateMachine
 				case EntityQueue<T>.ChangedAction.Enqueue:
 					var bucket = _bucket.Nested(_tailIndex ++);
 					_bucket.Add(Key.Tail, _tailIndex);
-					entity!.As<IStoreSupport>().Store(bucket);
+					entity.As<IStoreSupport>().Store(bucket);
 					break;
 
 				case EntityQueue<T>.ChangedAction.Dequeue:

@@ -215,7 +215,6 @@ namespace TSSArt.StateMachine
 					await asyncDisposable.DisposeAsync().ConfigureAwait(false);
 				}
 
-				// ReSharper disable once SuspiciousTypeConversion.Global
 				else if (ioProcessor is IDisposable disposable)
 				{
 					disposable.Dispose();
@@ -230,7 +229,6 @@ namespace TSSArt.StateMachine
 				return asyncDisposable.DisposeAsync();
 			}
 
-			// ReSharper disable once SuspiciousTypeConversion.Global
 			if (service is IDisposable disposable)
 			{
 				disposable.Dispose();

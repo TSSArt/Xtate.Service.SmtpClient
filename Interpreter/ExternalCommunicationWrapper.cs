@@ -145,6 +145,6 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private static Exception NoExternalCommunication() => new NotSupportedException(Resources.Exception_External_communication_does_not_configured_for_state_machine_interpreter);
+		private static NotSupportedException NoExternalCommunication() => new NotSupportedException(Resources.Exception_External_communication_does_not_configured_for_state_machine_interpreter);
 	}
 }

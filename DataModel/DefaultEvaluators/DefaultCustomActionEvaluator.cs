@@ -50,8 +50,6 @@ namespace TSSArt.StateMachine
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
 
-			Infrastructure.Assert(_customActionDispatcher != null, Resources.Assertion_CustomActionDoesNotConfigured);
-
 			return _customActionDispatcher.Execute(executionContext, token);
 		}
 

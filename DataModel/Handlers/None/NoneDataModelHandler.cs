@@ -35,15 +35,15 @@ namespace TSSArt.StateMachine
 				return;
 			}
 
-			try
-			{
-				var inState = (Identifier) expression.Substring(startIndex: 3, expression.Length - 4).Trim();
+			var state = expression.Substring(startIndex: 3, expression.Length - 4).Trim();
 
+			if (Identifier.TryCreate(state, out var inState))
+			{
 				conditionExpression = new NoneConditionExpressionEvaluator(properties, inState);
 			}
-			catch (ArgumentException ex)
+			else
 			{
-				AddErrorMessage(conditionExpression, Resources.ErrorMesasge_IncorrectConditionExpression, ex);
+				AddErrorMessage(conditionExpression, Resources.ErrorMesasge_IncorrectConditionExpression);
 			}
 		}
 

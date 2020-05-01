@@ -68,13 +68,9 @@ namespace TSSArt.StateMachine
 
 			foreach (var transition in _targetMap)
 			{
-				try
+				if(!transition.TryMapTarget(_idMap))
 				{
-					transition.MapTarget(_idMap);
-				}
-				catch (KeyNotFoundException ex)
-				{
-					_errorProcessor.AddError<InterpreterModelBuilder>(entity: null, Resources.ErrorMessage_Target_Id_does_not_exists, ex);
+					_errorProcessor.AddError<InterpreterModelBuilder>(entity: null, Resources.ErrorMessage_Target_Id_does_not_exists);
 				}
 			}
 

@@ -346,6 +346,6 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private static Exception GetIncorrectDataFormatException(Exception? ex = null) => new StateMachinePersistenceException(Resources.Exception_Incorrect_data_format, ex);
+		private static StateMachinePersistenceException GetIncorrectDataFormatException(Exception? ex = null) => new StateMachinePersistenceException(Resources.Exception_Incorrect_data_format, ex);
 	}
 }

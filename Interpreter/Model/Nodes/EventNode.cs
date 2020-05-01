@@ -9,8 +9,6 @@ namespace TSSArt.StateMachine
 
 		public EventNode(IOutgoingEvent evt)
 		{
-			Infrastructure.Assert(evt != null);
-
 			_event = evt;
 		}
 
