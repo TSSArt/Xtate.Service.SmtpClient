@@ -150,7 +150,6 @@ namespace TSSArt.StateMachine
 			var data = evt.Data;
 			var dataType = data.Type;
 
-			// ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
 			switch (dataType)
 			{
 				case DataModelValueType.Undefined:
