@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Pipes;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -186,6 +187,7 @@ namespace TSSArt.StateMachine
 			return new ValueTask(pipeStream.WriteAsync(buffer.Array, buffer.Offset, buffer.Count, token));
 		}
 
+		[SuppressMessage(category: "ReSharper", checkId: "MethodHasAsyncOverloadWithCancellation", Justification = "WriteAsync not needed for MemoryStream")]
 		private static async ValueTask ReceiveMessage(PipeStream pipeStream, MemoryStream memoryStream, CancellationToken token)
 		{
 			var buffer = ArrayPool<byte>.Shared.Rent(BufferSize);

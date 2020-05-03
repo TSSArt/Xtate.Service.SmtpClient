@@ -9,9 +9,9 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class CustomActionDispatcher : ICustomAction, ICustomActionDispatcher, ICustomActionContext
 	{
+		private readonly CustomAction                         _customAction;
 		private readonly ImmutableArray<ICustomActionFactory> _customActionFactories;
 		private readonly IErrorProcessor                      _errorProcessor;
-		private readonly CustomAction                         _customAction;
 
 		private ICustomActionExecutor?                       _executor;
 		private ImmutableArray<ILocationEvaluator>           _locationEvaluators;
@@ -74,12 +74,12 @@ namespace TSSArt.StateMachine
 			return expressionEvaluator;
 		}
 
-		string ICustomActionContext.Xml => _customAction.Xml!;
-
 		void ICustomActionContext.AddValidationError<T>(string message, Exception? exception)
 		{
 			_errorProcessor.AddError<T>(this, message, exception);
 		}
+
+		string ICustomActionContext.Xml => _customAction.Xml!;
 
 	#endregion
 
@@ -148,7 +148,7 @@ namespace TSSArt.StateMachine
 					return factory.CreateExecutor(this);
 				}
 			}
-			
+
 			return null;
 		}
 
@@ -208,14 +208,7 @@ namespace TSSArt.StateMachine
 
 				var objectEvaluator = _dispatcher._objectEvaluators[_index];
 
-				return EvaluateValueLocal();
-
-				async ValueTask<DataModelValue> EvaluateValueLocal()
-				{
-					var obj = await objectEvaluator.EvaluateObject(executionContext, token).ConfigureAwait(false);
-
-					return DataModelValue.FromObject(obj);
-				}
+				return Evaluate(objectEvaluator, executionContext, token);
 			}
 
 		#endregion
@@ -225,13 +218,24 @@ namespace TSSArt.StateMachine
 			public string Expression { get; }
 
 		#endregion
+
+			private static async ValueTask<DataModelValue> Evaluate(IObjectEvaluator objectEvaluator, IExecutionContext executionContext, CancellationToken token)
+			{
+				var obj = await objectEvaluator.EvaluateObject(executionContext, token).ConfigureAwait(false);
+
+				return DataModelValue.FromObject(obj);
+			}
 		}
 
 		private class NoActionExecutor : ICustomActionExecutor
 		{
 			public static readonly ICustomActionExecutor Instance = new NoActionExecutor();
 
+		#region Interface ICustomActionExecutor
+
 			public ValueTask Execute(IExecutionContext executionContext, CancellationToken token) => Infrastructure.Fail<ValueTask>();
+
+		#endregion
 		}
 	}
 }

@@ -29,33 +29,7 @@ namespace TSSArt.StateMachine
 
 			await context.AddService(sessionId, data.InvokeId, data.InvokeUniqueId, invokedService, token).ConfigureAwait(false);
 
-			CompleteAsync().Forget();
-
-			async ValueTask CompleteAsync()
-			{
-				try
-				{
-					var result = await invokedService.Result.ConfigureAwait(false);
-
-					var nameParts = EventName.GetDoneInvokeNameParts(data.InvokeId);
-					var evt = new EventObject(EventType.External, nameParts, result, sendId: null, data.InvokeId, data.InvokeUniqueId);
-					await service.Send(evt, token: default).ConfigureAwait(false);
-				}
-				catch (Exception ex)
-				{
-					var evt = new EventObject(EventType.External, EventName.ErrorExecution, DataConverter.FromException(ex), sendId: null, data.InvokeId, data.InvokeUniqueId);
-					await service.Send(evt, token: default).ConfigureAwait(false);
-				}
-				finally
-				{
-					var invokedService2 = await context.TryCompleteService(sessionId, data.InvokeId).ConfigureAwait(false);
-
-					if (invokedService2 != null)
-					{
-						await DisposeInvokedService(invokedService2).ConfigureAwait(false);
-					}
-				}
-			}
+			CompleteAsync(context, invokedService, service, sessionId, data.InvokeId, data.InvokeUniqueId).Forget();
 		}
 
 		async ValueTask IStateMachineHost.CancelInvoke(string sessionId, string invokeId, CancellationToken token)
@@ -125,6 +99,32 @@ namespace TSSArt.StateMachine
 		}
 
 	#endregion
+
+		private static async ValueTask CompleteAsync(StateMachineHostContext context, IService invokedService, StateMachineController service, string sessionId, string invokeId, string invokeUniqueId)
+		{
+			try
+			{
+				var result = await invokedService.Result.ConfigureAwait(false);
+
+				var nameParts = EventName.GetDoneInvokeNameParts(invokeId);
+				var evt = new EventObject(EventType.External, nameParts, result, sendId: null, invokeId, invokeUniqueId);
+				await service.Send(evt, token: default).ConfigureAwait(false);
+			}
+			catch (Exception ex)
+			{
+				var evt = new EventObject(EventType.External, EventName.ErrorExecution, DataConverter.FromException(ex), sendId: null, invokeId, invokeUniqueId);
+				await service.Send(evt, token: default).ConfigureAwait(false);
+			}
+			finally
+			{
+				var invokedService2 = await context.TryCompleteService(sessionId, invokeId).ConfigureAwait(false);
+
+				if (invokedService2 != null)
+				{
+					await DisposeInvokedService(invokedService2).ConfigureAwait(false);
+				}
+			}
+		}
 
 		private bool IsCurrentContextExists([NotNullWhen(true)] out StateMachineHostContext? context)
 		{
@@ -222,6 +222,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
+		[SuppressMessage(category: "ReSharper", checkId: "SuspiciousTypeConversion.Global", Justification = "Disposing")]
 		private static ValueTask DisposeInvokedService(IService service)
 		{
 			if (service is IAsyncDisposable asyncDisposable)

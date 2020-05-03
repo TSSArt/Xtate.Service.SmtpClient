@@ -63,7 +63,7 @@ namespace TSSArt.StateMachine
 
 	#endregion
 
-		private Stream GetResourceStream(Uri uri)
+		private static Stream GetResourceStream(Uri uri)
 		{
 			var assemblyName = uri.Host;
 			var assembly = Assembly.Load(assemblyName);

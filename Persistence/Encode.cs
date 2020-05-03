@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace TSSArt.StateMachine
 {
@@ -16,6 +17,7 @@ namespace TSSArt.StateMachine
 			throw new ArgumentException(Resources.Exception_Incorrect_encoding, nameof(val));
 		}
 
+		[SuppressMessage(category: "ReSharper", checkId: "CyclomaticComplexity", Justification = "OK")]
 		internal static int Decode(ReadOnlySpan<byte> span)
 		{
 			switch (span.Length)

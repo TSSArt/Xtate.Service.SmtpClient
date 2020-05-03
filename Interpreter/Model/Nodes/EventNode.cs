@@ -7,10 +7,7 @@ namespace TSSArt.StateMachine
 	{
 		private readonly IOutgoingEvent _event;
 
-		public EventNode(IOutgoingEvent evt)
-		{
-			_event = evt;
-		}
+		public EventNode(IOutgoingEvent evt) => _event = evt;
 
 	#region Interface IAncestorProvider
 

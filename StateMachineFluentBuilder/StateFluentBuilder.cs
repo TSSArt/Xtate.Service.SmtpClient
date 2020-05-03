@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using TSSArt.StateMachine.Annotations;
 
 namespace TSSArt.StateMachine
 {
 	[PublicAPI]
-	public class StateFluentBuilder<TOuterBuilder>
+	public class StateFluentBuilder<TOuterBuilder> where TOuterBuilder : notnull
 	{
 		private readonly IStateBuilder   _builder;
 		private readonly Action<IState>  _builtAction;
@@ -20,6 +21,7 @@ namespace TSSArt.StateMachine
 			_builtAction = builtAction;
 		}
 
+		[return: NotNull]
 		public TOuterBuilder EndState()
 		{
 			_builtAction(_builder.Build());

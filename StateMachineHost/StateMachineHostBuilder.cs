@@ -8,6 +8,7 @@ namespace TSSArt.StateMachine
 	[PublicAPI]
 	public class StateMachineHostBuilder
 	{
+		private Uri?                                              _baseUri;
 		private ImmutableDictionary<string, string>.Builder?      _configuration;
 		private ImmutableArray<ICustomActionFactory>.Builder?     _customActionFactories;
 		private ImmutableArray<IDataModelHandlerFactory>.Builder? _dataModelHandlerFactories;
@@ -18,7 +19,6 @@ namespace TSSArt.StateMachine
 		private ImmutableArray<IServiceFactory>.Builder?          _serviceFactories;
 		private IStorageProvider?                                 _storageProvider;
 		private TimeSpan                                          _suspendIdlePeriod;
-		private Uri?                                              _baseUri;
 		private bool                                              _verboseValidation = true;
 
 		public StateMachineHost Build()

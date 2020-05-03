@@ -18,11 +18,11 @@ namespace TSSArt.StateMachine
 		private readonly InterpreterOptions                   _defaultOptions;
 		private readonly CancellationTokenSource              _destroyTokenSource;
 		private readonly TimeSpan                             _idlePeriod;
-		private readonly IStateMachineHost                    _stateMachineHost;
 		private readonly ILogger                              _logger;
-		private readonly HashSet<ScheduledEvent>              _scheduledEvents = new HashSet<ScheduledEvent>();
 		private readonly IStateMachineOptions?                _options;
+		private readonly HashSet<ScheduledEvent>              _scheduledEvents = new HashSet<ScheduledEvent>();
 		private readonly IStateMachine?                       _stateMachine;
+		private readonly IStateMachineHost                    _stateMachineHost;
 		private readonly ConcurrentQueue<ScheduledEvent>      _toDelete = new ConcurrentQueue<ScheduledEvent>();
 
 		private bool                     _disposed;

@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
@@ -16,6 +15,7 @@ namespace TSSArt.StateMachine
 
 		private static readonly XmlReaderSettings DefaultSyncXmlReaderSettings  = new XmlReaderSettings { Async = false, CloseInput = true };
 		private static readonly XmlReaderSettings DefaultAsyncXmlReaderSettings = new XmlReaderSettings { Async = true, CloseInput = true };
+		private readonly        DataModelObject?  _configuration;
 
 		private readonly ImmutableDictionary<object, object>?   _contextRuntimeItems;
 		private readonly StateMachineHostOptions                _options;
@@ -29,7 +29,6 @@ namespace TSSArt.StateMachine
 		private readonly ConcurrentDictionary<string, StateMachineController> _stateMachinesBySessionId = new ConcurrentDictionary<string, StateMachineController>();
 		private readonly CancellationTokenSource                              _stopTokenSource;
 		private readonly CancellationTokenSource                              _suspendTokenSource;
-		private readonly DataModelObject?                                     _configuration;
 
 		public StateMachineHostContext(IStateMachineHost stateMachineHost, StateMachineHostOptions options)
 		{
@@ -320,21 +319,34 @@ namespace TSSArt.StateMachine
 
 		public async ValueTask WaitAllAsync(CancellationToken token)
 		{
-			StateMachineController GetControllerToWait() =>_stateMachinesBySessionId.FirstOrDefault(pair => !pair.Value.Result.IsCompleted).Value;
+			var exit = false;
 
-			for (var controller = GetControllerToWait(); controller != null; controller = GetControllerToWait())
+			while (!exit)
 			{
-				try
+				exit = true;
+
+				foreach (var pair in _stateMachinesBySessionId)
 				{
-					await controller.Result.WaitAsync(token).ConfigureAwait(false);
-				}
-				catch (OperationCanceledException ex) when (ex.CancellationToken == token)
-				{
-					throw;
-				}
-				catch
-				{
-					// ignored
+					var controller = pair.Value;
+					if (controller.Result.IsCompleted)
+					{
+						continue;
+					}
+
+					try
+					{
+						await controller.Result.WaitAsync(token).ConfigureAwait(false);
+					}
+					catch (OperationCanceledException ex) when (ex.CancellationToken == token)
+					{
+						throw;
+					}
+					catch
+					{
+						// ignored
+					}
+
+					exit = false;
 				}
 			}
 		}

@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -19,7 +20,6 @@ namespace TSSArt.StateMachine
 		private const    string                                   StateMachineDefinitionStorageKey = "smd";
 		private readonly DataModelValue                           _arguments;
 		private readonly DataModelObject                          _configuration;
-		private readonly DataModelObject                          _host;
 		private readonly ImmutableDictionary<object, object>      _contextRuntimeItems;
 		private readonly ImmutableArray<ICustomActionFactory>     _customActionProviders;
 		private readonly ImmutableArray<IDataModelHandlerFactory> _dataModelHandlerFactories;
@@ -27,6 +27,7 @@ namespace TSSArt.StateMachine
 		private readonly IErrorProcessor                          _errorProcessor;
 		private readonly ChannelReader<IEvent>                    _eventChannel;
 		private readonly ExternalCommunicationWrapper             _externalCommunication;
+		private readonly DataModelObject                          _host;
 		private readonly LoggerWrapper                            _logger;
 		private readonly INotifyStateChanged?                     _notifyStateChanged;
 		private readonly PersistenceLevel                         _persistenceLevel;
@@ -186,22 +187,23 @@ namespace TSSArt.StateMachine
 			await using (storage.ConfigureAwait(false))
 			{
 				SaveToStorage(interpreterModel.Root.As<IStoreSupport>(), new Bucket(storage));
-
-				void SaveToStorage(IStoreSupport root, Bucket bucket)
-				{
-					var memoryStorage = new InMemoryStorage();
-					root.Store(new Bucket(memoryStorage));
-
-					Span<byte> span = stackalloc byte[memoryStorage.GetTransactionLogSize()];
-					memoryStorage.WriteTransactionLogToSpan(span);
-
-					bucket.Add(Key.Version, value: 1);
-					bucket.Add(Key.SessionId, _sessionId);
-					bucket.Add(Key.StateMachineDefinition, span);
-				}
-
+				
 				await storage.CheckPoint(level: 0, _stopToken).ConfigureAwait(false);
 			}
+		}
+
+		[SuppressMessage(category: "ReSharper", checkId: "SuggestVarOrType_Elsewhere", Justification = "Span<> must be explicit")]
+		private void SaveToStorage(IStoreSupport root, Bucket bucket)
+		{
+			var memoryStorage = new InMemoryStorage();
+			root.Store(new Bucket(memoryStorage));
+
+			Span<byte> span = stackalloc byte[memoryStorage.GetTransactionLogSize()];
+			memoryStorage.WriteTransactionLogToSpan(span);
+
+			bucket.Add(Key.Version, value: 1);
+			bucket.Add(Key.SessionId, _sessionId);
+			bucket.Add(Key.StateMachineDefinition, span);
 		}
 
 		private static IDataModelHandlerFactory GetDataModelHandlerFactory(string? dataModelType, ImmutableArray<IDataModelHandlerFactory> factories, IErrorProcessor errorProcessor)
@@ -681,62 +683,73 @@ namespace TSSArt.StateMachine
 
 			foreach (var state in _context.Configuration.ToFilteredSortedList(s => s.IsAtomicState, StateEntityNode.EntryOrder))
 			{
-				await FindTransitionForState(state).ConfigureAwait(false);
+				await FindTransitionForState(transitions, state, evt).ConfigureAwait(false);
 			}
 
 			return RemoveConflictingTransitions(transitions);
+		}
 
-			async ValueTask FindTransitionForState(StateEntityNode state)
+		private async ValueTask FindTransitionForState(List<TransitionNode> transitionNodes, StateEntityNode state, IEvent? evt)
+		{
+			foreach (var transition in state.Transitions)
 			{
-				foreach (var transition in state.Transitions)
+				if (EventMatch(transition.EventDescriptors, evt) && await ConditionMatch(transition).ConfigureAwait(false))
 				{
-					if (EventMatch(transition) && await ConditionMatch(transition).ConfigureAwait(false))
-					{
-						transitions.Add(transition);
+					transitionNodes.Add(transition);
 
-						return;
-					}
-				}
-
-				if (!(state.Parent is StateMachineNode))
-				{
-					await FindTransitionForState(state.Parent!).ConfigureAwait(false);
+					return;
 				}
 			}
 
-			bool EventMatch(TransitionNode transition)
+			if (!(state.Parent is StateMachineNode))
 			{
-				var eventDescriptors = transition.EventDescriptors;
+				await FindTransitionForState(transitionNodes, state.Parent!, evt).ConfigureAwait(false);
+			}
+		}
 
-				if (evt == null)
-				{
-					return eventDescriptors == null;
-				}
-
-				return eventDescriptors != null && eventDescriptors.Any(d => d.IsEventMatch(evt));
+		private static bool EventMatch(ImmutableArray<IEventDescriptor> eventDescriptors, IEvent? evt)
+		{
+			if (evt == null)
+			{
+				return eventDescriptors.IsDefaultOrEmpty;
 			}
 
-			async ValueTask<bool> ConditionMatch(TransitionNode transition)
+			if (eventDescriptors.IsDefaultOrEmpty)
 			{
-				var condition = transition.ConditionEvaluator;
+				return false;
+			}
 
-				if (condition == null)
+			foreach (var eventDescriptor in eventDescriptors)
+			{
+				if (eventDescriptor.IsEventMatch(evt))
 				{
 					return true;
 				}
+			}
 
-				_stopToken.ThrowIfCancellationRequested();
+			return false;
+		}
 
-				try
-				{
-					return await condition.EvaluateBoolean(_context.ExecutionContext, _stopToken).ConfigureAwait(false);
-				}
-				catch (Exception ex) when (IsError(ex))
-				{
-					await Error(transition, ex).ConfigureAwait(false);
+		private async ValueTask<bool> ConditionMatch(TransitionNode transition)
+		{
+			var condition = transition.ConditionEvaluator;
 
-					return false;
-				}
+			if (condition == null)
+			{
+				return true;
+			}
+
+			_stopToken.ThrowIfCancellationRequested();
+
+			try
+			{
+				return await condition.EvaluateBoolean(_context.ExecutionContext, _stopToken).ConfigureAwait(false);
+			}
+			catch (Exception ex) when (IsError(ex))
+			{
+				await Error(transition, ex).ConfigureAwait(false);
+
+				return false;
 			}
 		}
 
@@ -1372,59 +1385,59 @@ namespace TSSArt.StateMachine
 		{
 			try
 			{
-				_context.DataModel[data.Id] = await GetValue().ConfigureAwait(false);
+				_context.DataModel[data.Id] = await GetValue(data, overrideValue).ConfigureAwait(false);
 			}
 			catch (Exception ex) when (IsError(ex))
 			{
 				await Error(data, ex).ConfigureAwait(false);
 			}
+		}
 
-			async ValueTask<DataModelValue> GetValue()
+		private async ValueTask<DataModelValue> GetValue(DataNode data, DataModelValue overrideValue)
+		{
+			if (!overrideValue.IsUndefined())
 			{
-				if (!overrideValue.IsUndefined())
-				{
-					return overrideValue;
-				}
-
-				if (data.Source != null)
-				{
-					var resource = await Load().ConfigureAwait(false);
-
-					return DataConverter.FromContent(resource.Content, resource.ContentType);
-				}
-
-				if (data.ExpressionEvaluator != null)
-				{
-					var obj = await data.ExpressionEvaluator.EvaluateObject(_context.ExecutionContext, _stopToken).ConfigureAwait(false);
-
-					return DataModelValue.FromObject(obj.ToObject());
-				}
-
-				if (data.InlineContent != null)
-				{
-					return data.InlineContent;
-				}
-
-				return DataModelValue.Undefined;
+				return overrideValue;
 			}
 
-			async ValueTask<Resource> Load()
+			if (data.Source != null)
 			{
-				if (!_resourceLoaders.IsDefaultOrEmpty)
-				{
-					var uri = data.Source.Uri!;
+				var resource = await LoadData(data.Source).ConfigureAwait(false);
 
-					foreach (var resourceLoader in _resourceLoaders)
+				return DataConverter.FromContent(resource.Content, resource.ContentType);
+			}
+
+			if (data.ExpressionEvaluator != null)
+			{
+				var obj = await data.ExpressionEvaluator.EvaluateObject(_context.ExecutionContext, _stopToken).ConfigureAwait(false);
+
+				return DataModelValue.FromObject(obj.ToObject());
+			}
+
+			if (data.InlineContent != null)
+			{
+				return data.InlineContent;
+			}
+
+			return DataModelValue.Undefined;
+		}
+
+		private async ValueTask<Resource> LoadData(IExternalDataExpression externalDataExpression)
+		{
+			if (!_resourceLoaders.IsDefaultOrEmpty)
+			{
+				var uri = externalDataExpression.Uri!;
+
+				foreach (var resourceLoader in _resourceLoaders)
+				{
+					if (resourceLoader.CanHandle(uri))
 					{
-						if (resourceLoader.CanHandle(uri))
-						{
-							return await resourceLoader.Request(uri, _stopToken).ConfigureAwait(false);
-						}
+						return await resourceLoader.Request(uri, _stopToken).ConfigureAwait(false);
 					}
 				}
-
-				throw new StateMachineProcessorException(Resources.Exception_Cannot_find_ResourceLoader_to_load_external_resource);
 			}
+
+			throw new StateMachineProcessorException(Resources.Exception_Cannot_find_ResourceLoader_to_load_external_resource);
 		}
 
 		private async ValueTask<IStateMachineContext> CreateContext()
@@ -1455,6 +1468,7 @@ namespace TSSArt.StateMachine
 
 		private static void PopulateObject(DataModelObject src, DataModelObject dst)
 		{
+			dst.EnsureCapacity(src.Count);
 			foreach (var property in src.Properties)
 			{
 				dst.SetInternal(property, new DataModelDescriptor(src[property], isReadOnly: true));
@@ -1466,6 +1480,7 @@ namespace TSSArt.StateMachine
 			var type = GetType();
 			var version = type.Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 
+			interpreterObject.EnsureCapacity(2);
 			interpreterObject.SetInternal(property: @"name", new DataModelDescriptor(new DataModelValue(type.FullName)));
 			interpreterObject.SetInternal(property: @"version", new DataModelDescriptor(new DataModelValue(version)));
 		}
@@ -1475,11 +1490,12 @@ namespace TSSArt.StateMachine
 			var type = _dataModelHandler.GetType();
 			var version = type.Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 
+			dataModelHandlerObject.EnsureCapacity(4);
 			dataModelHandlerObject.SetInternal(property: @"name", new DataModelDescriptor(new DataModelValue(type.FullName)));
 			dataModelHandlerObject.SetInternal(property: @"assembly", new DataModelDescriptor(new DataModelValue(type.Assembly.GetName().Name)));
 			dataModelHandlerObject.SetInternal(property: @"version", new DataModelDescriptor(new DataModelValue(version)));
 
-			var vars = new DataModelObject(true);
+			var vars = new DataModelObject(isReadOnly: true, dataModelVars.Count);
 			foreach (var pair in dataModelVars)
 			{
 				vars.SetInternal(pair.Key, new DataModelDescriptor(new DataModelValue(pair.Value)));

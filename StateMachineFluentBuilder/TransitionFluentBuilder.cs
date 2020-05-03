@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using TSSArt.StateMachine.Annotations;
 
 namespace TSSArt.StateMachine
 {
 	[PublicAPI]
-	public class TransitionFluentBuilder<TOuterBuilder>
+	public class TransitionFluentBuilder<TOuterBuilder> where TOuterBuilder : notnull
 	{
 		private readonly ITransitionBuilder  _builder;
 		private readonly Action<ITransition> _builtAction;
@@ -20,6 +21,7 @@ namespace TSSArt.StateMachine
 			_builtAction = builtAction;
 		}
 
+		[return: NotNull]
 		public TOuterBuilder EndTransition()
 		{
 			_builtAction(_builder.Build());

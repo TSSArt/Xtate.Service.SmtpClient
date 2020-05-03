@@ -6,15 +6,12 @@ namespace TSSArt.StateMachine
 {
 	internal static class BucketExtensions
 	{
-		public static void AddEntity<T>(this in Bucket bucket, Key key, T entity)
+		public static void AddEntity<T>(this in Bucket bucket, Key key, T? entity) where T : class
 		{
-			if (entity != null)
-			{
-				entity.As<IStoreSupport>().Store(bucket.Nested(key));
-			}
+			entity?.As<IStoreSupport>().Store(bucket.Nested(key));
 		}
 
-		public static void AddEntityList<T>(this in Bucket bucket, Key key, ImmutableArray<T> array)
+		public static void AddEntityList<T>(this in Bucket bucket, Key key, ImmutableArray<T> array) where T : class
 		{
 			if (array.IsDefaultOrEmpty)
 			{
@@ -27,11 +24,7 @@ namespace TSSArt.StateMachine
 
 			for (var i = 0; i < array.Length; i ++)
 			{
-				var entity = array[i];
-				if (entity != null)
-				{
-					entity.As<IStoreSupport>().Store(listStorage.Nested(i));
-				}
+				array[i].As<IStoreSupport>().Store(listStorage.Nested(i));
 			}
 		}
 

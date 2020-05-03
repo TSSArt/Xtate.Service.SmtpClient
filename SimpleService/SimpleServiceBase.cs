@@ -6,7 +6,7 @@ using TSSArt.StateMachine.Annotations;
 namespace TSSArt.StateMachine
 {
 	[PublicAPI]
-	public abstract class SimpleServiceBase : IService, IAsyncDisposable
+	public abstract class SimpleServiceBase : IService, IAsyncDisposable, IDisposable
 	{
 		private readonly TaskCompletionSource<DataModelValue> _completedTcs = new TaskCompletionSource<DataModelValue>();
 		private readonly CancellationTokenSource              _tokenSource  = new CancellationTokenSource();
@@ -32,7 +32,30 @@ namespace TSSArt.StateMachine
 
 	#region Interface IAsyncDisposable
 
-		public ValueTask DisposeAsync() => DisposeAsync(true);
+		public virtual ValueTask DisposeAsync()
+		{
+			try
+			{
+				Dispose();
+
+				return default;
+			}
+			catch (Exception ex)
+			{
+				return new ValueTask(Task.FromException(ex));
+			}
+		}
+
+	#endregion
+
+	#region Interface IDisposable
+
+		public void Dispose()
+		{
+			Dispose(true);
+
+			GC.SuppressFinalize(this);
+		}
 
 	#endregion
 
@@ -79,11 +102,11 @@ namespace TSSArt.StateMachine
 
 		protected abstract ValueTask<DataModelValue> Execute();
 
-		protected virtual ValueTask DisposeAsync(bool disposing)
+		protected virtual void Dispose(bool disposing)
 		{
 			if (_disposed)
 			{
-				return default;
+				return;
 			}
 
 			if (disposing)
@@ -92,8 +115,6 @@ namespace TSSArt.StateMachine
 			}
 
 			_disposed = true;
-
-			return default;
 		}
 	}
 }

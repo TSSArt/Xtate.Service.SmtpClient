@@ -9,7 +9,7 @@ namespace TSSArt.StateMachine
 
 		ValueTask<string> IHost.StartStateMachine(StateMachineOrigin origin, DataModelValue parameters, CancellationToken token) => Start(origin, parameters, token);
 
-		ValueTask<DataModelValue> IHost.ExecuteStateMachine(StateMachineOrigin origin, DataModelValue parameters, CancellationToken token) => Execute(origin, parameters, token);
+		ValueTask<DataModelValue> IHost.ExecuteStateMachine(StateMachineOrigin origin, DataModelValue parameters, CancellationToken token) => ExecuteAsync(origin, parameters, token);
 
 		ValueTask IHost.DestroyStateMachine(string sessionId, CancellationToken token) => GetCurrentContext().DestroyStateMachine(sessionId);
 
@@ -28,7 +28,7 @@ namespace TSSArt.StateMachine
 			return sessionId;
 		}
 
-		private async ValueTask<DataModelValue> Execute(StateMachineOrigin origin, DataModelValue parameters, CancellationToken token)
+		private async ValueTask<DataModelValue> ExecuteAsync(StateMachineOrigin origin, DataModelValue parameters, CancellationToken token)
 		{
 			var context = GetCurrentContext();
 			var sessionId = IdGenerator.NewSessionId();

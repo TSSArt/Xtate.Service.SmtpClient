@@ -28,10 +28,10 @@ namespace TSSArt.StateMachine
 		public static Identifier FromString(string val)
 		{
 			if (string.IsNullOrEmpty(val)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(val));
-			
-			for (var i = 0; i < val.Length; i ++)
+
+			foreach (var ch in val)
 			{
-				if (char.IsWhiteSpace(val[i]))
+				if (char.IsWhiteSpace(ch))
 				{
 					throw new ArgumentException(Resources.Exception_IdentifierCannotContainsWhitespace, nameof(val));
 				}
@@ -40,30 +40,31 @@ namespace TSSArt.StateMachine
 			return new Identifier(val);
 		}
 
-		public static bool TryCreate(string? val, [NotNullWhen(true)][MaybeNullWhen(false)]out Identifier? identifier)
+		public static bool TryCreate(string? val, [NotNullWhen(true)] [MaybeNullWhen(false)]
+									 out Identifier? identifier)
 		{
 			if (string.IsNullOrEmpty(val))
 			{
 				identifier = null;
-				
+
 				return false;
 			}
-			
-			for (var i = 0; i < val.Length; i ++)
+
+			foreach (var ch in val)
 			{
-				if (char.IsWhiteSpace(val[i]))
+				if (char.IsWhiteSpace(ch))
 				{
 					identifier = null;
-			
+
 					return false;
 				}
 			}
 
 			identifier = new Identifier(val);
-			
+
 			return true;
 		}
-		
+
 		public override bool Equals(object obj) => ReferenceEquals(this, obj) || obj is Identifier other && _val.Equals(other._val, StringComparison.Ordinal);
 
 		public override int GetHashCode() => _val.GetHashCode();

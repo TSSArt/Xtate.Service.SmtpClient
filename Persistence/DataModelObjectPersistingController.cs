@@ -15,7 +15,7 @@ namespace TSSArt.StateMachine
 			_referenceTracker = referenceTracker ?? throw new ArgumentNullException(nameof(referenceTracker));
 			_dataModelObject = dataModelObject ?? throw new ArgumentNullException(nameof(dataModelObject));
 
-			var shrink = dataModelObject.Properties.Count > 0;
+			var shrink = dataModelObject.Count > 0;
 			while (true)
 			{
 				var recordBucket = bucket.Nested(_record);
@@ -105,7 +105,7 @@ namespace TSSArt.StateMachine
 				case DataModelObject.ChangedAction.Remove:
 				{
 					_referenceTracker.RemoveReference(descriptor.Value);
-					if (_dataModelObject.Properties.Count > 1)
+					if (_dataModelObject.Count > 1)
 					{
 						var recordBucket = _bucket.Nested(_record ++);
 						recordBucket.Add(Key.Operation, Key.Remove);
@@ -126,6 +126,8 @@ namespace TSSArt.StateMachine
 		public override void Dispose()
 		{
 			_dataModelObject.Changed -= OnChanged;
+
+			base.Dispose();
 		}
 	}
 }

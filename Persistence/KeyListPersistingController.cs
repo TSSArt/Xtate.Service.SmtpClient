@@ -2,6 +2,7 @@
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 
 namespace TSSArt.StateMachine
 {
@@ -49,6 +50,7 @@ namespace TSSArt.StateMachine
 
 	#endregion
 
+		[SuppressMessage(category: "ReSharper", checkId: "SuggestVarOrType_Elsewhere", Justification = "Span<> must be explicit")]
 		private void OnChanged(KeyList<T>.ChangedAction action, IEntity entity, List<T> list)
 		{
 			if (action != KeyList<T>.ChangedAction.Set)
