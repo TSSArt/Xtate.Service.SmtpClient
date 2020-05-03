@@ -7,13 +7,13 @@ namespace TSSArt.StateMachine
 {
 	public class StartAction : ICustomActionExecutor
 	{
-		private const string Source     = "src";
-		private const string SourceExpr = "srcexpr";
-		private const string IdLocation = "idlocation";
+		private const    string             Source     = "src";
+		private const    string             SourceExpr = "srcexpr";
+		private const    string             IdLocation = "idlocation";
+		private readonly ILocationAssigner? _idLocation;
+		private readonly Uri?               _source;
 
 		private readonly IExpressionEvaluator? _sourceExpression;
-		private readonly Uri?                  _source;
-		private readonly ILocationAssigner?    _idLocation;
 
 		public StartAction(XmlReader xmlReader, ICustomActionContext access)
 		{
@@ -50,12 +50,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		internal static void FillXmlNameTable(XmlNameTable xmlNameTable)
-		{
-			xmlNameTable.Add(Source);
-			xmlNameTable.Add(SourceExpr);
-			xmlNameTable.Add(IdLocation);
-		}
+	#region Interface ICustomActionExecutor
 
 		public async ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
@@ -76,6 +71,15 @@ namespace TSSArt.StateMachine
 			{
 				await _idLocation.Assign(executionContext, sessionId, token).ConfigureAwait(false);
 			}
+		}
+
+	#endregion
+
+		internal static void FillXmlNameTable(XmlNameTable xmlNameTable)
+		{
+			xmlNameTable.Add(Source);
+			xmlNameTable.Add(SourceExpr);
+			xmlNameTable.Add(IdLocation);
 		}
 
 		private static Uri? GetBaseUri(IExecutionContext executionContext)

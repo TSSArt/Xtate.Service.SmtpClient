@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
-using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net.Mime;
 using System.Reflection;
@@ -16,16 +16,16 @@ using TSSArt.StateMachine.EcmaScript;
 namespace TSSArt.StateMachine.Test
 {
 	[TestClass]
+	[SuppressMessage(category: "ReSharper", checkId: "RedundantCapturedContext")]
 	public class StateMachinePersistenceTest
 	{
-		private IStateMachine         _allStateMachine;
-		private Mock<IResourceLoader> _resourceLoaderMock;
+		private IStateMachine         _allStateMachine    = default!;
+		private Mock<IResourceLoader> _resourceLoaderMock = default!;
 
 		[TestInitialize]
 		public void Initialize()
 		{
 			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("TSSArt.StateMachine.Test.Resources.All.xml");
-			Debug.Assert(stream != null);
 
 			var xmlReader = XmlReader.Create(stream);
 
@@ -82,7 +82,7 @@ namespace TSSArt.StateMachine.Test
 
 		#region Interface IStorageProvider
 
-			public async ValueTask<ITransactionalStorage> GetTransactionalStorage(string partition, string key, CancellationToken token)
+			public async ValueTask<ITransactionalStorage> GetTransactionalStorage(string? partition, string key, CancellationToken token)
 			{
 				if (string.IsNullOrEmpty(key)) throw new ArgumentException(message: @"Value cannot be null or empty.", nameof(key));
 
@@ -92,7 +92,7 @@ namespace TSSArt.StateMachine.Test
 				return await StreamStorage.CreateAsync(memStream, disposeStream: false, token);
 			}
 
-			public ValueTask RemoveTransactionalStorage(string partition, string key, CancellationToken token)
+			public ValueTask RemoveTransactionalStorage(string? partition, string key, CancellationToken token)
 			{
 				if (string.IsNullOrEmpty(key)) throw new ArgumentException(message: @"Value cannot be null or empty.", nameof(key));
 
@@ -102,7 +102,7 @@ namespace TSSArt.StateMachine.Test
 				return default;
 			}
 
-			public ValueTask RemoveAllTransactionalStorage(string partition, CancellationToken token)
+			public ValueTask RemoveAllTransactionalStorage(string? partition, CancellationToken token)
 			{
 				_storage.TryRemove(partition ?? "", out _);
 

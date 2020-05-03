@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TSSArt.StateMachine.Test.DevTests
 {
 	[TestClass]
+	[SuppressMessage(category: "ReSharper", checkId: "ExpressionIsAlwaysNull")]
 	public class DataModelValueTest
 	{
 		[TestMethod]
 		public void DataModelObjectNullTest()
 		{
 			// arrange
-			DataModelObject nullVal = null;
+			DataModelObject nullVal = null!;
 
 			// act
 			var v = (DataModelValue) nullVal;
@@ -25,7 +27,7 @@ namespace TSSArt.StateMachine.Test.DevTests
 		public void DataModelArrayNullTest()
 		{
 			// arrange
-			DataModelArray nullVal = null;
+			DataModelArray nullVal = null!;
 
 			// act
 			var v = (DataModelValue) nullVal;
@@ -39,7 +41,7 @@ namespace TSSArt.StateMachine.Test.DevTests
 		public void DataModelStringNullTest()
 		{
 			// arrange
-			string nullVal = null;
+			string nullVal = null!;
 
 			// act
 			var v = (DataModelValue) nullVal;

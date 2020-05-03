@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Windows.Forms;
 using CefSharp;
@@ -56,6 +57,7 @@ namespace TSSArt.StateMachine.Services
 			_content = content;
 		}
 
+		[SuppressMessage(category: "ReSharper", checkId: "SuspiciousTypeConversion.Global", Justification = "Uri can be compared with string")]
 		protected override IResourceRequestHandler GetResourceRequestHandler(IWebBrowser chromiumWebBrowser, IBrowser browser, IFrame frame, IRequest request,
 																			 bool isNavigation, bool isDownload, string requestInitiator, ref bool disableDefaultHandling)
 		{

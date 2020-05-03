@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace TSSArt.StateMachine
 {
@@ -355,6 +356,7 @@ namespace TSSArt.StateMachine
 				base.Visit(ref entity);
 			}
 
+			[SuppressMessage(category: "ReSharper", checkId: "CyclomaticComplexity", Justification = "OK")]
 			protected override void Visit(ref ISend entity)
 			{
 				if (entity == null) throw new ArgumentNullException(nameof(entity));

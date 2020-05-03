@@ -1,10 +1,11 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using TSSArt.StateMachine.Annotations;
 
 namespace TSSArt.StateMachine
 {
 	[PublicAPI]
-	public class InitialFluentBuilder<TOuterBuilder>
+	public class InitialFluentBuilder<TOuterBuilder> where TOuterBuilder : notnull
 	{
 		private readonly IInitialBuilder  _builder;
 		private readonly Action<IInitial> _builtAction;
@@ -19,6 +20,7 @@ namespace TSSArt.StateMachine
 			_builtAction = builtAction;
 		}
 
+		[return: NotNull]
 		public TOuterBuilder EndInitial()
 		{
 			_builtAction(_builder.Build());

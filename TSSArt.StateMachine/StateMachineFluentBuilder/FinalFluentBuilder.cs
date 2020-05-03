@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using TSSArt.StateMachine.Annotations;
 
 namespace TSSArt.StateMachine
 {
 	[PublicAPI]
-	public class FinalFluentBuilder<TOuterBuilder>
+	public class FinalFluentBuilder<TOuterBuilder> where TOuterBuilder : notnull
 	{
 		private readonly IFinalBuilder   _builder;
 		private readonly Action<IFinal>  _builtAction;
@@ -20,6 +21,7 @@ namespace TSSArt.StateMachine
 			_builtAction = builtAction;
 		}
 
+		[return: NotNull]
 		public TOuterBuilder EndFinal()
 		{
 			_builtAction(_builder.Build());

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -79,11 +80,12 @@ namespace TSSArt.StateMachine.Test
 	}
 
 	[TestClass]
+	[SuppressMessage(category: "ReSharper", checkId: "UncatchableException")]
 	public class StreamStorageTest
 	{
-		private ProxyMemoryStream    _stream;
-		private Mock<IStreamCapture> _streamCaptureMock;
-		private Mock<IStreamCapture> _streamCaptureMock2;
+		private ProxyMemoryStream    _stream             = default!;
+		private Mock<IStreamCapture> _streamCaptureMock  = default!;
+		private Mock<IStreamCapture> _streamCaptureMock2 = default!;
 
 		[TestInitialize]
 		public void Initialize()
@@ -124,7 +126,7 @@ namespace TSSArt.StateMachine.Test
 
 				await using var streamStorage2 = await StreamStorage.CreateAsync(new ProxyMemoryStream(_streamCaptureMock2.Object, _stream));
 				var bucket2 = new Bucket(streamStorage2);
-				Assert.AreEqual(expected: "v", bucket2.TryGet(key: "k", out string value) ? value : null);
+				Assert.AreEqual(expected: "v", bucket2.TryGet(key: "k", out string? value) ? value : null);
 			}
 
 			_streamCaptureMock.Verify(l => l.ReadAsync(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
@@ -145,7 +147,7 @@ namespace TSSArt.StateMachine.Test
 
 			await using var streamStorage2 = await StreamStorage.CreateAsync(new ProxyMemoryStream(_streamCaptureMock2.Object, _stream));
 			var bucket2 = new Bucket(streamStorage2);
-			Assert.AreEqual(expected: "v1", bucket2.TryGet(key: "k", out string value) ? value : null);
+			Assert.AreEqual(expected: "v1", bucket2.TryGet(key: "k", out string? value) ? value : null);
 		}
 
 		[TestMethod]
@@ -160,7 +162,7 @@ namespace TSSArt.StateMachine.Test
 
 			await using var streamStorage2 = await StreamStorage.CreateWithRollbackAsync(new ProxyMemoryStream(_streamCaptureMock2.Object, _stream), rollbackLevel: 0);
 			var bucket2 = new Bucket(streamStorage2);
-			Assert.AreEqual(expected: "v0", bucket2.TryGet(key: "k", out string value) ? value : null);
+			Assert.AreEqual(expected: "v0", bucket2.TryGet(key: "k", out string? value) ? value : null);
 		}
 
 		[TestMethod]
@@ -176,7 +178,7 @@ namespace TSSArt.StateMachine.Test
 
 			await using var streamStorage2 = await StreamStorage.CreateAsync(new ProxyMemoryStream(_streamCaptureMock2.Object, _stream));
 			var bucket2 = new Bucket(streamStorage2);
-			Assert.AreEqual(expected: "v1", bucket2.TryGet(key: "k", out string value) ? value : null);
+			Assert.AreEqual(expected: "v1", bucket2.TryGet(key: "k", out string? value) ? value : null);
 		}
 
 		[TestMethod]
@@ -196,14 +198,14 @@ namespace TSSArt.StateMachine.Test
 				await streamStorage.Shrink(token: default);
 				Assert.Fail();
 			}
-			catch (ApplicationException) { }
+			catch (ArgumentException) { }
 
 			var proxyMemoryStream = new ProxyMemoryStream(_streamCaptureMock2.Object, _stream);
 			Assert.AreEqual(expected: 18, proxyMemoryStream.Length);
 			await using var streamStorage2 = await StreamStorage.CreateAsync(proxyMemoryStream);
 			Assert.AreEqual(expected: 18, proxyMemoryStream.Length);
 			var bucket2 = new Bucket(streamStorage2);
-			Assert.AreEqual(expected: "v1", bucket2.TryGet(key: "k", out string value) ? value : null);
+			Assert.AreEqual(expected: "v1", bucket2.TryGet(key: "k", out string? value) ? value : null);
 		}
 
 		[TestMethod]
@@ -223,14 +225,14 @@ namespace TSSArt.StateMachine.Test
 				await streamStorage.Shrink(token: default);
 				Assert.Fail();
 			}
-			catch (ApplicationException) { }
+			catch (ArgumentException) { }
 
 			var proxyMemoryStream = new ProxyMemoryStream(_streamCaptureMock2.Object, _stream);
 			Assert.AreEqual(expected: 28, proxyMemoryStream.Length);
 			await using var streamStorage2 = await StreamStorage.CreateAsync(proxyMemoryStream);
 			Assert.AreEqual(expected: 18, proxyMemoryStream.Length);
 			var bucket2 = new Bucket(streamStorage2);
-			Assert.AreEqual(expected: "v1", bucket2.TryGet(key: "k", out string value) ? value : null);
+			Assert.AreEqual(expected: "v1", bucket2.TryGet(key: "k", out string? value) ? value : null);
 		}
 
 		[TestMethod]
@@ -250,14 +252,14 @@ namespace TSSArt.StateMachine.Test
 				await streamStorage.Shrink(token: default);
 				Assert.Fail();
 			}
-			catch (ApplicationException) { }
+			catch (ArgumentException) { }
 
 			var proxyMemoryStream = new ProxyMemoryStream(_streamCaptureMock2.Object, _stream);
 			Assert.AreEqual(expected: 28, proxyMemoryStream.Length);
 			await using var streamStorage2 = await StreamStorage.CreateAsync(proxyMemoryStream);
 			Assert.AreEqual(expected: 9, proxyMemoryStream.Length);
 			var bucket2 = new Bucket(streamStorage2);
-			Assert.AreEqual(expected: "v1", bucket2.TryGet(key: "k", out string value) ? value : null);
+			Assert.AreEqual(expected: "v1", bucket2.TryGet(key: "k", out string? value) ? value : null);
 		}
 
 		[TestMethod]
@@ -277,14 +279,14 @@ namespace TSSArt.StateMachine.Test
 				await streamStorage.Shrink(token: default);
 				Assert.Fail();
 			}
-			catch (ApplicationException) { }
+			catch (ArgumentException) { }
 
 			var proxyMemoryStream = new ProxyMemoryStream(_streamCaptureMock2.Object, _stream);
 			Assert.AreEqual(expected: 28, proxyMemoryStream.Length);
 			await using var streamStorage2 = await StreamStorage.CreateAsync(proxyMemoryStream);
 			Assert.AreEqual(expected: 9, proxyMemoryStream.Length);
 			var bucket2 = new Bucket(streamStorage2);
-			Assert.AreEqual(expected: "v1", bucket2.TryGet(key: "k", out string value) ? value : null);
+			Assert.AreEqual(expected: "v1", bucket2.TryGet(key: "k", out string? value) ? value : null);
 		}
 
 		[TestMethod]
@@ -306,7 +308,7 @@ namespace TSSArt.StateMachine.Test
 			await using var streamStorage2 = await StreamStorage.CreateAsync(proxyMemoryStream);
 			Assert.AreEqual(expected: 9, proxyMemoryStream.Length);
 			var bucket2 = new Bucket(streamStorage2);
-			Assert.AreEqual(expected: "v1", bucket2.TryGet(key: "k", out string value) ? value : null);
+			Assert.AreEqual(expected: "v1", bucket2.TryGet(key: "k", out string? value) ? value : null);
 		}
 
 		[TestMethod]
@@ -328,12 +330,12 @@ namespace TSSArt.StateMachine.Test
 				await streamStorage.Shrink(token: default);
 				Assert.Fail();
 			}
-			catch (ApplicationException) { }
+			catch (ArgumentException) { }
 
 			var proxyMemoryStream = new ProxyMemoryStream(_streamCaptureMock2.Object, _stream);
 			await using var streamStorage2 = await StreamStorage.CreateAsync(proxyMemoryStream);
 			var bucket2 = new Bucket(streamStorage2);
-			Assert.AreEqual(s, bucket2.TryGet(key: "k", out string value) ? value : null);
+			Assert.AreEqual(s, bucket2.TryGet(key: "k", out string? value) ? value : null);
 		}
 
 		[TestMethod]
@@ -349,7 +351,7 @@ namespace TSSArt.StateMachine.Test
 
 			await using var streamStorage2 = await StreamStorage.CreateAsync(new ProxyMemoryStream(_streamCaptureMock2.Object, _stream));
 			var bucket2 = new Bucket(streamStorage2);
-			Assert.AreEqual(expected: "v1", bucket2.TryGet(key: "k", out string value) ? value : null);
+			Assert.AreEqual(expected: "v1", bucket2.TryGet(key: "k", out string? value) ? value : null);
 		}
 
 		[TestMethod]
@@ -365,7 +367,7 @@ namespace TSSArt.StateMachine.Test
 
 			await using var streamStorage2 = await StreamStorage.CreateWithRollbackAsync(new ProxyMemoryStream(_streamCaptureMock2.Object, _stream), rollbackLevel: 0);
 			var bucket2 = new Bucket(streamStorage2);
-			Assert.AreEqual(expected: "v0", bucket2.TryGet(key: "k", out string value) ? value : null);
+			Assert.AreEqual(expected: "v0", bucket2.TryGet(key: "k", out string? value) ? value : null);
 		}
 
 		[TestMethod]
@@ -382,7 +384,7 @@ namespace TSSArt.StateMachine.Test
 
 			await using var streamStorage2 = await StreamStorage.CreateWithRollbackAsync(new ProxyMemoryStream(_streamCaptureMock2.Object, _stream), rollbackLevel: 0);
 			var bucket2 = new Bucket(streamStorage2);
-			Assert.AreEqual(expected: "v2", bucket2.TryGet(key: "k", out string value) ? value : null);
+			Assert.AreEqual(expected: "v2", bucket2.TryGet(key: "k", out string? value) ? value : null);
 		}
 	}
 }

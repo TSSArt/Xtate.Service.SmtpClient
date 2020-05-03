@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
 using System.Threading;
@@ -13,10 +14,11 @@ using TSSArt.StateMachine.EcmaScript;
 namespace TSSArt.StateMachine.Test
 {
 	[TestClass]
+	[SuppressMessage(category: "ReSharper", checkId: "RedundantCapturedContext")]
 	public class DataModelTest
 	{
-		private ChannelReader<IEvent> _eventChannel;
-		private Mock<ILogger>         _logger;
+		private ChannelReader<IEvent> _eventChannel = default!;
+		private Mock<ILogger>         _logger       = default!;
 		private InterpreterOptions    _options;
 
 		private static IStateMachine GetStateMachine(string scxml)
@@ -38,7 +40,7 @@ namespace TSSArt.StateMachine.Test
 				GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' datamodel='ecmascript' name='MyName'><datamodel><data id='my'/></datamodel><state><onentry>" + xml +
 								"</onentry></state></scxml>");
 
-		private async Task RunStateMachine(Func<string, IStateMachine> getter, string innerXml)
+		private Task RunStateMachine(Func<string, IStateMachine> getter, string innerXml)
 		{
 			// arrange
 			var stateMachine = getter(innerXml);
@@ -47,7 +49,7 @@ namespace TSSArt.StateMachine.Test
 			async Task Action() => await StateMachineInterpreter.RunAsync(IdGenerator.NewSessionId(), stateMachine, _eventChannel, _options);
 
 			// assert
-			await Assert.ThrowsExceptionAsync<StateMachineQueueClosedException>(Action);
+			return Assert.ThrowsExceptionAsync<StateMachineQueueClosedException>(Action);
 		}
 
 		[TestInitialize]

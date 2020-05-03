@@ -11,8 +11,8 @@ namespace TSSArt.StateMachine.Test
 	[TestClass]
 	public class InvokeTest
 	{
-		private Mock<IExternalCommunication> _externalCommunicationMock;
-		private Mock<ILogger>                _loggerMock;
+		private Mock<IExternalCommunication> _externalCommunicationMock = default!;
+		private Mock<ILogger>                _loggerMock                = default!;
 		private InterpreterOptions           _options;
 		private StateMachineEntity           _stateMachine;
 

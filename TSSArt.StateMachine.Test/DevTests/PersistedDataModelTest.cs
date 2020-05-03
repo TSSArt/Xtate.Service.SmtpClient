@@ -6,16 +6,16 @@ namespace TSSArt.StateMachine.Test
 	[TestClass]
 	public class PersistedDataModelTest
 	{
-		private DataModelArrayPersistingController  _arrayController;
+		private DataModelArrayPersistingController  _arrayController = default!;
 		private Bucket                              _bucket;
-		private DataModelArray                      _dataModelArray;
-		private DataModelObject                     _dataModelObject;
-		private DataModelObjectPersistingController _objectController;
-		private DataModelArray                      _restoredDataModelArray;
-		private DataModelObject                     _restoredDataModelObject;
-		private DataModelReferenceTracker           _restoredTracker;
-		private InMemoryStorage                     _storage;
-		private DataModelReferenceTracker           _tracker;
+		private DataModelArray                      _dataModelArray          = default!;
+		private DataModelObject                     _dataModelObject         = default!;
+		private DataModelObjectPersistingController _objectController        = default!;
+		private DataModelArray                      _restoredDataModelArray  = default!;
+		private DataModelObject                     _restoredDataModelObject = default!;
+		private DataModelReferenceTracker           _restoredTracker         = default!;
+		private InMemoryStorage                     _storage                 = default!;
+		private DataModelReferenceTracker           _tracker                 = default!;
 
 		[TestInitialize]
 		public void Initialize()
@@ -51,7 +51,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			using var controller = new DataModelObjectPersistingController(_bucket, _tracker, _restoredDataModelObject);
 
-			Assert.AreEqual(expected: 0, _restoredDataModelObject.Properties.Count);
+			Assert.AreEqual(expected: 0, _restoredDataModelObject.Count);
 			Assert.AreEqual(expected: 0, _storage.GetTransactionLogSize());
 		}
 
@@ -62,7 +62,7 @@ namespace TSSArt.StateMachine.Test
 
 			using var controller = new DataModelObjectPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
 
-			Assert.AreEqual(expected: 1, _restoredDataModelObject.Properties.Count);
+			Assert.AreEqual(expected: 1, _restoredDataModelObject.Count);
 			Assert.AreEqual(expected: "ee", _restoredDataModelObject["b"].AsString());
 
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
@@ -79,7 +79,7 @@ namespace TSSArt.StateMachine.Test
 
 			using var controller = new DataModelObjectPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
 
-			Assert.AreEqual(expected: 1, _restoredDataModelObject.Properties.Count);
+			Assert.AreEqual(expected: 1, _restoredDataModelObject.Count);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
 			Assert.AreEqual(expected: 15, StorageTest.GetEntriesCount(_storage));
 		}
@@ -95,7 +95,7 @@ namespace TSSArt.StateMachine.Test
 
 			using var controller = new DataModelObjectPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
 
-			Assert.AreEqual(expected: 0, _restoredDataModelObject.Properties.Count);
+			Assert.AreEqual(expected: 0, _restoredDataModelObject.Count);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
 			Assert.AreEqual(expected: 11, StorageTest.GetEntriesCount(_storage));
 		}

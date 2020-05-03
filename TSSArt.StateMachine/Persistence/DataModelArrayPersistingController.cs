@@ -188,6 +188,8 @@ namespace TSSArt.StateMachine
 		public override void Dispose()
 		{
 			_dataModelArray.Changed -= OnChanged;
+
+			base.Dispose();
 		}
 	}
 }

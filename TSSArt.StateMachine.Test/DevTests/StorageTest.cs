@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text;
 using System.Xml;
@@ -80,6 +80,7 @@ namespace TSSArt.StateMachine.Test
 			throw new ArgumentException("Incorrect key encoding");
 		}
 
+		[SuppressMessage(category: "ReSharper", checkId: "CyclomaticComplexity", Justification = "OK")]
 		private static int DecodeLength(ReadOnlySpan<byte> key)
 		{
 			switch (key.Length)
@@ -135,6 +136,7 @@ namespace TSSArt.StateMachine.Test
 			throw new ArgumentException("0xFF byte not detected");
 		}
 
+		[SuppressMessage(category: "ReSharper", checkId: "CyclomaticComplexity", Justification = "OK")]
 		private static ulong DecodeUInt64(Span<byte> key)
 		{
 			switch (key.Length)
@@ -246,8 +248,6 @@ namespace TSSArt.StateMachine.Test
 		public void StoreWithStorageTest()
 		{
 			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("TSSArt.StateMachine.Test.Resources.All.xml");
-
-			Debug.Assert(stream != null);
 
 			var xmlReader = XmlReader.Create(stream);
 
@@ -488,6 +488,7 @@ namespace TSSArt.StateMachine.Test
 		}
 
 		[TestMethod]
+		[SuppressMessage(category: "ReSharper", checkId: "StringLiteralTypo")]
 		public void UnicodeReadWriteTest()
 		{
 			var storage = new InMemoryStorage(false);
@@ -495,7 +496,7 @@ namespace TSSArt.StateMachine.Test
 
 			const string s = "aeiouçéüß";
 			bucket.Add(s, s);
-			var flag = bucket.TryGet(s, out string val);
+			var flag = bucket.TryGet(s, out string? val);
 			Assert.IsTrue(flag);
 			Assert.AreEqual(s, val);
 		}
@@ -515,7 +516,7 @@ namespace TSSArt.StateMachine.Test
 			var storage = new InMemoryStorage(false);
 			var bucket = new Bucket(storage);
 			bucket.Add(key: "a", value: "");
-			var flag = bucket.TryGet(key: "a", out string val);
+			var flag = bucket.TryGet(key: "a", out string? val);
 
 			Assert.IsTrue(flag);
 			Assert.AreEqual(expected: "", val);
@@ -527,8 +528,8 @@ namespace TSSArt.StateMachine.Test
 		{
 			var storage = new InMemoryStorage(false);
 			var bucket = new Bucket(storage);
-			bucket.Add(key: "a", (string) null);
-			var flag = bucket.TryGet(key: "a", out string val);
+			bucket.Add(key: "a", (string) null!);
+			var flag = bucket.TryGet(key: "a", out string? val);
 
 			Assert.IsFalse(flag);
 			Assert.IsNull(val);
@@ -541,7 +542,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			var storage = new InMemoryStorage();
 			var bucket = new Bucket(storage);
-			bucket.Add((string) null, value: "d");
+			bucket.Add((string) null!, value: "d");
 		}
 
 		[TestMethod]
@@ -577,7 +578,7 @@ namespace TSSArt.StateMachine.Test
 			storage.Write(new byte[] { 10, 11 }, new byte[] { 55 });
 			storage.Write(new byte[] { 20 }, new byte[] { 55 });
 
-			storage.Write(new byte[] { }, new byte[] { 10 });
+			storage.Write(Array.Empty<byte>(), new byte[] { 10 });
 
 			Assert.IsFalse(storage.Read(new byte[] { 1 }).IsEmpty);
 			Assert.IsTrue(storage.Read(new byte[] { 10 }).IsEmpty);
@@ -596,7 +597,7 @@ namespace TSSArt.StateMachine.Test
 			storage.Write(new byte[] { 11 }, new byte[] { 55 });
 			storage.Write(new byte[] { 20 }, new byte[] { 55 });
 
-			storage.Write(new byte[] { }, new byte[] { 10 });
+			storage.Write(Array.Empty<byte>(), new byte[] { 10 });
 
 			Assert.IsFalse(storage.Read(new byte[] { 1 }).IsEmpty);
 			Assert.IsTrue(storage.Read(new byte[] { 10 }).IsEmpty);
@@ -616,7 +617,7 @@ namespace TSSArt.StateMachine.Test
 			storage.Write(new byte[] { 11 }, new byte[] { 55 });
 			storage.Write(new byte[] { 20 }, new byte[] { 55 });
 
-			storage.Write(new byte[] { }, new byte[] { 10, 255 });
+			storage.Write(Array.Empty<byte>(), new byte[] { 10, 255 });
 
 			Assert.IsFalse(storage.Read(new byte[] { 1 }).IsEmpty);
 			Assert.IsTrue(storage.Read(new byte[] { 10, 255 }).IsEmpty);
@@ -634,7 +635,7 @@ namespace TSSArt.StateMachine.Test
 			storage.Write(new byte[] { 255 }, new byte[] { 55 });
 			storage.Write(new byte[] { 255, 11 }, new byte[] { 55 });
 
-			storage.Write(new byte[] { }, new byte[] { 255 });
+			storage.Write(Array.Empty<byte>(), new byte[] { 255 });
 
 			Assert.IsFalse(storage.Read(new byte[] { 1 }).IsEmpty);
 			Assert.IsTrue(storage.Read(new byte[] { 255 }).IsEmpty);

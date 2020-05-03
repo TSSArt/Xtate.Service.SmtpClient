@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -15,13 +14,12 @@ namespace TSSArt.StateMachine.Test
 	[TestClass]
 	public class ScxmlDirectorTest
 	{
-		private IStateMachine _stateMachine;
+		private IStateMachine _stateMachine = default!;
 
 		[TestInitialize]
 		public void Initialize()
 		{
 			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("TSSArt.StateMachine.Test.Resources.Main.xml");
-			Debug.Assert(stream != null);
 
 			var xmlReader = XmlReader.Create(stream);
 

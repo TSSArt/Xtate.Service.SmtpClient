@@ -12,7 +12,7 @@ namespace TSSArt.StateMachine.Test.DevTests
 			// arrange
 
 			// act
-			//await Host.Execute(".\\Resources\\All.xml");
+			//await Host.ExecuteAsync(".\\Resources\\All.xml");
 		}
 	}
 }

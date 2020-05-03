@@ -14,11 +14,11 @@ namespace TSSArt.StateMachine.Test
 	[TestClass]
 	public class ExecutableTest
 	{
-		private Mock<ICustomActionExecutor>  _customActionExecutor;
-		private Mock<ICustomActionFactory>   _customActionProvider;
-		private ChannelReader<IEvent>        _eventChannel;
-		private Mock<IExternalCommunication> _externalCommunication;
-		private Mock<ILogger>                _logger;
+		private Mock<ICustomActionExecutor>  _customActionExecutor  = default!;
+		private Mock<ICustomActionFactory>   _customActionProvider  = default!;
+		private ChannelReader<IEvent>        _eventChannel          = default!;
+		private Mock<IExternalCommunication> _externalCommunication = default!;
+		private Mock<ILogger>                _logger                = default!;
 		private InterpreterOptions           _options;
 
 		private static IStateMachine GetStateMachine(string scxml)

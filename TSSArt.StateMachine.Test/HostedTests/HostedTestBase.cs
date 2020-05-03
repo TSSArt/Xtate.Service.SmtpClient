@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -7,13 +8,14 @@ using TSSArt.StateMachine.Annotations;
 
 namespace TSSArt.StateMachine.Test.HostedTests
 {
+	[SuppressMessage(category: "ReSharper", checkId: "RedundantCapturedContext")]
 	public abstract class HostedTestBase
 	{
-		protected StateMachineHost Host { get; private set; }
-		protected Mock<ILogger> Logger { get; private set; }
+		protected StateMachineHost Host   { get; private set; } = default!;
+		protected Mock<ILogger>    Logger { get; private set; } = default!;
 
 		[TestInitialize]
-		public async Task Initialize()
+		public Task Initialize()
 		{
 			Logger = new Mock<ILogger>();
 
@@ -22,19 +24,17 @@ namespace TSSArt.StateMachine.Test.HostedTests
 				   .AddResourceLoader(ResxResourceLoader.Instance)
 				   .SetLogger(Logger.Object)
 				   .Build();
-			await Host.StartAsync();
+			return Host.StartAsync();
 		}
 
 		[TestCleanup]
-		public async Task Cleanup()
-		{
-			await Host.StopAsync();
-		}
+		public Task Cleanup() => Host.StopAsync();
 
-		protected async Task Execute([PathReference("~/HostedTests/Scxml/")] string scxmlPath)
+		protected async Task Execute([PathReference("~/HostedTests/Scxml/")]
+									 string scxmlPath)
 		{
 			var name = Assembly.GetExecutingAssembly().GetName().Name;
-			await Host.Execute(new Uri($"resx://{name}/{name}/HostedTests/Scxml/" + scxmlPath));
+			await Host.ExecuteAsync(new Uri($"resx://{name}/{name}/HostedTests/Scxml/" + scxmlPath));
 		}
 	}
 }

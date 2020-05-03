@@ -37,7 +37,7 @@ namespace TSSArt.StateMachine
 			return ImmutableArray.Create(parts);
 		}
 
-		private static void SetParts(Span<IIdentifier> span, string id)
+		private static void SetParts(Span<IIdentifier> span, string? id)
 		{
 			if (id == null)
 			{
@@ -58,7 +58,7 @@ namespace TSSArt.StateMachine
 			span[index] = (Identifier) id.Substring(pos);
 		}
 
-		private static int GetCount(string id)
+		private static int GetCount(string? id)
 		{
 			if (id == null)
 			{

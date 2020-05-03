@@ -21,7 +21,7 @@ namespace TSSArt.StateMachine.Test
 			await stateMachineHost.StartAsync();
 
 			// Act
-			var result = await stateMachineHost.Execute(stateMachine);
+			var result = await stateMachineHost.ExecuteAsync(stateMachine);
 
 			//Assert
 			Assert.AreEqual(expected: 22, result.AsNumber());
@@ -47,7 +47,7 @@ namespace TSSArt.StateMachine.Test
 			await stateMachineHost.StartAsync();
 
 			// Act
-			var result = await stateMachineHost.Execute(stateMachine, new DataModelValue(33));
+			var result = await stateMachineHost.ExecuteAsync(stateMachine, new DataModelValue(33));
 
 			//Assert
 			Assert.AreEqual(expected: 33, result.AsNumber());

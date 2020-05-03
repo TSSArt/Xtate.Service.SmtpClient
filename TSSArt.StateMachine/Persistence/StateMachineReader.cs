@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 
 namespace TSSArt.StateMachine
 {
@@ -217,6 +218,7 @@ namespace TSSArt.StateMachine
 
 		private static IOutgoingEvent RestoreEvent(Bucket bucket) => new EventEntity(bucket.GetString(Key.Id)) { Target = EventEntity.InternalTarget };
 
+		[SuppressMessage(category: "ReSharper", checkId: "CyclomaticComplexity", Justification = "OK")]
 		private IExecutableEntity RestoreExecutableEntity(Bucket bucket)
 		{
 			var typeInfo = bucket.Get<TypeInfo>(Key.TypeInfo);

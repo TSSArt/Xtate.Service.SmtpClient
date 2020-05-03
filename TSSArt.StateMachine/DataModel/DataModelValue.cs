@@ -523,44 +523,59 @@ namespace TSSArt.StateMachine
 					return new DataModelValue((string) value);
 
 				case TypeCode.Object:
-					return value switch
-					{
-							DateTimeOffset val => new DataModelValue(val),
-							DataModelValue val => val,
-							IObject obj => FromObjectWithMap(obj.ToObject(), ref map),
-							DataModelObject obj => new DataModelValue(obj),
-							DataModelArray arr => new DataModelValue(arr),
-							IDictionary<string, object> dict => CreateDataModelObject(dict, ref map),
-							IEnumerable arr => CreateDataModelArray(arr, ref map),
-							{} when IsAnonymousTypeValue(type) => CreateDataModelObjectFromObjectProperties(type, value, ref map),
-							_ => throw new ArgumentException(Resources.Exception_Unsupported_object_type, nameof(value))
-					};
+					return FromUnknownObjectWithMap(value, ref map);
 
 				default: throw new ArgumentException(Resources.Exception_Unsupported_object_type, nameof(value));
 			}
 		}
 
-		private static bool IsAnonymousTypeValue(Type type) => type.Name.Contains("AnonymousType") && type.GetCustomAttributes(typeof(CompilerGeneratedAttribute), inherit: false).Length > 0;
+		private static DataModelValue FromUnknownObjectWithMap(object value, ref Dictionary<object, object>? map) =>
+				value switch
+				{
+						DateTimeOffset val => new DataModelValue(val),
+						DataModelValue val => val,
+						IObject obj => FromObjectWithMap(obj.ToObject(), ref map),
+						DataModelObject obj => new DataModelValue(obj),
+						DataModelArray arr => new DataModelValue(arr),
+						IDictionary<string, object> dict => CreateDataModelObject(dict, ref map),
+						IEnumerable arr => CreateDataModelArray(arr, ref map),
+						{ } when TryFromAnonymousType(value, ref map, out var val) => val,
+						_ => throw new ArgumentException(Resources.Exception_Unsupported_object_type, nameof(value))
+				};
 
-		private static DataModelValue CreateDataModelObjectFromObjectProperties(Type type, object value, ref Dictionary<object, object>? map)
+		private static bool TryFromAnonymousType(object value, ref Dictionary<object, object>? map, out DataModelValue result)
 		{
+			var type = value.GetType();
+
+			if (!type.Name.Contains("AnonymousType") || type.GetCustomAttributes(typeof(CompilerGeneratedAttribute), inherit: false).Length == 0)
+			{
+				result = default;
+
+				return false;
+			}
+
 			map ??= new Dictionary<object, object>();
 
 			if (map.TryGetValue(value, out var val))
 			{
-				return new DataModelValue((DataModelObject) val);
+				result = new DataModelValue((DataModelObject)val);
+
+				return true;
 			}
 
 			var obj = new DataModelObject();
 
 			map[value] = obj;
 
-			foreach (var propertyInfo in type.GetProperties(BindingFlags.Instance | BindingFlags.Public))
+			foreach (var propertyInfo in value.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public))
 			{
+
 				obj[propertyInfo.Name] = FromObjectWithMap(propertyInfo.GetValue(value), ref map);
 			}
 
-			return new DataModelValue(obj);
+			result = new DataModelValue(obj);
+
+			return true;
 		}
 
 		private static DataModelValue CreateDataModelObject(IDictionary<string, object> dictionary, ref Dictionary<object, object>? map)

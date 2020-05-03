@@ -45,9 +45,9 @@ namespace TSSArt.StateMachine
 
 	#endregion
 
-		private bool CanHandleType(Uri? type) => type == null || FullUriComparer.Instance.Equals(type, IoProcessorId) || FullUriComparer.Instance.Equals(type, IoProcessorAliasId);
+		private static bool CanHandleType(Uri? type) => type == null || FullUriComparer.Instance.Equals(type, IoProcessorId) || FullUriComparer.Instance.Equals(type, IoProcessorAliasId);
 
-		private bool CanHandleTarget(Uri? target)
+		private static bool CanHandleTarget(Uri? target)
 		{
 			if (target == null)
 			{

@@ -48,7 +48,7 @@ namespace TSSArt.StateMachine
 			async ValueTask<T> WaitAsyncLocal()
 			{
 				var task = valueTask.AsTask();
-				
+
 				await Task.WhenAny(task, Task.Delay(millisecondsDelay: -1, token)).ConfigureAwait(false);
 
 				token.ThrowIfCancellationRequested();

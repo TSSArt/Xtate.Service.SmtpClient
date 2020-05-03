@@ -76,12 +76,12 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private ref struct VisitListData<TIEntity>
+		private ref struct VisitListData<T> where T : class
 		{
-			private readonly ImmutableArray<TIEntity> _original;
-			public           TrackList<TIEntity>      List;
+			private readonly ImmutableArray<T> _original;
+			public           TrackList<T>      List;
 
-			public VisitListData(ImmutableArray<TIEntity> list)
+			public VisitListData(ImmutableArray<T> list)
 			{
 				if (list.IsDefault)
 				{
@@ -89,10 +89,10 @@ namespace TSSArt.StateMachine
 				}
 
 				_original = list;
-				List = new TrackList<TIEntity>(list);
+				List = new TrackList<T>(list);
 			}
 
-			public void Update(ref ImmutableArray<TIEntity> list)
+			public void Update(ref ImmutableArray<T> list)
 			{
 				if (_original == list && List.IsModified)
 				{
@@ -102,7 +102,7 @@ namespace TSSArt.StateMachine
 		}
 
 		[PublicAPI]
-		protected ref struct TrackList<T>
+		protected ref struct TrackList<T> where T : class
 		{
 			private ImmutableArray<T> _items;
 
@@ -142,21 +142,19 @@ namespace TSSArt.StateMachine
 
 			public int Count => ModifiedItems?.Count ?? _items.Length;
 
-			[MaybeNull]
-			[AllowNull]
-			public T this[int index]
+			public T? this[int index]
 			{
 				get => ModifiedItems != null ? ModifiedItems[index] : _items[index];
 				set
 				{
 					if (ModifiedItems != null)
 					{
-						ModifiedItems[index] = value;
+						ModifiedItems[index] = value!;
 					}
 					else if (!ReferenceEquals(_items[index], value))
 					{
 						ModifiedItems = _items.ToBuilder();
-						ModifiedItems[index] = value;
+						ModifiedItems[index] = value!;
 					}
 				}
 			}

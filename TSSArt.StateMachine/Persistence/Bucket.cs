@@ -8,6 +8,7 @@ using TSSArt.StateMachine.Annotations;
 namespace TSSArt.StateMachine
 {
 	[PublicAPI]
+	[SuppressMessage(category: "ReSharper", checkId: "SuggestVarOrType_Elsewhere", Justification = "Span<> must be explicit")]
 	internal readonly struct Bucket
 	{
 		public static readonly RootType RootKey = RootType.Instance;
@@ -124,9 +125,7 @@ namespace TSSArt.StateMachine
 			_node.Storage.Write(CreateFullKey(buf, key), value);
 		}
 
-		public void Add<TKey, TValue>([NotNull]
-									  TKey key, [NotNull]
-									  TValue value)
+		public void Add<TKey, TValue>([NotNull] TKey key, [NotNull] TValue value)
 		{
 			if (value == null)
 			{
@@ -141,30 +140,26 @@ namespace TSSArt.StateMachine
 			_node.Storage.Write(CreateFullKey(buf, key), bufVal);
 		}
 
-		public void Remove<TKey>([NotNull]
-								 TKey key)
+		public void Remove<TKey>([NotNull] TKey key)
 		{
 			Span<byte> buf = stackalloc byte[GetFullKeySize(key)];
 			_node.Storage.Write(CreateFullKey(buf, key), ReadOnlySpan<byte>.Empty);
 		}
 
-		public void RemoveSubtree<TKey>([NotNull]
-										TKey key)
+		public void RemoveSubtree<TKey>([NotNull] TKey key)
 		{
 			Span<byte> buf = stackalloc byte[GetFullKeySize(key)];
 			_node.Storage.Write(ReadOnlySpan<byte>.Empty, CreateFullKey(buf, key));
 		}
 
-		public bool TryGet<TKey>([NotNull]
-								 TKey key, out ReadOnlyMemory<byte> value)
+		public bool TryGet<TKey>([NotNull] TKey key, out ReadOnlyMemory<byte> value)
 		{
 			Span<byte> buf = stackalloc byte[GetFullKeySize(key)];
 			value = _node.Storage.Read(CreateFullKey(buf, key));
 			return !value.IsEmpty;
 		}
 
-		public bool TryGet<TKey, TValue>([NotNull]
-										 TKey key, [NotNullWhen(true)] [MaybeNullWhen(false)]
+		public bool TryGet<TKey, TValue>([NotNull] TKey key, [NotNullWhen(true)] [MaybeNullWhen(false)]
 										 out TValue value)
 		{
 			Span<byte> buf = stackalloc byte[GetFullKeySize(key)];
@@ -332,11 +327,9 @@ namespace TSSArt.StateMachine
 
 		private abstract class ConverterBase<T>
 		{
-			public abstract int GetLength([NotNull]
-										  T key);
+			public abstract int GetLength([NotNull] T key);
 
-			public abstract void Write([NotNull]
-									   T key, Span<byte> bytes);
+			public abstract void Write([NotNull] T key, Span<byte> bytes);
 
 			[return: NotNull]
 			public abstract T Read(ReadOnlySpan<byte> bytes);

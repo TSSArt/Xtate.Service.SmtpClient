@@ -31,23 +31,23 @@ namespace TSSArt.StateMachine
 
 			await service.StartAsync(token).ConfigureAwait(false);
 
-			CompleteAsync().Forget();
-
-			async ValueTask CompleteAsync()
-			{
-				try
-				{
-					await service.Result.ConfigureAwait(false);
-				}
-				finally
-				{
-					await context.DestroyStateMachine(sessionId).ConfigureAwait(false);
-				}
-			}
+			CompleteAsync(context, service, sessionId).Forget();
 
 			return service;
 		}
 
 	#endregion
+
+		private static async ValueTask CompleteAsync(StateMachineHostContext context, StateMachineController service, string sessionId)
+		{
+			try
+			{
+				await service.Result.ConfigureAwait(false);
+			}
+			finally
+			{
+				await context.DestroyStateMachine(sessionId).ConfigureAwait(false);
+			}
+		}
 	}
 }

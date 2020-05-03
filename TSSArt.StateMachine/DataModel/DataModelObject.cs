@@ -24,17 +24,30 @@ namespace TSSArt.StateMachine
 			Remove
 		}
 
-		public static readonly DataModelObject Empty = new DataModelObject(DataModelAccess.Constant);
+		public static readonly DataModelObject Empty = new DataModelObject(DataModelAccess.Constant, capacity: 0);
 
-		private readonly Dictionary<string, DataModelDescriptor> _properties = new Dictionary<string, DataModelDescriptor>();
+		private readonly Dictionary<string, DataModelDescriptor> _properties;
 
 		private DataModelAccess _access;
 
-		public DataModelObject() : this(DataModelAccess.Writable) { }
+		public DataModelObject() : this(capacity: 0) { }
+		
+		public DataModelObject(int capacity) : this(DataModelAccess.Writable, capacity) { }
+		
+		internal DataModelObject(bool isReadOnly, int capacity) : this(isReadOnly ? DataModelAccess.ReadOnly : DataModelAccess.Writable, capacity) { }
 
-		public DataModelObject(bool isReadOnly) : this(isReadOnly ? DataModelAccess.ReadOnly : DataModelAccess.Writable) { }
+		private DataModelObject(DataModelAccess access, int capacity)
+		{
+			_access = access;
+			_properties = new Dictionary<string, DataModelDescriptor>(capacity);
+		}
 
-		private DataModelObject(DataModelAccess access) => _access = access;
+		public void EnsureCapacity(int capacity)
+		{
+#if NETSTANDARD2_1
+			_properties.EnsureCapacity(capacity);
+#endif
+		}
 
 		public DataModelAccess Access
 		{
@@ -71,6 +84,8 @@ namespace TSSArt.StateMachine
 		}
 
 		public ICollection<string> Properties => _properties.Keys;
+		
+		public int Count => _properties.Count;
 
 		public DataModelValue this[string property]
 		{
@@ -225,7 +240,7 @@ namespace TSSArt.StateMachine
 				return (DataModelObject) val;
 			}
 
-			var clone = new DataModelObject(targetAccess);
+			var clone = new DataModelObject(targetAccess, _properties.Count);
 
 			map[this] = clone;
 

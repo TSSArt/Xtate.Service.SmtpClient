@@ -4,8 +4,8 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class PreDataModelProcessor : StateMachineVisitor
 	{
-		private readonly IErrorProcessor _errorProcessor;
 		private readonly ImmutableArray<ICustomActionFactory> _customActionProviders;
+		private readonly IErrorProcessor                      _errorProcessor;
 
 		public PreDataModelProcessor(IErrorProcessor errorProcessor, ImmutableArray<ICustomActionFactory> customActionProviders)
 		{

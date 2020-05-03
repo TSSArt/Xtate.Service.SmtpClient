@@ -68,7 +68,7 @@ namespace TSSArt.StateMachine
 
 			foreach (var transition in _targetMap)
 			{
-				if(!transition.TryMapTarget(_idMap))
+				if (!transition.TryMapTarget(_idMap))
 				{
 					_errorProcessor.AddError<InterpreterModelBuilder>(entity: null, Resources.ErrorMessage_Target_Id_does_not_exists);
 				}
@@ -120,27 +120,27 @@ namespace TSSArt.StateMachine
 			{
 				token.ThrowIfCancellationRequested();
 
-				await Load(uri, consumer).ConfigureAwait(false);
+				await LoadAndSetContent(resourceLoaders, uri, consumer, token).ConfigureAwait(false);
 			}
+		}
 
-			async ValueTask Load(Uri uri, IExternalScriptConsumer consumer)
+		private static async ValueTask LoadAndSetContent(ImmutableArray<IResourceLoader> resourceLoaders, Uri uri, IExternalScriptConsumer consumer, CancellationToken token)
+		{
+			if (!resourceLoaders.IsDefaultOrEmpty)
 			{
-				if (!resourceLoaders.IsDefaultOrEmpty)
+				foreach (var resourceLoader in resourceLoaders)
 				{
-					foreach (var resourceLoader in resourceLoaders)
+					if (resourceLoader.CanHandle(uri))
 					{
-						if (resourceLoader.CanHandle(uri))
-						{
-							var resource = await resourceLoader.Request(uri, token).ConfigureAwait(false);
-							consumer.SetContent(resource.Content);
+						var resource = await resourceLoader.Request(uri, token).ConfigureAwait(false);
+						consumer.SetContent(resource.Content);
 
-							return;
-						}
+						return;
 					}
 				}
-
-				throw new StateMachineProcessorException(Resources.Exception_Cannot_find_ResourceLoader_to_load_external_resource);
 			}
+
+			throw new StateMachineProcessorException(Resources.Exception_Cannot_find_ResourceLoader_to_load_external_resource);
 		}
 
 		private void RegisterEntity(IEntity entity) => _entities.Add(entity);

@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace TSSArt.StateMachine.Services
@@ -15,6 +16,7 @@ namespace TSSArt.StateMachine.Services
 			return new ValueTask<DataModelValue>(task);
 		}
 
+		[SuppressMessage(category: "ReSharper", checkId: "AccessToDisposedClosure", Justification = "Form closed by external event")]
 		private DataModelValue Show()
 		{
 			var controls = Content.AsObjectOrEmpty()["controls"].AsArrayOrEmpty();

@@ -28,7 +28,7 @@ namespace TSSArt.StateMachine.Core.Host
 			await stateMachineHost.StartAsync().ConfigureAwait(false);
 
 			var name = Assembly.GetExecutingAssembly().GetName().Name;
-			var autorun = stateMachineHost.Execute(new Uri($"resx://{name}/{name}/Scxml/autorun.scxml"));
+			var autorun = stateMachineHost.ExecuteAsync(new Uri($"resx://{name}/{name}/Scxml/autorun.scxml"));
 
 			Application.Run();
 

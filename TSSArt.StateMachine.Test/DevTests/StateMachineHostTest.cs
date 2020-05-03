@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net.Mime;
 using System.Reflection;
@@ -14,6 +15,7 @@ using TSSArt.StateMachine.Services;
 namespace TSSArt.StateMachine.Test
 {
 	[TestClass]
+	[SuppressMessage(category: "ReSharper", checkId: "StringLiteralTypo")]
 	public class StateMachineHostTest
 	{
 		private static XmlReader GetStateMachineBase(string scxml)
@@ -42,7 +44,7 @@ namespace TSSArt.StateMachine.Test
 			await stateMachineHost.StartAsync();
 			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("TSSArt.StateMachine.Test.Resources.All.xml");
 			var reader = new StreamReader(stream ?? throw new InvalidOperationException());
-			var _ = stateMachineHost.Execute(await reader.ReadToEndAsync());
+			var _ = stateMachineHost.ExecuteAsync(await reader.ReadToEndAsync());
 		}
 
 		[TestMethod]
@@ -64,7 +66,7 @@ namespace TSSArt.StateMachine.Test
 
 			var stateMachineHost = new StateMachineHost(options);
 			await stateMachineHost.StartAsync();
-			var result = await stateMachineHost.Execute(new Uri("scxml://a"));
+			var result = await stateMachineHost.ExecuteAsync(new Uri("scxml://a"));
 
 			Assert.AreEqual(expected: 111.0, result.AsNumber());
 		}
@@ -110,7 +112,7 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 
 			var stateMachineHost = new StateMachineHost(options);
 
-			var result = await stateMachineHost.Execute(new Uri("scxml://a"));
+			var result = await stateMachineHost.ExecuteAsync(new Uri("scxml://a"));
 
 			Console.WriteLine(DataModelConverter.ToJson(result));
 			Assert.IsFalse(result.IsUndefined());
@@ -182,7 +184,7 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 
 			var stateMachineHost = new StateMachineHost(options);
 
-			var result = await stateMachineHost.Execute(stateMachine);
+			var result = await stateMachineHost.ExecuteAsync(stateMachine);
 
 			Console.WriteLine(DataModelConverter.ToJson(result));
 			Assert.IsFalse(result.IsUndefined());

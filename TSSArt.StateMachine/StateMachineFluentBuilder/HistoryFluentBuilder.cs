@@ -1,11 +1,12 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using TSSArt.StateMachine.Annotations;
 
 namespace TSSArt.StateMachine
 {
 	[PublicAPI]
-	public class HistoryFluentBuilder<TOuterBuilder>
+	public class HistoryFluentBuilder<TOuterBuilder> where TOuterBuilder : notnull
 	{
 		private readonly IHistoryBuilder  _builder;
 		private readonly Action<IHistory> _builtAction;
@@ -20,6 +21,7 @@ namespace TSSArt.StateMachine
 			_builtAction = builtAction;
 		}
 
+		[return: NotNull]
 		public TOuterBuilder EndHistory()
 		{
 			_builtAction(_builder.Build());

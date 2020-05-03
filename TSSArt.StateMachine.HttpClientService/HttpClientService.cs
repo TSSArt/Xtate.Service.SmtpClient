@@ -12,9 +12,11 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
+using TSSArt.StateMachine.Annotations;
 
 namespace TSSArt.StateMachine.Services
 {
+	[PublicAPI]
 	[SimpleService("http://tssart.com/scxml/service/#HTTPClient", Alias = "http")]
 	public class HttpClientService : SimpleServiceBase
 	{
@@ -64,7 +66,7 @@ namespace TSSArt.StateMachine.Services
 
 				var str = val.AsStringOrDefault();
 
-				return !string.IsNullOrEmpty(str) ? new[] { str! } : null;
+				return !string.IsNullOrEmpty(str) ? new[] { str } : null;
 			}
 
 			var response = await DoRequest(Source, method, accept, autoRedirect, contentType, headers, cookies, captures.ToArray(), Content, StopToken).ConfigureAwait(false);

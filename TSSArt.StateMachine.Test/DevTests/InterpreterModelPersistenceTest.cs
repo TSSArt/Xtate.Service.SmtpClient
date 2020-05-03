@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Reflection;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -10,14 +9,13 @@ namespace TSSArt.StateMachine.Test
 	[TestClass]
 	public class InterpreterModelPersistenceTest
 	{
-		private IStateMachine     _allStateMachine;
-		private IDataModelHandler _dataModelHandler;
+		private IStateMachine     _allStateMachine  = default!;
+		private IDataModelHandler _dataModelHandler = default!;
 
 		[TestInitialize]
 		public void Initialize()
 		{
 			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("TSSArt.StateMachine.Test.Resources.All.xml");
-			Debug.Assert(stream != null);
 
 			var xmlReader = XmlReader.Create(stream);
 

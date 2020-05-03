@@ -72,7 +72,7 @@ namespace TSSArt.StateMachine
 
 		public OrderedSet<StateEntityNode> Configuration { get; } = new OrderedSet<StateEntityNode>();
 
-		public DataModelObject DataModelHandlerObject { get; } = new DataModelObject(true);
+		public DataModelObject DataModelHandlerObject { get; } = new DataModelObject(isReadOnly: true, capacity: 0);
 
 		public IExecutionContext ExecutionContext => this;
 
@@ -80,11 +80,11 @@ namespace TSSArt.StateMachine
 
 		public EntityQueue<IEvent> InternalQueue { get; } = new EntityQueue<IEvent>();
 
-		public DataModelObject InterpreterObject { get; } = new DataModelObject(true);
+		public DataModelObject InterpreterObject { get; } = new DataModelObject(isReadOnly: true, capacity: 0);
 
-		public DataModelObject ConfigurationObject { get; } = new DataModelObject(true);
-		
-		public DataModelObject HostObject { get; } = new DataModelObject(true);
+		public DataModelObject ConfigurationObject { get; } = new DataModelObject(isReadOnly: true, capacity: 0);
+
+		public DataModelObject HostObject { get; } = new DataModelObject(isReadOnly: true, capacity: 0);
 
 		public OrderedSet<StateEntityNode> StatesToInvoke { get; } = new OrderedSet<StateEntityNode>();
 
@@ -109,7 +109,7 @@ namespace TSSArt.StateMachine
 
 		private DataModelObject CreateDataModel(string? stateMachineName, string sessionId, DataModelValue arguments)
 		{
-			var platform = new DataModelObject
+			var platform = new DataModelObject(capacity: 5)
 						   {
 								   [@"interpreter"] = new DataModelValue(InterpreterObject),
 								   [@"datamodel"] = new DataModelValue(DataModelHandlerObject),
@@ -120,7 +120,7 @@ namespace TSSArt.StateMachine
 
 			platform.MakeReadOnly();
 
-			var dataModel = new DataModelObject();
+			var dataModel = new DataModelObject(capacity: 5);
 
 			dataModel.SetInternal(property: @"_name", new DataModelDescriptor(new DataModelValue(stateMachineName), isReadOnly: true));
 			dataModel.SetInternal(property: @"_sessionid", new DataModelDescriptor(new DataModelValue(sessionId), isReadOnly: true));
@@ -139,11 +139,11 @@ namespace TSSArt.StateMachine
 					return DataModelObject.Empty;
 				}
 
-				var dictionary = new DataModelObject();
+				var dictionary = new DataModelObject(capacity: ioProcessors.Length);
 
 				foreach (var ioProcessor in ioProcessors)
 				{
-					dictionary[ioProcessor.Id.ToString()] = new DataModelValue(new DataModelObject { [@"location"] = new DataModelValue(ioProcessor.GetTarget(sessionId).ToString()) });
+					dictionary[ioProcessor.Id.ToString()] = new DataModelValue(new DataModelObject(capacity: 1) { [@"location"] = new DataModelValue(ioProcessor.GetTarget(sessionId).ToString()) });
 				}
 
 				dictionary.MakeDeepConstant();
@@ -154,8 +154,8 @@ namespace TSSArt.StateMachine
 
 		private class ContextItems : IContextItems
 		{
-			private readonly ImmutableDictionary<object, object> _permanentItems;
 			private readonly Dictionary<object, object>          _items = new Dictionary<object, object>();
+			private readonly ImmutableDictionary<object, object> _permanentItems;
 
 			public ContextItems(ImmutableDictionary<object, object> permanentItems) => _permanentItems = permanentItems;
 

@@ -12,8 +12,6 @@ namespace TSSArt.StateMachine
 	[PublicAPI]
 	public enum DataModelConverterOptions
 	{
-		None = 0,
-
 		/// <summary>
 		///     Serialization of undefined value will cause an exception. Array with undefined element will cause an exception.
 		///     Properties with undefined values in object will be skipped.
@@ -44,8 +42,8 @@ namespace TSSArt.StateMachine
 	[PublicAPI]
 	public static class DataModelConverter
 	{
-		private static readonly JsonSerializerOptions DefaultOptions = CreateOptions(DataModelConverterOptions.None);
-		private static          JsonSerializerOptions GetOptions(DataModelConverterOptions options) => options == DataModelConverterOptions.None ? DefaultOptions : CreateOptions(options);
+		private static readonly JsonSerializerOptions DefaultOptions = CreateOptions(DataModelConverterOptions.UndefinedNotAllowed);
+		private static JsonSerializerOptions GetOptions(DataModelConverterOptions options) => options == DataModelConverterOptions.UndefinedNotAllowed ? DefaultOptions : CreateOptions(options);
 
 		private static JsonSerializerOptions CreateOptions(DataModelConverterOptions options) =>
 				new JsonSerializerOptions

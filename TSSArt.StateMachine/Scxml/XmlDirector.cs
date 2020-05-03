@@ -173,25 +173,25 @@ namespace TSSArt.StateMachine
 		[PublicAPI]
 		protected enum AttributeType
 		{
-			Optional         = 0,
-			Required         = 1,
-			SysIncrement     = 2,
-			SysOptionalFound = 2,
-			SysRequiredFound = 3
+			Optional         = 1,
+			Required         = 2,
+			SysIncrement     = 10,
+			SysOptionalFound = 11,
+			SysRequiredFound = 12
 		}
 
 		[PublicAPI]
 		protected enum ElementType
 		{
-			ZeroToMany         = 0,
-			ZeroToOne          = 1,
-			One                = 2,
-			OneToMany          = 3,
-			SysIncrement       = 4,
-			SysZeroToManyFound = 4,
-			SysZeroToOneFound  = 5,
-			SysOneFound        = 6,
-			SysOneToManyFound  = 7
+			ZeroToMany         = 1,
+			ZeroToOne          = 2,
+			One                = 3,
+			OneToMany          = 4,
+			SysIncrement       = 10,
+			SysZeroToManyFound = 11,
+			SysZeroToOneFound  = 12,
+			SysOneFound        = 13,
+			SysOneToManyFound  = 14
 		}
 
 		protected class Policy<TEntity>

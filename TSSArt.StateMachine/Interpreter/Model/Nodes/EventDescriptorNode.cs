@@ -6,10 +6,7 @@ namespace TSSArt.StateMachine
 	{
 		private readonly IEventDescriptor _eventDescriptor;
 
-		public EventDescriptorNode(IEventDescriptor eventDescriptor)
-		{
-			_eventDescriptor = eventDescriptor;
-		}
+		public EventDescriptorNode(IEventDescriptor eventDescriptor) => _eventDescriptor = eventDescriptor;
 
 	#region Interface IAncestorProvider
 

@@ -53,15 +53,15 @@ namespace TSSArt.StateMachine
 				{
 					switch (pair.Value)
 					{
-						case IExpressionEvaluator expressionEvaluator: 
+						case IExpressionEvaluator expressionEvaluator:
 							builder.Add(pair.Key, await expressionEvaluator.Evaluate(executionContext, token).ConfigureAwait(false));
 							break;
-						
-						case string str: 
+
+						case string str:
 							builder.Add(pair.Key, str);
 							break;
-						
-						default: 
+
+						default:
 							builder.Add(pair.Key, DataModelValue.Undefined);
 							break;
 					}

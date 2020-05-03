@@ -36,12 +36,12 @@ namespace TSSArt.StateMachine.IntegrationTest
 							   password = "123456"
 					   };
 
-			var task = stateMachineHost.Execute(new Uri(ScxmlBase, relativeUri: "signup.scxml"), DataModelValue.FromObject(prms));
+			var task = stateMachineHost.ExecuteAsync(new Uri(ScxmlBase, relativeUri: "signup.scxml"), DataModelValue.FromObject(prms));
 
 			dynamic result = await task.ConfigureAwait(false);
 
 			var prms2 = new { profileUrl = "https://test.tssart.com/wp-admin/profile.php", result.data.cookies };
-			var task2 = stateMachineHost.Execute(new Uri(ScxmlBase, relativeUri: "captureEmail.scxml"), DataModelValue.FromObject(prms2));
+			var task2 = stateMachineHost.ExecuteAsync(new Uri(ScxmlBase, relativeUri: "captureEmail.scxml"), DataModelValue.FromObject(prms2));
 
 			dynamic _ = await task2.ConfigureAwait(false);
 

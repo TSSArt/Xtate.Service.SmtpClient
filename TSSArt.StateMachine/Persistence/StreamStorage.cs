@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -94,26 +95,6 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-#if NETSTANDARD2_1
-		public void Dispose() => DisposeAsync().GetAwaiter().GetResult();
-
-		public async ValueTask DisposeAsync()
-		{
-			if (_disposed)
-			{
-				return;
-			}
-
-			if (_disposeStream)
-			{
-				await _stream.DisposeAsync().ConfigureAwait(false);
-			}
-
-			_inMemoryStorage?.Dispose();
-
-			_disposed = true;
-		}
-#else
 		public void Dispose()
 		{
 			if (_disposed)
@@ -131,13 +112,39 @@ namespace TSSArt.StateMachine
 			_disposed = true;
 		}
 
+#if NETSTANDARD2_1
+		public async ValueTask DisposeAsync()
+		{
+			if (_disposed)
+			{
+				return;
+			}
+
+			if (_disposeStream)
+			{
+				await _stream.DisposeAsync().ConfigureAwait(false);
+			}
+
+			_inMemoryStorage?.Dispose();
+
+			_disposed = true;
+		}
+#else
 		public ValueTask DisposeAsync()
 		{
-			Dispose();
+			try
+			{
+				Dispose();
 
-			return default;
+				return default;
+			}
+			catch (Exception ex)
+			{
+				return new ValueTask(Task.FromException(ex));
+			}
 		}
 #endif
+
 		public static async ValueTask<StreamStorage> CreateAsync(Stream stream, bool disposeStream = true, CancellationToken token = default) =>
 				new StreamStorage(stream, disposeStream)
 				{
@@ -154,6 +161,8 @@ namespace TSSArt.StateMachine
 				   };
 		}
 
+		[SuppressMessage(category: "ReSharper", checkId: "UncatchableException", Justification = "Handle ArgumentOutOfRangeException")]
+		[SuppressMessage(category: "ReSharper", checkId: "CyclomaticComplexity", Justification = "Hard to decompose")]
 		private static async ValueTask<InMemoryStorage?> ReadStream(Stream stream, int rollbackLevel, bool shrink, CancellationToken token)
 		{
 			var total = 0;
@@ -260,7 +269,6 @@ namespace TSSArt.StateMachine
 					return null;
 				}
 
-				//var memory = buf.AsMemory();
 				buf[0] = FinalMark;
 				memoryOffset = FinalMarkLength;
 

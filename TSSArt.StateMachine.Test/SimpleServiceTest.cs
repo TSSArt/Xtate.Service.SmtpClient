@@ -46,7 +46,7 @@ namespace TSSArt.StateMachine.Test
 			await stateMachineHost.StartAsync();
 
 			// Act
-			dynamic result = await stateMachineHost.Execute(stateMachine);
+			dynamic result = await stateMachineHost.ExecuteAsync(stateMachine);
 
 			//Assert
 			Assert.AreEqual("value1", result.str);

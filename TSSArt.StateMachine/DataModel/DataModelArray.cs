@@ -29,22 +29,22 @@ namespace TSSArt.StateMachine
 			SetLength
 		}
 
-		public static readonly DataModelArray Empty = new DataModelArray(DataModelAccess.Constant);
+		public static readonly DataModelArray Empty = new DataModelArray(DataModelAccess.Constant, capacity: 0);
 
 		private readonly List<DataModelDescriptor> _list;
 
 		private DataModelAccess _access;
 
-		public DataModelArray() : this(DataModelAccess.Writable) { }
+		public DataModelArray() : this(capacity: 0) { }
 
-		public DataModelArray(int capacity) => _list = new List<DataModelDescriptor>(capacity);
+		public DataModelArray(int capacity) : this(DataModelAccess.Writable, capacity) { }
 
-		public DataModelArray(bool isReadOnly) : this(isReadOnly ? DataModelAccess.ReadOnly : DataModelAccess.Writable) { }
+		internal DataModelArray(bool isReadOnly, int capacity) : this(isReadOnly ? DataModelAccess.ReadOnly : DataModelAccess.Writable, capacity) { }
 
-		private DataModelArray(DataModelAccess access)
+		private DataModelArray(DataModelAccess access, int capacity)
 		{
 			_access = access;
-			_list = new List<DataModelDescriptor>();
+			_list = new List<DataModelDescriptor>(capacity);
 		}
 
 		public DataModelArray(IEnumerable<DataModelValue> items)
@@ -56,6 +56,14 @@ namespace TSSArt.StateMachine
 			foreach (var value in items)
 			{
 				_list.Add(new DataModelDescriptor(value));
+			}
+		}
+
+		public void EnsureCapacity(int capacity)
+		{
+			if (capacity > _list.Capacity)
+			{
+				_list.Capacity = capacity;
 			}
 		}
 
@@ -498,7 +506,7 @@ namespace TSSArt.StateMachine
 				return (DataModelArray) val;
 			}
 
-			var clone = new DataModelArray(targetAccess);
+			var clone = new DataModelArray(targetAccess, _list.Count);
 
 			map[this] = clone;
 

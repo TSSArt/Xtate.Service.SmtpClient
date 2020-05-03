@@ -19,8 +19,14 @@ namespace TSSArt.StateMachine
 			_invoke = invoke;
 
 			Finalize = invoke.Finalize?.As<FinalizeNode>();
-			_startInvokeEvaluator = invoke.As<IStartInvokeEvaluator>();
-			_cancelInvokeEvaluator = invoke.As<ICancelInvokeEvaluator>();
+
+			var startInvokeEvaluator = invoke.Ancestor?.As<IStartInvokeEvaluator>();
+			Infrastructure.Assert(startInvokeEvaluator != null);
+			_startInvokeEvaluator = startInvokeEvaluator;
+
+			var cancelInvokeEvaluator = invoke.Ancestor?.As<ICancelInvokeEvaluator>();
+			Infrastructure.Assert(cancelInvokeEvaluator != null);
+			_cancelInvokeEvaluator = cancelInvokeEvaluator;
 		}
 
 		public string? InvokeId { get; private set; }
