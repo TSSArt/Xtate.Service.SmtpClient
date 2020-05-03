@@ -142,6 +142,8 @@ namespace TSSArt.StateMachine.EcmaScript
 
 		protected override void Build(ref IExternalScriptExpression externalScriptExpression, ref ExternalScriptExpression externalScriptExpressionProperties)
 		{
+			var _ = externalScriptExpression;
+
 			externalScriptExpression = new EcmaScriptExternalScriptExpressionEvaluator(externalScriptExpressionProperties);
 
 			base.Build(ref externalScriptExpression, ref externalScriptExpressionProperties);
@@ -149,6 +151,8 @@ namespace TSSArt.StateMachine.EcmaScript
 
 		protected override void Build(ref IContentBody contentBody, ref ContentBody contentBodyProperties)
 		{
+			var _ = contentBody;
+
 			contentBody = new EcmaScriptContentBodyEvaluator(contentBodyProperties);
 
 			base.Build(ref contentBody, ref contentBodyProperties);
