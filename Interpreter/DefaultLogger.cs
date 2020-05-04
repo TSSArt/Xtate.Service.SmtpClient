@@ -25,7 +25,7 @@ namespace TSSArt.StateMachine
 			return default;
 		}
 
-#if TRACE
+#if DEBUG
 		public bool IsTracingEnabled => true;
 #else
 		public bool IsTracingEnabled => false;
