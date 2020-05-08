@@ -40,10 +40,10 @@ namespace TSSArt.StateMachine
 
 	#region Interface ICancelInvokeEvaluator
 
-		public virtual ValueTask Cancel(string invokeId, IExecutionContext executionContext, CancellationToken token)
+		public virtual ValueTask Cancel(InvokeId invokeId, IExecutionContext executionContext, CancellationToken token)
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
-			if (string.IsNullOrEmpty(invokeId)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(invokeId));
+			if (invokeId == null) throw new ArgumentNullException(nameof(invokeId));
 
 			return executionContext.CancelInvoke(invokeId, token);
 		}
@@ -68,13 +68,12 @@ namespace TSSArt.StateMachine
 
 	#region Interface IStartInvokeEvaluator
 
-		public virtual async ValueTask<(string InvokeId, string InvokeUniqueId)> Start(string stateId, IExecutionContext executionContext, CancellationToken token)
+		public virtual async ValueTask<InvokeId> Start(IIdentifier stateId, IExecutionContext executionContext, CancellationToken token)
 		{
+			if (stateId == null) throw new ArgumentNullException(nameof(stateId));
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
-			if (string.IsNullOrEmpty(stateId)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(stateId));
 
-			var invokeId = _invoke.Id ?? IdGenerator.NewInvokeId(stateId);
-			var invokeUniqueId = _invoke.Id != null ? IdGenerator.NewInvokeUniqueId() : invokeId;
+			var invokeId = InvokeId.New(stateId, _invoke.Id);
 
 			if (IdLocationEvaluator != null)
 			{
@@ -90,11 +89,11 @@ namespace TSSArt.StateMachine
 
 			Infrastructure.Assert(type != null);
 
-			var invokeData = new InvokeData(invokeId, invokeUniqueId, type, source, rawContent, content, parameters);
+			var invokeData = new InvokeData(invokeId, type, source, rawContent, content, parameters);
 
 			await executionContext.StartInvoke(invokeData, token).ConfigureAwait(false);
 
-			return (invokeId, invokeUniqueId);
+			return invokeId;
 		}
 
 	#endregion

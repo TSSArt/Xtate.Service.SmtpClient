@@ -10,8 +10,8 @@ namespace TSSArt.StateMachine
 
 		bool CanHandle(Uri? type, Uri? target);
 
-		Uri GetTarget(string sessionId);
+		Uri GetTarget(SessionId sessionId);
 
-		ValueTask Dispatch(string sessionId, IOutgoingEvent evt, CancellationToken token);
+		ValueTask Dispatch(SessionId sessionId, IOutgoingEvent evt, CancellationToken token);
 	}
 }

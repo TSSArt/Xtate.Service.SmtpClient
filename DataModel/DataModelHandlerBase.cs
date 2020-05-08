@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -11,7 +11,10 @@ namespace TSSArt.StateMachine
 
 	#region Interface IDataModelHandler
 
-		public virtual void ExecutionContextCreated(IExecutionContext executionContext, IDictionary<string, string> dataModelVars) { }
+		public virtual void ExecutionContextCreated(IExecutionContext executionContext, out ImmutableDictionary<string, string> dataModelVars)
+		{
+			dataModelVars = ImmutableDictionary<string, string>.Empty;
+		}
 
 		void IDataModelHandler.Process(ref IExecutableEntity executableEntity)
 		{

@@ -24,6 +24,8 @@ namespace TSSArt.StateMachine
 
 		public bool IsEventMatch(IEvent evt) => _eventDescriptor.IsEventMatch(evt);
 
+		public string Value => _eventDescriptor.Value;
+
 	#endregion
 
 	#region Interface IStoreSupport
@@ -31,7 +33,7 @@ namespace TSSArt.StateMachine
 		void IStoreSupport.Store(Bucket bucket)
 		{
 			bucket.Add(Key.TypeInfo, TypeInfo.EventDescriptorNode);
-			bucket.Add(Key.Id, _eventDescriptor.As<string>());
+			bucket.Add(Key.Id, _eventDescriptor.Value);
 		}
 
 	#endregion

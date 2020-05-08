@@ -14,10 +14,9 @@ namespace TSSArt.StateMachine
 
 	public class InvokeData
 	{
-		public InvokeData(string invokeId, string invokeUniqueId, Uri type, Uri? source, string? rawContent, DataModelValue content, DataModelValue parameters)
+		public InvokeData(InvokeId invokeId, Uri type, Uri? source, string? rawContent, DataModelValue content, DataModelValue parameters)
 		{
 			InvokeId = invokeId;
-			InvokeUniqueId = invokeUniqueId;
 			Type = type;
 			Source = source;
 			RawContent = rawContent;
@@ -25,13 +24,12 @@ namespace TSSArt.StateMachine
 			Parameters = parameters;
 		}
 
-		public string         InvokeId       { get; }
-		public string         InvokeUniqueId { get; }
-		public Uri            Type           { get; }
-		public Uri?           Source         { get; }
-		public string?        RawContent     { get; }
-		public DataModelValue Content        { get; }
-		public DataModelValue Parameters     { get; }
+		public InvokeId       InvokeId   { get; }
+		public Uri            Type       { get; }
+		public Uri?           Source     { get; }
+		public string?        RawContent { get; }
+		public DataModelValue Content    { get; }
+		public DataModelValue Parameters { get; }
 	}
 
 	public interface IExternalCommunication
@@ -39,10 +37,10 @@ namespace TSSArt.StateMachine
 		ImmutableArray<IIoProcessor> GetIoProcessors();
 
 		ValueTask             StartInvoke(InvokeData invokeData, CancellationToken token);
-		ValueTask             CancelInvoke(string invokeId, CancellationToken token);
-		bool                  IsInvokeActive(string invokeId, string invokeUniqueId);
+		ValueTask             CancelInvoke(InvokeId invokeId, CancellationToken token);
+		bool                  IsInvokeActive(InvokeId invokeId);
 		ValueTask<SendStatus> TrySendEvent(IOutgoingEvent evt, CancellationToken token);
-		ValueTask             ForwardEvent(IEvent evt, string invokeId, CancellationToken token);
-		ValueTask             CancelEvent(string sendId, CancellationToken token);
+		ValueTask             ForwardEvent(IEvent evt, InvokeId invokeId, CancellationToken token);
+		ValueTask             CancelEvent(SendId sendId, CancellationToken token);
 	}
 }

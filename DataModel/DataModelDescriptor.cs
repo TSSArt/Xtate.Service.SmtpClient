@@ -2,14 +2,14 @@
 {
 	public readonly struct DataModelDescriptor
 	{
-		public DataModelDescriptor(DataModelValue value, bool isReadOnly = false)
+		public DataModelDescriptor(DataModelValue value, DataModelAccess access = DataModelAccess.Writable)
 		{
 			Value = value;
-			IsReadOnly = isReadOnly;
+			Access = access;
 		}
 
 		public DataModelValue Value { get; }
 
-		public bool IsReadOnly { get; }
+		public DataModelAccess Access { get; }
 	}
 }

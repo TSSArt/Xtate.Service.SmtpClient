@@ -7,15 +7,10 @@ namespace TSSArt.StateMachine
 {
 	internal readonly struct ExternalCommunicationWrapper
 	{
-		private const string ErrorTypeKey   = "ErrorType";
-		private const string ErrorTypeValue = "Communication";
-		private const string SessionIdKey   = "SessionId";
-		private const string SendIdKey      = "SendId";
-
 		private readonly IExternalCommunication? _externalCommunication;
-		private readonly string                  _sessionId;
+		private readonly SessionId               _sessionId;
 
-		public ExternalCommunicationWrapper(IExternalCommunication? externalCommunication, string sessionId)
+		public ExternalCommunicationWrapper(IExternalCommunication? externalCommunication, SessionId sessionId)
 		{
 			_externalCommunication = externalCommunication;
 			_sessionId = sessionId;
@@ -23,13 +18,13 @@ namespace TSSArt.StateMachine
 
 		public ImmutableArray<IIoProcessor> GetIoProcessors() => _externalCommunication?.GetIoProcessors() ?? default;
 
-		public bool IsCommunicationError(Exception exception, out string? sendId)
+		public bool IsCommunicationError(Exception exception, out SendId? sendId)
 		{
 			for (; exception != null; exception = exception.InnerException)
 			{
-				if (Equals(exception.Data[ErrorTypeKey], ErrorTypeValue) && Equals(exception.Data[SessionIdKey], _sessionId))
+				if (exception is StateMachineCommunicationException ex && ex.SessionId == _sessionId)
 				{
-					sendId = (string) exception.Data[SendIdKey];
+					sendId = ex.SendId;
 
 					return true;
 				}
@@ -38,17 +33,6 @@ namespace TSSArt.StateMachine
 			sendId = null;
 
 			return false;
-		}
-
-		private void MarkAsCommunicationError(Exception exception, string? sendId = null)
-		{
-			exception.Data[ErrorTypeKey] = ErrorTypeValue;
-			exception.Data[SessionIdKey] = _sessionId;
-
-			if (sendId != null)
-			{
-				exception.Data[SendIdKey] = sendId;
-			}
 		}
 
 		public async ValueTask StartInvoke(InvokeData invokeData, CancellationToken token)
@@ -64,12 +48,11 @@ namespace TSSArt.StateMachine
 			}
 			catch (Exception ex)
 			{
-				MarkAsCommunicationError(ex);
-				throw;
+				throw new StateMachineCommunicationException(ex, _sessionId);
 			}
 		}
 
-		public async ValueTask CancelInvoke(string invokeId, CancellationToken token)
+		public async ValueTask CancelInvoke(InvokeId invokeId, CancellationToken token)
 		{
 			try
 			{
@@ -82,12 +65,11 @@ namespace TSSArt.StateMachine
 			}
 			catch (Exception ex)
 			{
-				MarkAsCommunicationError(ex);
-				throw;
+				throw new StateMachineCommunicationException(ex, _sessionId);
 			}
 		}
 
-		public bool IsInvokeActive(string invokeId, string invokeUniqueId) => _externalCommunication?.IsInvokeActive(invokeId, invokeUniqueId) == true;
+		public bool IsInvokeActive(InvokeId invokeId) => _externalCommunication?.IsInvokeActive(invokeId) == true;
 
 		public async ValueTask<SendStatus> TrySendEvent(IOutgoingEvent evt, CancellationToken token)
 		{
@@ -104,12 +86,11 @@ namespace TSSArt.StateMachine
 			}
 			catch (Exception ex)
 			{
-				MarkAsCommunicationError(ex, evt.SendId);
-				throw;
+				throw new StateMachineCommunicationException(ex, _sessionId, evt.SendId);
 			}
 		}
 
-		public async ValueTask ForwardEvent(IEvent evt, string invokeId, CancellationToken token)
+		public async ValueTask ForwardEvent(IEvent evt, InvokeId invokeId, CancellationToken token)
 		{
 			try
 			{
@@ -122,12 +103,11 @@ namespace TSSArt.StateMachine
 			}
 			catch (Exception ex)
 			{
-				MarkAsCommunicationError(ex);
-				throw;
+				throw new StateMachineCommunicationException(ex, _sessionId);
 			}
 		}
 
-		public async ValueTask CancelEvent(string sendId, CancellationToken token)
+		public async ValueTask CancelEvent(SendId sendId, CancellationToken token)
 		{
 			try
 			{
@@ -140,8 +120,7 @@ namespace TSSArt.StateMachine
 			}
 			catch (Exception ex)
 			{
-				MarkAsCommunicationError(ex, sendId);
-				throw;
+				throw new StateMachineCommunicationException(ex, _sessionId, sendId);
 			}
 		}
 

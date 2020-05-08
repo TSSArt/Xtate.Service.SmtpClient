@@ -31,22 +31,15 @@ namespace TSSArt.StateMachine
 		private DataModelAccess _access;
 
 		public DataModelObject() : this(capacity: 0) { }
-		
+
 		public DataModelObject(int capacity) : this(DataModelAccess.Writable, capacity) { }
-		
+
 		internal DataModelObject(bool isReadOnly, int capacity) : this(isReadOnly ? DataModelAccess.ReadOnly : DataModelAccess.Writable, capacity) { }
 
 		private DataModelObject(DataModelAccess access, int capacity)
 		{
 			_access = access;
 			_properties = new Dictionary<string, DataModelDescriptor>(capacity);
-		}
-
-		public void EnsureCapacity(int capacity)
-		{
-#if NETSTANDARD2_1
-			_properties.EnsureCapacity(capacity);
-#endif
 		}
 
 		public DataModelAccess Access
@@ -84,28 +77,13 @@ namespace TSSArt.StateMachine
 		}
 
 		public ICollection<string> Properties => _properties.Keys;
-		
+
 		public int Count => _properties.Count;
 
 		public DataModelValue this[string property]
 		{
-			get
-			{
-				if (property == null) throw new ArgumentNullException(nameof(property));
-
-				return GetDescriptor(property).Value;
-			}
-			set
-			{
-				if (property == null) throw new ArgumentNullException(nameof(property));
-
-				if (!CanSet(property))
-				{
-					throw ObjectCantBeModifiedException();
-				}
-
-				SetInternal(property, new DataModelDescriptor(value));
-			}
+			get => GetDescriptor(property).Value;
+			set => SetProperty(property, new DataModelDescriptor(value), DataModelAccess.Writable, throwOnDeny: true);
 		}
 
 	#region Interface IDynamicMetaObjectProvider
@@ -138,6 +116,21 @@ namespace TSSArt.StateMachine
 
 	#endregion
 
+		public void EnsureCapacity(int capacity)
+		{
+			if (_access == DataModelAccess.Constant)
+			{
+				return;
+			}
+
+#if NETSTANDARD2_1
+			_properties.EnsureCapacity(capacity);
+#else
+			var _ = _properties;
+			var __ = capacity;
+#endif
+		}
+
 		public event ChangedHandler? Changed;
 
 		public void MakeReadOnly() => Access = DataModelAccess.ReadOnly;
@@ -150,66 +143,96 @@ namespace TSSArt.StateMachine
 
 		public DataModelObject AsConstant() => DeepClone(DataModelAccess.Constant);
 
-		private static InvalidOperationException ObjectCantBeModifiedException() => new InvalidOperationException(Resources.Exception_Object_can_not_be_modified);
-
 		internal DataModelDescriptor GetDescriptor(string property) => _properties.TryGetValue(property, out var descriptor) ? descriptor : new DataModelDescriptor(DataModelValue.Undefined);
 
-		internal void SetInternal(string property, DataModelDescriptor descriptor)
+		private static bool NoAccess(DataModelAccess objectAccess, DataModelAccess requestedAccess, bool throwOnDeny)
 		{
-			if (property == null) throw new ArgumentNullException(nameof(property));
-
-			if (_access == DataModelAccess.Constant)
+			if (objectAccess == DataModelAccess.Writable)
 			{
-				throw ObjectCantBeModifiedException();
+				return false;
+			}
+
+			if (objectAccess != DataModelAccess.Constant && requestedAccess == DataModelAccess.ReadOnly)
+			{
+				return false;
+			}
+
+			if (throwOnDeny)
+			{
+				throw new InvalidOperationException(Resources.Exception_Object_can_not_be_modified);
+			}
+
+			return true;
+		}
+
+		public bool CanSet(string property) => SetProperty(property, descriptor: default, DataModelAccess.Constant, throwOnDeny: false);
+
+		private bool SetProperty(string property, DataModelDescriptor descriptor, DataModelAccess requestedAccess, bool throwOnDeny)
+		{
+			if (NoAccess(_access, requestedAccess, throwOnDeny))
+			{
+				return false;
 			}
 
 			if (_properties.TryGetValue(property, out var oldDescriptor))
 			{
+				if (NoAccess(oldDescriptor.Access, requestedAccess, throwOnDeny))
+				{
+					return false;
+				}
+
+				if (requestedAccess != DataModelAccess.Constant)
+				{
+					Changed?.Invoke(ChangedAction.Remove, property, oldDescriptor);
+				}
+			}
+
+			if (requestedAccess != DataModelAccess.Constant)
+			{
+				_properties[property] = descriptor;
+
+				Changed?.Invoke(ChangedAction.Set, property, descriptor);
+			}
+
+			return true;
+		}
+
+		public bool CanRemove(string property) => RemoveProperty(property, DataModelAccess.Constant, throwOnDeny: false);
+
+		private bool RemoveProperty(string property, DataModelAccess requestedAccess, bool throwOnDeny)
+		{
+			if (NoAccess(_access, requestedAccess, throwOnDeny))
+			{
+				return false;
+			}
+
+			if (!_properties.TryGetValue(property, out var oldDescriptor))
+			{
+				return false;
+			}
+
+			if (NoAccess(oldDescriptor.Access, requestedAccess, throwOnDeny))
+			{
+				return false;
+			}
+
+			if (requestedAccess != DataModelAccess.Constant)
+			{
 				Changed?.Invoke(ChangedAction.Remove, property, oldDescriptor);
+
+				_properties.Remove(property);
 			}
 
-			_properties[property] = descriptor;
-
-			Changed?.Invoke(ChangedAction.Set, property, descriptor);
+			return true;
 		}
 
-		internal void RemoveInternal(string property)
-		{
-			if (property == null) throw new ArgumentNullException(nameof(property));
+		internal bool SetInternal(string property, DataModelDescriptor descriptor, bool throwOnDeny = true) => SetProperty(property, descriptor, DataModelAccess.ReadOnly, throwOnDeny);
 
-			if (_access == DataModelAccess.Constant)
-			{
-				throw ObjectCantBeModifiedException();
-			}
+		internal bool RemoveInternal(string property, bool throwOnDeny = true) => RemoveProperty(property, DataModelAccess.ReadOnly, throwOnDeny);
 
-			if (_properties.TryGetValue(property, out var oldDescriptor))
-			{
-				Changed?.Invoke(ChangedAction.Remove, property, oldDescriptor);
-			}
+		public bool Contains(string property) => _properties.ContainsKey(property);
 
-			_properties.Remove(property);
-		}
-
-		public bool Contains(string property)
-		{
-			if (property == null) throw new ArgumentNullException(nameof(property));
-
-			return _properties.ContainsKey(property);
-		}
-
-		public bool CanSet(string property) => _access == DataModelAccess.Writable && !(_properties.TryGetValue(property, out var descriptor) && descriptor.IsReadOnly);
-
-		public bool CanRemove(string property) => _access == DataModelAccess.Writable && !(_properties.TryGetValue(property, out var descriptor) && descriptor.IsReadOnly);
-
-		public void Remove(string property)
-		{
-			if (!CanRemove(property))
-			{
-				throw ObjectCantBeModifiedException();
-			}
-
-			RemoveInternal(property);
-		}
+		public void Remove(string property) => RemoveProperty(property, DataModelAccess.Writable, throwOnDeny: true);
 
 		public DataModelObject DeepClone(DataModelAccess targetAccess)
 		{
@@ -246,7 +269,7 @@ namespace TSSArt.StateMachine
 
 			foreach (var pair in _properties)
 			{
-				clone._properties[pair.Key] = new DataModelDescriptor(pair.Value.Value.DeepCloneWithMap(targetAccess, ref map), targetAccess != DataModelAccess.Writable);
+				clone._properties[pair.Key] = new DataModelDescriptor(pair.Value.Value.DeepCloneWithMap(targetAccess, ref map), targetAccess);
 			}
 
 			return clone;

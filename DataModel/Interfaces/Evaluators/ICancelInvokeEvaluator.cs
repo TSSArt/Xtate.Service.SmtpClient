@@ -7,6 +7,6 @@ namespace TSSArt.StateMachine
 	[PublicAPI]
 	public interface ICancelInvokeEvaluator
 	{
-		ValueTask Cancel(string invokeId, IExecutionContext executionContext, CancellationToken token);
+		ValueTask Cancel(InvokeId invokeId, IExecutionContext executionContext, CancellationToken token);
 	}
 }

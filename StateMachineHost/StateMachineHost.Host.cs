@@ -7,18 +7,18 @@ namespace TSSArt.StateMachine
 	{
 	#region Interface IHost
 
-		ValueTask<string> IHost.StartStateMachine(StateMachineOrigin origin, DataModelValue parameters, CancellationToken token) => Start(origin, parameters, token);
+		ValueTask<SessionId> IHost.StartStateMachine(StateMachineOrigin origin, DataModelValue parameters, CancellationToken token) => Start(origin, parameters, token);
 
 		ValueTask<DataModelValue> IHost.ExecuteStateMachine(StateMachineOrigin origin, DataModelValue parameters, CancellationToken token) => ExecuteAsync(origin, parameters, token);
 
-		ValueTask IHost.DestroyStateMachine(string sessionId, CancellationToken token) => GetCurrentContext().DestroyStateMachine(sessionId);
+		ValueTask IHost.DestroyStateMachine(SessionId sessionId, CancellationToken token) => GetCurrentContext().DestroyStateMachine(sessionId);
 
 	#endregion
 
-		private async ValueTask<string> Start(StateMachineOrigin origin, DataModelValue parameters, CancellationToken token)
+		private async ValueTask<SessionId> Start(StateMachineOrigin origin, DataModelValue parameters, CancellationToken token)
 		{
 			var context = GetCurrentContext();
-			var sessionId = IdGenerator.NewSessionId();
+			var sessionId = SessionId.New();
 			var errorProcessor = CreateErrorProcessor(sessionId, origin);
 
 			var controller = await context.CreateAndAddStateMachine(sessionId, origin, parameters, errorProcessor, token).ConfigureAwait(false);
@@ -31,7 +31,7 @@ namespace TSSArt.StateMachine
 		private async ValueTask<DataModelValue> ExecuteAsync(StateMachineOrigin origin, DataModelValue parameters, CancellationToken token)
 		{
 			var context = GetCurrentContext();
-			var sessionId = IdGenerator.NewSessionId();
+			var sessionId = SessionId.New();
 			var errorProcessor = CreateErrorProcessor(sessionId, origin);
 
 			var controller = await context.CreateAndAddStateMachine(sessionId, origin, parameters, errorProcessor, token).ConfigureAwait(false);

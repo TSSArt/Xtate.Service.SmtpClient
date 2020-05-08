@@ -8,14 +8,10 @@ namespace TSSArt.StateMachine
 {
 	internal readonly struct LoggerWrapper
 	{
-		private const string ErrorTypeKey   = "ErrorType";
-		private const string ErrorTypeValue = "Platform";
-		private const string SessionIdKey   = "SessionId";
+		private readonly ILogger   _logger;
+		private readonly SessionId _sessionId;
 
-		private readonly ILogger _logger;
-		private readonly string  _sessionId;
-
-		public LoggerWrapper(ILogger logger, string sessionId)
+		public LoggerWrapper(ILogger logger, SessionId sessionId)
 		{
 			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
 			_sessionId = sessionId ?? throw new ArgumentNullException(nameof(sessionId));
@@ -25,7 +21,7 @@ namespace TSSArt.StateMachine
 		{
 			for (; exception != null; exception = exception.InnerException)
 			{
-				if (Equals(exception.Data[ErrorTypeKey], ErrorTypeValue) && Equals(exception.Data[SessionIdKey], _sessionId))
+				if (exception is StateMachinePlatformException ex && ex.SessionId == _sessionId)
 				{
 					return true;
 				}
@@ -42,9 +38,7 @@ namespace TSSArt.StateMachine
 			}
 			catch (Exception ex)
 			{
-				MarkAsPlatformError(ex);
-
-				throw;
+				throw new StateMachinePlatformException(ex, _sessionId);
 			}
 		}
 
@@ -56,16 +50,8 @@ namespace TSSArt.StateMachine
 			}
 			catch (Exception ex)
 			{
-				MarkAsPlatformError(ex);
-
-				throw;
+				throw new StateMachinePlatformException(ex, _sessionId);
 			}
-		}
-
-		private void MarkAsPlatformError(Exception exception)
-		{
-			exception.Data[ErrorTypeKey] = ErrorTypeValue;
-			exception.Data[SessionIdKey] = _sessionId;
 		}
 
 		public void ProcessingEvent(IEvent evt)
@@ -85,7 +71,7 @@ namespace TSSArt.StateMachine
 
 			if (_logger.IsTracingEnabled)
 			{
-				_logger.TraceEnteringState(_sessionId, state.Id.As<string>());
+				_logger.TraceEnteringState(_sessionId, state.Id);
 			}
 		}
 
@@ -95,7 +81,7 @@ namespace TSSArt.StateMachine
 
 			if (_logger.IsTracingEnabled)
 			{
-				_logger.TraceExitingState(_sessionId, state.Id.As<string>());
+				_logger.TraceExitingState(_sessionId, state.Id);
 			}
 		}
 
@@ -116,7 +102,7 @@ namespace TSSArt.StateMachine
 				return null;
 			}
 
-			return string.Join(separator: @" ", list.Select(id => id.As<string>()));
+			return string.Join(separator: @" ", list.Select(id => id.Value));
 		}
 
 		private static string? ToString(ImmutableArray<IEventDescriptor> list)
@@ -126,7 +112,7 @@ namespace TSSArt.StateMachine
 				return null;
 			}
 
-			return string.Join(separator: @" ", list.Select(id => id.As<string>()));
+			return string.Join(separator: @" ", list.Select(id => id.Value));
 		}
 	}
 }

@@ -8,11 +8,11 @@ namespace TSSArt.StateMachine
 	public sealed class DetailedErrorProcessor : IErrorProcessor
 	{
 		private readonly StateMachineOrigin _origin;
-		private readonly string?            _sessionId;
+		private readonly SessionId?         _sessionId;
 
 		private ImmutableArray<ErrorItem>.Builder? _errors;
 
-		public DetailedErrorProcessor(string? sessionId, StateMachineOrigin origin)
+		public DetailedErrorProcessor(SessionId? sessionId, StateMachineOrigin origin)
 		{
 			_sessionId = sessionId;
 			_origin = origin;

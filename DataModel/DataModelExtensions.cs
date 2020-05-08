@@ -11,7 +11,7 @@ namespace TSSArt.StateMachine
 		{
 			if (enumerable == null) throw new ArgumentNullException(nameof(enumerable));
 
-			var dataModelArray = enumerable is ICollection<T> collection ? new DataModelArray(collection.Count) : new DataModelArray();
+			var dataModelArray = new DataModelArray(enumerable.Capacity());
 
 			foreach (var item in enumerable)
 			{
@@ -27,7 +27,7 @@ namespace TSSArt.StateMachine
 		{
 			if (enumerable == null) throw new ArgumentNullException(nameof(enumerable));
 
-			var dataModelObject = new DataModelObject();
+			var dataModelObject = new DataModelObject(enumerable.Capacity());
 
 			foreach (var item in enumerable)
 			{

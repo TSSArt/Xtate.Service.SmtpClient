@@ -18,9 +18,9 @@ namespace TSSArt.StateMachine
 		public static readonly ImmutableArray<IIdentifier> ErrorCommunication = ImmutableArray.Create(ErrorIdentifier, (Identifier) @"communication");
 		public static readonly ImmutableArray<IIdentifier> ErrorPlatform      = ImmutableArray.Create(ErrorIdentifier, (Identifier) @"platform");
 
-		internal static ImmutableArray<IIdentifier> GetDoneStateNameParts(IIdentifier id) => GetNameParts(DoneIdentifier, StateIdentifier, id.As<string>());
+		internal static ImmutableArray<IIdentifier> GetDoneStateNameParts(IIdentifier id) => GetNameParts(DoneIdentifier, StateIdentifier, id.Value);
 
-		internal static ImmutableArray<IIdentifier> GetDoneInvokeNameParts(string invokeId) => GetNameParts(DoneIdentifier, InvokeIdentifier, invokeId);
+		internal static ImmutableArray<IIdentifier> GetDoneInvokeNameParts(InvokeId invokeId) => GetNameParts(DoneIdentifier, InvokeIdentifier, invokeId.Value);
 
 		private static ImmutableArray<IIdentifier> GetNameParts(IIdentifier id1, IIdentifier id2, string name)
 		{
@@ -80,7 +80,7 @@ namespace TSSArt.StateMachine
 		{
 			if (nameParts.IsDefaultOrEmpty) throw new ArgumentException(Resources.Exception_ValueCantBeEmpty, nameof(nameParts));
 
-			return string.Join(separator: @".", nameParts.Select(p => p.As<string>()));
+			return string.Join(separator: @".", nameParts.Select(p => p.Value));
 		}
 
 		public static void WriteXml(XmlWriter writer, ImmutableArray<IIdentifier> nameParts)
@@ -96,7 +96,7 @@ namespace TSSArt.StateMachine
 					writer.WriteString(@".");
 				}
 
-				writer.WriteString(part.As<string>());
+				writer.WriteString(part.Value);
 
 				writeDelimiter = true;
 			}

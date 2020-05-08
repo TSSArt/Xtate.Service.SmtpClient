@@ -7,6 +7,6 @@ namespace TSSArt.StateMachine
 	[PublicAPI]
 	public interface IStartInvokeEvaluator
 	{
-		ValueTask<(string InvokeId, string InvokeUniqueId)> Start(string stateId, IExecutionContext executionContext, CancellationToken token);
+		ValueTask<InvokeId> Start(IIdentifier stateId, IExecutionContext executionContext, CancellationToken token);
 	}
 }

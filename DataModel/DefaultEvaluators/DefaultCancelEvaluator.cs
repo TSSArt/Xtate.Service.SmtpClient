@@ -44,7 +44,7 @@ namespace TSSArt.StateMachine
 				throw new StateMachineExecutionException(Resources.Exception_SendIdIsEmpty);
 			}
 
-			await executionContext.Cancel(sendId, token).ConfigureAwait(false);
+			await executionContext.Cancel(StateMachine.SendId.FromString(sendId), token).ConfigureAwait(false);
 		}
 
 	#endregion

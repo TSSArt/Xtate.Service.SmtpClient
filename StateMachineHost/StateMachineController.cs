@@ -29,7 +29,7 @@ namespace TSSArt.StateMachine
 		private CancellationTokenSource? _suspendOnIdleTokenSource;
 		private CancellationTokenSource? _suspendTokenSource;
 
-		public StateMachineController(string sessionId, IStateMachineOptions? options, IStateMachine? stateMachine, Uri? stateMachineLocation,
+		public StateMachineController(SessionId sessionId, IStateMachineOptions? options, IStateMachine? stateMachine, Uri? stateMachineLocation,
 									  IStateMachineHost stateMachineHost, TimeSpan idlePeriod, in InterpreterOptions defaultOptions)
 		{
 			SessionId = sessionId;
@@ -49,7 +49,7 @@ namespace TSSArt.StateMachine
 
 		protected virtual Channel<IEvent> Channel { get; }
 
-		public string SessionId { get; }
+		public SessionId SessionId { get; }
 
 		public Uri? StateMachineLocation { get; }
 
@@ -91,7 +91,7 @@ namespace TSSArt.StateMachine
 			return sendStatus;
 		}
 
-		async ValueTask IExternalCommunication.CancelEvent(string sendId, CancellationToken token)
+		async ValueTask IExternalCommunication.CancelEvent(SendId sendId, CancellationToken token)
 		{
 			foreach (var evt in _scheduledEvents)
 			{
@@ -106,11 +106,11 @@ namespace TSSArt.StateMachine
 
 		ValueTask IExternalCommunication.StartInvoke(InvokeData invokeData, CancellationToken token) => _stateMachineHost.StartInvoke(SessionId, invokeData, token);
 
-		ValueTask IExternalCommunication.CancelInvoke(string invokeId, CancellationToken token) => _stateMachineHost.CancelInvoke(SessionId, invokeId, token);
+		ValueTask IExternalCommunication.CancelInvoke(InvokeId invokeId, CancellationToken token) => _stateMachineHost.CancelInvoke(SessionId, invokeId, token);
 
-		bool IExternalCommunication.IsInvokeActive(string invokeId, string invokeUniqueId) => _stateMachineHost.IsInvokeActive(SessionId, invokeId, invokeUniqueId);
+		bool IExternalCommunication.IsInvokeActive(InvokeId invokeId) => _stateMachineHost.IsInvokeActive(SessionId, invokeId);
 
-		ValueTask IExternalCommunication.ForwardEvent(IEvent evt, string invokeId, CancellationToken token) => _stateMachineHost.ForwardEvent(SessionId, evt, invokeId, token);
+		ValueTask IExternalCommunication.ForwardEvent(IEvent evt, InvokeId invokeId, CancellationToken token) => _stateMachineHost.ForwardEvent(SessionId, evt, invokeId, token);
 
 	#endregion
 
@@ -315,7 +315,7 @@ namespace TSSArt.StateMachine
 				}
 				catch (Exception ex)
 				{
-					await _logger.LogError(ErrorType.Communication, SessionId, _options?.Name, scheduledEvent.Event.SendId, ex, token: default).ConfigureAwait(false);
+					await _logger.LogError(ErrorType.Communication, SessionId, _options?.Name, scheduledEvent.Event.SendId?.Value, ex, token: default).ConfigureAwait(false);
 				}
 			}
 			finally

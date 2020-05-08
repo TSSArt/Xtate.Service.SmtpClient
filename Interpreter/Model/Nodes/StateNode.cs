@@ -11,7 +11,7 @@ namespace TSSArt.StateMachine
 		{
 			_state = state;
 
-			var id = state.Id ?? new IdentifierNode(new RuntimeIdentifier());
+			var id = state.Id ?? new IdentifierNode(Identifier.New());
 			var transitions = state.Transitions.AsArrayOf<ITransition, TransitionNode>(true);
 			var invokeList = state.Invoke.AsArrayOf<IInvoke, InvokeNode>(true);
 

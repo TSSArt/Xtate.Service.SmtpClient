@@ -69,7 +69,7 @@ namespace TSSArt.StateMachine
 
 			if (_idLocation != null)
 			{
-				await _idLocation.Assign(executionContext, sessionId, token).ConfigureAwait(false);
+				await _idLocation.Assign(executionContext, new DataModelValue(sessionId), token).ConfigureAwait(false);
 			}
 		}
 

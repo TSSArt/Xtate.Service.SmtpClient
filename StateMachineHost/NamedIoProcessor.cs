@@ -60,9 +60,9 @@ namespace TSSArt.StateMachine
 
 	#region Interface IIoProcessor
 
-		Uri IIoProcessor.GetTarget(string sessionId) => GetTarget(sessionId);
+		Uri IIoProcessor.GetTarget(SessionId sessionId) => GetTarget(sessionId);
 
-		ValueTask IIoProcessor.Dispatch(string sessionId, IOutgoingEvent evt, CancellationToken token) => OutgoingEvent(sessionId, evt, token);
+		ValueTask IIoProcessor.Dispatch(SessionId sessionId, IOutgoingEvent evt, CancellationToken token) => OutgoingEvent(sessionId, evt, token);
 
 		bool IIoProcessor.CanHandle(Uri? type, Uri? target) => type == null || FullUriComparer.Instance.Equals(type, IoProcessorId) || FullUriComparer.Instance.Equals(type, IoProcessorAliasId);
 
@@ -70,9 +70,9 @@ namespace TSSArt.StateMachine
 
 	#endregion
 
-		private Uri GetTarget(string sessionId, bool isLoopback = false) => new Uri(isLoopback ? _loopbackBaseUri : _baseUri, "#_scxml_" + sessionId);
+		private Uri GetTarget(SessionId sessionId, bool isLoopback = false) => new Uri(isLoopback ? _loopbackBaseUri : _baseUri, "#_scxml_" + sessionId.Value);
 
-		private async ValueTask OutgoingEvent(string sessionId, IOutgoingEvent evt, CancellationToken token)
+		private async ValueTask OutgoingEvent(SessionId sessionId, IOutgoingEvent evt, CancellationToken token)
 		{
 			if (evt.Target == null)
 			{
@@ -96,7 +96,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private static async ValueTask SendEventToPipe(string server, string pipeName, string sessionId, EventObject eventObject, CancellationToken token)
+		private static async ValueTask SendEventToPipe(string server, string pipeName, SessionId? sessionId, EventObject eventObject, CancellationToken token)
 		{
 			var pipeStream = new NamedPipeClientStream(server, pipeName, PipeDirection.InOut, DefaultPipeOptions);
 			var memoryStream = new MemoryStream();
@@ -146,7 +146,7 @@ namespace TSSArt.StateMachine
 					memoryStream.Position = 0;
 					var message = Deserialize(memoryStream, b => new EventMessage(b));
 
-					if (!string.IsNullOrEmpty(message.SessionId))
+					if (message.SessionId != null)
 					{
 						await _eventConsumer.Dispatch(message.SessionId, message.Event, _stopTokenSource.Token).ConfigureAwait(false);
 					}
@@ -164,7 +164,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private static string ExtractSessionId(Uri target)
+		private static SessionId ExtractSessionId(Uri target)
 		{
 			var fragment = target.GetComponents(UriComponents.Fragment, UriFormat.Unescaped);
 
@@ -172,7 +172,7 @@ namespace TSSArt.StateMachine
 
 			if (fragment.StartsWith(prefix))
 			{
-				return fragment.Substring(prefix.Length);
+				return SessionId.FromString(fragment.Substring(prefix.Length));
 			}
 
 			throw new StateMachineProcessorException(Resources.Exception_Target_wrong_format);
@@ -243,15 +243,15 @@ namespace TSSArt.StateMachine
 		{
 			var eventObject = new EventObject(EventType.External, new EventEntity("$"));
 
-			return SendEventToPipe(server: ".", _pipeName, string.Empty, eventObject, token);
+			return SendEventToPipe(server: ".", _pipeName, sessionId: null, eventObject, token);
 		}
 
 		private readonly struct EventMessage : IStoreSupport
 		{
 			public readonly EventObject Event;
-			public readonly string      SessionId;
+			public readonly SessionId?  SessionId;
 
-			public EventMessage(string sessionId, EventObject evt)
+			public EventMessage(SessionId? sessionId, EventObject evt)
 			{
 				SessionId = sessionId;
 				Event = evt;
@@ -264,7 +264,7 @@ namespace TSSArt.StateMachine
 					throw new ArgumentException(Resources.Exception_Invalid_TypeInfo_value);
 				}
 
-				SessionId = bucket.GetString(Key.SessionId) ?? throw new StateMachineProcessorException(Resources.Exception_SessionId_is_empty);
+				SessionId = bucket.GetSessionId(Key.SessionId);
 				Event = new EventObject(bucket.Nested(Key.Event));
 			}
 
@@ -273,7 +273,7 @@ namespace TSSArt.StateMachine
 			public void Store(Bucket bucket)
 			{
 				bucket.Add(Key.TypeInfo, TypeInfo.Message);
-				bucket.Add(Key.SessionId, SessionId);
+				bucket.AddId(Key.SessionId, SessionId);
 				bucket.AddEntity(Key.Event, Event);
 			}
 

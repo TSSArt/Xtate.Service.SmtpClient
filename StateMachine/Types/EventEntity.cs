@@ -25,7 +25,7 @@ namespace TSSArt.StateMachine
 		public DataModelValue              Data      { get; set; }
 		public int                         DelayMs   { get; set; }
 		public ImmutableArray<IIdentifier> NameParts { get; set; }
-		public string?                     SendId    { get; set; }
+		public SendId?                     SendId    { get; set; }
 		public Uri?                        Target    { get; set; }
 		public Uri?                        Type      { get; set; }
 

@@ -29,9 +29,9 @@ namespace TSSArt.StateMachine
 
 	#region Interface IIoProcessor
 
-		Uri IIoProcessor.GetTarget(string sessionId) => GetTarget(sessionId);
+		Uri IIoProcessor.GetTarget(SessionId sessionId) => GetTarget(sessionId);
 
-		ValueTask IIoProcessor.Dispatch(string sessionId, IOutgoingEvent evt, CancellationToken token) => OutgoingEvent(sessionId, evt, token);
+		ValueTask IIoProcessor.Dispatch(SessionId sessionId, IOutgoingEvent evt, CancellationToken token) => OutgoingEvent(sessionId, evt, token);
 
 		bool IIoProcessor.CanHandle(Uri? type, Uri? target) => FullUriComparer.Instance.Equals(type, IoProcessorId) || FullUriComparer.Instance.Equals(type, _ioProcessorAliasId);
 
@@ -39,10 +39,10 @@ namespace TSSArt.StateMachine
 
 	#endregion
 
-		protected abstract Uri GetTarget(string sessionId);
+		protected abstract Uri GetTarget(SessionId sessionId);
 
-		protected abstract ValueTask OutgoingEvent(string sessionId, IOutgoingEvent evt, CancellationToken token);
+		protected abstract ValueTask OutgoingEvent(SessionId sessionId, IOutgoingEvent evt, CancellationToken token);
 
-		protected ValueTask IncomingEvent(string sessionId, IEvent evt, CancellationToken token) => _eventConsumer.Dispatch(sessionId, evt, token);
+		protected ValueTask IncomingEvent(SessionId sessionId, IEvent evt, CancellationToken token) => _eventConsumer.Dispatch(sessionId, evt, token);
 	}
 }

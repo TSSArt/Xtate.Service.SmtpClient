@@ -4,18 +4,17 @@ using TSSArt.StateMachine.Annotations;
 namespace TSSArt.StateMachine
 {
 	[PublicAPI]
-	public sealed class EventDescriptor : IEventDescriptor, IAncestorProvider
+	public sealed class EventDescriptor : IEventDescriptor
 	{
 		private static readonly char[] Dot = { '.' };
 
 		private readonly IIdentifier[] _parts;
-		private readonly string        _val;
 
 		private EventDescriptor(string val)
 		{
 			if (string.IsNullOrEmpty(val)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(val));
 
-			_val = val;
+			Value = val;
 
 			var parts = val.Split(Dot, StringSplitOptions.None);
 			var length = parts.Length;
@@ -31,12 +30,6 @@ namespace TSSArt.StateMachine
 				_parts[i] = (Identifier) parts[i];
 			}
 		}
-
-	#region Interface IAncestorProvider
-
-		object IAncestorProvider.Ancestor => _val;
-
-	#endregion
 
 	#region Interface IEventDescriptor
 
@@ -59,6 +52,8 @@ namespace TSSArt.StateMachine
 
 			return true;
 		}
+
+		public string Value { get; }
 
 	#endregion
 

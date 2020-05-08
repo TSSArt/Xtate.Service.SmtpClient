@@ -20,12 +20,18 @@ namespace TSSArt.StateMachine
 
 	#endregion
 
+	#region Interface IIdentifier
+
+		public string Value => _identifier.Value;
+
+	#endregion
+
 	#region Interface IStoreSupport
 
 		void IStoreSupport.Store(Bucket bucket)
 		{
 			bucket.Add(Key.TypeInfo, TypeInfo.IdentifierNode);
-			bucket.Add(Key.Id, _identifier.As<string>());
+			bucket.Add(Key.Id, _identifier.Value);
 		}
 
 	#endregion

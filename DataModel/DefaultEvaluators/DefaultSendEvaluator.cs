@@ -54,7 +54,7 @@ namespace TSSArt.StateMachine
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
 
-			var sendId = _send.Id ?? IdGenerator.NewSendId();
+			var sendId = _send.Id != null ? SendId.FromString(_send.Id) : SendId.New();
 
 			if (IdLocationEvaluator != null)
 			{

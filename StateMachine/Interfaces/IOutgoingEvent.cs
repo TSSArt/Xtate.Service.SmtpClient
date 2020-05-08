@@ -5,7 +5,7 @@ namespace TSSArt.StateMachine
 {
 	public interface IOutgoingEvent : IEntity
 	{
-		string?                     SendId    { get; }
+		SendId?                     SendId    { get; }
 		ImmutableArray<IIdentifier> NameParts { get; }
 		Uri?                        Target    { get; }
 		Uri?                        Type      { get; }
