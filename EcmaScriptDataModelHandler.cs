@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using Jint.Parser;
 using Jint.Parser.Ast;
 
@@ -17,16 +17,15 @@ namespace TSSArt.StateMachine.EcmaScript
 
 		private EcmaScriptDataModelHandler(IErrorProcessor errorProcessor) : base(errorProcessor) { }
 
-		public override void ExecutionContextCreated(IExecutionContext executionContext, IDictionary<string, string> dataModelVars)
+		public override void ExecutionContextCreated(IExecutionContext executionContext, out ImmutableDictionary<string, string> dataModelVars)
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
-			if (dataModelVars == null) throw new ArgumentNullException(nameof(dataModelVars));
 
-			base.ExecutionContextCreated(executionContext, dataModelVars);
+			base.ExecutionContextCreated(executionContext, out dataModelVars);
 
 			executionContext.RuntimeItems[EcmaScriptEngine.Key] = new EcmaScriptEngine(executionContext);
 
-			dataModelVars[EcmaScriptHelper.JintVersionPropertyName] = EcmaScriptHelper.JintVersionValue;
+			dataModelVars = dataModelVars.SetItem(EcmaScriptHelper.JintVersionPropertyName, EcmaScriptHelper.JintVersionValue);
 		}
 
 		private Program Parse(string source) => _parser.Parse(source, ParserOptions);
