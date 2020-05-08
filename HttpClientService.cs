@@ -74,7 +74,7 @@ namespace TSSArt.StateMachine.Services
 			var responseHeaders = new DataModelArray();
 			foreach (var header in response.Headers)
 			{
-				responseHeaders.Add(new DataModelObject
+				responseHeaders.Add(new DataModelObject(capacity: 2)
 									{
 											["name"] = header.Key,
 											["value"] = header.Value
@@ -84,7 +84,7 @@ namespace TSSArt.StateMachine.Services
 			var responseCookies = new DataModelArray();
 			foreach (var cookie in response.Cookies)
 			{
-				responseCookies.Add(new DataModelObject
+				responseCookies.Add(new DataModelObject(capacity: 8)
 									{
 											["name"] = cookie.Name,
 											["value"] = cookie.Value,
@@ -97,7 +97,7 @@ namespace TSSArt.StateMachine.Services
 									});
 			}
 
-			return new DataModelObject
+			return new DataModelObject(capacity: 6)
 				   {
 						   ["statusCode"] = response.StatusCode,
 						   ["statusDescription"] = response.StatusDescription,
@@ -149,7 +149,7 @@ namespace TSSArt.StateMachine.Services
 
 		private static ValueTask<DataModelValue> FromJsonContent(Stream stream, CancellationToken token) => DataModelConverter.FromJsonAsync(stream, token);
 
-		private static ValueTask<DataModelValue> FromHtmlContent(Stream stream, IEnumerable<Capture> captures)
+		private static ValueTask<DataModelValue> FromHtmlContent(Stream stream, Capture[] captures)
 		{
 			var htmlDocument = new HtmlDocument();
 			htmlDocument.Load(stream);
@@ -306,9 +306,9 @@ namespace TSSArt.StateMachine.Services
 			}
 		}
 
-		private static DataModelValue CaptureData(HtmlDocument htmlDocument, IEnumerable<Capture> captures)
+		private static DataModelValue CaptureData(HtmlDocument htmlDocument, Capture[] captures)
 		{
-			var obj = new DataModelObject();
+			var obj = new DataModelObject(captures.Length);
 
 			foreach (var capture in captures)
 			{
@@ -362,7 +362,7 @@ namespace TSSArt.StateMachine.Services
 				return CaptureInText(node.InnerHtml, pattern);
 			}
 
-			var obj = new DataModelObject();
+			var obj = new DataModelObject(attrs.Length);
 
 			foreach (var attr in attrs)
 			{
@@ -441,9 +441,10 @@ namespace TSSArt.StateMachine.Services
 				return match.Groups[0].Value;
 			}
 
-			var obj = new DataModelObject();
+			var groupNames = regex.GetGroupNames();
 
-			foreach (var name in regex.GetGroupNames())
+			var obj = new DataModelObject(groupNames.Length);
+			foreach (var name in groupNames)
 			{
 				obj[name] = match.Groups[name].Value;
 			}
