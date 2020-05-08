@@ -66,11 +66,7 @@ namespace TSSArt.StateMachine
 
 		public DataModelValue(int value) : this((double) value) { }
 
-		public DataModelValue(DateTimeOffset value)
-		{
-			_value = DateTimeValue.Get(value.Offset);
-			_int64 = value.Ticks;
-		}
+		public DataModelValue(DateTimeOffset value) => _value = DateTimeValue.GetDateTimeValue(value, out _int64);
 
 		public DataModelValue(DateTime value) : this((DateTimeOffset) value) { }
 
@@ -78,6 +74,12 @@ namespace TSSArt.StateMachine
 		{
 			_value = BooleanValue;
 			_int64 = value ? 1 : 0;
+		}
+
+		public DataModelValue(ILazyValue? lazyValue)
+		{
+			_value = lazyValue ?? NullValue;
+			_int64 = 0;
 		}
 
 		public DataModelValueType Type =>
@@ -91,6 +93,7 @@ namespace TSSArt.StateMachine
 						DateTimeValue _ => DataModelValueType.DateTime,
 						DataModelObject _ => DataModelValueType.Object,
 						DataModelArray _ => DataModelValueType.Array,
+						ILazyValue lazyValue => lazyValue.Value.Type,
 						_ => Infrastructure.UnexpectedValue<DataModelValueType>()
 				};
 
@@ -280,7 +283,21 @@ namespace TSSArt.StateMachine
 
 	#region Interface IEquatable<DataModelValue>
 
-		public bool Equals(DataModelValue other) => Equals(_value, other._value) && _int64 == other._int64;
+		public bool Equals(DataModelValue other)
+		{
+			var val = this;
+			while (val._value is ILazyValue lazyValue)
+			{
+				val = lazyValue.Value;
+			}
+
+			while (other._value is ILazyValue lazyValue)
+			{
+				other = lazyValue.Value;
+			}
+
+			return val._int64 == other._int64 && Equals(val._value, other._value);
+		}
 
 	#endregion
 
@@ -317,6 +334,7 @@ namespace TSSArt.StateMachine
 						DateTimeValue val => new DateTimeOffset(new DateTime(_int64), val.Offset),
 						DataModelObject obj => obj,
 						DataModelArray arr => arr,
+						ILazyValue lazyValue => lazyValue.Value.ToObject(),
 						_ => Infrastructure.UnexpectedValue<object>()
 				};
 
@@ -339,6 +357,7 @@ namespace TSSArt.StateMachine
 		public static DataModelValue FromDateTimeOffset(DateTimeOffset val)    => new DataModelValue(val);
 		public static DataModelValue FromDateTime(DateTime val)                => new DataModelValue(val);
 		public static DataModelValue FromBoolean(bool val)                     => new DataModelValue(val);
+		public static DataModelValue FromLazyValue(ILazyValue val)             => new DataModelValue(val);
 
 		public bool IsUndefinedOrNull() => _value == null || _value == NullValue;
 
@@ -348,6 +367,7 @@ namespace TSSArt.StateMachine
 				_value switch
 				{
 						DataModelObject obj => obj,
+						ILazyValue val => val.Value.AsObject(),
 						_ => throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_DataModelObject)
 				};
 
@@ -356,15 +376,23 @@ namespace TSSArt.StateMachine
 				{
 						DataModelObject obj => obj,
 						{ } val when val == NullValue => null,
+						ILazyValue val => val.Value.AsNullableObject(),
 						_ => throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_DataModelObject)
 				};
 
-		public DataModelObject AsObjectOrEmpty() => _value is DataModelObject obj ? obj : DataModelObject.Empty;
+		public DataModelObject AsObjectOrEmpty() =>
+				_value switch
+				{
+						DataModelObject obj => obj,
+						ILazyValue val => val.Value.AsObjectOrEmpty(),
+						_ => DataModelObject.Empty
+				};
 
 		public DataModelArray AsArray() =>
 				_value switch
 				{
 						DataModelArray arr => arr,
+						ILazyValue val => val.Value.AsArray(),
 						_ => throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_DataModelArray)
 				};
 
@@ -373,15 +401,23 @@ namespace TSSArt.StateMachine
 				{
 						DataModelArray arr => arr,
 						{ } val when val == NullValue => null,
+						ILazyValue val => val.Value.AsNullableArray(),
 						_ => throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_DataModelArray)
 				};
 
-		public DataModelArray AsArrayOrEmpty() => _value is DataModelArray arr ? arr : DataModelArray.Empty;
+		public DataModelArray AsArrayOrEmpty() =>
+				_value switch
+				{
+						DataModelArray arr => arr,
+						ILazyValue val => val.Value.AsArrayOrEmpty(),
+						_ => DataModelArray.Empty
+				};
 
 		public string AsString() =>
 				_value switch
 				{
 						string str => str,
+						ILazyValue val => val.Value.AsString(),
 						_ => throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_String)
 				};
 
@@ -390,20 +426,31 @@ namespace TSSArt.StateMachine
 				{
 						string str => str,
 						{ } val when val == NullValue => null,
+						ILazyValue val => val.Value.AsNullableString(),
 						_ => throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_String)
 				};
 
-		public string? AsStringOrDefault() => _value as string;
+		public string? AsStringOrDefault() =>
+				_value switch
+				{
+						string str => str,
+						ILazyValue val => val.Value.AsStringOrDefault(),
+						_ => null
+				};
 
 		public double AsNumber() =>
 				_value == NumberValue
 						? BitConverter.Int64BitsToDouble(_int64)
-						: throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_Number);
+						: _value is ILazyValue val
+								? val.Value.AsNumber()
+								: throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_Number);
 
 		public double? AsNumberOrDefault() =>
 				_value == NumberValue
 						? BitConverter.Int64BitsToDouble(_int64)
-						: (double?) null;
+						: _value is ILazyValue val
+								? val.Value.AsNumberOrDefault()
+								: null;
 
 		public int AsInteger() => (int) AsNumber();
 
@@ -412,22 +459,32 @@ namespace TSSArt.StateMachine
 		public bool AsBoolean() =>
 				_value == BooleanValue
 						? _int64 != 0
-						: throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_Boolean);
+						: _value is ILazyValue val
+								? val.Value.AsBoolean()
+								: throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_Boolean);
 
 		public bool? AsBooleanOrDefault() =>
 				_value == BooleanValue
 						? _int64 != 0
-						: (bool?) null;
+						: _value is ILazyValue val
+								? val.Value.AsBooleanOrDefault()
+								: null;
 
 		public DateTimeOffset AsDateTimeOffset() =>
-				_value is DateTimeValue val
-						? new DateTimeOffset(new DateTime(_int64), val.Offset)
-						: throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_DateTime);
+				_value switch
+				{
+						DateTimeValue val => val.GetDateTimeOffset(_int64),
+						ILazyValue lazyVal => lazyVal.Value.AsDateTimeOffset(),
+						_ => throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_DateTime)
+				};
 
 		public DateTimeOffset? AsDateTimeOffsetOrDefault() =>
-				_value is DateTimeValue val
-						? new DateTimeOffset(new DateTime(_int64), val.Offset)
-						: (DateTimeOffset?) null;
+				_value switch
+				{
+						DateTimeValue val => val.GetDateTimeOffset(_int64),
+						ILazyValue lazyVal => lazyVal.Value.AsDateTimeOffsetOrDefault(),
+						_ => null
+				};
 
 		public DateTime AsDateTime() => AsDateTimeOffset().UtcDateTime;
 
@@ -538,7 +595,9 @@ namespace TSSArt.StateMachine
 						DataModelObject obj => new DataModelValue(obj),
 						DataModelArray arr => new DataModelValue(arr),
 						IDictionary<string, object> dict => CreateDataModelObject(dict, ref map),
+						IDictionary<string, string> dict => CreateDataModelObject(dict, ref map),
 						IEnumerable arr => CreateDataModelArray(arr, ref map),
+						ILazyValue val => new DataModelValue(val),
 						{ } when TryFromAnonymousType(value, ref map, out var val) => val,
 						_ => throw new ArgumentException(Resources.Exception_Unsupported_object_type, nameof(value))
 				};
@@ -558,18 +617,19 @@ namespace TSSArt.StateMachine
 
 			if (map.TryGetValue(value, out var val))
 			{
-				result = new DataModelValue((DataModelObject)val);
+				result = new DataModelValue((DataModelObject) val);
 
 				return true;
 			}
 
-			var obj = new DataModelObject();
+			var propertyInfos = value.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
+
+			var obj = new DataModelObject(propertyInfos.Length);
 
 			map[value] = obj;
 
-			foreach (var propertyInfo in value.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public))
+			foreach (var propertyInfo in propertyInfos)
 			{
-
 				obj[propertyInfo.Name] = FromObjectWithMap(propertyInfo.GetValue(value), ref map);
 			}
 
@@ -587,13 +647,34 @@ namespace TSSArt.StateMachine
 				return new DataModelValue((DataModelObject) val);
 			}
 
-			var obj = new DataModelObject();
+			var obj = new DataModelObject(dictionary.Count);
 
 			map[dictionary] = obj;
 
 			foreach (var pair in dictionary)
 			{
 				obj[pair.Key] = FromObjectWithMap(pair.Value, ref map);
+			}
+
+			return new DataModelValue(obj);
+		}
+
+		private static DataModelValue CreateDataModelObject(IDictionary<string, string> dictionary, ref Dictionary<object, object>? map)
+		{
+			map ??= new Dictionary<object, object>();
+
+			if (map.TryGetValue(dictionary, out var val))
+			{
+				return new DataModelValue((DataModelObject) val);
+			}
+
+			var obj = new DataModelObject(dictionary.Count);
+
+			map[dictionary] = obj;
+
+			foreach (var pair in dictionary)
+			{
+				obj[pair.Key] = new DataModelValue(pair.Value);
 			}
 
 			return new DataModelValue(obj);
@@ -608,7 +689,7 @@ namespace TSSArt.StateMachine
 				return new DataModelValue((DataModelArray) val);
 			}
 
-			var arr = new DataModelArray();
+			var arr = new DataModelArray(array.Capacity());
 
 			map[array] = arr;
 
@@ -633,8 +714,12 @@ namespace TSSArt.StateMachine
 
 			public TimeSpan Offset { get; }
 
-			public static DateTimeValue Get(TimeSpan offset)
+			public static DateTimeValue GetDateTimeValue(DateTimeOffset dateTimeOffset, out long utcTicks)
 			{
+				utcTicks = dateTimeOffset.UtcTicks;
+
+				var offset = dateTimeOffset.Offset;
+
 				Infrastructure.Assert(MinOffset <= offset && offset <= MaxOffset && offset.Ticks % TimeSpan.TicksPerMinute == 0);
 
 				var val = (int) (offset.Ticks / TimeSpan.TicksPerMinute);
@@ -655,6 +740,12 @@ namespace TSSArt.StateMachine
 
 				return dateTimeValue;
 			}
+
+			public DateTimeOffset GetDateTimeOffset(long utcTicks) => new DateTimeOffset(new DateTime(utcTicks + Offset.Ticks), Offset);
+
+			public override int GetHashCode() => 0;
+
+			public override bool Equals(object obj) => obj is DateTimeValue;
 		}
 
 		[PublicAPI]

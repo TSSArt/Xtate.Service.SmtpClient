@@ -11,7 +11,7 @@ namespace TSSArt.StateMachine
 
 		bool InState(IIdentifier id);
 
-		ValueTask Cancel(string sendId, CancellationToken token = default);
+		ValueTask Cancel(SendId sendId, CancellationToken token = default);
 
 		ValueTask Log(string? label, DataModelValue arguments = default, CancellationToken token = default);
 
@@ -19,7 +19,7 @@ namespace TSSArt.StateMachine
 
 		ValueTask StartInvoke(InvokeData invokeData, CancellationToken token = default);
 
-		ValueTask CancelInvoke(string invokeId, CancellationToken token = default);
+		ValueTask CancelInvoke(InvokeId invokeId, CancellationToken token = default);
 	}
 
 	public interface IContextItems

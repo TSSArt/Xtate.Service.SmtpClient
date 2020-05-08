@@ -15,7 +15,7 @@ namespace TSSArt.StateMachine
 
 		async ValueTask<IService> IServiceFactory.StartService(Uri? baseUri, InvokeData invokeData, IServiceCommunication serviceCommunication, CancellationToken token)
 		{
-			var sessionId = invokeData.InvokeId; // using InvokeId as SessionId
+			var sessionId = SessionId.FromString(invokeData.InvokeId.Value); // using InvokeId as SessionId
 			var scxml = invokeData.RawContent ?? invokeData.Content.AsStringOrDefault();
 			var context = GetCurrentContext();
 			var parameters = invokeData.Parameters;
@@ -38,7 +38,7 @@ namespace TSSArt.StateMachine
 
 	#endregion
 
-		private static async ValueTask CompleteAsync(StateMachineHostContext context, StateMachineController service, string sessionId)
+		private static async ValueTask CompleteAsync(StateMachineHostContext context, StateMachineController service, SessionId sessionId)
 		{
 			try
 			{

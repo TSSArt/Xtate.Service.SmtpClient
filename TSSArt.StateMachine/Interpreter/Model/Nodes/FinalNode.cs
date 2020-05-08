@@ -11,7 +11,7 @@ namespace TSSArt.StateMachine
 		{
 			_final = final;
 
-			Id = final.Id ?? new IdentifierNode(new RuntimeIdentifier());
+			Id = final.Id ?? new IdentifierNode(Identifier.New());
 			OnEntry = final.OnEntry.AsArrayOf<IOnEntry, OnEntryNode>(true);
 			OnExit = final.OnExit.AsArrayOf<IOnExit, OnExitNode>(true);
 			DoneData = final.DoneData?.As<DoneDataNode>();

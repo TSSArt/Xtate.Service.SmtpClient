@@ -131,39 +131,41 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public ValueTask<DataModelValue> ExecuteAsync(string scxml, DataModelValue parameters = default) => ExecuteAsync(new StateMachineOrigin(scxml), IdGenerator.NewSessionId(), parameters);
+		public ValueTask<DataModelValue> ExecuteAsync(string scxml, DataModelValue parameters = default) => ExecuteAsync(new StateMachineOrigin(scxml), SessionId.New(), parameters);
 
-		public ValueTask<DataModelValue> ExecuteAsync(Uri source, DataModelValue parameters = default) => ExecuteAsync(new StateMachineOrigin(source), IdGenerator.NewSessionId(), parameters);
+		public ValueTask<DataModelValue> ExecuteAsync(Uri source, DataModelValue parameters = default) => ExecuteAsync(new StateMachineOrigin(source), SessionId.New(), parameters);
 
 		public ValueTask<DataModelValue> ExecuteAsync(IStateMachine stateMachine, DataModelValue parameters = default) =>
-				ExecuteAsync(new StateMachineOrigin(stateMachine), IdGenerator.NewSessionId(), parameters);
+				ExecuteAsync(new StateMachineOrigin(stateMachine), SessionId.New(), parameters);
 
 		public ValueTask<DataModelValue> ExecuteAsync(string scxml, Uri? baseUri, DataModelValue parameters = default) =>
-				ExecuteAsync(new StateMachineOrigin(scxml, baseUri), IdGenerator.NewSessionId(), parameters);
+				ExecuteAsync(new StateMachineOrigin(scxml, baseUri), SessionId.New(), parameters);
 
 		public ValueTask<DataModelValue> ExecuteAsync(Uri source, Uri? baseUri, DataModelValue parameters = default) =>
-				ExecuteAsync(new StateMachineOrigin(source, baseUri), IdGenerator.NewSessionId(), parameters);
+				ExecuteAsync(new StateMachineOrigin(source, baseUri), SessionId.New(), parameters);
 
 		public ValueTask<DataModelValue> ExecuteAsync(IStateMachine stateMachine, Uri? baseUri, DataModelValue parameters = default) =>
-				ExecuteAsync(new StateMachineOrigin(stateMachine, baseUri), IdGenerator.NewSessionId(), parameters);
+				ExecuteAsync(new StateMachineOrigin(stateMachine, baseUri), SessionId.New(), parameters);
 
-		public ValueTask<DataModelValue> ExecuteAsync(string scxml, string sessionId, DataModelValue parameters = default) => ExecuteAsync(new StateMachineOrigin(scxml), sessionId, parameters);
+		public ValueTask<DataModelValue> ExecuteAsync(string scxml, string sessionId, DataModelValue parameters = default) =>
+				ExecuteAsync(new StateMachineOrigin(scxml), SessionId.FromString(sessionId), parameters);
 
-		public ValueTask<DataModelValue> ExecuteAsync(Uri source, string sessionId, DataModelValue parameters = default) => ExecuteAsync(new StateMachineOrigin(source), sessionId, parameters);
+		public ValueTask<DataModelValue> ExecuteAsync(Uri source, string sessionId, DataModelValue parameters = default) =>
+				ExecuteAsync(new StateMachineOrigin(source), SessionId.FromString(sessionId), parameters);
 
 		public ValueTask<DataModelValue> ExecuteAsync(IStateMachine stateMachine, string sessionId, DataModelValue parameters = default) =>
-				ExecuteAsync(new StateMachineOrigin(stateMachine), sessionId, parameters);
+				ExecuteAsync(new StateMachineOrigin(stateMachine), SessionId.FromString(sessionId), parameters);
 
 		public ValueTask<DataModelValue> ExecuteAsync(string scxml, Uri? baseUri, string sessionId, DataModelValue parameters = default) =>
-				ExecuteAsync(new StateMachineOrigin(scxml, baseUri), sessionId, parameters);
+				ExecuteAsync(new StateMachineOrigin(scxml, baseUri), SessionId.FromString(sessionId), parameters);
 
 		public ValueTask<DataModelValue> ExecuteAsync(Uri source, Uri? baseUri, string sessionId, DataModelValue parameters = default) =>
-				ExecuteAsync(new StateMachineOrigin(source, baseUri), sessionId, parameters);
+				ExecuteAsync(new StateMachineOrigin(source, baseUri), SessionId.FromString(sessionId), parameters);
 
 		public ValueTask<DataModelValue> ExecuteAsync(IStateMachine stateMachine, Uri? baseUri, string sessionId, DataModelValue parameters = default) =>
-				ExecuteAsync(new StateMachineOrigin(stateMachine, baseUri), sessionId, parameters);
+				ExecuteAsync(new StateMachineOrigin(stateMachine, baseUri), SessionId.FromString(sessionId), parameters);
 
-		private ValueTask<DataModelValue> ExecuteAsync(StateMachineOrigin origin, string sessionId, DataModelValue parameters)
+		private ValueTask<DataModelValue> ExecuteAsync(StateMachineOrigin origin, SessionId sessionId, DataModelValue parameters)
 		{
 			if (sessionId == null) throw new ArgumentNullException(nameof(sessionId));
 			if (origin.Type == StateMachineOriginType.None) throw new ArgumentException(Resources.Exception_StateMachine_origin_missed, nameof(origin));
@@ -173,7 +175,7 @@ namespace TSSArt.StateMachine
 			return ExecuteInternal(context, origin, sessionId, parameters);
 		}
 
-		private async ValueTask<DataModelValue> ExecuteInternal(StateMachineHostContext context, StateMachineOrigin origin, string sessionId, DataModelValue parameters)
+		private async ValueTask<DataModelValue> ExecuteInternal(StateMachineHostContext context, StateMachineOrigin origin, SessionId sessionId, DataModelValue parameters)
 		{
 			var errorProcessor = CreateErrorProcessor(sessionId, origin);
 

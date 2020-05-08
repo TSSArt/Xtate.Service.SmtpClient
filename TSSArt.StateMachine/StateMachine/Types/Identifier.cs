@@ -5,17 +5,11 @@ using TSSArt.StateMachine.Annotations;
 namespace TSSArt.StateMachine
 {
 	[PublicAPI]
-	public sealed class Identifier : IIdentifier, IEquatable<IIdentifier>, IAncestorProvider
+	public sealed class Identifier : LazyId, IIdentifier, IEquatable<IIdentifier>
 	{
-		private readonly string _val;
+		private Identifier() { }
 
-		private Identifier(string val) => _val = val;
-
-	#region Interface IAncestorProvider
-
-		object IAncestorProvider.Ancestor => _val;
-
-	#endregion
+		private Identifier(string val) : base(val) { }
 
 	#region Interface IEquatable<IIdentifier>
 
@@ -65,8 +59,8 @@ namespace TSSArt.StateMachine
 			return true;
 		}
 
-		public override bool Equals(object obj) => ReferenceEquals(this, obj) || obj is Identifier other && _val.Equals(other._val, StringComparison.Ordinal);
+		protected override string GenerateId() => IdGenerator.NewId(GetHashCode());
 
-		public override int GetHashCode() => _val.GetHashCode();
+		public static IIdentifier New() => new Identifier();
 	}
 }

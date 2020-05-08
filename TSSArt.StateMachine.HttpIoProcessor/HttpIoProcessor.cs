@@ -114,9 +114,14 @@ namespace TSSArt.StateMachine
 			return new IPEndPoint(listenAddress, uri.Port);
 		}
 
-		protected override Uri GetTarget(string sessionId) => new Uri(_baseUri, sessionId);
+		protected override Uri GetTarget(SessionId sessionId)
+		{
+			if (sessionId == null) throw new ArgumentNullException(nameof(sessionId));
 
-		protected override async ValueTask OutgoingEvent(string sessionId, IOutgoingEvent evt, CancellationToken token)
+			return new Uri(_baseUri, sessionId.Value);
+		}
+
+		protected override async ValueTask OutgoingEvent(SessionId sessionId, IOutgoingEvent evt, CancellationToken token)
 		{
 			if (evt == null) throw new ArgumentNullException(nameof(evt));
 
@@ -234,7 +239,7 @@ namespace TSSArt.StateMachine
 
 		private async ValueTask<bool> Handle(HttpRequest request)
 		{
-			string sessionId;
+			SessionId sessionId;
 
 			if (_path == @"/")
 			{
@@ -255,16 +260,16 @@ namespace TSSArt.StateMachine
 			return true;
 		}
 
-		private static string ExtractSessionId(PathString pathString)
+		private static SessionId ExtractSessionId(PathString pathString)
 		{
 			var unescapedString = pathString.Value;
 
 			if (unescapedString.Length > 0 && unescapedString[0] == '/')
 			{
-				return unescapedString.Substring(1);
+				return SessionId.FromString(unescapedString.Substring(1));
 			}
 
-			return unescapedString;
+			return SessionId.FromString(unescapedString);
 		}
 
 		private async ValueTask<IEvent> CreateEvent(HttpRequest request)
@@ -302,8 +307,7 @@ namespace TSSArt.StateMachine
 			if (mediaType == MediaTypeApplicationFormUrlEncoded)
 			{
 				var pairs = QueryHelpers.ParseQuery(body);
-				var dataModelObject = new DataModelObject();
-
+				var dataModelObject = new DataModelObject(pairs.Count);
 
 				foreach (var pair in pairs)
 				{

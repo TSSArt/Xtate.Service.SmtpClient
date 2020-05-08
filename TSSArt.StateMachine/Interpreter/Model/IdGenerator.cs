@@ -4,16 +4,37 @@ namespace TSSArt.StateMachine
 {
 	internal static class IdGenerator
 	{
-		private static string NewGuidString() => Guid.NewGuid().ToString(format: "D", provider: default);
+		public static string NewSendId(int hash) => NewGuidWithHash(hash);
 
-		public static string NewSessionId() => NewGuidString();
+		public static string NewSessionId(int hash) => NewGuidWithHash(hash);
 
-		public static string NewSendId() => NewGuidString();
+		public static string NewInvokeUniqueId(int hash) => NewGuidWithHash(hash);
 
-		public static string NewInvokeId(string stateId) => stateId + @"." + NewGuidString();
+		public static string NewId(int hash) => NewGuidWithHash(hash);
 
-		public static string NewInvokeUniqueId() => NewGuidString();
+#if NETSTANDARD2_1
+		public static string NewInvokeId(string id, int hash) =>
+				string.Create(46 + id.Length, (id, hash), (span, arg) =>
+														  {
+															  arg.id.AsSpan().CopyTo(span);
+															  span[arg.id.Length] = '.';
+															  span = span.Slice(arg.id.Length + 1);
+															  Guid.NewGuid().TryFormat(span, out var pos, format: "D");
+															  span[pos] = '-';
+															  hash.TryFormat(span.Slice(pos + 1), out pos, format: "x8");
+														  });
 
-		public static string NewUniqueStateId() => NewGuidString();
+		private static string NewGuidWithHash(int hash) =>
+				string.Create(length: 45, hash, (span, h) =>
+												{
+													Guid.NewGuid().TryFormat(span, out var pos, format: "D");
+													span[pos] = '-';
+													hash.TryFormat(span.Slice(pos + 1), out pos, format: "x8");
+												});
+#else
+		public static string NewInvokeId(string id, int hash) => id + "." + Guid.NewGuid().ToString("D") + "-" + hash.ToString("x8");
+
+		private static string NewGuidWithHash(int hash) => Guid.NewGuid().ToString("D") + "-" + hash.ToString("x8");
+#endif
 	}
 }

@@ -9,17 +9,21 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using TSSArt.StateMachine.Annotations;
 
 namespace TSSArt.StateMachine
 {
 	using DefaultHistoryContent = Dictionary<IIdentifier, ImmutableArray<IExecEvaluator>>;
 
-	public sealed class StateMachineInterpreter
+	[PublicAPI]
+	public sealed class StateMachineInterpreter : IDataModelValueProvider
 	{
-		private const    string                                   StateStorageKey                  = "state";
-		private const    string                                   StateMachineDefinitionStorageKey = "smd";
+		private const string StateStorageKey                  = "state";
+		private const string StateMachineDefinitionStorageKey = "smd";
+
+		private static readonly DataModelValue InterpreterObject = new DataModelValue(new LazyValue(CreateInterpreterObject));
+
 		private readonly DataModelValue                           _arguments;
-		private readonly DataModelObject                          _configuration;
 		private readonly ImmutableDictionary<object, object>      _contextRuntimeItems;
 		private readonly ImmutableArray<ICustomActionFactory>     _customActionProviders;
 		private readonly ImmutableArray<IDataModelHandlerFactory> _dataModelHandlerFactories;
@@ -27,25 +31,24 @@ namespace TSSArt.StateMachine
 		private readonly IErrorProcessor                          _errorProcessor;
 		private readonly ChannelReader<IEvent>                    _eventChannel;
 		private readonly ExternalCommunicationWrapper             _externalCommunication;
-		private readonly DataModelObject                          _host;
 		private readonly LoggerWrapper                            _logger;
 		private readonly INotifyStateChanged?                     _notifyStateChanged;
 		private readonly PersistenceLevel                         _persistenceLevel;
 		private readonly ImmutableArray<IResourceLoader>          _resourceLoaders;
-		private readonly string                                   _sessionId;
+		private readonly SessionId                                _sessionId;
+		private readonly IStateMachineValidator                   _stateMachineValidator;
+		private readonly CancellationToken                        _stopToken;
+		private readonly IStorageProvider                         _storageProvider;
+		private readonly CancellationToken                        _suspendToken;
+		private          CancellationTokenSource                  _anyTokenSource;
+		private          IStateMachineContext                     _context;
+		private          IDataModelHandler                        _dataModelHandler;
+		private          ImmutableDictionary<string, string>      _dataModelVars;
+		private          DataModelValue                           _doneData;
+		private          InterpreterModel                         _model;
+		private          bool                                     _stop;
 
-		private readonly IStateMachineValidator  _stateMachineValidator = StateMachineValidator.Instance;
-		private readonly CancellationToken       _stopToken;
-		private readonly IStorageProvider        _storageProvider;
-		private readonly CancellationToken       _suspendToken;
-		private          CancellationTokenSource _anyTokenSource;
-		private          IStateMachineContext    _context;
-		private          IDataModelHandler       _dataModelHandler;
-		private          DataModelValue          _doneData;
-		private          InterpreterModel        _model;
-		private          bool                    _stop;
-
-		private StateMachineInterpreter(string sessionId, ChannelReader<IEvent> eventChannel, in InterpreterOptions options)
+		private StateMachineInterpreter(SessionId sessionId, ChannelReader<IEvent> eventChannel, in InterpreterOptions options)
 		{
 			_sessionId = sessionId;
 			_eventChannel = eventChannel;
@@ -58,13 +61,16 @@ namespace TSSArt.StateMachine
 			_logger = new LoggerWrapper(options.Logger ?? DefaultLogger.Instance, sessionId);
 			_externalCommunication = new ExternalCommunicationWrapper(options.ExternalCommunication, sessionId);
 			_storageProvider = options.StorageProvider ?? NullStorageProvider.Instance;
-			_configuration = options.Configuration?.AsConstant() ?? DataModelObject.Empty;
-			_host = options.Host?.AsConstant() ?? DataModelObject.Empty;
+			Configuration = new DataModelValue(options.Configuration?.AsConstant() ?? DataModelObject.Empty);
+			Host = new DataModelValue(options.Host?.AsConstant() ?? DataModelObject.Empty);
 			_contextRuntimeItems = options.ContextRuntimeItems ?? ImmutableDictionary<object, object>.Empty;
 			_errorProcessor = options.ErrorProcessor ?? DefaultErrorProcessor.Instance;
 			_persistenceLevel = options.PersistenceLevel;
 			_notifyStateChanged = options.NotifyStateChanged;
 			_arguments = options.Arguments.AsConstant();
+			_stateMachineValidator = StateMachineValidator.Instance;
+			_dataModelVars = ImmutableDictionary<string, string>.Empty;
+			DataModelHandler = new DataModelValue(new LazyValue(CreateDataModelHandlerObject));
 
 			_anyTokenSource = null!;
 			_dataModelHandler = null!;
@@ -88,7 +94,28 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public static ValueTask<DataModelValue> RunAsync(string sessionId, IStateMachine? stateMachine, ChannelReader<IEvent> eventChannel, in InterpreterOptions options = default)
+	#region Interface IDataModelValueProvider
+
+		public DataModelValue Arguments => _arguments;
+
+		public DataModelValue Interpreter => InterpreterObject;
+
+		public DataModelValue Configuration { get; }
+
+		public DataModelValue Host { get; }
+
+		public DataModelValue DataModelHandler { get; }
+
+	#endregion
+
+		public static ValueTask<DataModelValue> RunAsync(IStateMachine? stateMachine, ChannelReader<IEvent> eventChannel, in InterpreterOptions options = default)
+		{
+			if (eventChannel == null) throw new ArgumentNullException(nameof(eventChannel));
+
+			return new StateMachineInterpreter(SessionId.New(), eventChannel, options).Run(stateMachine);
+		}
+
+		public static ValueTask<DataModelValue> RunAsync(SessionId sessionId, IStateMachine? stateMachine, ChannelReader<IEvent> eventChannel, in InterpreterOptions options = default)
 		{
 			if (sessionId == null) throw new ArgumentNullException(nameof(sessionId));
 			if (eventChannel == null) throw new ArgumentNullException(nameof(eventChannel));
@@ -140,7 +167,8 @@ namespace TSSArt.StateMachine
 					throw new StateMachinePersistenceException(Resources.Exception_Persisted_state_can_t_be_read__Unsupported_version_);
 				}
 
-				if (bucket.TryGet(Key.SessionId, out string? sessionId) && sessionId != _sessionId)
+				var storedSessionId = bucket.GetSessionId(Key.SessionId);
+				if (storedSessionId != null && storedSessionId != _sessionId)
 				{
 					throw new StateMachinePersistenceException(Resources.Exception_Persisted_state_can_t_be_read__Stored_and_provided_SessionIds_does_not_match);
 				}
@@ -187,7 +215,7 @@ namespace TSSArt.StateMachine
 			await using (storage.ConfigureAwait(false))
 			{
 				SaveToStorage(interpreterModel.Root.As<IStoreSupport>(), new Bucket(storage));
-				
+
 				await storage.CheckPoint(level: 0, _stopToken).ConfigureAwait(false);
 			}
 		}
@@ -202,7 +230,7 @@ namespace TSSArt.StateMachine
 			memoryStorage.WriteTransactionLogToSpan(span);
 
 			bucket.Add(Key.Version, value: 1);
-			bucket.Add(Key.SessionId, _sessionId);
+			bucket.AddId(Key.SessionId, _sessionId);
 			bucket.Add(Key.StateMachineDefinition, span);
 		}
 
@@ -472,7 +500,7 @@ namespace TSSArt.StateMachine
 
 			_logger.ProcessingEvent(internalEvent);
 
-			_context.DataModel.SetInternal(property: @"_event", new DataModelDescriptor(DataConverter.FromEvent(internalEvent), isReadOnly: true));
+			_context.DataModel.SetInternal(property: @"_event", new DataModelDescriptor(DataConverter.FromEvent(internalEvent), DataModelAccess.ReadOnly));
 
 			return SelectTransitions(internalEvent);
 		}
@@ -576,20 +604,22 @@ namespace TSSArt.StateMachine
 
 			_logger.ProcessingEvent(externalEvent);
 
-			_context.DataModel.SetInternal(property: @"_event", new DataModelDescriptor(DataConverter.FromEvent(externalEvent), isReadOnly: true));
+			_context.DataModel.SetInternal(property: @"_event", new DataModelDescriptor(DataConverter.FromEvent(externalEvent), DataModelAccess.ReadOnly));
 
 			foreach (var state in _context.Configuration)
 			{
 				foreach (var invoke in state.Invoke)
 				{
-					if (invoke.InvokeUniqueId == externalEvent.InvokeUniqueId)
+					Infrastructure.Assert(invoke.InvokeId != null);
+
+					if (externalEvent.InvokeId != null && InvokeId.InvokeUniqueIdComparer.Equals(invoke.InvokeId, externalEvent.InvokeId))
 					{
 						await ApplyFinalize(invoke).ConfigureAwait(false);
 					}
 
 					if (invoke.AutoForward)
 					{
-						await ForwardEvent(invoke.InvokeId!, externalEvent).ConfigureAwait(false);
+						await ForwardEvent(invoke.InvokeId, externalEvent).ConfigureAwait(false);
 					}
 				}
 			}
@@ -624,7 +654,7 @@ namespace TSSArt.StateMachine
 					return evt;
 				}
 
-				if (_externalCommunication.IsInvokeActive(evt.InvokeId, evt.InvokeUniqueId!))
+				if (_externalCommunication.IsInvokeActive(evt.InvokeId))
 				{
 					return evt;
 				}
@@ -1259,7 +1289,7 @@ namespace TSSArt.StateMachine
 		{
 			var sourceEntityId = (source as IEntity).Is(out IDebugEntityId? id) ? id.EntityId?.ToString(CultureInfo.InvariantCulture) : null;
 
-			string? sendId = null;
+			SendId? sendId = null;
 
 			var errorType = _logger.IsPlatformError(exception)
 					? ErrorType.Platform
@@ -1322,7 +1352,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private ValueTask ForwardEvent(string invokeId, IEvent evt) => _externalCommunication.ForwardEvent(evt, invokeId, _stopToken);
+		private ValueTask ForwardEvent(InvokeId invokeId, IEvent evt) => _externalCommunication.ForwardEvent(evt, invokeId, _stopToken);
 
 		private ValueTask ApplyFinalize(InvokeNode invoke) => invoke.Finalize != null ? RunExecutableEntity(invoke.Finalize.ActionEvaluators) : default;
 
@@ -1446,62 +1476,48 @@ namespace TSSArt.StateMachine
 			if (IsPersistingEnabled)
 			{
 				var storage = await _storageProvider.GetTransactionalStorage(partition: default, StateStorageKey, _stopToken).ConfigureAwait(false);
-				context = new StateMachinePersistedContext(_model.Root.Name, _sessionId, _arguments, storage, _model.EntityMap, _logger, _externalCommunication, _contextRuntimeItems);
+				context = new StateMachinePersistedContext(_model.Root.Name, _sessionId, this, storage, _model.EntityMap, _logger, _externalCommunication, _contextRuntimeItems);
 			}
 			else
 			{
-				context = new StateMachineContext(_model.Root.Name, _sessionId, _arguments, _logger, _externalCommunication, _contextRuntimeItems);
+				context = new StateMachineContext(_model.Root.Name, _sessionId, this, _logger, _externalCommunication, _contextRuntimeItems);
 			}
 
-			PopulateInterpreterObject(context.InterpreterObject);
-
-			var dataModelVars = new Dictionary<string, string>();
-			_dataModelHandler.ExecutionContextCreated(context.ExecutionContext, dataModelVars);
-
-			PopulateDataModelHandlerObject(context.DataModelHandlerObject, dataModelVars);
-
-			PopulateObject(_host, context.HostObject);
-			PopulateObject(_configuration, context.ConfigurationObject);
+			_dataModelHandler.ExecutionContextCreated(context.ExecutionContext, out _dataModelVars);
 
 			return context;
 		}
 
-		private static void PopulateObject(DataModelObject src, DataModelObject dst)
+		private static DataModelValue CreateInterpreterObject()
 		{
-			dst.EnsureCapacity(src.Count);
-			foreach (var property in src.Properties)
-			{
-				dst.SetInternal(property, new DataModelDescriptor(src[property], isReadOnly: true));
-			}
-		}
+			var interpreterObject = new DataModelObject(capacity: 2);
 
-		private void PopulateInterpreterObject(DataModelObject interpreterObject)
-		{
-			var type = GetType();
+			var type = typeof(StateMachineInterpreter);
 			var version = type.Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 
-			interpreterObject.EnsureCapacity(2);
-			interpreterObject.SetInternal(property: @"name", new DataModelDescriptor(new DataModelValue(type.FullName)));
-			interpreterObject.SetInternal(property: @"version", new DataModelDescriptor(new DataModelValue(version)));
+			interpreterObject[@"name"] = new DataModelValue(type.FullName);
+			interpreterObject[@"version"] = new DataModelValue(version);
+
+			interpreterObject.MakeDeepConstant();
+
+			return new DataModelValue(interpreterObject);
 		}
 
-		private void PopulateDataModelHandlerObject(DataModelObject dataModelHandlerObject, Dictionary<string, string> dataModelVars)
+		private DataModelValue CreateDataModelHandlerObject()
 		{
+			var dataModelHandlerObject = new DataModelObject(capacity: 4);
+
 			var type = _dataModelHandler.GetType();
 			var version = type.Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 
-			dataModelHandlerObject.EnsureCapacity(4);
-			dataModelHandlerObject.SetInternal(property: @"name", new DataModelDescriptor(new DataModelValue(type.FullName)));
-			dataModelHandlerObject.SetInternal(property: @"assembly", new DataModelDescriptor(new DataModelValue(type.Assembly.GetName().Name)));
-			dataModelHandlerObject.SetInternal(property: @"version", new DataModelDescriptor(new DataModelValue(version)));
+			dataModelHandlerObject[@"name"] = new DataModelValue(type.FullName);
+			dataModelHandlerObject[@"assembly"] = new DataModelValue(type.Assembly.GetName().Name);
+			dataModelHandlerObject[@"version"] = new DataModelValue(version);
+			dataModelHandlerObject[@"vars"] = DataModelValue.FromObject(_dataModelVars);
 
-			var vars = new DataModelObject(isReadOnly: true, dataModelVars.Count);
-			foreach (var pair in dataModelVars)
-			{
-				vars.SetInternal(pair.Key, new DataModelDescriptor(new DataModelValue(pair.Value)));
-			}
+			dataModelHandlerObject.MakeDeepConstant();
 
-			dataModelHandlerObject.SetInternal(property: @"vars", new DataModelDescriptor(new DataModelValue(vars)));
+			return new DataModelValue(dataModelHandlerObject);
 		}
 
 		private enum StateBagKey

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
@@ -12,6 +12,6 @@ namespace TSSArt.StateMachine
 
 		void Process(ref IInvoke invoke);
 
-		void ExecutionContextCreated(IExecutionContext executionContext, IDictionary<string, string> dataModelVars);
+		void ExecutionContextCreated(IExecutionContext executionContext, out ImmutableDictionary<string, string> dataModelVars);
 	}
 }

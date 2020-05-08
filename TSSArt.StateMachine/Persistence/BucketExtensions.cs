@@ -54,6 +54,31 @@ namespace TSSArt.StateMachine
 			return builder.MoveToImmutable();
 		}
 
+		public static void AddId(this in Bucket bucket, Key key, SessionId? sessionId)
+		{
+			if (sessionId != null)
+			{
+				bucket.Add(key, sessionId.Value);
+			}
+		}
+
+		public static void AddId(this in Bucket bucket, Key key, SendId? sendId)
+		{
+			if (sendId != null)
+			{
+				bucket.Add(key, sendId.Value);
+			}
+		}
+
+		public static void AddId(this in Bucket bucket, Key key, InvokeId? invokeId)
+		{
+			if (invokeId != null)
+			{
+				bucket.Add(key, invokeId.Value);
+				bucket.Nested(key).Add(key: 1, invokeId.InvokeUniqueIdValue);
+			}
+		}
+
 		public static TEnum Get<TEnum>(this in Bucket bucket, Key key) where TEnum : struct, Enum =>
 				bucket.TryGet(key, out TEnum value) ? value : throw new KeyNotFoundException(Res.Format(Resources.Exception_key_not_found, key));
 
@@ -63,6 +88,23 @@ namespace TSSArt.StateMachine
 				bucket.TryGet(key, out bool value) ? value : throw new KeyNotFoundException(Res.Format(Resources.Exception_key_not_found, key));
 
 		public static string? GetString(this in Bucket bucket, Key key) => bucket.TryGet(key, out string? value) ? value : null;
+
+		public static SessionId? GetSessionId(this in Bucket bucket, Key key) => bucket.TryGet(key, out string? value) ? SessionId.FromString(value) : null;
+
+		public static SendId? GetSendId(this in Bucket bucket, Key key) => bucket.TryGet(key, out string? value) ? SendId.FromString(value) : null;
+
+		public static InvokeId? GetInvokeId(this in Bucket bucket, Key key)
+		{
+			bucket.TryGet(key, out string? invokeId);
+			bucket.Nested(key).TryGet(key: 1, out string? invokeUniqueId);
+
+			if (invokeId == null || invokeUniqueId == null)
+			{
+				return null;
+			}
+
+			return InvokeId.FromString(invokeId, invokeUniqueId);
+		}
 
 		public static Uri? GetUri(this in Bucket bucket, Key key) => bucket.TryGet(key, out Uri? value) ? value : null;
 

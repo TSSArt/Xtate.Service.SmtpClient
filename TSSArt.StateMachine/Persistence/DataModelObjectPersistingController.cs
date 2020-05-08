@@ -15,10 +15,22 @@ namespace TSSArt.StateMachine
 			_referenceTracker = referenceTracker ?? throw new ArgumentNullException(nameof(referenceTracker));
 			_dataModelObject = dataModelObject ?? throw new ArgumentNullException(nameof(dataModelObject));
 
-			var shrink = dataModelObject.Count > 0;
+			Restore(out var shrink);
+
+			if (shrink)
+			{
+				Shrink();
+			}
+
+			dataModelObject.Changed += OnChanged;
+		}
+
+		private void Restore(out bool shrink)
+		{
+			shrink = _dataModelObject.Count > 0;
 			while (true)
 			{
-				var recordBucket = bucket.Nested(_record);
+				var recordBucket = _bucket.Nested(_record);
 
 				if (!recordBucket.TryGet(Key.Operation, out Key operation))
 				{
@@ -29,58 +41,64 @@ namespace TSSArt.StateMachine
 				{
 					case Key.Set when recordBucket.TryGet(Key.Property, out string? property):
 					{
-						var dataModelValue = recordBucket.GetDataModelValue(referenceTracker, dataModelObject[property]);
-						recordBucket.TryGet(Key.ReadOnly, out bool isReadOnly);
-						dataModelObject.SetInternal(property, new DataModelDescriptor(dataModelValue, isReadOnly));
-						referenceTracker.AddReference(dataModelValue);
+						var dataModelValue = recordBucket.GetDataModelValue(_referenceTracker, _dataModelObject[property]);
+						recordBucket.TryGet(Key.Access, out DataModelAccess access);
+						if (_dataModelObject.SetInternal(property, new DataModelDescriptor(dataModelValue, access), throwOnDeny: false))
+						{
+							_referenceTracker.AddReference(dataModelValue);
+						}
+
 						break;
 					}
 
 					case Key.Remove when recordBucket.TryGet(Key.Property, out string? property):
 					{
 						shrink = true;
-						referenceTracker.RemoveReference(dataModelObject[property]);
-						dataModelObject.RemoveInternal(property);
+						var dataModelValue = _dataModelObject[property];
+						if (_dataModelObject.RemoveInternal(property, throwOnDeny: false))
+						{
+							_referenceTracker.RemoveReference(dataModelValue);
+						}
+
 						break;
 					}
 
 					default:
 						Infrastructure.UnexpectedValue();
+
 						break;
 				}
 
 				_record ++;
 			}
+		}
 
-			if (shrink)
+		private void Shrink()
+		{
+			_bucket.RemoveSubtree(Bucket.RootKey);
+			if (_dataModelObject.Access != DataModelAccess.Writable)
 			{
-				bucket.RemoveSubtree(Bucket.RootKey);
-				if (dataModelObject.Access != DataModelAccess.Writable)
-				{
-					bucket.Add(Key.Access, dataModelObject.Access);
-				}
-
-				_record = 0;
-				foreach (var property in dataModelObject.Properties)
-				{
-					var descriptor = dataModelObject.GetDescriptor(property);
-					if (!descriptor.Value.IsUndefined() || descriptor.IsReadOnly)
-					{
-						var recordBucket = bucket.Nested(_record ++);
-						recordBucket.Add(Key.Operation, Key.Set);
-						recordBucket.Add(Key.Property, property);
-
-						if (descriptor.IsReadOnly)
-						{
-							recordBucket.Add(Key.ReadOnly, value: true);
-						}
-
-						recordBucket.SetDataModelValue(referenceTracker, descriptor.Value);
-					}
-				}
+				_bucket.Add(Key.Access, _dataModelObject.Access);
 			}
 
-			dataModelObject.Changed += OnChanged;
+			_record = 0;
+			foreach (var property in _dataModelObject.Properties)
+			{
+				var descriptor = _dataModelObject.GetDescriptor(property);
+				if (!descriptor.Value.IsUndefined() || descriptor.Access != DataModelAccess.Writable)
+				{
+					var recordBucket = _bucket.Nested(_record ++);
+					recordBucket.Add(Key.Operation, Key.Set);
+					recordBucket.Add(Key.Property, property);
+
+					if (descriptor.Access != DataModelAccess.Writable)
+					{
+						recordBucket.Add(Key.Access, descriptor.Access);
+					}
+
+					recordBucket.SetDataModelValue(_referenceTracker, descriptor.Value);
+				}
+			}
 		}
 
 		private void OnChanged(DataModelObject.ChangedAction action, string property, DataModelDescriptor descriptor)
@@ -93,9 +111,9 @@ namespace TSSArt.StateMachine
 					recordBucket.Add(Key.Operation, Key.Set);
 					recordBucket.Add(Key.Property, property);
 
-					if (descriptor.IsReadOnly)
+					if (descriptor.Access != DataModelAccess.Writable)
 					{
-						recordBucket.Add(Key.ReadOnly, value: true);
+						recordBucket.Add(Key.Access, descriptor.Access);
 					}
 
 					_referenceTracker.AddReference(descriptor.Value);

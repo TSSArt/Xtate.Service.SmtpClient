@@ -35,7 +35,7 @@ namespace TSSArt.StateMachine
 			if (!target.IsDefaultOrEmpty)
 			{
 				_writer.WriteStartAttribute("initial");
-				WriteArray(target, i => i.As<string>(), Space);
+				WriteArray(target, i => i.Value, Space);
 				_writer.WriteEndAttribute();
 			}
 
@@ -85,7 +85,7 @@ namespace TSSArt.StateMachine
 
 			if (entity.Id != null)
 			{
-				_writer.WriteAttributeString(localName: "id", entity.Id.As<string>());
+				_writer.WriteAttributeString(localName: "id", entity.Id.Value);
 			}
 
 			base.Visit(ref entity);
@@ -101,7 +101,7 @@ namespace TSSArt.StateMachine
 
 			if (entity.Id != null)
 			{
-				_writer.WriteAttributeString(localName: "id", entity.Id.As<string>());
+				_writer.WriteAttributeString(localName: "id", entity.Id.Value);
 			}
 
 			base.Visit(ref entity);
@@ -117,7 +117,7 @@ namespace TSSArt.StateMachine
 
 			if (entity.Id != null)
 			{
-				_writer.WriteAttributeString(localName: "id", entity.Id.As<string>());
+				_writer.WriteAttributeString(localName: "id", entity.Id.Value);
 			}
 
 			if (entity.Type != HistoryType.Shallow)
@@ -138,7 +138,7 @@ namespace TSSArt.StateMachine
 
 			if (entity.Id != null)
 			{
-				_writer.WriteAttributeString(localName: "id", entity.Id.As<string>());
+				_writer.WriteAttributeString(localName: "id", entity.Id.Value);
 			}
 
 			base.Visit(ref entity);
@@ -160,7 +160,7 @@ namespace TSSArt.StateMachine
 			if (!entity.EventDescriptors.IsDefaultOrEmpty)
 			{
 				_writer.WriteStartAttribute("event");
-				WriteArray(entity.EventDescriptors, ed => ed.As<string>(), Space);
+				WriteArray(entity.EventDescriptors, ed => ed.Value, Space);
 				_writer.WriteEndAttribute();
 			}
 
@@ -173,7 +173,7 @@ namespace TSSArt.StateMachine
 			if (!entity.Target.IsDefaultOrEmpty)
 			{
 				_writer.WriteStartAttribute("target");
-				WriteArray(entity.Target, i => i.As<string>(), Space);
+				WriteArray(entity.Target, i => i.Value, Space);
 				_writer.WriteEndAttribute();
 			}
 

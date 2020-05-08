@@ -64,7 +64,7 @@ namespace TSSArt.StateMachine.Test
 
 			_externalCommunicationMock = new Mock<IExternalCommunication>();
 			_externalCommunicationMock.Setup(e => e.GetIoProcessors()).Returns(ImmutableArray<IIoProcessor>.Empty);
-			_externalCommunicationMock.Setup(e => e.IsInvokeActive(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
+			_externalCommunicationMock.Setup(e => e.IsInvokeActive(It.IsAny<InvokeId>())).Returns(true);
 			_loggerMock = new Mock<ILogger>();
 
 			_options = new InterpreterOptions
@@ -74,27 +74,27 @@ namespace TSSArt.StateMachine.Test
 					   };
 		}
 
+		private static EventObject CreateEventObject(string name, InvokeId? invokeId = null) => new EventObject(EventType.External, EventName.ToParts(name), data: default, sendId: default, invokeId);
+
 		[TestMethod]
 		public async Task SimpleTest()
 		{
 			var invokeUniqueId = "";
 			_externalCommunicationMock.Setup(l => l.StartInvoke(It.IsAny<InvokeData>(), default))
-									  .Callback((InvokeData data, CancellationToken token) => invokeUniqueId = data.InvokeUniqueId);
+									  .Callback((InvokeData data, CancellationToken token) => invokeUniqueId = data.InvokeId.InvokeUniqueIdValue);
 
 			var channel = Channel.CreateUnbounded<IEvent>();
-			var task = StateMachineInterpreter.RunAsync(sessionId: "session1", _stateMachine, channel, _options);
-			await channel.Writer.WriteAsync(new EventObject(name: "fromInvoked", invokeId: "invoke_id", invokeUniqueId));
-			await channel.Writer.WriteAsync(new EventObject("ToF"));
+			var task = StateMachineInterpreter.RunAsync(SessionId.FromString("session1"), _stateMachine, channel, _options);
+			await channel.Writer.WriteAsync(CreateEventObject(name: "fromInvoked", InvokeId.FromString(invokeId: "invoke_id", invokeUniqueId)));
+			await channel.Writer.WriteAsync(CreateEventObject("ToF"));
 			await task;
 
-
-			_externalCommunicationMock.Verify(l => l.GetIoProcessors());
 			_externalCommunicationMock.Verify(l => l.StartInvoke(It.IsAny<InvokeData>(), default));
-			_externalCommunicationMock.Verify(l => l.CancelInvoke("invoke_id", default));
-			_externalCommunicationMock.Verify(l => l.IsInvokeActive("invoke_id", invokeUniqueId));
+			_externalCommunicationMock.Verify(l => l.CancelInvoke(InvokeId.FromString("invoke_id", invokeUniqueId), default));
+			_externalCommunicationMock.Verify(l => l.IsInvokeActive(InvokeId.FromString("invoke_id", invokeUniqueId)));
 			_externalCommunicationMock.VerifyNoOtherCalls();
 
-			_loggerMock.Verify(l => l.LogInfo(It.IsAny<string>(), null, "FinalizeExecuted", default, default));
+			_loggerMock.Verify(l => l.LogInfo(It.IsAny<SessionId>(), null, "FinalizeExecuted", default, default));
 			_loggerMock.VerifyGet(l => l.IsTracingEnabled);
 			_loggerMock.VerifyNoOtherCalls();
 		}

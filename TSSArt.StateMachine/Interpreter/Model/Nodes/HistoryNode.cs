@@ -12,7 +12,7 @@ namespace TSSArt.StateMachine
 
 			_history = history;
 
-			Id = history.Id ?? new IdentifierNode(new RuntimeIdentifier());
+			Id = history.Id ?? new IdentifierNode(Identifier.New());
 			Transition = history.Transition.As<TransitionNode>();
 			Transition.SetSource(this);
 		}

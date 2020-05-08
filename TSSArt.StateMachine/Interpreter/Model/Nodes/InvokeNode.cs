@@ -11,7 +11,7 @@ namespace TSSArt.StateMachine
 		private readonly InvokeEntity           _invoke;
 		private readonly IStartInvokeEvaluator  _startInvokeEvaluator;
 		private          DocumentIdRecord       _documentIdNode;
-		private          string?                _stateId;
+		private          IIdentifier?           _stateId;
 
 		public InvokeNode(in DocumentIdRecord documentIdNode, in InvokeEntity invoke)
 		{
@@ -29,9 +29,7 @@ namespace TSSArt.StateMachine
 			_cancelInvokeEvaluator = cancelInvokeEvaluator;
 		}
 
-		public string? InvokeId { get; private set; }
-
-		public string? InvokeUniqueId { get; private set; }
+		public InvokeId? InvokeId { get; private set; }
 
 		public FinalizeNode? Finalize { get; }
 
@@ -90,20 +88,19 @@ namespace TSSArt.StateMachine
 
 	#endregion
 
-		public void SetStateId(IIdentifier stateId) => _stateId = stateId.As<string>();
+		public void SetStateId(IIdentifier stateId) => _stateId = stateId;
 
 		public async ValueTask Start(IExecutionContext executionContext, CancellationToken token)
 		{
 			Infrastructure.Assert(_stateId != null, Resources.Exception_StateId_not_initialized);
 
-			(InvokeId, InvokeUniqueId) = await _startInvokeEvaluator.Start(_stateId, executionContext, token).ConfigureAwait(false);
+			InvokeId = await _startInvokeEvaluator.Start(_stateId, executionContext, token).ConfigureAwait(false);
 		}
 
 		public async ValueTask Cancel(IExecutionContext executionContext, CancellationToken token)
 		{
 			var tmpInvokeId = InvokeId;
 			InvokeId = null;
-			InvokeUniqueId = null;
 
 			if (tmpInvokeId != null)
 			{

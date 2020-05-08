@@ -18,7 +18,7 @@ namespace TSSArt.StateMachine
 	#region Interface IOutgoingEvent
 
 		public ImmutableArray<IIdentifier> NameParts => _event.NameParts;
-		public string?                     SendId    => _event.SendId;
+		public SendId?                     SendId    => _event.SendId;
 		public DataModelValue              Data      => _event.Data;
 		public Uri?                        Target    => _event.Target;
 		public Uri?                        Type      => _event.Type;

@@ -28,23 +28,25 @@ namespace TSSArt.StateMachine.Test
 			_stateMachine = director.ConstructStateMachine(StateMachineValidator.Instance);
 		}
 
+		private static EventObject CreateEventObject(string name) => new EventObject(EventType.External, EventName.ToParts(name));
+
 		[TestMethod]
 		public async Task ReadScxmlTest()
 		{
 			var channel = Channel.CreateUnbounded<IEvent>();
 
-			await channel.Writer.WriteAsync(new EventObject("Event1"));
-			await channel.Writer.WriteAsync(new EventObject("Test1.done"));
-			await channel.Writer.WriteAsync(new EventObject("Event2"));
-			await channel.Writer.WriteAsync(new EventObject("done.state.Test2"));
-			await channel.Writer.WriteAsync(new EventObject("Timer"));
+			await channel.Writer.WriteAsync(CreateEventObject("Event1"));
+			await channel.Writer.WriteAsync(CreateEventObject("Test1.done"));
+			await channel.Writer.WriteAsync(CreateEventObject("Event2"));
+			await channel.Writer.WriteAsync(CreateEventObject("done.state.Test2"));
+			await channel.Writer.WriteAsync(CreateEventObject("Timer"));
 			channel.Writer.Complete(new ArgumentException("333"));
 
 			var options = new InterpreterOptions { DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory) };
 
 			try
 			{
-				await StateMachineInterpreter.RunAsync(IdGenerator.NewSessionId(), _stateMachine, channel.Reader, options);
+				await StateMachineInterpreter.RunAsync(SessionId.New(), _stateMachine, channel.Reader, options);
 
 				Assert.Fail("StateMachineQueueClosedException should be raised");
 			}
@@ -65,7 +67,7 @@ namespace TSSArt.StateMachine.Test
 
 			try
 			{
-				await StateMachineInterpreter.RunAsync(IdGenerator.NewSessionId(), _stateMachine, channel.Reader, options);
+				await StateMachineInterpreter.RunAsync(SessionId.New(), _stateMachine, channel.Reader, options);
 
 				Assert.Fail("StateMachineQueueClosedException should be raised");
 			}

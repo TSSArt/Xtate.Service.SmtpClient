@@ -37,7 +37,7 @@ namespace TSSArt.StateMachine.Test
 
 			try
 			{
-				await StateMachineInterpreter.RunAsync(IdGenerator.NewSessionId(), stateMachine, _eventChannel, _options);
+				await StateMachineInterpreter.RunAsync(SessionId.New(), stateMachine, _eventChannel, _options);
 
 				Assert.Fail("StateMachineQueueClosedException should be raised");
 			}
@@ -82,7 +82,7 @@ namespace TSSArt.StateMachine.Test
 								  innerXml:
 								  "<state id='s1'><onentry><raise event='my'/></onentry><transition event='my' target='s2'/></state><state id='s2'><onentry><log label='Hello'/></onentry></state>");
 
-			_logger.Verify(l => l.LogInfo(It.IsAny<string>(), It.IsAny<string>(), "Hello", default, default), Times.Once);
+			_logger.Verify(l => l.LogInfo(It.IsAny<SessionId>(), It.IsAny<string>(), "Hello", default, default), Times.Once);
 		}
 
 		[TestMethod]
@@ -92,7 +92,7 @@ namespace TSSArt.StateMachine.Test
 								  innerXml:
 								  "<state id='s1'><onentry><send event='my' target='_internal'/></onentry><transition event='my' target='s2'/></state><state id='s2'><onentry><log label='Hello'/></onentry></state>");
 
-			_logger.Verify(l => l.LogInfo(It.IsAny<string>(), It.IsAny<string>(), "Hello", default, default), Times.Once);
+			_logger.Verify(l => l.LogInfo(It.IsAny<SessionId>(), It.IsAny<string>(), "Hello", default, default), Times.Once);
 		}
 
 		[TestMethod]
@@ -102,7 +102,7 @@ namespace TSSArt.StateMachine.Test
 								  innerXml:
 								  "<state id='s1'><onentry><raise event='my.suffix'/></onentry><transition event='my' target='s2'/></state><state id='s2'><onentry><log label='Hello'/></onentry></state>");
 
-			_logger.Verify(l => l.LogInfo(It.IsAny<string>(), It.IsAny<string>(), "Hello", default, default), Times.Once);
+			_logger.Verify(l => l.LogInfo(It.IsAny<SessionId>(), It.IsAny<string>(), "Hello", default, default), Times.Once);
 		}
 
 		[TestMethod]
@@ -112,7 +112,7 @@ namespace TSSArt.StateMachine.Test
 								  innerXml:
 								  "<state id='s1'><onentry><raise event='my.suffix'/></onentry><transition event='my.*' target='s2'/></state><state id='s2'><onentry><log label='Hello'/></onentry></state>");
 
-			_logger.Verify(l => l.LogInfo(It.IsAny<string>(), It.IsAny<string>(), "Hello", default, default), Times.Once);
+			_logger.Verify(l => l.LogInfo(It.IsAny<SessionId>(), It.IsAny<string>(), "Hello", default, default), Times.Once);
 		}
 
 		[TestMethod]
@@ -122,7 +122,7 @@ namespace TSSArt.StateMachine.Test
 								  innerXml:
 								  "<state id='s1'><onentry><custom my='name'/></onentry></state>");
 
-			_logger.Verify(l => l.LogInfo(It.IsAny<string>(), It.IsAny<string>(), "Custom", default, default), Times.Once);
+			_logger.Verify(l => l.LogInfo(It.IsAny<SessionId>(), It.IsAny<string>(), "Custom", default, default), Times.Once);
 		}
 
 		[TestMethod]

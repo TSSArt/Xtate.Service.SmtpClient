@@ -14,16 +14,16 @@ namespace TSSArt.StateMachine
 		private readonly Uri?     _baseUri;
 		private readonly TimeSpan _idlePeriod;
 
-		private readonly Dictionary<(string SessionId, string InvokeId), InvokedServiceMeta> _invokedServices = new Dictionary<(string SessionId, string InvokeId), InvokedServiceMeta>();
+		private readonly Dictionary<(SessionId SessionId, InvokeId InvokeId), InvokedServiceMeta> _invokedServices = new Dictionary<(SessionId SessionId, InvokeId InvokeId), InvokedServiceMeta>();
 
-		private readonly SemaphoreSlim                        _lockInvokedServices = new SemaphoreSlim(initialCount: 1, maxCount: 1);
-		private readonly SemaphoreSlim                        _lockStateMachines   = new SemaphoreSlim(initialCount: 1, maxCount: 1);
-		private readonly IStateMachineHost                    _stateMachineHost;
-		private readonly Dictionary<string, StateMachineMeta> _stateMachines = new Dictionary<string, StateMachineMeta>();
-		private readonly IStorageProvider                     _storageProvider;
-		private          bool                                 _disposed;
-		private          int                                  _invokedServiceRecordId;
-		private          int                                  _stateMachineRecordId;
+		private readonly SemaphoreSlim                           _lockInvokedServices = new SemaphoreSlim(initialCount: 1, maxCount: 1);
+		private readonly SemaphoreSlim                           _lockStateMachines   = new SemaphoreSlim(initialCount: 1, maxCount: 1);
+		private readonly IStateMachineHost                       _stateMachineHost;
+		private readonly Dictionary<SessionId, StateMachineMeta> _stateMachines = new Dictionary<SessionId, StateMachineMeta>();
+		private readonly IStorageProvider                        _storageProvider;
+		private          bool                                    _disposed;
+		private          int                                     _invokedServiceRecordId;
+		private          int                                     _stateMachineRecordId;
 
 		private ITransactionalStorage? _storage;
 
@@ -78,20 +78,20 @@ namespace TSSArt.StateMachine
 			await base.DisposeAsync().ConfigureAwait(false);
 		}
 
-		public override async ValueTask AddService(string sessionId, string invokeId, string invokeUniqueId, IService service, CancellationToken token)
+		public override async ValueTask AddService(SessionId sessionId, InvokeId invokeId, IService service, CancellationToken token)
 		{
 			Infrastructure.Assert(_storage != null);
 
 			await _lockInvokedServices.WaitAsync(token).ConfigureAwait(false);
 			try
 			{
-				await base.AddService(sessionId, invokeId, invokeUniqueId, service, token).ConfigureAwait(false);
+				await base.AddService(sessionId, invokeId, service, token).ConfigureAwait(false);
 
 				var bucket = new Bucket(_storage).Nested(InvokedServicesKey);
 				var recordId = _invokedServiceRecordId ++;
 
 				var invokedSessionId = service is StateMachineController stateMachineController ? stateMachineController.SessionId : null;
-				var invokedService = new InvokedServiceMeta(sessionId, invokeId, invokeUniqueId, invokedSessionId) { RecordId = recordId };
+				var invokedService = new InvokedServiceMeta(sessionId, invokeId, invokedSessionId) { RecordId = recordId };
 				_invokedServices.Add((sessionId, invokeId), invokedService);
 
 				bucket.Add(Bucket.RootKey, _invokedServiceRecordId);
@@ -106,7 +106,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private async ValueTask RemoveInvokedService(string sessionId, string invokeId)
+		private async ValueTask RemoveInvokedService(SessionId sessionId, InvokeId invokeId)
 		{
 			Infrastructure.Assert(_storage != null);
 
@@ -126,7 +126,7 @@ namespace TSSArt.StateMachine
 			await ShrinkInvokedServices().ConfigureAwait(false);
 		}
 
-		public override async ValueTask<IService?> TryRemoveService(string sessionId, string invokeId)
+		public override async ValueTask<IService?> TryRemoveService(SessionId sessionId, InvokeId invokeId)
 		{
 			await _lockInvokedServices.WaitAsync(StopToken).ConfigureAwait(false);
 			try
@@ -141,7 +141,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public override async ValueTask<IService?> TryCompleteService(string sessionId, string invokeId)
+		public override async ValueTask<IService?> TryCompleteService(SessionId sessionId, InvokeId invokeId)
 		{
 			await _lockInvokedServices.WaitAsync(StopToken).ConfigureAwait(false);
 			try
@@ -156,13 +156,13 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected override StateMachineController CreateStateMachineController(string sessionId, IStateMachine? stateMachine, IStateMachineOptions? stateMachineOptions,
+		protected override StateMachineController CreateStateMachineController(SessionId sessionId, IStateMachine? stateMachine, IStateMachineOptions? stateMachineOptions,
 																			   Uri? stateMachineLocation, in InterpreterOptions defaultOptions) =>
 				stateMachineOptions.IsStateMachinePersistable()
 						? new StateMachinePersistedController(sessionId, stateMachineOptions, stateMachine, stateMachineLocation, _stateMachineHost, _storageProvider, _idlePeriod, in defaultOptions)
 						: base.CreateStateMachineController(sessionId, stateMachine, stateMachineOptions, stateMachineLocation, in defaultOptions);
 
-		public override async ValueTask<StateMachineController> CreateAndAddStateMachine(string sessionId, StateMachineOrigin origin, DataModelValue parameters, IErrorProcessor errorProcessor,
+		public override async ValueTask<StateMachineController> CreateAndAddStateMachine(SessionId sessionId, StateMachineOrigin origin, DataModelValue parameters, IErrorProcessor errorProcessor,
 																						 CancellationToken token)
 		{
 			Infrastructure.Assert(_storage != null);
@@ -201,7 +201,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public override async ValueTask DestroyStateMachine(string sessionId)
+		public override async ValueTask DestroyStateMachine(SessionId sessionId)
 		{
 			Infrastructure.Assert(_storage != null);
 
@@ -346,14 +346,14 @@ namespace TSSArt.StateMachine
 						{
 							var stateMachine = _stateMachines[invokedService.SessionId];
 							Infrastructure.Assert(stateMachine.Controller != null);
-							await base.AddService(invokedService.ParentSessionId, invokedService.InvokeId, invokedService.InvokeUniqueId, stateMachine.Controller, token).ConfigureAwait(false);
+							await base.AddService(invokedService.ParentSessionId, invokedService.InvokeId, stateMachine.Controller, token).ConfigureAwait(false);
 
 							_invokedServices.Add((invokedService.ParentSessionId, invokedService.InvokeId), invokedService);
 						}
 						else if (_stateMachines.TryGetValue(invokedService.ParentSessionId, out var invokingStateMachine))
 						{
 							Infrastructure.Assert(invokingStateMachine.Controller != null);
-							var evt = new EventObject(EventType.External, EventName.ErrorExecution, data: default, sendId: null, invokedService.InvokeId, invokedService.InvokeUniqueId);
+							var evt = new EventObject(EventType.External, EventName.ErrorExecution, data: default, sendId: null, invokedService.InvokeId);
 							await invokingStateMachine.Controller.Send(evt, token).ConfigureAwait(false);
 						}
 					}
@@ -367,7 +367,7 @@ namespace TSSArt.StateMachine
 
 		private class StateMachineMeta : IStoreSupport, IStateMachineOptions
 		{
-			public StateMachineMeta(string sessionId, IStateMachineOptions? options, Uri? stateMachineLocation)
+			public StateMachineMeta(SessionId sessionId, IStateMachineOptions? options, Uri? stateMachineLocation)
 			{
 				SessionId = sessionId;
 				Location = stateMachineLocation;
@@ -382,7 +382,7 @@ namespace TSSArt.StateMachine
 
 			public StateMachineMeta(Bucket bucket)
 			{
-				SessionId = bucket.GetString(Key.SessionId) ?? throw new StateMachinePersistenceException(Resources.Exception_Missed_SessionId);
+				SessionId = bucket.GetSessionId(Key.SessionId) ?? throw new StateMachinePersistenceException(Resources.Exception_Missed_SessionId);
 				Location = bucket.GetUri(Key.Location);
 				Name = bucket.GetString(Key.Name);
 
@@ -402,7 +402,7 @@ namespace TSSArt.StateMachine
 				}
 			}
 
-			public string                  SessionId  { get; }
+			public SessionId               SessionId  { get; }
 			public Uri?                    Location   { get; }
 			public int                     RecordId   { get; set; }
 			public StateMachineController? Controller { get; set; }
@@ -421,7 +421,7 @@ namespace TSSArt.StateMachine
 			public void Store(Bucket bucket)
 			{
 				bucket.Add(Key.TypeInfo, TypeInfo.StateMachine);
-				bucket.Add(Key.SessionId, SessionId);
+				bucket.AddId(Key.SessionId, SessionId);
 				bucket.Add(Key.Location, Location);
 
 				if (Name != null)
@@ -450,37 +450,34 @@ namespace TSSArt.StateMachine
 
 		private class InvokedServiceMeta : IStoreSupport
 		{
-			public InvokedServiceMeta(string parentSessionId, string invokeId, string invokeUniqueId, string? sessionId)
+			public InvokedServiceMeta(SessionId parentSessionId, InvokeId invokeId, SessionId? sessionId)
 			{
 				ParentSessionId = parentSessionId;
 				InvokeId = invokeId;
-				InvokeUniqueId = invokeUniqueId;
 				SessionId = sessionId;
 			}
 
 			public InvokedServiceMeta(Bucket bucket)
 			{
-				ParentSessionId = bucket.GetString(Key.ParentSessionId) ?? throw new StateMachinePersistenceException(Resources.Exception_Missed_ParentSessionId);
-				InvokeId = bucket.GetString(Key.InvokeId) ?? throw new StateMachinePersistenceException(Resources.Exception_InvokedServiceMeta_Missed_InvokeId);
-				InvokeUniqueId = bucket.GetString(Key.InvokeUniqueId) ?? throw new StateMachinePersistenceException(Resources.Exception_Missed_InvokeUniqueId);
-				SessionId = bucket.GetString(Key.SessionId);
+				ParentSessionId = bucket.GetSessionId(Key.ParentSessionId) ?? throw new StateMachinePersistenceException(Resources.Exception_Missed_ParentSessionId);
+				InvokeId = bucket.GetInvokeId(Key.InvokeId) ?? throw new StateMachinePersistenceException(Resources.Exception_InvokedServiceMeta_Missed_InvokeId);
+				SessionId = bucket.GetSessionId(Key.SessionId);
 			}
 
-			public string  ParentSessionId { get; }
-			public string  InvokeId        { get; }
-			public string  InvokeUniqueId  { get; }
-			public string? SessionId       { get; }
-			public int     RecordId        { get; set; }
+			public SessionId  ParentSessionId { get; }
+			public InvokeId   InvokeId        { get; }
+			public SessionId? SessionId       { get; }
+			public int        RecordId        { get; set; }
 
 		#region Interface IStoreSupport
 
 			public void Store(Bucket bucket)
 			{
 				bucket.Add(Key.TypeInfo, TypeInfo.InvokedService);
-				bucket.Add(Key.ParentSessionId, ParentSessionId);
-				bucket.Add(Key.InvokeId, InvokeId);
-				bucket.Add(Key.InvokeUniqueId, InvokeUniqueId);
-				bucket.Add(Key.SessionId, SessionId);
+				bucket.AddId(Key.ParentSessionId, ParentSessionId);
+				bucket.AddId(Key.InvokeId, InvokeId);
+				bucket.AddId(Key.InvokeUniqueId, InvokeId);
+				bucket.AddId(Key.SessionId, SessionId);
 			}
 
 		#endregion

@@ -55,12 +55,14 @@ namespace TSSArt.StateMachine
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
 
-			if (nameEvaluatorList.IsDefaultOrEmpty && parameterList.IsDefaultOrEmpty)
+			var length = (nameEvaluatorList.IsDefault ? 0 : nameEvaluatorList.Length) + (parameterList.IsDefault ? 0 : parameterList.Length);
+
+			if (length == 0)
 			{
 				return DataModelValue.Undefined;
 			}
 
-			var attributes = new DataModelObject();
+			var attributes = new DataModelObject(length);
 
 			if (!nameEvaluatorList.IsDefaultOrEmpty)
 			{
@@ -107,7 +109,7 @@ namespace TSSArt.StateMachine
 		{
 			if (evt == null) throw new ArgumentNullException(nameof(evt));
 
-			var eventObject = new DataModelObject
+			var eventObject = new DataModelObject(capacity: 7)
 							  {
 									  [@"name"] = new DataModelValue(EventName.ToName(evt.NameParts)),
 									  [@"type"] = new DataModelValue(GetTypeString(evt.Type)),
@@ -138,7 +140,7 @@ namespace TSSArt.StateMachine
 		{
 			if (exception == null) throw new ArgumentNullException(nameof(exception));
 
-			var exceptionData = new DataModelObject
+			var exceptionData = new DataModelObject(capacity: 6)
 								{
 										[@"message"] = new DataModelValue(exception.Message),
 										[@"typeName"] = new DataModelValue(exception.GetType().Name),

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using Jint;
@@ -109,14 +110,19 @@ namespace TSSArt.StateMachine.EcmaScript
 					return new DataModelValue(dataModelArray);
 
 				default:
-					var dataModelObject = new DataModelObject();
+				{
+					IEnumerable<KeyValuePair<string, PropertyDescriptor>> ownProperties = objectInstance.GetOwnProperties();
+					var capacity = ownProperties is ICollection<KeyValuePair<string, PropertyDescriptor>> collection ? collection.Count : 0;
 
-					foreach (var pair in objectInstance.GetOwnProperties())
+					var dataModelObject = new DataModelObject(capacity);
+
+					foreach (var pair in ownProperties)
 					{
 						dataModelObject[pair.Key] = ConvertFromJsValue(objectInstance.Get(pair.Key));
 					}
 
 					return new DataModelValue(dataModelObject);
+				}
 			}
 		}
 

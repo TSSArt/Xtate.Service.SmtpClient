@@ -56,7 +56,7 @@ namespace TSSArt.StateMachine.Test
 								  StorageProvider = new TestStorage()
 						  };
 
-			var newSessionId = IdGenerator.NewSessionId();
+			var newSessionId = SessionId.New();
 			try
 			{
 				await StateMachineInterpreter.RunAsync(newSessionId, _allStateMachine, channel.Reader, options);

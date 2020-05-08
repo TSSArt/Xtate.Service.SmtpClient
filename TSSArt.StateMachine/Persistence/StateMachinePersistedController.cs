@@ -22,7 +22,7 @@ namespace TSSArt.StateMachine
 		private int                    _recordId;
 		private ITransactionalStorage? _storage;
 
-		public StateMachinePersistedController(string sessionId, IStateMachineOptions? options, IStateMachine? stateMachine, Uri? stateMachineLocation,
+		public StateMachinePersistedController(SessionId sessionId, IStateMachineOptions? options, IStateMachine? stateMachine, Uri? stateMachineLocation,
 											   IStateMachineHost stateMachineHost, IStorageProvider storageProvider, TimeSpan idlePeriod, in InterpreterOptions defaultOptions)
 				: base(sessionId, options, stateMachine, stateMachineLocation, stateMachineHost, idlePeriod, defaultOptions)
 		{
@@ -40,21 +40,21 @@ namespace TSSArt.StateMachine
 		{
 			if (partition != null) throw new ArgumentException(Resources.Exception_Partition_argument_should_be_null, nameof(partition));
 
-			return _storageProvider.GetTransactionalStorage(SessionId, key, token);
+			return _storageProvider.GetTransactionalStorage(SessionId.Value, key, token);
 		}
 
 		ValueTask IStorageProvider.RemoveTransactionalStorage(string? partition, string key, CancellationToken token)
 		{
 			if (partition != null) throw new ArgumentException(Resources.Exception_Partition_argument_should_be_null, nameof(partition));
 
-			return _storageProvider.RemoveTransactionalStorage(SessionId, key, token);
+			return _storageProvider.RemoveTransactionalStorage(SessionId.Value, key, token);
 		}
 
 		ValueTask IStorageProvider.RemoveAllTransactionalStorage(string? partition, CancellationToken token)
 		{
 			if (partition != null) throw new ArgumentException(Resources.Exception_Partition_argument_should_be_null, nameof(partition));
 
-			return _storageProvider.RemoveAllTransactionalStorage(SessionId, token);
+			return _storageProvider.RemoveAllTransactionalStorage(SessionId.Value, token);
 		}
 
 	#endregion
@@ -84,7 +84,7 @@ namespace TSSArt.StateMachine
 		{
 			await base.Initialize().ConfigureAwait(false);
 
-			_storage = await _storageProvider.GetTransactionalStorage(SessionId, ControllerStateKey, _stopToken).ConfigureAwait(false);
+			_storage = await _storageProvider.GetTransactionalStorage(SessionId.Value, ControllerStateKey, _stopToken).ConfigureAwait(false);
 
 			_channelPersistingController.Initialize(new Bucket(_storage).Nested(ExternalEventsKey), bucket => new EventObject(bucket), _storageLock, token => _storage.CheckPoint(level: 0, token));
 
@@ -250,7 +250,7 @@ namespace TSSArt.StateMachine
 
 				return new EventEntity
 					   {
-							   SendId = bucket.GetString(Key.SendId),
+							   SendId = bucket.GetSendId(Key.SendId),
 							   NameParts = name != null ? EventName.ToParts(name) : default,
 							   Target = bucket.GetUri(Key.Target),
 							   Type = bucket.GetUri(Key.Type),

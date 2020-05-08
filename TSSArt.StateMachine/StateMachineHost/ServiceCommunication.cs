@@ -7,17 +7,15 @@ namespace TSSArt.StateMachine
 	internal class ServiceCommunication : IServiceCommunication
 	{
 		private readonly StateMachineController _creator;
-		private readonly string                 _invokeId;
-		private readonly string                 _invokeUniqueId;
+		private readonly InvokeId               _invokeId;
 		private readonly Uri                    _originType;
 		private          Uri?                   _origin;
 
-		public ServiceCommunication(StateMachineController creator, Uri originType, string invokeId, string invokeUniqueId)
+		public ServiceCommunication(StateMachineController creator, Uri originType, InvokeId invokeId)
 		{
 			_creator = creator;
 			_originType = originType;
 			_invokeId = invokeId;
-			_invokeUniqueId = invokeUniqueId;
 		}
 
 	#region Interface IServiceCommunication
@@ -34,9 +32,9 @@ namespace TSSArt.StateMachine
 				throw new StateMachineProcessorException(Resources.Exception_Target_should_be_equal_to___parent__or_null);
 			}
 
-			_origin ??= new Uri("#_" + _invokeId);
+			_origin ??= new Uri("#_" + _invokeId.Value);
 
-			var eventObject = new EventObject(EventType.External, evt, _origin, _originType, _invokeId, _invokeUniqueId);
+			var eventObject = new EventObject(EventType.External, evt, _origin, _originType, _invokeId);
 
 			return _creator.Send(eventObject, token);
 		}

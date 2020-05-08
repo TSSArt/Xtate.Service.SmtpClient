@@ -32,6 +32,8 @@ namespace TSSArt.StateMachine.Test
 
 		private static string U(string v, [CallerMemberName] string? member = null) => v + "_" + member;
 
+		private static EventObject CreateEventObject(string name) => new EventObject(EventType.External, EventName.ToParts(name));
+
 		[TestMethod]
 		public async Task SameStateMachineHostTest()
 		{
@@ -40,9 +42,11 @@ namespace TSSArt.StateMachine.Test
 			var _ = srcPrc.ExecuteAsync(string.Format(SrcScxml, $"iop:///{U("src")}#_scxml_dstID"), sessionId: "srcID");
 			var dst = srcPrc.ExecuteAsync(DstScxml, sessionId: "dstID");
 
-			await srcPrc.Dispatch(sessionId: "srcID", new EventObject("trigger"));
+			await srcPrc.Dispatch(SessionId.FromString("srcID"), CreateEventObject("trigger"));
 
 			var result = await dst;
+
+			await srcPrc.WaitAllAsync();
 
 			await srcPrc.StopAsync();
 
@@ -61,10 +65,12 @@ namespace TSSArt.StateMachine.Test
 			var dst = dstPrc.ExecuteAsync(DstScxml, sessionId: "dstID");
 
 
-			await srcPrc.Dispatch(sessionId: "srcID", new EventObject("trigger"));
+			await srcPrc.Dispatch(SessionId.FromString("srcID"), CreateEventObject("trigger"));
 
 			var result = await dst;
 
+			await srcPrc.WaitAllAsync();
+			await dstPrc.WaitAllAsync();
 			await srcPrc.StopAsync();
 			await dstPrc.StopAsync();
 
@@ -83,10 +89,12 @@ namespace TSSArt.StateMachine.Test
 			var dst = dstPrc.ExecuteAsync(DstScxml, sessionId: "dstID");
 
 
-			await srcPrc.Dispatch(sessionId: "srcID", new EventObject("trigger"));
+			await srcPrc.Dispatch(SessionId.FromString("srcID"), CreateEventObject("trigger"));
 
 			var result = await dst;
 
+			await srcPrc.WaitAllAsync();
+			await dstPrc.WaitAllAsync();
 			await srcPrc.StopAsync();
 			await dstPrc.StopAsync();
 

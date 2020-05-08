@@ -7,7 +7,6 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using HtmlAgilityPack;
 using MimeKit;
-
 #if NETSTANDARD2_1
 using System.Buffers;
 
@@ -120,8 +119,10 @@ namespace TSSArt.StateMachine.Services
 				return match.Groups[0].Value;
 			}
 
-			var obj = new DataModelObject();
-			foreach (var name in regex.GetGroupNames())
+			var groupNames = regex.GetGroupNames();
+
+			var obj = new DataModelObject(groupNames.Length);
+			foreach (var name in groupNames)
 			{
 				obj[name] = match.Groups[name].Value;
 			}
@@ -160,8 +161,10 @@ namespace TSSArt.StateMachine.Services
 					return match.Groups[0].Value;
 				}
 
-				var obj = new DataModelObject();
-				foreach (var name in regex.GetGroupNames())
+				var groupNames = regex.GetGroupNames();
+
+				var obj = new DataModelObject(groupNames.Length);
+				foreach (var name in groupNames)
 				{
 					obj[name] = match.Groups[name].Value;
 				}

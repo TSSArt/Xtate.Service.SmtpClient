@@ -10,7 +10,7 @@ namespace TSSArt.StateMachine
 	{
 		protected StateMachineValidationException(SerializationInfo info, StreamingContext context) : base(info, context) { }
 
-		public StateMachineValidationException(ImmutableArray<ErrorItem> validationMessages, string? sessionId = null, StateMachineOrigin origin = default)
+		public StateMachineValidationException(ImmutableArray<ErrorItem> validationMessages, SessionId? sessionId = default, StateMachineOrigin origin = default)
 				: base(GetMessage(validationMessages))
 		{
 			Origin = origin;
@@ -18,7 +18,7 @@ namespace TSSArt.StateMachine
 			ValidationMessages = validationMessages;
 		}
 
-		public string?                   SessionId          { get; }
+		public SessionId?                SessionId          { get; }
 		public StateMachineOrigin        Origin             { get; }
 		public ImmutableArray<ErrorItem> ValidationMessages { get; }
 

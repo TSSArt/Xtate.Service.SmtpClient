@@ -12,7 +12,7 @@ namespace TSSArt.StateMachine
 
 	#region Interface IEventConsumer
 
-		public ValueTask Dispatch(string sessionId, IEvent evt, CancellationToken token = default)
+		public ValueTask Dispatch(SessionId sessionId, IEvent evt, CancellationToken token = default)
 		{
 			GetCurrentContext().ValidateSessionId(sessionId, out var controller);
 
@@ -23,9 +23,9 @@ namespace TSSArt.StateMachine
 
 	#region Interface IIoProcessor
 
-		Uri IIoProcessor.GetTarget(string sessionId) => GetTarget(sessionId);
+		Uri IIoProcessor.GetTarget(SessionId sessionId) => GetTarget(sessionId);
 
-		ValueTask IIoProcessor.Dispatch(string sessionId, IOutgoingEvent evt, CancellationToken token)
+		ValueTask IIoProcessor.Dispatch(SessionId sessionId, IOutgoingEvent evt, CancellationToken token)
 		{
 			if (evt.Target == null)
 			{
@@ -62,6 +62,6 @@ namespace TSSArt.StateMachine
 			return !target.IsAbsoluteUri;
 		}
 
-		private static Uri GetTarget(string sessionId) => new Uri(BaseUri, "#_scxml_" + sessionId);
+		private static Uri GetTarget(SessionId sessionId) => new Uri(BaseUri, "#_scxml_" + sessionId.Value);
 	}
 }

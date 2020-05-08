@@ -53,7 +53,6 @@
 		Parameters,
 		ParentSessionId,
 		Property,
-		ReadOnly,
 		RefId,
 		Remove,
 		Script,

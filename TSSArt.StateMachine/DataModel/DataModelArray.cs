@@ -59,14 +59,6 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public void EnsureCapacity(int capacity)
-		{
-			if (capacity > _list.Capacity)
-			{
-				_list.Capacity = capacity;
-			}
-		}
-
 		public int Length => _list.Count;
 
 		public DataModelAccess Access
@@ -105,25 +97,9 @@ namespace TSSArt.StateMachine
 
 	#region Interface ICollection<DataModelValue>
 
-		public void Add(DataModelValue item)
-		{
-			if (!CanAdd(item))
-			{
-				throw ObjectCantBeModifiedException();
-			}
+		public void Add(DataModelValue item) => AddItem(new DataModelDescriptor(item), DataModelAccess.Writable, throwOnDeny: true);
 
-			AddInternal(new DataModelDescriptor(item));
-		}
-
-		public void Clear()
-		{
-			if (!CanClear())
-			{
-				throw ObjectCantBeModifiedException();
-			}
-
-			ClearInternal();
-		}
+		public void Clear() => ClearItems(DataModelAccess.Writable, throwOnDeny: true);
 
 		public bool Contains(DataModelValue item) => _list.Contains(new DataModelDescriptor(item));
 
@@ -137,15 +113,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public bool Remove(DataModelValue item)
-		{
-			if (!CanRemove(item))
-			{
-				throw ObjectCantBeModifiedException();
-			}
-
-			return RemoveInternal(new DataModelDescriptor(item));
-		}
+		public bool Remove(DataModelValue item) => RemoveItem(new DataModelDescriptor(item), DataModelAccess.Writable, throwOnDeny: true);
 
 		bool ICollection<DataModelValue>.IsReadOnly => _access != DataModelAccess.Writable;
 
@@ -205,52 +173,31 @@ namespace TSSArt.StateMachine
 
 		public DataModelValue this[int index]
 		{
-			get
-			{
-				if (index < 0) throw new ArgumentOutOfRangeException(nameof(index));
+			get => GetDescriptor(index).Value;
 
-				return GetDescriptor(index).Value;
-			}
-			set
-			{
-				if (index < 0) throw new ArgumentOutOfRangeException(nameof(index));
-
-				if (!CanSet(index, value))
-				{
-					throw ObjectCantBeModifiedException();
-				}
-
-				SetInternal(index, new DataModelDescriptor(value));
-			}
+			set => SetItem(index, new DataModelDescriptor(value), DataModelAccess.Writable, throwOnDeny: true);
 		}
 
 		public int IndexOf(DataModelValue item) => _list.IndexOf(new DataModelDescriptor(item));
 
-		public void Insert(int index, DataModelValue item)
-		{
-			if (index < 0) throw new ArgumentOutOfRangeException(nameof(index));
+		public void Insert(int index, DataModelValue item) => InsertItem(index, new DataModelDescriptor(item), DataModelAccess.Writable, throwOnDeny: true);
 
-			if (!CanInsert(index, item))
-			{
-				throw ObjectCantBeModifiedException();
-			}
-
-			InsertInternal(index, new DataModelDescriptor(item));
-		}
-
-		public void RemoveAt(int index)
-		{
-			if (index < 0) throw new ArgumentOutOfRangeException(nameof(index));
-
-			if (!CanRemoveAt(index))
-			{
-				throw ObjectCantBeModifiedException();
-			}
-
-			RemoveAtInternal(index);
-		}
+		public void RemoveAt(int index) => RemoveAtItem(index, DataModelAccess.Writable, throwOnDeny: true);
 
 	#endregion
+
+		public void EnsureCapacity(int capacity)
+		{
+			if (_access == DataModelAccess.Constant)
+			{
+				return;
+			}
+
+			if (capacity > _list.Capacity)
+			{
+				_list.Capacity = capacity;
+			}
+		}
 
 		internal DataModelDescriptor GetDescriptor(int index) => index < _list.Count ? _list[index] : new DataModelDescriptor(DataModelValue.Undefined);
 
@@ -266,44 +213,103 @@ namespace TSSArt.StateMachine
 
 		public DataModelArray AsConstant() => DeepClone(DataModelAccess.Constant);
 
-		internal void AddInternal(DataModelDescriptor descriptor)
+		public bool CanAdd() => AddItem(descriptor: default, DataModelAccess.Constant, throwOnDeny: false);
+
+		public bool CanClear() => ClearItems(DataModelAccess.Constant, throwOnDeny: false);
+
+		public bool CanRemove(DataModelValue item) => RemoveItem(new DataModelDescriptor(item), DataModelAccess.Constant, throwOnDeny: false);
+
+		public bool CanInsert(int index) => InsertItem(index, descriptor: default, DataModelAccess.Constant, throwOnDeny: false);
+
+		public bool CanRemoveAt(int index) => RemoveAtItem(index, DataModelAccess.Constant, throwOnDeny: false);
+
+		public bool CanSet(int index) => SetItem(index, descriptor: default, DataModelAccess.Constant, throwOnDeny: false);
+
+		public bool CanSetLength(int value) => SetLengthItems(value, DataModelAccess.Constant, throwOnDeny: false);
+
+		internal bool AddInternal(DataModelDescriptor descriptor, bool throwOnDeny = true) => AddItem(descriptor, DataModelAccess.ReadOnly, throwOnDeny);
+
+		internal bool ClearInternal(bool throwOnDeny = true) => ClearItems(DataModelAccess.ReadOnly, throwOnDeny);
+
+		internal bool RemoveInternal(DataModelDescriptor descriptor, bool throwOnDeny = true) => RemoveItem(descriptor, DataModelAccess.ReadOnly, throwOnDeny);
+
+		internal bool InsertInternal(int index, DataModelDescriptor descriptor, bool throwOnDeny = true) => InsertItem(index, descriptor, DataModelAccess.ReadOnly, throwOnDeny);
+
+		internal bool RemoveAtInternal(int index, bool throwOnDeny = true) => RemoveAtItem(index, DataModelAccess.ReadOnly, throwOnDeny);
+
+		internal bool SetInternal(int index, DataModelDescriptor descriptor, bool throwOnDeny = true) => SetItem(index, descriptor, DataModelAccess.ReadOnly, throwOnDeny);
+
+		internal bool SetLengthInternal(int value, bool throwOnDeny = true) => SetLengthItems(value, DataModelAccess.ReadOnly, throwOnDeny);
+
+		public void SetLength(int value) => SetLengthItems(value, DataModelAccess.Writable, throwOnDeny: true);
+
+		private bool AddItem(DataModelDescriptor descriptor, DataModelAccess requestedAccess, bool throwOnDeny)
 		{
-			if (_access == DataModelAccess.Constant)
+			if (NoAccess(_access, requestedAccess, throwOnDeny))
 			{
-				throw ObjectCantBeModifiedException();
+				return false;
 			}
 
-			_list.Add(descriptor);
-
-			Changed?.Invoke(ChangedAction.Set, _list.Count - 1, descriptor);
-		}
-
-		internal void ClearInternal()
-		{
-			if (_access == DataModelAccess.Constant)
+			if (requestedAccess != DataModelAccess.Constant)
 			{
-				throw ObjectCantBeModifiedException();
+				_list.Add(descriptor);
+
+				Changed?.Invoke(ChangedAction.Set, _list.Count - 1, descriptor);
 			}
 
-			Changed?.Invoke(ChangedAction.Clear, index: default, descriptor: default);
-
-			_list.Clear();
+			return true;
 		}
 
-		internal bool RemoveInternal(DataModelDescriptor descriptor)
+		private bool ClearItems(DataModelAccess requestedAccess, bool throwOnDeny)
 		{
-			if (_access == DataModelAccess.Constant)
+			if (NoAccess(_access, requestedAccess, throwOnDeny))
 			{
-				throw ObjectCantBeModifiedException();
+				return false;
+			}
+
+			foreach (var descriptor in _list)
+			{
+				if (NoAccess(descriptor.Access, requestedAccess, throwOnDeny))
+				{
+					return false;
+				}
+			}
+
+			if (requestedAccess != DataModelAccess.Constant)
+			{
+				Changed?.Invoke(ChangedAction.Clear, index: default, descriptor: default);
+
+				_list.Clear();
+			}
+
+			return true;
+		}
+
+		private bool RemoveItem(DataModelDescriptor descriptor, DataModelAccess requestedAccess, bool throwOnDeny)
+		{
+			if (NoAccess(_access, requestedAccess, throwOnDeny))
+			{
+				return false;
 			}
 
 			var index = _list.IndexOf(descriptor);
 
 			if (index >= 0)
 			{
-				Changed?.Invoke(ChangedAction.Remove, index, descriptor);
+				for (var i = index; i < _list.Count; i ++)
+				{
+					if (NoAccess(_list[i].Access, requestedAccess, throwOnDeny))
+					{
+						return false;
+					}
+				}
 
-				_list.RemoveAt(index);
+				if (requestedAccess != DataModelAccess.Constant)
+				{
+					Changed?.Invoke(ChangedAction.Remove, index, descriptor);
+
+					_list.RemoveAt(index);
+				}
 
 				return true;
 			}
@@ -311,170 +317,173 @@ namespace TSSArt.StateMachine
 			return false;
 		}
 
-		internal void InsertInternal(int index, DataModelDescriptor descriptor)
+		private bool InsertItem(int index, DataModelDescriptor descriptor, DataModelAccess requestedAccess, bool throwOnDeny)
 		{
-			if (_access == DataModelAccess.Constant)
+			if (NoAccess(_access, requestedAccess, throwOnDeny))
 			{
-				throw ObjectCantBeModifiedException();
+				return false;
 			}
 
-			if (index > Length)
+			for (var i = index; i < _list.Count; i ++)
 			{
-				SetLength(index);
+				if (NoAccess(_list[i].Access, requestedAccess, throwOnDeny))
+				{
+					return false;
+				}
 			}
 
-			_list.Insert(index, descriptor);
+			if (requestedAccess != DataModelAccess.Constant)
+			{
+				if (index > Length)
+				{
+					SetLength(index);
+				}
 
-			Changed?.Invoke(ChangedAction.Insert, index, descriptor);
+				_list.Insert(index, descriptor);
+
+				Changed?.Invoke(ChangedAction.Insert, index, descriptor);
+			}
+
+			return true;
 		}
 
-		internal void RemoveAtInternal(int index)
+		private bool RemoveAtItem(int index, DataModelAccess requestedAccess, bool throwOnDeny)
 		{
-			if (_access == DataModelAccess.Constant)
+			if (NoAccess(_access, requestedAccess, throwOnDeny))
 			{
-				throw ObjectCantBeModifiedException();
+				return false;
+			}
+
+			for (var i = index; i < _list.Count; i ++)
+			{
+				if (NoAccess(_list[i].Access, requestedAccess, throwOnDeny))
+				{
+					return false;
+				}
 			}
 
 			if (index < _list.Count)
 			{
-				Changed?.Invoke(ChangedAction.Remove, index, _list[index]);
+				if (requestedAccess != DataModelAccess.Constant)
+				{
+					Changed?.Invoke(ChangedAction.Remove, index, _list[index]);
 
-				_list.RemoveAt(index);
+					_list.RemoveAt(index);
+				}
+
+				return true;
 			}
+
+			return false;
 		}
 
-		internal void SetInternal(int index, DataModelDescriptor descriptor)
+		private bool SetItem(int index, DataModelDescriptor descriptor, DataModelAccess requestedAccess, bool throwOnDeny)
 		{
-			if (_access == DataModelAccess.Constant)
+			if (NoAccess(_access, requestedAccess, throwOnDeny))
 			{
-				throw ObjectCantBeModifiedException();
+				return false;
 			}
 
 			if (index < _list.Count)
 			{
-				Changed?.Invoke(ChangedAction.Remove, index, _list[index]);
+				if (NoAccess(_list[index].Access, requestedAccess, throwOnDeny))
+				{
+					return false;
+				}
 
-				_list[index] = descriptor;
+				if (requestedAccess != DataModelAccess.Constant)
+				{
+					Changed?.Invoke(ChangedAction.Remove, index, _list[index]);
+
+					_list[index] = descriptor;
+
+					Changed?.Invoke(ChangedAction.Set, index, descriptor);
+				}
+
+				return true;
+			}
+
+			if (requestedAccess != DataModelAccess.Constant)
+			{
+				if (index > _list.Count)
+				{
+					_list.Capacity = index + 1;
+
+					while (index > _list.Count)
+					{
+						_list.Add(default);
+					}
+				}
+
+				_list.Add(descriptor);
 
 				Changed?.Invoke(ChangedAction.Set, index, descriptor);
-
-				return;
 			}
 
-			if (index > _list.Count)
-			{
-				_list.Capacity = index + 1;
-				_list.AddRange(Enumerable.Repeat(default(DataModelDescriptor), index - Length));
-			}
-
-			_list.Add(descriptor);
-
-			Changed?.Invoke(ChangedAction.Set, index, descriptor);
+			return true;
 		}
 
-		private static InvalidOperationException ObjectCantBeModifiedException() => new InvalidOperationException(Resources.Exception_Object_can_not_be_modified);
-
-		public bool CanAdd(DataModelValue item)
+		private bool SetLengthItems(int value, DataModelAccess requestedAccess, bool throwOnDeny)
 		{
-			var _ = item;
-
-			return _access == DataModelAccess.Writable;
-		}
-
-		public bool CanClear() => _access == DataModelAccess.Writable && _list.All(i => !i.IsReadOnly);
-
-		public bool CanRemove(DataModelValue item)
-		{
-			if (_access != DataModelAccess.Writable)
+			if (NoAccess(_access, requestedAccess, throwOnDeny))
 			{
 				return false;
-			}
-
-			var index = _list.IndexOf(new DataModelDescriptor(item));
-
-			return index < 0 || _list.Skip(index).All(i => !i.IsReadOnly);
-		}
-
-		public bool CanSetLength(int value)
-		{
-			if (value < 0) throw new ArgumentOutOfRangeException(nameof(value));
-
-			if (_access != DataModelAccess.Writable)
-			{
-				return false;
-			}
-
-			return value >= Length || _list.Skip(value).All(i => !i.IsReadOnly);
-		}
-
-		public void SetLength(int value)
-		{
-			if (value < 0) throw new ArgumentOutOfRangeException(nameof(value));
-
-			if (!CanSetLength(value))
-			{
-				throw ObjectCantBeModifiedException();
-			}
-
-			SetLengthInternal(value);
-		}
-
-		internal void SetLengthInternal(int value)
-		{
-			if (_access == DataModelAccess.Constant)
-			{
-				throw ObjectCantBeModifiedException();
 			}
 
 			if (value < Length)
 			{
-				Changed?.Invoke(ChangedAction.SetLength, value, descriptor: default);
+				for (var i = value; i < _list.Count; i ++)
+				{
+					if (NoAccess(_list[i].Access, requestedAccess, throwOnDeny))
+					{
+						return false;
+					}
+				}
 
-				_list.RemoveRange(value, Length - value);
-				_list.Capacity = value;
+				if (requestedAccess != DataModelAccess.Constant)
+				{
+					Changed?.Invoke(ChangedAction.SetLength, value, descriptor: default);
+
+					_list.RemoveRange(value, Length - value);
+					_list.Capacity = value;
+				}
 			}
 			else if (value > Length)
 			{
-				Changed?.Invoke(ChangedAction.SetLength, value, descriptor: default);
+				if (requestedAccess != DataModelAccess.Constant)
+				{
+					Changed?.Invoke(ChangedAction.SetLength, value, descriptor: default);
 
-				_list.Capacity = value;
-				_list.AddRange(Enumerable.Repeat(new DataModelDescriptor(DataModelValue.Undefined), value - Length));
+					_list.Capacity = value;
+
+					while (value > _list.Count)
+					{
+						_list.Add(default);
+					}
+				}
 			}
+
+			return true;
 		}
 
-		public bool CanInsert(int index, DataModelValue item)
+		private static bool NoAccess(DataModelAccess objectAccess, DataModelAccess requestedAccess, bool throwOnDeny)
 		{
-			if (index < 0) throw new ArgumentOutOfRangeException(nameof(index));
-
-			var _ = item;
-
-			return _list.Skip(index).All(i => !i.IsReadOnly);
-		}
-
-		public bool CanRemoveAt(int index)
-		{
-			if (index < 0) throw new ArgumentOutOfRangeException(nameof(index));
-
-			if (_access != DataModelAccess.Writable)
+			if (objectAccess == DataModelAccess.Writable)
 			{
 				return false;
 			}
 
-			return _list.Skip(index).All(i => !i.IsReadOnly);
-		}
-
-		public bool CanSet(int index, DataModelValue value)
-		{
-			if (index < 0) throw new ArgumentOutOfRangeException(nameof(index));
-
-			var _ = value;
-
-			if (_access != DataModelAccess.Writable)
+			if (objectAccess != DataModelAccess.Constant && requestedAccess == DataModelAccess.ReadOnly)
 			{
 				return false;
 			}
 
-			return index >= _list.Count || !_list[index].IsReadOnly;
+			if (throwOnDeny)
+			{
+				throw new InvalidOperationException(Resources.Exception_Object_can_not_be_modified);
+			}
+
+			return true;
 		}
 
 		public DataModelArray DeepClone(DataModelAccess targetAccess)
@@ -512,7 +521,7 @@ namespace TSSArt.StateMachine
 
 			foreach (var item in _list)
 			{
-				clone._list.Add(new DataModelDescriptor(item.Value.DeepCloneWithMap(targetAccess, ref map), targetAccess != DataModelAccess.Writable));
+				clone._list.Add(new DataModelDescriptor(item.Value.DeepCloneWithMap(targetAccess, ref map), targetAccess));
 			}
 
 			return clone;

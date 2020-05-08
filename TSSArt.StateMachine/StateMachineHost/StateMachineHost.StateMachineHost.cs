@@ -17,22 +17,22 @@ namespace TSSArt.StateMachine
 
 		ImmutableArray<IIoProcessor> IStateMachineHost.GetIoProcessors() => _ioProcessors;
 
-		async ValueTask IStateMachineHost.StartInvoke(string sessionId, InvokeData data, CancellationToken token)
+		async ValueTask IStateMachineHost.StartInvoke(SessionId sessionId, InvokeData data, CancellationToken token)
 		{
 			var context = GetCurrentContext();
 
 			context.ValidateSessionId(sessionId, out var service);
 
 			var factory = FindServiceFactory(data.Type, data.Source);
-			var serviceCommunication = new ServiceCommunication(service, IoProcessorId, data.InvokeId, data.InvokeUniqueId);
+			var serviceCommunication = new ServiceCommunication(service, IoProcessorId, data.InvokeId);
 			var invokedService = await factory.StartService(service.StateMachineLocation, data, serviceCommunication, token).ConfigureAwait(false);
 
-			await context.AddService(sessionId, data.InvokeId, data.InvokeUniqueId, invokedService, token).ConfigureAwait(false);
+			await context.AddService(sessionId, data.InvokeId, invokedService, token).ConfigureAwait(false);
 
-			CompleteAsync(context, invokedService, service, sessionId, data.InvokeId, data.InvokeUniqueId).Forget();
+			CompleteAsync(context, invokedService, service, sessionId, data.InvokeId).Forget();
 		}
 
-		async ValueTask IStateMachineHost.CancelInvoke(string sessionId, string invokeId, CancellationToken token)
+		async ValueTask IStateMachineHost.CancelInvoke(SessionId sessionId, InvokeId invokeId, CancellationToken token)
 		{
 			var context = GetCurrentContext();
 
@@ -48,10 +48,9 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		bool IStateMachineHost.IsInvokeActive(string sessionId, string invokeId, string invokeUniqueId) =>
-				IsCurrentContextExists(out var context) && context.TryGetService(sessionId, invokeId, out var pair) && pair.InvokeUniqueId == invokeUniqueId;
+		bool IStateMachineHost.IsInvokeActive(SessionId sessionId, InvokeId invokeId) => IsCurrentContextExists(out var context) && context.TryGetService(invokeId, out _);
 
-		async ValueTask<SendStatus> IStateMachineHost.DispatchEvent(string sessionId, IOutgoingEvent evt, bool skipDelay, CancellationToken token)
+		async ValueTask<SendStatus> IStateMachineHost.DispatchEvent(SessionId sessionId, IOutgoingEvent evt, bool skipDelay, CancellationToken token)
 		{
 			if (evt == null) throw new ArgumentNullException(nameof(evt));
 
@@ -84,35 +83,35 @@ namespace TSSArt.StateMachine
 			return SendStatus.Sent;
 		}
 
-		ValueTask IStateMachineHost.ForwardEvent(string sessionId, IEvent evt, string invokeId, CancellationToken token)
+		ValueTask IStateMachineHost.ForwardEvent(SessionId sessionId, IEvent evt, InvokeId invokeId, CancellationToken token)
 		{
 			var context = GetCurrentContext();
 
 			context.ValidateSessionId(sessionId, out _);
 
-			if (!context.TryGetService(sessionId, invokeId, out var pair))
+			if (!context.TryGetService(invokeId, out var service))
 			{
 				throw new StateMachineProcessorException(Resources.Exception_Invalid_InvokeId);
 			}
 
-			return pair.Service?.Send(evt, token) ?? default;
+			return service?.Send(evt, token) ?? default;
 		}
 
 	#endregion
 
-		private static async ValueTask CompleteAsync(StateMachineHostContext context, IService invokedService, StateMachineController service, string sessionId, string invokeId, string invokeUniqueId)
+		private static async ValueTask CompleteAsync(StateMachineHostContext context, IService invokedService, StateMachineController service, SessionId sessionId, InvokeId invokeId)
 		{
 			try
 			{
 				var result = await invokedService.Result.ConfigureAwait(false);
 
 				var nameParts = EventName.GetDoneInvokeNameParts(invokeId);
-				var evt = new EventObject(EventType.External, nameParts, result, sendId: null, invokeId, invokeUniqueId);
+				var evt = new EventObject(EventType.External, nameParts, result, sendId: null, invokeId);
 				await service.Send(evt, token: default).ConfigureAwait(false);
 			}
 			catch (Exception ex)
 			{
-				var evt = new EventObject(EventType.External, EventName.ErrorExecution, DataConverter.FromException(ex), sendId: null, invokeId, invokeUniqueId);
+				var evt = new EventObject(EventType.External, EventName.ErrorExecution, DataConverter.FromException(ex), sendId: null, invokeId);
 				await service.Send(evt, token: default).ConfigureAwait(false);
 			}
 			finally
@@ -133,7 +132,7 @@ namespace TSSArt.StateMachine
 			return context != null;
 		}
 
-		private IErrorProcessor CreateErrorProcessor(string sessionId, StateMachineOrigin origin) =>
+		private IErrorProcessor CreateErrorProcessor(SessionId sessionId, StateMachineOrigin origin) =>
 				_options.VerboseValidation ? new DetailedErrorProcessor(sessionId, origin) : DefaultErrorProcessor.Instance;
 
 		private StateMachineHostContext GetCurrentContext() => _context ?? throw new InvalidOperationException(Resources.Exception_IO_Processor_has_not_been_started);

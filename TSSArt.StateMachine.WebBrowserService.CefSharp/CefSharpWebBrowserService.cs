@@ -28,22 +28,27 @@ namespace TSSArt.StateMachine.Services
 
 			Application.Run(form);
 
-			var result = new DataModelObject();
+			var result = new DataModelObject(capacity: 2);
 
 			if (form.DialogResult == DialogResult.OK)
 			{
 				result["status"] = "ok";
 
-				var parameters = new DataModelObject();
 				if (form.Result != null)
 				{
+					var parameters = new DataModelObject(capacity: form.Result.Count);
+
 					foreach (var pair in form.Result)
 					{
 						parameters[pair.Key] = pair.Value;
 					}
-				}
 
-				result["parameters"] = parameters;
+					result["parameters"] = parameters;
+				}
+				else
+				{
+					result["parameters"] = DataModelObject.Empty;
+				}
 			}
 			else
 			{

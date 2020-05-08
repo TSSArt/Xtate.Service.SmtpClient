@@ -11,7 +11,7 @@ namespace TSSArt.StateMachine
 		{
 			_parallel = parallel;
 
-			var id = parallel.Id ?? new IdentifierNode(new RuntimeIdentifier());
+			var id = parallel.Id ?? new IdentifierNode(Identifier.New());
 			var transitions = parallel.Transitions.AsArrayOf<ITransition, TransitionNode>(true);
 			var invokeList = parallel.Invoke.AsArrayOf<IInvoke, InvokeNode>(true);
 
