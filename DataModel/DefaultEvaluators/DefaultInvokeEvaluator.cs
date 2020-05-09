@@ -77,7 +77,7 @@ namespace TSSArt.StateMachine
 
 			if (IdLocationEvaluator != null)
 			{
-				await IdLocationEvaluator.SetValue(new DefaultObject(invokeId), executionContext, token).ConfigureAwait(false);
+				await IdLocationEvaluator.SetValue(invokeId, executionContext, token).ConfigureAwait(false);
 			}
 
 			var type = TypeExpressionEvaluator != null ? ToUri(await TypeExpressionEvaluator.EvaluateString(executionContext, token).ConfigureAwait(false)) : _invoke.Type;

@@ -143,7 +143,7 @@ namespace TSSArt.StateMachine
 
 		public DataModelObject AsConstant() => DeepClone(DataModelAccess.Constant);
 
-		internal DataModelDescriptor GetDescriptor(string property) => _properties.TryGetValue(property, out var descriptor) ? descriptor : new DataModelDescriptor(DataModelValue.Undefined);
+		internal DataModelDescriptor GetDescriptor(string property) => _properties.TryGetValue(property, out var descriptor) ? descriptor : default;
 
 		private static bool NoAccess(DataModelAccess objectAccess, DataModelAccess requestedAccess, bool throwOnDeny)
 		{

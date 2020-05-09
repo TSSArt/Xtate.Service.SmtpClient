@@ -2,22 +2,15 @@
 {
 	internal sealed class DefaultObject : IObject
 	{
+		public static readonly IObject Null = new DefaultObject(null);
+
 		private readonly object? _value;
 
 		public DefaultObject(object? value) => _value = value;
 
 	#region Interface IObject
 
-		public object? ToObject()
-		{
-			var val = _value;
-			while (val is ILazyValue lazyValue)
-			{
-				val = lazyValue.Value.ToObject();
-			}
-
-			return val;
-		}
+		public object? ToObject() => _value;
 
 	#endregion
 	}

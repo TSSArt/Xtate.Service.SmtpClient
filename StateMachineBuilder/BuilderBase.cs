@@ -14,7 +14,7 @@ namespace TSSArt.StateMachine
 
 		protected object? Ancestor { get; }
 
-		protected void AddError(string message, Exception? exception = null)
+		protected void AddError(string message, Exception? exception = default)
 		{
 			_errorProcessor.AddError(GetType(), Ancestor, message, exception);
 		}

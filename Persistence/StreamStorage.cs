@@ -342,9 +342,9 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private static int GetMarkSizeLength(int mark, int? size = null) => Encode.GetEncodedLength(mark) + (size != null ? Encode.GetEncodedLength(size.Value) : 0);
+		private static int GetMarkSizeLength(int mark, int? size = default) => Encode.GetEncodedLength(mark) + (size != null ? Encode.GetEncodedLength(size.Value) : 0);
 
-		private static void WriteMarkSize(Span<byte> span, int mark, int? size = null)
+		private static void WriteMarkSize(Span<byte> span, int mark, int? size = default)
 		{
 			Encode.WriteEncodedValue(span, mark);
 
@@ -354,6 +354,6 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private static StateMachinePersistenceException GetIncorrectDataFormatException(Exception? ex = null) => new StateMachinePersistenceException(Resources.Exception_Incorrect_data_format, ex);
+		private static StateMachinePersistenceException GetIncorrectDataFormatException(Exception? ex = default) => new StateMachinePersistenceException(Resources.Exception_Incorrect_data_format, ex);
 	}
 }

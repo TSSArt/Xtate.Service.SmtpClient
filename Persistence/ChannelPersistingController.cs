@@ -114,7 +114,7 @@ namespace TSSArt.StateMachine
 
 			public ChannelWriter(ChannelPersistingController<T> parent) => _parent = parent;
 
-			public override bool TryComplete(Exception? error = null) => _parent._baseChannel.Writer.TryComplete(error);
+			public override bool TryComplete(Exception? error = default) => _parent._baseChannel.Writer.TryComplete(error);
 
 			public override bool TryWrite(T item) => throw new NotSupportedException(Resources.Exception_Use_WriteAsync___instead);
 

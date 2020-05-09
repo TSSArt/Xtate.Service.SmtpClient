@@ -199,7 +199,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		internal DataModelDescriptor GetDescriptor(int index) => index < _list.Count ? _list[index] : new DataModelDescriptor(DataModelValue.Undefined);
+		internal DataModelDescriptor GetDescriptor(int index) => index < _list.Count ? _list[index] : default;
 
 		public event ChangedHandler? Changed;
 

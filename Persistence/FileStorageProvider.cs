@@ -17,7 +17,7 @@ namespace TSSArt.StateMachine
 		private readonly string? _extension;
 		private readonly string  _path;
 
-		public FileStorageProvider(string path, string? extension = null)
+		public FileStorageProvider(string path, string? extension = default)
 		{
 			_path = path ?? throw new ArgumentNullException(nameof(path));
 			_extension = extension;

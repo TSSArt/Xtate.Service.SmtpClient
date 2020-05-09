@@ -47,7 +47,7 @@ namespace TSSArt.StateMachine
 				return new DataModelValue(str);
 			}
 
-			return DataModelValue.Undefined;
+			return default;
 		}
 
 		public static async ValueTask<DataModelValue> GetParameters(ImmutableArray<ILocationEvaluator> nameEvaluatorList, ImmutableArray<DefaultParam> parameterList,
@@ -59,7 +59,7 @@ namespace TSSArt.StateMachine
 
 			if (length == 0)
 			{
-				return DataModelValue.Undefined;
+				return default;
 			}
 
 			var attributes = new DataModelObject(length);

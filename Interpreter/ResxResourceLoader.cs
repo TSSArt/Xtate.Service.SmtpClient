@@ -37,7 +37,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public ValueTask<XmlReader> RequestXmlReader(Uri uri, XmlReaderSettings? readerSettings = null, XmlParserContext? parserContext = null, CancellationToken token = default)
+		public ValueTask<XmlReader> RequestXmlReader(Uri uri, XmlReaderSettings? readerSettings = default, XmlParserContext? parserContext = default, CancellationToken token = default)
 		{
 			if (uri == null) throw new ArgumentNullException(nameof(uri));
 

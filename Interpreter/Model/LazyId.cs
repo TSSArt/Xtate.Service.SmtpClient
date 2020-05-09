@@ -6,7 +6,7 @@ using System.Threading;
 namespace TSSArt.StateMachine
 {
 	[Serializable]
-	public abstract class LazyId : ILazyValue
+	public abstract class LazyId : ILazyValue, IObject
 	{
 		private string? _id;
 
@@ -36,6 +36,12 @@ namespace TSSArt.StateMachine
 	#region Interface ILazyValue
 
 		DataModelValue ILazyValue.Value => new DataModelValue(Value);
+
+	#endregion
+
+	#region Interface IObject
+
+		object? IObject.ToObject() => Value;
 
 	#endregion
 

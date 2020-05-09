@@ -1449,7 +1449,7 @@ namespace TSSArt.StateMachine
 				return data.InlineContent;
 			}
 
-			return DataModelValue.Undefined;
+			return default;
 		}
 
 		private async ValueTask<Resource> LoadData(IExternalDataExpression externalDataExpression)
