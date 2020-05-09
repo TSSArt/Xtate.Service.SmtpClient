@@ -19,6 +19,7 @@ namespace TSSArt.StateMachine
 		private ImmutableArray<IServiceFactory>.Builder?          _serviceFactories;
 		private IStorageProvider?                                 _storageProvider;
 		private TimeSpan                                          _suspendIdlePeriod;
+		private UnhandledErrorBehaviour                           _unhandledErrorBehaviour;
 		private bool                                              _verboseValidation = true;
 
 		public StateMachineHost Build()
@@ -36,7 +37,8 @@ namespace TSSArt.StateMachine
 								 PersistenceLevel = _persistenceLevel,
 								 StorageProvider = _storageProvider,
 								 SuspendIdlePeriod = _suspendIdlePeriod,
-								 VerboseValidation = _verboseValidation
+								 VerboseValidation = _verboseValidation,
+								 UnhandledErrorBehaviour = _unhandledErrorBehaviour
 						 };
 
 			return new StateMachineHost(option);
@@ -76,7 +78,10 @@ namespace TSSArt.StateMachine
 
 		public StateMachineHostBuilder SetPersistence(PersistenceLevel persistenceLevel, IStorageProvider storageProvider)
 		{
-			if (!Enum.IsDefined(typeof(PersistenceLevel), persistenceLevel)) throw new InvalidEnumArgumentException(nameof(persistenceLevel), (int) persistenceLevel, typeof(PersistenceLevel));
+			if (persistenceLevel < PersistenceLevel.None || persistenceLevel > PersistenceLevel.ExecutableAction)
+			{
+				throw new InvalidEnumArgumentException(nameof(persistenceLevel), (int) persistenceLevel, typeof(PersistenceLevel));
+			}
 
 			_persistenceLevel = persistenceLevel;
 			_storageProvider = storageProvider ?? throw new ArgumentNullException(nameof(storageProvider));
@@ -132,6 +137,18 @@ namespace TSSArt.StateMachine
 		public StateMachineHostBuilder SetBaseUri(Uri uri)
 		{
 			_baseUri = uri ?? throw new ArgumentNullException(nameof(uri));
+
+			return this;
+		}
+
+		public StateMachineHostBuilder SetUnhandledErrorBehaviour(UnhandledErrorBehaviour unhandledErrorBehaviour)
+		{
+			if (unhandledErrorBehaviour < UnhandledErrorBehaviour.DestroyStateMachine || unhandledErrorBehaviour > UnhandledErrorBehaviour.IgnoreError)
+			{
+				throw new InvalidEnumArgumentException(nameof(unhandledErrorBehaviour), (int) unhandledErrorBehaviour, typeof(UnhandledErrorBehaviour));
+			}
+
+			_unhandledErrorBehaviour = unhandledErrorBehaviour;
 
 			return this;
 		}

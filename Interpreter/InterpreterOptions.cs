@@ -21,5 +21,6 @@ namespace TSSArt.StateMachine
 		public IStorageProvider?                        StorageProvider           { get; set; }
 		public ILogger?                                 Logger                    { get; set; }
 		public IErrorProcessor?                         ErrorProcessor            { get; set; }
+		public UnhandledErrorBehaviour                  UnhandledErrorBehaviour   { get; set; }
 	}
 }

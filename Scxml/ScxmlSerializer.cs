@@ -66,6 +66,11 @@ namespace TSSArt.StateMachine
 			{
 				_writer.WriteAttributeString(localName: "queueSize", TSSArtScxmlNs, XmlConvert.ToString(options.ExternalQueueSize.Value));
 			}
+
+			if (options.UnhandledErrorBehaviour != null)
+			{
+				_writer.WriteAttributeString(localName: "onError", TSSArtScxmlNs, options.UnhandledErrorBehaviour.Value.ToString());
+			}
 		}
 
 		protected override void Visit(ref IInitial entity)

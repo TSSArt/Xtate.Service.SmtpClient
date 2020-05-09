@@ -197,6 +197,11 @@ namespace TSSArt.StateMachine
 
 				options.SuspendToken = _suspendTokenSource.Token;
 			}
+
+			if (_options?.UnhandledErrorBehaviour != null)
+			{
+				options.UnhandledErrorBehaviour = _options.UnhandledErrorBehaviour.Value;
+			}
 		}
 
 		protected virtual ValueTask Initialize() => default;
@@ -256,7 +261,7 @@ namespace TSSArt.StateMachine
 					return;
 				}
 
-				await Channel.Reader.ReadAsync(CancellationToken.None).ConfigureAwait(false);
+				await Channel.Reader.ReadAsync(anyTokenSource.Token).ConfigureAwait(false);
 			}
 			catch (OperationCanceledException ex) when (ex.CancellationToken == anyTokenSource.Token && _defaultOptions.StopToken.IsCancellationRequested)
 			{
@@ -311,7 +316,7 @@ namespace TSSArt.StateMachine
 
 				try
 				{
-					await _stateMachineHost.DispatchEvent(SessionId, scheduledEvent.Event, skipDelay: true, CancellationToken.None).ConfigureAwait(false);
+					await _stateMachineHost.DispatchEvent(SessionId, scheduledEvent.Event, skipDelay: true, token: default).ConfigureAwait(false);
 				}
 				catch (Exception ex)
 				{

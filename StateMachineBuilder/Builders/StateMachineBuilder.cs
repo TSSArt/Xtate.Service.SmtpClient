@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.ComponentModel;
+using TSSArt.StateMachine.Annotations;
 
 namespace TSSArt.StateMachine
 {
+	[PublicAPI]
 	public class StateMachineBuilder : BuilderBase, IStateMachineBuilder
 	{
 		private BindingType                           _bindingType;
@@ -80,7 +82,10 @@ namespace TSSArt.StateMachine
 
 		public void SetPersistenceLevel(PersistenceLevel persistenceLevel)
 		{
-			if (!Enum.IsDefined(typeof(PersistenceLevel), persistenceLevel)) throw new InvalidEnumArgumentException(nameof(persistenceLevel), (int) persistenceLevel, typeof(PersistenceLevel));
+			if (persistenceLevel < PersistenceLevel.None || persistenceLevel > PersistenceLevel.ExecutableAction)
+			{
+				throw new InvalidEnumArgumentException(nameof(persistenceLevel), (int) persistenceLevel, typeof(PersistenceLevel));
+			}
 
 			_options.PersistenceLevel = persistenceLevel;
 			_injectOptions = true;
@@ -101,5 +106,16 @@ namespace TSSArt.StateMachine
 		}
 
 	#endregion
+
+		public void SetUnhandledErrorBehaviour(UnhandledErrorBehaviour unhandledErrorBehaviour)
+		{
+			if (unhandledErrorBehaviour < UnhandledErrorBehaviour.DestroyStateMachine || unhandledErrorBehaviour > UnhandledErrorBehaviour.IgnoreError)
+			{
+				throw new InvalidEnumArgumentException(nameof(unhandledErrorBehaviour), (int) unhandledErrorBehaviour, typeof(UnhandledErrorBehaviour));
+			}
+
+			_options.UnhandledErrorBehaviour = unhandledErrorBehaviour;
+			_injectOptions = true;
+		}
 	}
 }

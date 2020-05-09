@@ -121,5 +121,7 @@ namespace TSSArt.StateMachine
 
 			return ImmutableArray.Create(parts);
 		}
+
+		public static bool IsError(ImmutableArray<IIdentifier> nameParts) => !nameParts.IsDefaultOrEmpty && nameParts[0] == ErrorIdentifier;
 	}
 }

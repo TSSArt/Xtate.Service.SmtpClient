@@ -377,6 +377,7 @@ namespace TSSArt.StateMachine
 					PersistenceLevel = options.PersistenceLevel;
 					SynchronousEventProcessing = options.SynchronousEventProcessing;
 					ExternalQueueSize = options.ExternalQueueSize;
+					UnhandledErrorBehaviour = options.UnhandledErrorBehaviour;
 				}
 			}
 
@@ -400,6 +401,11 @@ namespace TSSArt.StateMachine
 				{
 					ExternalQueueSize = externalQueueSize;
 				}
+
+				if (bucket.TryGet(Key.UnhandledErrorBehaviour, out UnhandledErrorBehaviour unhandledErrorBehaviour))
+				{
+					UnhandledErrorBehaviour = unhandledErrorBehaviour;
+				}
 			}
 
 			public SessionId               SessionId  { get; }
@@ -409,10 +415,11 @@ namespace TSSArt.StateMachine
 
 		#region Interface IStateMachineOptions
 
-			public string?           Name                       { get; }
-			public PersistenceLevel? PersistenceLevel           { get; }
-			public bool?             SynchronousEventProcessing { get; }
-			public int?              ExternalQueueSize          { get; }
+			public string?                  Name                       { get; }
+			public PersistenceLevel?        PersistenceLevel           { get; }
+			public bool?                    SynchronousEventProcessing { get; }
+			public int?                     ExternalQueueSize          { get; }
+			public UnhandledErrorBehaviour? UnhandledErrorBehaviour    { get; }
 
 		#endregion
 
@@ -442,6 +449,11 @@ namespace TSSArt.StateMachine
 				if (ExternalQueueSize != null)
 				{
 					bucket.Add(Key.OptionExternalQueueSize, ExternalQueueSize.Value);
+				}
+
+				if (UnhandledErrorBehaviour != null)
+				{
+					bucket.Add(Key.UnhandledErrorBehaviour, UnhandledErrorBehaviour.Value);
 				}
 			}
 

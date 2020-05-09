@@ -23,7 +23,6 @@ namespace TSSArt.StateMachine
 
 		private static readonly DataModelValue InterpreterObject = new DataModelValue(new LazyValue(CreateInterpreterObject));
 
-		private readonly DataModelValue                           _arguments;
 		private readonly ImmutableDictionary<object, object>      _contextRuntimeItems;
 		private readonly ImmutableArray<ICustomActionFactory>     _customActionProviders;
 		private readonly ImmutableArray<IDataModelHandlerFactory> _dataModelHandlerFactories;
@@ -40,6 +39,7 @@ namespace TSSArt.StateMachine
 		private readonly CancellationToken                        _stopToken;
 		private readonly IStorageProvider                         _storageProvider;
 		private readonly CancellationToken                        _suspendToken;
+		private readonly UnhandledErrorBehaviour                  _unhandledErrorBehaviour;
 		private          CancellationTokenSource                  _anyTokenSource;
 		private          IStateMachineContext                     _context;
 		private          IDataModelHandler                        _dataModelHandler;
@@ -61,16 +61,17 @@ namespace TSSArt.StateMachine
 			_logger = new LoggerWrapper(options.Logger ?? DefaultLogger.Instance, sessionId);
 			_externalCommunication = new ExternalCommunicationWrapper(options.ExternalCommunication, sessionId);
 			_storageProvider = options.StorageProvider ?? NullStorageProvider.Instance;
-			Configuration = new DataModelValue(options.Configuration?.AsConstant() ?? DataModelObject.Empty);
-			Host = new DataModelValue(options.Host?.AsConstant() ?? DataModelObject.Empty);
 			_contextRuntimeItems = options.ContextRuntimeItems ?? ImmutableDictionary<object, object>.Empty;
 			_errorProcessor = options.ErrorProcessor ?? DefaultErrorProcessor.Instance;
 			_persistenceLevel = options.PersistenceLevel;
 			_notifyStateChanged = options.NotifyStateChanged;
-			_arguments = options.Arguments.AsConstant();
 			_stateMachineValidator = StateMachineValidator.Instance;
 			_dataModelVars = ImmutableDictionary<string, string>.Empty;
+			_unhandledErrorBehaviour = options.UnhandledErrorBehaviour;
 			DataModelHandler = new DataModelValue(new LazyValue(CreateDataModelHandlerObject));
+			Configuration = new DataModelValue(options.Configuration?.AsConstant() ?? DataModelObject.Empty);
+			Host = new DataModelValue(options.Host?.AsConstant() ?? DataModelObject.Empty);
+			Arguments = options.Arguments.AsConstant();
 
 			_anyTokenSource = null!;
 			_dataModelHandler = null!;
@@ -96,7 +97,7 @@ namespace TSSArt.StateMachine
 
 	#region Interface IDataModelValueProvider
 
-		public DataModelValue Arguments => _arguments;
+		public DataModelValue Arguments { get; }
 
 		public DataModelValue Interpreter => InterpreterObject;
 
@@ -407,7 +408,7 @@ namespace TSSArt.StateMachine
 			}
 			catch (OperationCanceledException ex) when (ex.CancellationToken == _stopToken || ex.CancellationToken == _anyTokenSource.Token && _stopToken.IsCancellationRequested)
 			{
-				throw new OperationCanceledException(Resources.Exception_State_Machine_has_been_halted, ex, _stopToken);
+				throw new OperationCanceledException(Resources.Exception_State_Machine_has_been_halted, ex, _stopToken.IsCancellationRequested ? _stopToken : default);
 			}
 			catch (OperationCanceledException ex) when (ex.CancellationToken == _destroyToken || ex.CancellationToken == _anyTokenSource.Token && _destroyToken.IsCancellationRequested)
 			{
@@ -415,11 +416,11 @@ namespace TSSArt.StateMachine
 				await DoOperation(StateBagKey.NotifyExited, NotifyExited).ConfigureAwait(false);
 				await CleanupPersistedData().ConfigureAwait(false);
 
-				throw new StateMachineDestroyedException(Resources.Exception_State_Machine_has_been_destroyed, ex, _destroyToken);
+				throw new StateMachineDestroyedException(Resources.Exception_State_Machine_has_been_destroyed, ex, _destroyToken.IsCancellationRequested ? _destroyToken : default);
 			}
 			catch (OperationCanceledException ex) when (ex.CancellationToken == _suspendToken || ex.CancellationToken == _anyTokenSource.Token && _suspendToken.IsCancellationRequested)
 			{
-				throw new StateMachineSuspendedException(Resources.Exception_State_Machine_has_been_suspended, ex, _suspendToken);
+				throw new StateMachineSuspendedException(Resources.Exception_State_Machine_has_been_suspended, ex, _suspendToken.IsCancellationRequested ? _suspendToken : default);
 			}
 
 			await CleanupPersistedData().ConfigureAwait(false);
@@ -494,7 +495,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private ValueTask<List<TransitionNode>> SelectInternalEventTransitions()
+		private async ValueTask<List<TransitionNode>> SelectInternalEventTransitions()
 		{
 			var internalEvent = _context.InternalQueue.Dequeue();
 
@@ -502,7 +503,41 @@ namespace TSSArt.StateMachine
 
 			_context.DataModel.SetInternal(property: @"_event", new DataModelDescriptor(DataConverter.FromEvent(internalEvent), DataModelAccess.ReadOnly));
 
-			return SelectTransitions(internalEvent);
+			var transitions = await SelectTransitions(internalEvent).ConfigureAwait(false);
+
+			if (transitions.Count == 0 && EventName.IsError(internalEvent.NameParts))
+			{
+				UnhandledErrorEvent(internalEvent);
+			}
+
+			return transitions;
+		}
+
+		private void UnhandledErrorEvent(IEvent evt)
+		{
+			switch (_unhandledErrorBehaviour)
+			{
+				case UnhandledErrorBehaviour.IgnoreError:
+					return;
+
+				case UnhandledErrorBehaviour.HaltStateMachine:
+				{
+					evt.Is<Exception>(out var exception);
+
+					throw new StateMachineUnhandledErrorException(Resources.Exception_Unhandled_exception, exception, _stopToken);
+				}
+
+				case UnhandledErrorBehaviour.DestroyStateMachine:
+				{
+					evt.Is<Exception>(out var exception);
+
+					throw new StateMachineUnhandledErrorException(Resources.Exception_Unhandled_exception, exception, _destroyToken);
+				}
+
+				default:
+					Infrastructure.UnexpectedValue();
+					break;
+			}
 		}
 
 		private async ValueTask<bool> InternalQueueProcessMessage()
@@ -1305,7 +1340,7 @@ namespace TSSArt.StateMachine
 					_ => Infrastructure.UnexpectedValue<ImmutableArray<IIdentifier>>()
 			};
 
-			var eventObject = new EventObject(EventType.Platform, nameParts, DataConverter.FromException(exception), sendId);
+			var eventObject = new EventObject(EventType.Platform, nameParts, DataConverter.FromException(exception), sendId, invokeId: default, exception);
 
 			_context.InternalQueue.Enqueue(eventObject);
 
@@ -1389,14 +1424,14 @@ namespace TSSArt.StateMachine
 				return;
 			}
 
-			if (_arguments.Type != DataModelValueType.Object)
+			if (Arguments.Type != DataModelValueType.Object)
 			{
 				await InitializeDataModel(rootDataModel).ConfigureAwait(false);
 
 				return;
 			}
 
-			var dictionary = _arguments.AsObject();
+			var dictionary = Arguments.AsObject();
 			foreach (var node in rootDataModel.Data)
 			{
 				await InitializeData(node, dictionary[node.Id]).ConfigureAwait(false);
