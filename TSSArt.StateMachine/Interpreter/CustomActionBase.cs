@@ -27,7 +27,7 @@ namespace TSSArt.StateMachine
 
 	#endregion
 
-		protected void RegisterArgument(string key, string? expression, string? constant = null)
+		protected void RegisterArgument(string key, string? expression, string? constant = default)
 		{
 			_arguments ??= new Dictionary<string, object?>();
 			_arguments.Add(key, expression != null ? (object) _customActionContext.RegisterValueExpression(expression) : constant);
@@ -62,7 +62,7 @@ namespace TSSArt.StateMachine
 							break;
 
 						default:
-							builder.Add(pair.Key, DataModelValue.Undefined);
+							builder.Add(pair.Key, value: default);
 							break;
 					}
 				}

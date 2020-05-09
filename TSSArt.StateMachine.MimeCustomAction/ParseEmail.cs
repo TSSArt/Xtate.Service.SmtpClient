@@ -98,7 +98,7 @@ namespace TSSArt.StateMachine.Services
 
 			if (text == null)
 			{
-				return DataModelValue.Undefined;
+				return default;
 			}
 
 			if (pattern == null)
@@ -111,7 +111,7 @@ namespace TSSArt.StateMachine.Services
 
 			if (!match.Success)
 			{
-				return DataModelValue.Undefined;
+				return default;
 			}
 
 			if (match.Groups.Count == 1)
@@ -172,7 +172,7 @@ namespace TSSArt.StateMachine.Services
 				return obj;
 			}
 
-			return DataModelValue.Undefined;
+			return default;
 		}
 	}
 }

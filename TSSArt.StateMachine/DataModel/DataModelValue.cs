@@ -34,7 +34,6 @@ namespace TSSArt.StateMachine
 		private static readonly object NumberValue  = new object();
 		private static readonly object BooleanValue = new object();
 
-		public static readonly DataModelValue Undefined;
 		public static readonly DataModelValue Null = new DataModelValue((string?) null);
 
 		private readonly long    _int64;

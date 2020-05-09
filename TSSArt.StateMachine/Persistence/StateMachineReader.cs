@@ -8,7 +8,7 @@ namespace TSSArt.StateMachine
 	{
 		private ImmutableDictionary<int, IEntity>? _forwardEntities;
 
-		public IStateMachine Build(Bucket bucket, ImmutableDictionary<int, IEntity>? forwardEntities = null)
+		public IStateMachine Build(Bucket bucket, ImmutableDictionary<int, IEntity>? forwardEntities = default)
 		{
 			_forwardEntities = forwardEntities;
 

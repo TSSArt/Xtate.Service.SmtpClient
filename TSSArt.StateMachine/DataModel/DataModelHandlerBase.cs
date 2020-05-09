@@ -38,7 +38,7 @@ namespace TSSArt.StateMachine
 
 	#endregion
 
-		protected void AddErrorMessage(object? entity, string message, Exception? exception = null) => _errorProcessor.AddError(GetType(), entity, message, exception);
+		protected void AddErrorMessage(object? entity, string message, Exception? exception = default) => _errorProcessor.AddError(GetType(), entity, message, exception);
 
 		protected override void Visit(ref IValueExpression expression)
 		{

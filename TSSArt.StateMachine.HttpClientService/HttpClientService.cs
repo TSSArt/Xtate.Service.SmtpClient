@@ -93,7 +93,7 @@ namespace TSSArt.StateMachine.Services
 											["httpOnly"] = cookie.HttpOnly,
 											["port"] = cookie.Port,
 											["secure"] = cookie.Secure,
-											["expires"] = cookie.Expires != default ? cookie.Expires : DataModelValue.Undefined
+											["expires"] = cookie.Expires != default ? cookie.Expires : default(DataModelValue)
 									});
 			}
 
@@ -370,7 +370,7 @@ namespace TSSArt.StateMachine.Services
 
 				if (value == null)
 				{
-					return DataModelValue.Undefined;
+					return default;
 				}
 
 				obj[attr] = CaptureInText(value, pattern);
@@ -433,7 +433,7 @@ namespace TSSArt.StateMachine.Services
 
 			if (!match.Success)
 			{
-				return DataModelValue.Undefined;
+				return default;
 			}
 
 			if (match.Groups.Count == 1)

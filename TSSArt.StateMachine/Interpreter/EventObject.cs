@@ -5,10 +5,10 @@ namespace TSSArt.StateMachine
 {
 	internal sealed class EventObject : IEvent, IStoreSupport
 	{
-		public EventObject(EventType type, IOutgoingEvent evt, Uri? origin = null, Uri? originType = null, InvokeId? invokeId = null)
+		public EventObject(EventType type, IOutgoingEvent evt, Uri? origin = default, Uri? originType = default, InvokeId? invokeId = default)
 				: this(type, evt.SendId, evt.NameParts, invokeId, origin, originType, evt.Data) { }
 
-		public EventObject(EventType type, ImmutableArray<IIdentifier> nameParts, DataModelValue data = default, SendId? sendId = null, InvokeId? invokeId = null)
+		public EventObject(EventType type, ImmutableArray<IIdentifier> nameParts, DataModelValue data = default, SendId? sendId = default, InvokeId? invokeId = default)
 				: this(type, sendId, nameParts, invokeId, origin: null, originType: null, data) { }
 
 		private EventObject(EventType type, SendId? sendId, ImmutableArray<IIdentifier> nameParts, InvokeId? invokeId, Uri? origin, Uri? originType, DataModelValue data)

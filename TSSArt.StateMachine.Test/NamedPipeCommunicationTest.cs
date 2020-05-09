@@ -30,7 +30,7 @@ namespace TSSArt.StateMachine.Test
 </final>
 </scxml>";
 
-		private static string U(string v, [CallerMemberName] string? member = null) => v + "_" + member;
+		private static string U(string v, [CallerMemberName] string? member = default) => v + "_" + member;
 
 		private static EventObject CreateEventObject(string name) => new EventObject(EventType.External, EventName.ToParts(name));
 

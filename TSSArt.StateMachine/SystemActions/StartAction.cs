@@ -65,7 +65,7 @@ namespace TSSArt.StateMachine
 				throw new StateMachineProcessorException(Resources.StartAction_Execute_Source_not_specified);
 			}
 
-			var sessionId = await host.StartStateMachine(new StateMachineOrigin(source, baseUri), DataModelValue.Undefined, token).ConfigureAwait(false);
+			var sessionId = await host.StartStateMachine(new StateMachineOrigin(source, baseUri), parameters: default, token).ConfigureAwait(false);
 
 			if (_idLocation != null)
 			{

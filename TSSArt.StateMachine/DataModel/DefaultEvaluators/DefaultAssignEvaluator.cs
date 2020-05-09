@@ -43,7 +43,7 @@ namespace TSSArt.StateMachine
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
 
-			IObject value = DataModelValue.Undefined;
+			IObject value;
 
 			if (ExpressionEvaluator != null)
 			{
@@ -51,7 +51,11 @@ namespace TSSArt.StateMachine
 			}
 			else if (InlineContent != null)
 			{
-				value = new DataModelValue(InlineContent);
+				value = new DefaultObject(InlineContent);
+			}
+			else
+			{
+				value = DefaultObject.Null;
 			}
 
 			await LocationEvaluator.SetValue(value, executionContext, token).ConfigureAwait(false);

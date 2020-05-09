@@ -32,7 +32,7 @@ namespace TSSArt.StateMachine.EcmaScript
 		{
 			if (IsArrayIndex(property, out var index))
 			{
-				_array[(int) index] = DataModelValue.Undefined;
+				_array[(int) index] = default;
 			}
 
 			base.RemoveOwnProperty(property);

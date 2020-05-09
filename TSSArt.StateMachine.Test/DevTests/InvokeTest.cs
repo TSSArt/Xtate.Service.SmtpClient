@@ -74,7 +74,8 @@ namespace TSSArt.StateMachine.Test
 					   };
 		}
 
-		private static EventObject CreateEventObject(string name, InvokeId? invokeId = null) => new EventObject(EventType.External, EventName.ToParts(name), data: default, sendId: default, invokeId);
+		private static EventObject CreateEventObject(string name, InvokeId? invokeId = default) =>
+				new EventObject(EventType.External, EventName.ToParts(name), data: default, sendId: default, invokeId);
 
 		[TestMethod]
 		public async Task SimpleTest()

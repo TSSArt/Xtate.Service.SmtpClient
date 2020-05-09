@@ -72,7 +72,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public IStateMachine ConstructStateMachine(IStateMachineValidator? stateMachineValidator = null)
+		public IStateMachine ConstructStateMachine(IStateMachineValidator? stateMachineValidator = default)
 		{
 			var stateMachine = ReadStateMachine();
 

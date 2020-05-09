@@ -54,17 +54,17 @@ namespace TSSArt.StateMachine.Test.DevTests
 		[TestMethod]
 		public void EqualityInequalityTest()
 		{
-			Assert.AreEqual(DataModelValue.Undefined, actual: default);
-			Assert.AreEqual(DataModelValue.Undefined, DataModelValue.Undefined);
+			Assert.AreEqual(expected: default, new DataModelValue());
 			Assert.AreEqual(DataModelValue.Null, DataModelValue.Null);
-			Assert.AreNotEqual(DataModelValue.Null, DataModelValue.Undefined);
-			Assert.AreNotEqual(DataModelValue.Undefined, DataModelValue.Null);
+			Assert.AreNotEqual(DataModelValue.Null, actual: default);
+			Assert.AreNotEqual(notExpected: default, DataModelValue.Null);
 		}
 
 		[TestMethod]
 		public void TypesTest()
 		{
-			Assert.AreEqual(DataModelValueType.Undefined, DataModelValue.Undefined.Type);
+			Assert.AreEqual(DataModelValueType.Undefined, default(DataModelValue).Type);
+			Assert.AreEqual(DataModelValueType.Undefined, new DataModelValue().Type);
 			Assert.AreEqual(DataModelValueType.Null, DataModelValue.Null.Type);
 			Assert.AreEqual(DataModelValueType.String, DataModelValue.FromString("str").Type);
 			Assert.AreEqual(DataModelValueType.Boolean, DataModelValue.FromBoolean(false).Type);

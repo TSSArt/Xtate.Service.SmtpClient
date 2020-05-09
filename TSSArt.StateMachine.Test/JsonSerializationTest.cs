@@ -53,7 +53,7 @@ namespace TSSArt.StateMachine.Test
 		public void UndefinedFailTest()
 		{
 			// arrange
-			var undefined = DataModelValue.Undefined;
+			var undefined = default(DataModelValue);
 
 			// act => assert
 			Assert.ThrowsException<JsonException>(() => DataModelConverter.ToJson(undefined));
@@ -63,7 +63,7 @@ namespace TSSArt.StateMachine.Test
 		public void UndefinedInObjectFailTest()
 		{
 			// arrange
-			var undefined = DataModelValue.Undefined;
+			var undefined = default(DataModelValue);
 			var obj = new DataModelObject { ["undef"] = undefined };
 
 			// act
@@ -77,7 +77,7 @@ namespace TSSArt.StateMachine.Test
 		public void UndefinedInArrayFailTest()
 		{
 			// arrange
-			var undefined = DataModelValue.Undefined;
+			var undefined = default(DataModelValue);
 			var arr = new DataModelArray { undefined };
 
 			// act => assert
@@ -88,7 +88,7 @@ namespace TSSArt.StateMachine.Test
 		public void UndefinedToNullTest()
 		{
 			// arrange
-			var undefined = DataModelValue.Undefined;
+			var undefined = default(DataModelValue);
 
 			// act
 			var json = DataModelConverter.ToJson(undefined, DataModelConverterOptions.UndefinedToNull);
@@ -101,7 +101,7 @@ namespace TSSArt.StateMachine.Test
 		public void UndefinedInObjectToNullTest()
 		{
 			// arrange
-			var undefined = DataModelValue.Undefined;
+			var undefined = default(DataModelValue);
 			var obj = new DataModelObject { ["undef"] = undefined };
 
 			// act
@@ -115,7 +115,7 @@ namespace TSSArt.StateMachine.Test
 		public void UndefinedInArrayToNullTest()
 		{
 			// arrange
-			var undefined = DataModelValue.Undefined;
+			var undefined = default(DataModelValue);
 			var arr = new DataModelArray { undefined };
 
 			// act
@@ -129,7 +129,7 @@ namespace TSSArt.StateMachine.Test
 		public void UndefinedToSkipTest()
 		{
 			// arrange
-			var undefined = DataModelValue.Undefined;
+			var undefined = default(DataModelValue);
 
 			// act
 			var json = DataModelConverter.ToJson(undefined, DataModelConverterOptions.UndefinedToSkip);
@@ -142,7 +142,7 @@ namespace TSSArt.StateMachine.Test
 		public void UndefinedInObjectToSkipTest()
 		{
 			// arrange
-			var undefined = DataModelValue.Undefined;
+			var undefined = default(DataModelValue);
 			var obj = new DataModelObject { ["undef"] = undefined };
 
 			// act
@@ -156,7 +156,7 @@ namespace TSSArt.StateMachine.Test
 		public void UndefinedInArrayToSkipTest()
 		{
 			// arrange
-			var undefined = DataModelValue.Undefined;
+			var undefined = default(DataModelValue);
 			var arr = new DataModelArray { undefined };
 
 			// act
@@ -170,7 +170,7 @@ namespace TSSArt.StateMachine.Test
 		public void UndefinedToSkipOrNullTest()
 		{
 			// arrange
-			var undefined = DataModelValue.Undefined;
+			var undefined = default(DataModelValue);
 
 			// act
 			var json = DataModelConverter.ToJson(undefined, DataModelConverterOptions.UndefinedToSkipOrNull);
@@ -183,7 +183,7 @@ namespace TSSArt.StateMachine.Test
 		public void UndefinedInObjectToSkipOrNullTest()
 		{
 			// arrange
-			var undefined = DataModelValue.Undefined;
+			var undefined = default(DataModelValue);
 			var obj = new DataModelObject { ["undef"] = undefined };
 
 			// act
@@ -197,7 +197,7 @@ namespace TSSArt.StateMachine.Test
 		public void UndefinedInArrayToSkipOrNullTest()
 		{
 			// arrange
-			var undefined = DataModelValue.Undefined;
+			var undefined = default(DataModelValue);
 			var arr = new DataModelArray { undefined };
 
 			// act
@@ -451,7 +451,7 @@ namespace TSSArt.StateMachine.Test
 		public void WriteObjectTest()
 		{
 			// arrange
-			var obj = new DataModelObject { ["undef"] = DataModelValue.Undefined, ["num"] = 1 };
+			var obj = new DataModelObject { ["undef"] = default, ["num"] = 1 };
 
 			// act
 			var json = DataModelConverter.ToJson(obj);

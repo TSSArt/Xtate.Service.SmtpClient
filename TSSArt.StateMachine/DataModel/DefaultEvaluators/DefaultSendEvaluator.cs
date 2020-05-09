@@ -58,7 +58,7 @@ namespace TSSArt.StateMachine
 
 			if (IdLocationEvaluator != null)
 			{
-				await IdLocationEvaluator.SetValue(new DefaultObject(sendId), executionContext, token).ConfigureAwait(false);
+				await IdLocationEvaluator.SetValue(sendId, executionContext, token).ConfigureAwait(false);
 			}
 
 			var name = EventExpressionEvaluator != null ? await EventExpressionEvaluator.EvaluateString(executionContext, token).ConfigureAwait(false) : _send.EventName;

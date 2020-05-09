@@ -459,7 +459,7 @@ namespace TSSArt.StateMachine.Test
 
 			Assert.AreEqual(expected: "prop1-rw", new Bucket(_storage).Nested("refs").Nested(0).Nested(0).GetString(Key.Property));
 			Assert.IsTrue(new Bucket(_storage).Nested("refs").Nested(0).Nested(0).TryGet(Key.Property, out string _));
-			_dataModelObject["obj1a"] = DataModelValue.Undefined;
+			_dataModelObject["obj1a"] = default;
 			Assert.IsFalse(new Bucket(_storage).Nested("refs").Nested(0).Nested(0).TryGet(Key.Property, out string _));
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
 		}

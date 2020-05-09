@@ -30,7 +30,7 @@ namespace TSSArt.StateMachine
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
 
-			var data = DataModelValue.Undefined;
+			var data = default(DataModelValue);
 
 			if (ExpressionEvaluator != null)
 			{
