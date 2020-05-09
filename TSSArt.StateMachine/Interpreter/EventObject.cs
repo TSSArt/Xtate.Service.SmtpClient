@@ -3,16 +3,17 @@ using System.Collections.Immutable;
 
 namespace TSSArt.StateMachine
 {
-	internal sealed class EventObject : IEvent, IStoreSupport
+	internal sealed class EventObject : IEvent, IStoreSupport, IAncestorProvider
 	{
 		public EventObject(EventType type, IOutgoingEvent evt, Uri? origin = default, Uri? originType = default, InvokeId? invokeId = default)
-				: this(type, evt.SendId, evt.NameParts, invokeId, origin, originType, evt.Data) { }
+				: this(type, evt.SendId, evt.NameParts, invokeId, origin, originType, evt.Data, ancestor: default) { }
 
-		public EventObject(EventType type, ImmutableArray<IIdentifier> nameParts, DataModelValue data = default, SendId? sendId = default, InvokeId? invokeId = default)
-				: this(type, sendId, nameParts, invokeId, origin: null, originType: null, data) { }
+		public EventObject(EventType type, ImmutableArray<IIdentifier> nameParts, DataModelValue data = default, SendId? sendId = default, InvokeId? invokeId = default, object? ancestor = default)
+				: this(type, sendId, nameParts, invokeId, origin: null, originType: null, data, ancestor) { }
 
-		private EventObject(EventType type, SendId? sendId, ImmutableArray<IIdentifier> nameParts, InvokeId? invokeId, Uri? origin, Uri? originType, DataModelValue data)
+		private EventObject(EventType type, SendId? sendId, ImmutableArray<IIdentifier> nameParts, InvokeId? invokeId, Uri? origin, Uri? originType, DataModelValue data, object? ancestor)
 		{
+			Ancestor = ancestor;
 			Type = type;
 			SendId = sendId;
 			NameParts = nameParts;
@@ -43,6 +44,12 @@ namespace TSSArt.StateMachine
 				Data = bucket.Nested(Key.DataValue).GetDataModelValue(tracker, baseValue: default).AsConstant();
 			}
 		}
+
+	#region Interface IAncestorProvider
+
+		public object? Ancestor { get; }
+
+	#endregion
 
 	#region Interface IEvent
 

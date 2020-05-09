@@ -664,4 +664,7 @@
   <data name="Exception_Resource_not_found" xml:space="preserve">
     <value>Resource '{0}' not found.</value>
   </data>
+  <data name="Exception_Unhandled_exception" xml:space="preserve">
+    <value>Unhandled exception.</value>
+  </data>
 </root>

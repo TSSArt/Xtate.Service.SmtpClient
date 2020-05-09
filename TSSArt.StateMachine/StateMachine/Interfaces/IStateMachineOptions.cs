@@ -9,5 +9,7 @@
 		bool? SynchronousEventProcessing { get; }
 
 		int? ExternalQueueSize { get; }
+
+		UnhandledErrorBehaviour? UnhandledErrorBehaviour { get; }
 	}
 }

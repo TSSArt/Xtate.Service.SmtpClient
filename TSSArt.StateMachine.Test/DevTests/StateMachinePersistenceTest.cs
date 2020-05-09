@@ -19,8 +19,9 @@ namespace TSSArt.StateMachine.Test
 	[SuppressMessage(category: "ReSharper", checkId: "RedundantCapturedContext")]
 	public class StateMachinePersistenceTest
 	{
-		private IStateMachine         _allStateMachine    = default!;
-		private Mock<IResourceLoader> _resourceLoaderMock = default!;
+		private IStateMachine                _allStateMachine       = default!;
+		private Mock<IExternalCommunication> _externalCommunication = default!;
+		private Mock<IResourceLoader>        _resourceLoaderMock    = default!;
 
 		[TestInitialize]
 		public void Initialize()
@@ -34,9 +35,10 @@ namespace TSSArt.StateMachine.Test
 			_allStateMachine = director.ConstructStateMachine(StateMachineValidator.Instance);
 
 			_resourceLoaderMock = new Mock<IResourceLoader>();
-			var task = new ValueTask<Resource>(new Resource(new Uri("http://none"), new ContentType(), content: "content"));
+			var task = new ValueTask<Resource>(new Resource(new Uri("http://none"), new ContentType(), content: "'content'"));
 			_resourceLoaderMock.Setup(e => e.Request(It.IsAny<Uri>(), It.IsAny<CancellationToken>())).Returns(task);
 			_resourceLoaderMock.Setup(e => e.CanHandle(It.IsAny<Uri>())).Returns(true);
+			_externalCommunication = new Mock<IExternalCommunication>();
 		}
 
 		[TestMethod]
@@ -53,7 +55,8 @@ namespace TSSArt.StateMachine.Test
 								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
 								  ResourceLoaders = ImmutableArray.Create(_resourceLoaderMock.Object),
 								  PersistenceLevel = PersistenceLevel.ExecutableAction,
-								  StorageProvider = new TestStorage()
+								  StorageProvider = new TestStorage(),
+								  ExternalCommunication = _externalCommunication.Object
 						  };
 
 			var newSessionId = SessionId.New();

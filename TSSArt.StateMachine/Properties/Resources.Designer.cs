@@ -1539,6 +1539,15 @@ namespace TSSArt.StateMachine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unhandled exception..
+        /// </summary>
+        internal static string Exception_Unhandled_exception {
+            get {
+                return ResourceManager.GetString("Exception_Unhandled_exception", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unknown Condition type..
         /// </summary>
         internal static string Exception_Unknown_Condition_type {

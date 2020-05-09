@@ -74,6 +74,7 @@ namespace TSSArt.StateMachine
 										 SuspendToken = _suspendTokenSource.Token,
 										 Logger = _options.Logger,
 										 DataModelHandlerFactories = _options.DataModelHandlerFactories,
+										 UnhandledErrorBehaviour = _options.UnhandledErrorBehaviour,
 										 ContextRuntimeItems = _contextRuntimeItems
 								 };
 		}

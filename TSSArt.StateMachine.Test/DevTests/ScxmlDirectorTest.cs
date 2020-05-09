@@ -7,6 +7,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moq;
 using TSSArt.StateMachine.EcmaScript;
 
 namespace TSSArt.StateMachine.Test
@@ -42,7 +43,8 @@ namespace TSSArt.StateMachine.Test
 			await channel.Writer.WriteAsync(CreateEventObject("Timer"));
 			channel.Writer.Complete(new ArgumentException("333"));
 
-			var options = new InterpreterOptions { DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory) };
+			var extComm = new Mock<IExternalCommunication>();
+			var options = new InterpreterOptions { DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory), ExternalCommunication = extComm.Object };
 
 			try
 			{

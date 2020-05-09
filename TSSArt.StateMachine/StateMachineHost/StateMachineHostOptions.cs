@@ -19,5 +19,6 @@ namespace TSSArt.StateMachine
 		public IStorageProvider?                        StorageProvider           { get; set; }
 		public TimeSpan                                 SuspendIdlePeriod         { get; set; }
 		public bool                                     VerboseValidation         { get; set; }
+		public UnhandledErrorBehaviour                  UnhandledErrorBehaviour   { get; set; }
 	}
 }

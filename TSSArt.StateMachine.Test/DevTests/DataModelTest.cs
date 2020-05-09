@@ -52,6 +52,18 @@ namespace TSSArt.StateMachine.Test
 			return Assert.ThrowsExceptionAsync<StateMachineQueueClosedException>(Action);
 		}
 
+		private Task RunStateMachineWithError(Func<string, IStateMachine> getter, string innerXml)
+		{
+			// arrange
+			var stateMachine = getter(innerXml);
+
+			// act
+			async Task Action() => await StateMachineInterpreter.RunAsync(stateMachine, _eventChannel, _options);
+
+			// assert
+			return Assert.ThrowsExceptionAsync<OperationCanceledException>(Action);
+		}
+
 		[TestInitialize]
 		public void Init()
 		{
@@ -110,7 +122,7 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public async Task LogNonExistedTest()
 		{
-			await RunStateMachine(NoNameOnEntry, innerXml: "<log expr='_not_existed'/>");
+			await RunStateMachineWithError(NoNameOnEntry, innerXml: "<log expr='_not_existed'/>");
 
 			_logger.Verify(l => l.LogError(ErrorType.Execution, It.IsAny<SessionId>(), null, "(#7)", It.IsAny<Exception>(), It.IsAny<CancellationToken>()), Times.Once);
 			_logger.VerifyGet(l => l.IsTracingEnabled);
@@ -120,7 +132,7 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public async Task ExecutionBlockWithErrorInsideTest()
 		{
-			await RunStateMachine(WithNameOnEntry, innerXml: "<log expr='_name'/><log expr='_not_existed'/><log expr='_name'/>");
+			await RunStateMachineWithError(WithNameOnEntry, innerXml: "<log expr='_name'/><log expr='_not_existed'/><log expr='_name'/>");
 
 			_logger.Verify(l => l.LogInfo(It.IsAny<SessionId>(), "MyName", null, new DataModelValue("MyName"), default), Times.Once);
 			_logger.Verify(l => l.LogError(ErrorType.Execution, It.IsAny<SessionId>(), "MyName", "(#9)", It.IsNotNull<Exception>(), default), Times.Once);
@@ -233,7 +245,7 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public async Task SystemAssignTest()
 		{
-			await RunStateMachine(WithNameOnEntry, innerXml: "<assign location='_name' expr=\"'Hello World'\"/>");
+			await RunStateMachineWithError(WithNameOnEntry, innerXml: "<assign location='_name' expr=\"'Hello World'\"/>");
 
 			_logger.Verify(l => l.LogError(ErrorType.Execution, It.IsAny<SessionId>(), "MyName", "(#7)", It.IsNotNull<InvalidOperationException>(), default), Times.Once);
 			_logger.VerifyGet(l => l.IsTracingEnabled);

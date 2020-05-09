@@ -103,7 +103,7 @@ namespace TSSArt.StateMachine.Test
 			var channel = Channel.CreateUnbounded<IEvent>();
 			channel.Writer.Complete();
 			var eventChannel = channel.Reader;
-			await StateMachineInterpreter.RunAsync(SessionId.New(), builder.Build(), eventChannel);
+			await StateMachineInterpreter.RunAsync(SessionId.New(), builder.Build(), eventChannel, new InterpreterOptions { UnhandledErrorBehaviour = UnhandledErrorBehaviour.IgnoreError });
 		}
 
 		[TestMethod]

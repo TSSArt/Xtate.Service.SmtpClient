@@ -74,6 +74,7 @@
 		Type,
 		TypeExpression,
 		TypeInfo,
+		UnhandledErrorBehaviour,
 		Uri,
 		ValueList,
 		Version
