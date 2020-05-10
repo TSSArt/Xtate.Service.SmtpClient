@@ -13,7 +13,7 @@ namespace TSSArt.StateMachine.Test.HostedTests
 		{
 			// act
 			await Execute("StartSystemAction.scxml");
-			await Host.WaitAllAsync();
+			await Host.WaitAllStateMachinesAsync();
 
 			// assert
 			Logger.Verify(l => l.LogInfo(It.IsAny<SessionId>(), "StartSystemActionChild", "StartSystemActionChild", default, It.IsAny<CancellationToken>()));

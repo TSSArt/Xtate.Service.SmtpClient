@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
@@ -7,31 +8,48 @@ namespace TSSArt.StateMachine
 	{
 	#region Interface IHost
 
-		ValueTask<SessionId> IHost.StartStateMachine(StateMachineOrigin origin, DataModelValue parameters, CancellationToken token) => Start(origin, parameters, token);
+		async ValueTask IHost.StartStateMachineAsync(SessionId sessionId, StateMachineOrigin origin, DataModelValue parameters, CancellationToken token) =>
+				await StartStateMachine(sessionId, origin, parameters, token).ConfigureAwait(false);
 
-		ValueTask<DataModelValue> IHost.ExecuteStateMachine(StateMachineOrigin origin, DataModelValue parameters, CancellationToken token) => ExecuteAsync(origin, parameters, token);
+		ValueTask<DataModelValue> IHost.ExecuteStateMachineAsync(SessionId sessionId, StateMachineOrigin origin, DataModelValue parameters, CancellationToken token) =>
+				ExecuteStateMachine(sessionId, origin, parameters, token);
 
-		ValueTask IHost.DestroyStateMachine(SessionId sessionId, CancellationToken token) => GetCurrentContext().DestroyStateMachine(sessionId);
+		void IHost.DestroyStateMachine(SessionId sessionId) => GetCurrentContext().TriggerDestroySignal(sessionId);
 
 	#endregion
 
-		private async ValueTask<SessionId> Start(StateMachineOrigin origin, DataModelValue parameters, CancellationToken token)
+		private async ValueTask<StateMachineController> StartStateMachine(SessionId sessionId, StateMachineOrigin origin, DataModelValue parameters, CancellationToken token = default)
 		{
+			if (sessionId == null) throw new ArgumentNullException(nameof(sessionId));
+			if (origin.Type == StateMachineOriginType.None) throw new ArgumentException(Resources.Exception_StateMachine_origin_missed, nameof(origin));
+
 			var context = GetCurrentContext();
-			var sessionId = SessionId.New();
 			var errorProcessor = CreateErrorProcessor(sessionId, origin);
 
 			var controller = await context.CreateAndAddStateMachine(sessionId, origin, parameters, errorProcessor, token).ConfigureAwait(false);
 
 			await controller.StartAsync(token).ConfigureAwait(false);
 
-			return sessionId;
+			CompleteStateMachine(context, controller).Forget();
+
+			return controller;
 		}
 
-		private async ValueTask<DataModelValue> ExecuteAsync(StateMachineOrigin origin, DataModelValue parameters, CancellationToken token)
+		private static async ValueTask CompleteStateMachine(StateMachineHostContext context, StateMachineController controller)
+		{
+			try
+			{
+				await controller.Result.ConfigureAwait(false);
+			}
+			finally
+			{
+				await context.RemoveStateMachine(controller.SessionId).ConfigureAwait(false);
+			}
+		}
+
+		private async ValueTask<DataModelValue> ExecuteStateMachine(SessionId sessionId, StateMachineOrigin origin, DataModelValue parameters, CancellationToken token = default)
 		{
 			var context = GetCurrentContext();
-			var sessionId = SessionId.New();
 			var errorProcessor = CreateErrorProcessor(sessionId, origin);
 
 			var controller = await context.CreateAndAddStateMachine(sessionId, origin, parameters, errorProcessor, token).ConfigureAwait(false);
@@ -42,7 +60,7 @@ namespace TSSArt.StateMachine
 			}
 			finally
 			{
-				await context.DestroyStateMachine(sessionId).ConfigureAwait(false);
+				await context.RemoveStateMachine(sessionId).ConfigureAwait(false);
 			}
 		}
 	}

@@ -38,17 +38,17 @@ namespace TSSArt.StateMachine.Test
 		public async Task SameStateMachineHostTest()
 		{
 			var srcPrc = new StateMachineHostBuilder().AddNamedIoProcessor(U("src")).AddEcmaScript().Build();
-			await srcPrc.StartAsync();
-			var _ = srcPrc.ExecuteAsync(string.Format(SrcScxml, $"iop:///{U("src")}#_scxml_dstID"), sessionId: "srcID");
-			var dst = srcPrc.ExecuteAsync(DstScxml, sessionId: "dstID");
+			await srcPrc.StartHostAsync();
+			var _ = srcPrc.ExecuteStateMachineAsync(string.Format(SrcScxml, $"iop:///{U("src")}#_scxml_dstID"), sessionId: "srcID");
+			var dst = srcPrc.ExecuteStateMachineAsync(DstScxml, sessionId: "dstID");
 
 			await srcPrc.Dispatch(SessionId.FromString("srcID"), CreateEventObject("trigger"));
 
 			var result = await dst;
 
-			await srcPrc.WaitAllAsync();
+			await srcPrc.WaitAllStateMachinesAsync();
 
-			await srcPrc.StopAsync();
+			await srcPrc.StopHostAsync();
 
 			Assert.AreEqual($"http://www.w3.org/TR/scxml/#SCXMLEventProcessor+pipe:///{U("src")}#_scxml_srcID", result.AsString());
 		}
@@ -57,22 +57,22 @@ namespace TSSArt.StateMachine.Test
 		public async Task SameAppDomainNoPipesTest()
 		{
 			var srcPrc = new StateMachineHostBuilder().AddNamedIoProcessor(U("src")).Build();
-			await srcPrc.StartAsync();
-			var _ = srcPrc.ExecuteAsync(string.Format(SrcScxml, $"iop:///{U("dst")}#_scxml_dstID"), sessionId: "srcID");
+			await srcPrc.StartHostAsync();
+			var _ = srcPrc.ExecuteStateMachineAsync(string.Format(SrcScxml, $"iop:///{U("dst")}#_scxml_dstID"), sessionId: "srcID");
 
 			var dstPrc = new StateMachineHostBuilder().AddNamedIoProcessor(U("dst")).AddEcmaScript().Build();
-			await dstPrc.StartAsync();
-			var dst = dstPrc.ExecuteAsync(DstScxml, sessionId: "dstID");
+			await dstPrc.StartHostAsync();
+			var dst = dstPrc.ExecuteStateMachineAsync(DstScxml, sessionId: "dstID");
 
 
 			await srcPrc.Dispatch(SessionId.FromString("srcID"), CreateEventObject("trigger"));
 
 			var result = await dst;
 
-			await srcPrc.WaitAllAsync();
-			await dstPrc.WaitAllAsync();
-			await srcPrc.StopAsync();
-			await dstPrc.StopAsync();
+			await srcPrc.WaitAllStateMachinesAsync();
+			await dstPrc.WaitAllStateMachinesAsync();
+			await srcPrc.StopHostAsync();
+			await dstPrc.StopHostAsync();
 
 			Assert.AreEqual($"http://www.w3.org/TR/scxml/#SCXMLEventProcessor+pipe:///{U("src")}#_scxml_srcID", result.AsString());
 		}
@@ -81,22 +81,22 @@ namespace TSSArt.StateMachine.Test
 		public async Task SameAppDomainPipesTest()
 		{
 			var srcPrc = new StateMachineHostBuilder().AddNamedIoProcessor(host: "MyHost1", U("src")).Build();
-			await srcPrc.StartAsync();
-			var _ = srcPrc.ExecuteAsync(string.Format(SrcScxml, $"iop://./{U("dst")}#_scxml_dstID"), sessionId: "srcID");
+			await srcPrc.StartHostAsync();
+			var _ = srcPrc.ExecuteStateMachineAsync(string.Format(SrcScxml, $"iop://./{U("dst")}#_scxml_dstID"), sessionId: "srcID");
 
 			var dstPrc = new StateMachineHostBuilder().AddNamedIoProcessor(host: ".", U("dst")).AddEcmaScript().Build();
-			await dstPrc.StartAsync();
-			var dst = dstPrc.ExecuteAsync(DstScxml, sessionId: "dstID");
+			await dstPrc.StartHostAsync();
+			var dst = dstPrc.ExecuteStateMachineAsync(DstScxml, sessionId: "dstID");
 
 
 			await srcPrc.Dispatch(SessionId.FromString("srcID"), CreateEventObject("trigger"));
 
 			var result = await dst;
 
-			await srcPrc.WaitAllAsync();
-			await dstPrc.WaitAllAsync();
-			await srcPrc.StopAsync();
-			await dstPrc.StopAsync();
+			await srcPrc.WaitAllStateMachinesAsync();
+			await dstPrc.WaitAllStateMachinesAsync();
+			await srcPrc.StopHostAsync();
+			await dstPrc.StopHostAsync();
 
 			Assert.AreEqual($"http://www.w3.org/TR/scxml/#SCXMLEventProcessor+pipe://myhost1/{U("src")}#_scxml_srcID", result.AsString());
 		}

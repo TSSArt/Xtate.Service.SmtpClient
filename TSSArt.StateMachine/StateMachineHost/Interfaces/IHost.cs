@@ -7,10 +7,10 @@ namespace TSSArt.StateMachine
 	[PublicAPI]
 	public interface IHost
 	{
-		ValueTask<SessionId> StartStateMachine(StateMachineOrigin origin, DataModelValue parameters, CancellationToken token);
+		ValueTask StartStateMachineAsync(SessionId sessionId, StateMachineOrigin origin, DataModelValue parameters, CancellationToken token);
 
-		ValueTask<DataModelValue> ExecuteStateMachine(StateMachineOrigin origin, DataModelValue parameters, CancellationToken token);
+		ValueTask<DataModelValue> ExecuteStateMachineAsync(SessionId sessionId, StateMachineOrigin origin, DataModelValue parameters, CancellationToken token);
 
-		ValueTask DestroyStateMachine(SessionId sessionId, CancellationToken token);
+		void DestroyStateMachine(SessionId sessionId);
 	}
 }

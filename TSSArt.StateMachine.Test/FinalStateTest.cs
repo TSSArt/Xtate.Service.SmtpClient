@@ -18,10 +18,10 @@ namespace TSSArt.StateMachine.Test
 
 			await using var stateMachineHost = new StateMachineHost(new StateMachineHostOptions());
 
-			await stateMachineHost.StartAsync();
+			await stateMachineHost.StartHostAsync();
 
 			// Act
-			var result = await stateMachineHost.ExecuteAsync(stateMachine);
+			var result = await stateMachineHost.ExecuteStateMachineAsync(stateMachine);
 
 			//Assert
 			Assert.AreEqual(expected: 22, result.AsNumber());
@@ -44,10 +44,10 @@ namespace TSSArt.StateMachine.Test
 
 			await using var stateMachineHost = new StateMachineHost(new StateMachineHostOptions());
 
-			await stateMachineHost.StartAsync();
+			await stateMachineHost.StartHostAsync();
 
 			// Act
-			var result = await stateMachineHost.ExecuteAsync(stateMachine, new DataModelValue(33));
+			var result = await stateMachineHost.ExecuteStateMachineAsync(stateMachine, new DataModelValue(33));
 
 			//Assert
 			Assert.AreEqual(expected: 33, result.AsNumber());

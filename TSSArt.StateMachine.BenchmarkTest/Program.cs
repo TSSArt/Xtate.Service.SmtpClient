@@ -59,13 +59,13 @@ namespace TSSArt.StateMachine.BenchmarkTest
 			_channelReader = Channel.CreateUnbounded<IEvent>();
 			_dataModelHandler = NoneDataModelHandler.Factory.CreateHandler(DefaultErrorProcessor.Instance);
 			_host = new StateMachineHostBuilder().SetLogger(_logger).Build();
-			_host.StartAsync().Wait();
+			_host.StartHostAsync().Wait();
 		}
 
 		[Benchmark]
 		public void HostExecuteStateMachine()
 		{
-			var _ = _host.ExecuteAsync(_stateMachine).AsTask().Result;
+			var _ = _host.ExecuteStateMachineAsync(_stateMachine).AsTask().Result;
 		}
 
 		[Benchmark]

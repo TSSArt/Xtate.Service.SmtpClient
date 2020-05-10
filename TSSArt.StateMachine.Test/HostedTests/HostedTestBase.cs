@@ -24,17 +24,17 @@ namespace TSSArt.StateMachine.Test.HostedTests
 				   .AddResourceLoader(ResxResourceLoader.Instance)
 				   .SetLogger(Logger.Object)
 				   .Build();
-			return Host.StartAsync();
+			return Host.StartHostAsync();
 		}
 
 		[TestCleanup]
-		public Task Cleanup() => Host.StopAsync();
+		public Task Cleanup() => Host.StopHostAsync();
 
 		protected async Task Execute([PathReference("~/HostedTests/Scxml/")]
 									 string scxmlPath)
 		{
 			var name = Assembly.GetExecutingAssembly().GetName().Name;
-			await Host.ExecuteAsync(new Uri($"resx://{name}/{name}/HostedTests/Scxml/" + scxmlPath));
+			await Host.ExecuteStateMachineAsync(new Uri($"resx://{name}/{name}/HostedTests/Scxml/" + scxmlPath));
 		}
 	}
 }

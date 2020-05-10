@@ -27,7 +27,7 @@ namespace TSSArt.StateMachine.IntegrationTest
 											   .SetConfigurationValue(key: "mailEndpoint", value: "http://mid.dev.tssart.com/MailServer/Web2/api/Mail/")
 											   .Build();
 
-			await stateMachineHost.StartAsync().ConfigureAwait(false);
+			await stateMachineHost.StartHostAsync().ConfigureAwait(false);
 
 			var prms = new
 					   {
@@ -36,16 +36,16 @@ namespace TSSArt.StateMachine.IntegrationTest
 							   password = "123456"
 					   };
 
-			var task = stateMachineHost.ExecuteAsync(new Uri(ScxmlBase, relativeUri: "signup.scxml"), DataModelValue.FromObject(prms));
+			var task = stateMachineHost.ExecuteStateMachineAsync(new Uri(ScxmlBase, relativeUri: "signup.scxml"), DataModelValue.FromObject(prms));
 
 			dynamic result = await task.ConfigureAwait(false);
 
 			var prms2 = new { profileUrl = "https://test.tssart.com/wp-admin/profile.php", result.data.cookies };
-			var task2 = stateMachineHost.ExecuteAsync(new Uri(ScxmlBase, relativeUri: "captureEmail.scxml"), DataModelValue.FromObject(prms2));
+			var task2 = stateMachineHost.ExecuteStateMachineAsync(new Uri(ScxmlBase, relativeUri: "captureEmail.scxml"), DataModelValue.FromObject(prms2));
 
 			dynamic _ = await task2.ConfigureAwait(false);
 
-			await stateMachineHost.StopAsync().ConfigureAwait(false);
+			await stateMachineHost.StopHostAsync().ConfigureAwait(false);
 		}
 	}
 }

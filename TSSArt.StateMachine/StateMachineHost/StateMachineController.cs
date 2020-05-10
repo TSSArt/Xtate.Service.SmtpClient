@@ -138,8 +138,8 @@ namespace TSSArt.StateMachine
 
 		ValueTask IService.Destroy(CancellationToken token)
 		{
-			_destroyTokenSource.Cancel();
-			Channel.Writer.Complete();
+			TriggerDestroySignal();
+
 			return default;
 		}
 
@@ -249,6 +249,12 @@ namespace TSSArt.StateMachine
 					throw;
 				}
 			}
+		}
+
+		public void TriggerDestroySignal()
+		{
+			_destroyTokenSource.Cancel();
+			Channel.Writer.Complete();
 		}
 
 		private async ValueTask WaitForResume()

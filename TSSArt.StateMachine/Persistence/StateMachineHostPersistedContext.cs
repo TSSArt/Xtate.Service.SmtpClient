@@ -201,7 +201,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public override async ValueTask DestroyStateMachine(SessionId sessionId)
+		public override async ValueTask RemoveStateMachine(SessionId sessionId)
 		{
 			Infrastructure.Assert(_storage != null);
 
@@ -220,7 +220,7 @@ namespace TSSArt.StateMachine
 
 				await ShrinkStateMachines().ConfigureAwait(false);
 
-				await base.DestroyStateMachine(sessionId).ConfigureAwait(false);
+				await base.RemoveStateMachine(sessionId).ConfigureAwait(false);
 			}
 			finally
 			{

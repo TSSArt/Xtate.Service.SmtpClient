@@ -43,10 +43,10 @@ namespace TSSArt.StateMachine.Test
 
 			await using var stateMachineHost = new StateMachineHost(options);
 
-			await stateMachineHost.StartAsync();
+			await stateMachineHost.StartHostAsync();
 
 			// Act
-			dynamic result = await stateMachineHost.ExecuteAsync(stateMachine);
+			dynamic result = await stateMachineHost.ExecuteStateMachineAsync(stateMachine);
 
 			//Assert
 			Assert.AreEqual("value1", result.str);

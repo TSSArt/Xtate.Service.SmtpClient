@@ -50,7 +50,7 @@ namespace TSSArt.StateMachine
 
 	#endregion
 
-		public async Task StartAsync(CancellationToken token = default)
+		public async Task StartHostAsync(CancellationToken token = default)
 		{
 			if (_asyncOperationInProgress)
 			{
@@ -86,7 +86,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public async Task StopAsync(CancellationToken token = default)
+		public async Task StopHostAsync(CancellationToken token = default)
 		{
 			if (_asyncOperationInProgress)
 			{
@@ -121,7 +121,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public async Task WaitAllAsync(CancellationToken token = default)
+		public async Task WaitAllStateMachinesAsync(CancellationToken token = default)
 		{
 			var context = _context;
 
@@ -131,63 +131,75 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		public ValueTask<DataModelValue> ExecuteAsync(string scxml, DataModelValue parameters = default) => ExecuteAsync(new StateMachineOrigin(scxml), SessionId.New(), parameters);
+		public ValueTask<DataModelValue> ExecuteStateMachineAsync(string scxml, DataModelValue parameters = default) => ExecuteStateMachine(SessionId.New(), new StateMachineOrigin(scxml), parameters);
 
-		public ValueTask<DataModelValue> ExecuteAsync(Uri source, DataModelValue parameters = default) => ExecuteAsync(new StateMachineOrigin(source), SessionId.New(), parameters);
+		public ValueTask<DataModelValue> ExecuteStateMachineAsync(Uri source, DataModelValue parameters = default) => ExecuteStateMachine(SessionId.New(), new StateMachineOrigin(source), parameters);
 
-		public ValueTask<DataModelValue> ExecuteAsync(IStateMachine stateMachine, DataModelValue parameters = default) =>
-				ExecuteAsync(new StateMachineOrigin(stateMachine), SessionId.New(), parameters);
+		public ValueTask<DataModelValue> ExecuteStateMachineAsync(IStateMachine stateMachine, DataModelValue parameters = default) =>
+				ExecuteStateMachine(SessionId.New(), new StateMachineOrigin(stateMachine), parameters);
 
-		public ValueTask<DataModelValue> ExecuteAsync(string scxml, Uri? baseUri, DataModelValue parameters = default) =>
-				ExecuteAsync(new StateMachineOrigin(scxml, baseUri), SessionId.New(), parameters);
+		public ValueTask<DataModelValue> ExecuteStateMachineAsync(string scxml, Uri? baseUri, DataModelValue parameters = default) =>
+				ExecuteStateMachine(SessionId.New(), new StateMachineOrigin(scxml, baseUri), parameters);
 
-		public ValueTask<DataModelValue> ExecuteAsync(Uri source, Uri? baseUri, DataModelValue parameters = default) =>
-				ExecuteAsync(new StateMachineOrigin(source, baseUri), SessionId.New(), parameters);
+		public ValueTask<DataModelValue> ExecuteStateMachineAsync(Uri source, Uri? baseUri, DataModelValue parameters = default) =>
+				ExecuteStateMachine(SessionId.New(), new StateMachineOrigin(source, baseUri), parameters);
 
-		public ValueTask<DataModelValue> ExecuteAsync(IStateMachine stateMachine, Uri? baseUri, DataModelValue parameters = default) =>
-				ExecuteAsync(new StateMachineOrigin(stateMachine, baseUri), SessionId.New(), parameters);
+		public ValueTask<DataModelValue> ExecuteStateMachineAsync(IStateMachine stateMachine, Uri? baseUri, DataModelValue parameters = default) =>
+				ExecuteStateMachine(SessionId.New(), new StateMachineOrigin(stateMachine, baseUri), parameters);
 
-		public ValueTask<DataModelValue> ExecuteAsync(string scxml, string sessionId, DataModelValue parameters = default) =>
-				ExecuteAsync(new StateMachineOrigin(scxml), SessionId.FromString(sessionId), parameters);
+		public ValueTask<DataModelValue> ExecuteStateMachineAsync(string scxml, string sessionId, DataModelValue parameters = default) =>
+				ExecuteStateMachine(SessionId.FromString(sessionId), new StateMachineOrigin(scxml), parameters);
 
-		public ValueTask<DataModelValue> ExecuteAsync(Uri source, string sessionId, DataModelValue parameters = default) =>
-				ExecuteAsync(new StateMachineOrigin(source), SessionId.FromString(sessionId), parameters);
+		public ValueTask<DataModelValue> ExecuteStateMachineAsync(Uri source, string sessionId, DataModelValue parameters = default) =>
+				ExecuteStateMachine(SessionId.FromString(sessionId), new StateMachineOrigin(source), parameters);
 
-		public ValueTask<DataModelValue> ExecuteAsync(IStateMachine stateMachine, string sessionId, DataModelValue parameters = default) =>
-				ExecuteAsync(new StateMachineOrigin(stateMachine), SessionId.FromString(sessionId), parameters);
+		public ValueTask<DataModelValue> ExecuteStateMachineAsync(IStateMachine stateMachine, string sessionId, DataModelValue parameters = default) =>
+				ExecuteStateMachine(SessionId.FromString(sessionId), new StateMachineOrigin(stateMachine), parameters);
 
-		public ValueTask<DataModelValue> ExecuteAsync(string scxml, Uri? baseUri, string sessionId, DataModelValue parameters = default) =>
-				ExecuteAsync(new StateMachineOrigin(scxml, baseUri), SessionId.FromString(sessionId), parameters);
+		public ValueTask<DataModelValue> ExecuteStateMachineAsync(string scxml, Uri? baseUri, string sessionId, DataModelValue parameters = default) =>
+				ExecuteStateMachine(SessionId.FromString(sessionId), new StateMachineOrigin(scxml, baseUri), parameters);
 
-		public ValueTask<DataModelValue> ExecuteAsync(Uri source, Uri? baseUri, string sessionId, DataModelValue parameters = default) =>
-				ExecuteAsync(new StateMachineOrigin(source, baseUri), SessionId.FromString(sessionId), parameters);
+		public ValueTask<DataModelValue> ExecuteStateMachineAsync(Uri source, Uri? baseUri, string sessionId, DataModelValue parameters = default) =>
+				ExecuteStateMachine(SessionId.FromString(sessionId), new StateMachineOrigin(source, baseUri), parameters);
 
-		public ValueTask<DataModelValue> ExecuteAsync(IStateMachine stateMachine, Uri? baseUri, string sessionId, DataModelValue parameters = default) =>
-				ExecuteAsync(new StateMachineOrigin(stateMachine, baseUri), SessionId.FromString(sessionId), parameters);
+		public ValueTask<DataModelValue> ExecuteStateMachineAsync(IStateMachine stateMachine, Uri? baseUri, string sessionId, DataModelValue parameters = default) =>
+				ExecuteStateMachine(SessionId.FromString(sessionId), new StateMachineOrigin(stateMachine, baseUri), parameters);
 
-		private ValueTask<DataModelValue> ExecuteAsync(StateMachineOrigin origin, SessionId sessionId, DataModelValue parameters)
-		{
-			if (sessionId == null) throw new ArgumentNullException(nameof(sessionId));
-			if (origin.Type == StateMachineOriginType.None) throw new ArgumentException(Resources.Exception_StateMachine_origin_missed, nameof(origin));
+		public ValueTask StartStateMachineAsync(string scxml, DataModelValue parameters = default) => StartStateMachineWrapper(SessionId.New(), new StateMachineOrigin(scxml), parameters);
 
-			var context = GetCurrentContext();
+		public ValueTask StartStateMachineAsync(Uri source, DataModelValue parameters = default) => StartStateMachineWrapper(SessionId.New(), new StateMachineOrigin(source), parameters);
 
-			return ExecuteInternal(context, origin, sessionId, parameters);
-		}
+		public ValueTask StartStateMachineAsync(IStateMachine stateMachine, DataModelValue parameters = default) =>
+				StartStateMachineWrapper(SessionId.New(), new StateMachineOrigin(stateMachine), parameters);
 
-		private async ValueTask<DataModelValue> ExecuteInternal(StateMachineHostContext context, StateMachineOrigin origin, SessionId sessionId, DataModelValue parameters)
-		{
-			var errorProcessor = CreateErrorProcessor(sessionId, origin);
+		public ValueTask StartStateMachineAsync(string scxml, Uri? baseUri, DataModelValue parameters = default) =>
+				StartStateMachineWrapper(SessionId.New(), new StateMachineOrigin(scxml, baseUri), parameters);
 
-			var controller = await context.CreateAndAddStateMachine(sessionId, origin, parameters, errorProcessor, token: default).ConfigureAwait(false);
-			try
-			{
-				return await controller.ExecuteAsync().ConfigureAwait(false);
-			}
-			finally
-			{
-				await context.DestroyStateMachine(sessionId).ConfigureAwait(false);
-			}
-		}
+		public ValueTask StartStateMachineAsync(Uri source, Uri? baseUri, DataModelValue parameters = default) =>
+				StartStateMachineWrapper(SessionId.New(), new StateMachineOrigin(source, baseUri), parameters);
+
+		public ValueTask StartStateMachineAsync(IStateMachine stateMachine, Uri? baseUri, DataModelValue parameters = default) =>
+				StartStateMachineWrapper(SessionId.New(), new StateMachineOrigin(stateMachine, baseUri), parameters);
+
+		public ValueTask StartStateMachineAsync(string scxml, string sessionId, DataModelValue parameters = default) =>
+				StartStateMachineWrapper(SessionId.FromString(sessionId), new StateMachineOrigin(scxml), parameters);
+
+		public ValueTask StartStateMachineAsync(Uri source, string sessionId, DataModelValue parameters = default) =>
+				StartStateMachineWrapper(SessionId.FromString(sessionId), new StateMachineOrigin(source), parameters);
+
+		public ValueTask StartStateMachineAsync(IStateMachine stateMachine, string sessionId, DataModelValue parameters = default) =>
+				StartStateMachineWrapper(SessionId.FromString(sessionId), new StateMachineOrigin(stateMachine), parameters);
+
+		public ValueTask StartStateMachineAsync(string scxml, Uri? baseUri, string sessionId, DataModelValue parameters = default) =>
+				StartStateMachineWrapper(SessionId.FromString(sessionId), new StateMachineOrigin(scxml, baseUri), parameters);
+
+		public ValueTask StartStateMachineAsync(Uri source, Uri? baseUri, string sessionId, DataModelValue parameters = default) =>
+				StartStateMachineWrapper(SessionId.FromString(sessionId), new StateMachineOrigin(source, baseUri), parameters);
+
+		public ValueTask StartStateMachineAsync(IStateMachine stateMachine, Uri? baseUri, string sessionId, DataModelValue parameters = default) =>
+				StartStateMachineWrapper(SessionId.FromString(sessionId), new StateMachineOrigin(stateMachine, baseUri), parameters);
+
+		private async ValueTask StartStateMachineWrapper(SessionId sessionId, StateMachineOrigin origin, DataModelValue parameters) =>
+				await StartStateMachine(sessionId, origin, parameters).ConfigureAwait(false);
 	}
 }

@@ -25,14 +25,14 @@ namespace TSSArt.StateMachine.Core.Host
 											   .AddResourceLoader(ResxResourceLoader.Instance)
 											   .Build();
 
-			await stateMachineHost.StartAsync().ConfigureAwait(false);
+			await stateMachineHost.StartHostAsync().ConfigureAwait(false);
 
 			var name = Assembly.GetExecutingAssembly().GetName().Name;
-			var autorun = stateMachineHost.ExecuteAsync(new Uri($"resx://{name}/{name}/Scxml/autorun.scxml"));
+			var autorun = stateMachineHost.ExecuteStateMachineAsync(new Uri($"resx://{name}/{name}/Scxml/autorun.scxml"));
 
 			Application.Run();
 
-			await stateMachineHost.StopAsync().ConfigureAwait(false);
+			await stateMachineHost.StopHostAsync().ConfigureAwait(false);
 			await autorun.ConfigureAwait(false);
 		}
 	}

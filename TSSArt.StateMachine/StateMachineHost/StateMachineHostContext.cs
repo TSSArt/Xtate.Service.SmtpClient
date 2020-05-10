@@ -223,7 +223,7 @@ namespace TSSArt.StateMachine
 			ValidateTrue(_stateMachinesBySessionId.TryAdd(sessionId, stateMachineController));
 		}
 
-		public virtual ValueTask DestroyStateMachine(SessionId sessionId)
+		public virtual ValueTask RemoveStateMachine(SessionId sessionId)
 		{
 			ValidateTrue(_stateMachinesBySessionId.TryRemove(sessionId, out var stateMachineController));
 
@@ -322,6 +322,14 @@ namespace TSSArt.StateMachine
 			}
 
 			throw new StateMachineProcessorException(Resources.Exception_Cannot_find_target);
+		}
+
+		public void TriggerDestroySignal(SessionId sessionId)
+		{
+			if (_stateMachinesBySessionId.TryGetValue(sessionId, out var controller))
+			{
+				controller.TriggerDestroySignal();
+			}
 		}
 
 		public async ValueTask WaitAllAsync(CancellationToken token)
