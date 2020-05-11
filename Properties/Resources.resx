@@ -667,4 +667,7 @@
   <data name="Exception_Unhandled_exception" xml:space="preserve">
     <value>Unhandled exception.</value>
   </data>
+  <data name="DefaultLogger_TraceInterpreterState" xml:space="preserve">
+    <value>Interpreter state has changed to [{0}]. SessionId: [{1}].</value>
+  </data>
 </root>

@@ -124,6 +124,15 @@ namespace TSSArt.StateMachine {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Interpreter state has changed to [{0}]. SessionId: [{1}]..
+        /// </summary>
+        internal static string DefaultLogger_TraceInterpreterState {
+            get {
+                return ResourceManager.GetString("DefaultLogger_TraceInterpreterState", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Performing {0} transition to: [{1}]. Event: [{2}]. SessionId: [{3}]..
         /// </summary>
         internal static string DefaultLogger_TracePerformingTransition {

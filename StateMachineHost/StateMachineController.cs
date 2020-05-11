@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	internal class StateMachineController : IService, IExternalCommunication, INotifyStateChanged, IAsyncDisposable
+	internal class StateMachineController : IService, IExternalCommunication, INotifyStateChanged, ILoggerContext, IAsyncDisposable
 	{
 		private static readonly UnboundedChannelOptions UnboundedSynchronousChannelOptions  = new UnboundedChannelOptions { SingleReader = true, AllowSynchronousContinuations = true };
 		private static readonly UnboundedChannelOptions UnboundedAsynchronousChannelOptions = new UnboundedChannelOptions { SingleReader = true, AllowSynchronousContinuations = false };
@@ -48,8 +48,6 @@ namespace TSSArt.StateMachine
 		}
 
 		protected virtual Channel<IEvent> Channel { get; }
-
-		public SessionId SessionId { get; }
 
 		public Uri? StateMachineLocation { get; }
 
@@ -111,6 +109,14 @@ namespace TSSArt.StateMachine
 		bool IExternalCommunication.IsInvokeActive(InvokeId invokeId) => _stateMachineHost.IsInvokeActive(SessionId, invokeId);
 
 		ValueTask IExternalCommunication.ForwardEvent(IEvent evt, InvokeId invokeId, CancellationToken token) => _stateMachineHost.ForwardEvent(SessionId, evt, invokeId, token);
+
+	#endregion
+
+	#region Interface ILoggerContext
+
+		public SessionId SessionId { get; }
+
+		public string? StateMachineName => _options?.Name;
 
 	#endregion
 
@@ -275,7 +281,7 @@ namespace TSSArt.StateMachine
 			}
 			catch (OperationCanceledException ex) when (ex.CancellationToken == anyTokenSource.Token && _defaultOptions.SuspendToken.IsCancellationRequested)
 			{
-				throw new StateMachineSuspendedException(Resources.Exception_State_Machine_has_been_suspended, ex, _defaultOptions.SuspendToken);
+				throw new StateMachineSuspendedException(Resources.Exception_State_Machine_has_been_suspended, ex);
 			}
 			catch (ChannelClosedException ex)
 			{
@@ -326,7 +332,7 @@ namespace TSSArt.StateMachine
 				}
 				catch (Exception ex)
 				{
-					await _logger.LogError(ErrorType.Communication, SessionId, _options?.Name, scheduledEvent.Event.SendId?.Value, ex, token: default).ConfigureAwait(false);
+					await _logger.LogError(this, ErrorType.Communication, ex, scheduledEvent.Event.SendId?.Value, token: default).ConfigureAwait(false);
 				}
 			}
 			finally

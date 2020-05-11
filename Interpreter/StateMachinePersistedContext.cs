@@ -18,7 +18,7 @@ namespace TSSArt.StateMachine
 		private bool _disposed;
 
 		public StateMachinePersistedContext(string? stateMachineName, SessionId sessionId, IDataModelValueProvider dataModelValueProvider, ITransactionalStorage storage,
-											ImmutableDictionary<int, IEntity> entityMap, LoggerWrapper logger, ExternalCommunicationWrapper externalCommunication,
+											ImmutableDictionary<int, IEntity> entityMap, ILogger logger, IExternalCommunication externalCommunication,
 											ImmutableDictionary<object, object> contextRuntimeItems)
 				: base(stateMachineName, sessionId, dataModelValueProvider, logger, externalCommunication, contextRuntimeItems)
 		{
