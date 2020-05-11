@@ -32,13 +32,21 @@ namespace TSSArt.StateMachine.BenchmarkTest
 	{
 	#region Interface ILogger
 
-		public ValueTask LogInfo(SessionId sessionId, string? stateMachineName, string? label, DataModelValue data, CancellationToken token) => default;
-		public ValueTask LogError(ErrorType errorType, SessionId sessionId, string? stateMachineName, string? sourceEntityId, Exception exception, CancellationToken token) => default;
-		public void      TraceProcessingEvent(SessionId sessionId, EventType eventType, string name, SendId? sendId, InvokeId? invokeId, DataModelValue data, string? originType, string? origin) { }
-		public void      TraceEnteringState(SessionId sessionId, IIdentifier stateId) { }
-		public void      TraceExitingState(SessionId sessionId, IIdentifier stateId) { }
-		public void      TracePerformingTransition(SessionId sessionId, string type, string? evt, string? target) { }
-		public bool      IsTracingEnabled => false;
+		public ValueTask ExecuteLog(ILoggerContext loggerContext, string? label, DataModelValue data, CancellationToken token) => default;
+
+		public ValueTask LogError(ILoggerContext loggerContext, ErrorType errorType, Exception exception, string? sourceEntityId, CancellationToken token) => default;
+
+		public void TraceProcessingEvent(ILoggerContext loggerContext, IEvent evt) { }
+
+		public void TraceEnteringState(ILoggerContext loggerContext, IIdentifier stateId) { }
+
+		public void TraceExitingState(ILoggerContext loggerContext, IIdentifier stateId) { }
+
+		public void TracePerformingTransition(ILoggerContext loggerContext, TransitionType type, string? eventDescriptor, string? target) { }
+
+		public void TraceInterpreterState(ILoggerContext loggerContext, StateMachineInterpreterState state) { }
+
+		public bool IsTracingEnabled => false;
 
 	#endregion
 	}

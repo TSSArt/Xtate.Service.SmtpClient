@@ -88,7 +88,6 @@ namespace TSSArt.StateMachine.Test
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(StateMachineLiveLockException))]
 		public async Task LiveLockErrorConditionTest()
 		{
 			var builder = new StateMachineFluentBuilder(BuilderFactory.Instance);
@@ -103,11 +102,17 @@ namespace TSSArt.StateMachine.Test
 			var channel = Channel.CreateUnbounded<IEvent>();
 			channel.Writer.Complete();
 			var eventChannel = channel.Reader;
-			await StateMachineInterpreter.RunAsync(SessionId.New(), builder.Build(), eventChannel, new InterpreterOptions { UnhandledErrorBehaviour = UnhandledErrorBehaviour.IgnoreError });
+
+			async Task AssertAction()
+			{
+				var options = new InterpreterOptions { UnhandledErrorBehaviour = UnhandledErrorBehaviour.IgnoreError };
+				await StateMachineInterpreter.RunAsync(SessionId.New(), builder.Build(), eventChannel, options);
+			}
+
+			await Assert.ThrowsExceptionAsync<StateMachineDestroyedException>(AssertAction);
 		}
 
 		[TestMethod]
-		[ExpectedException(typeof(StateMachineLiveLockException))]
 		public async Task LiveLockPingPongTest()
 		{
 			var builder = new StateMachineFluentBuilder(BuilderFactory.Instance);
@@ -127,7 +132,10 @@ namespace TSSArt.StateMachine.Test
 			var channel = Channel.CreateUnbounded<IEvent>();
 			channel.Writer.Complete();
 			var eventChannel = channel.Reader;
-			await StateMachineInterpreter.RunAsync(SessionId.New(), builder.Build(), eventChannel);
+
+			async Task AssertAction() => await StateMachineInterpreter.RunAsync(SessionId.New(), builder.Build(), eventChannel);
+
+			await Assert.ThrowsExceptionAsync<StateMachineDestroyedException>(AssertAction);
 		}
 	}
 }

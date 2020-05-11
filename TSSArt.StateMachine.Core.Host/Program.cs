@@ -23,6 +23,7 @@ namespace TSSArt.StateMachine.Core.Host
 											   .AddHttpIoProcessor(baseUri)
 											   .DisableVerboseValidation()
 											   .AddResourceLoader(ResxResourceLoader.Instance)
+											   .SetLogger(SerilogLogger.CreateLogger())
 											   .Build();
 
 			await stateMachineHost.StartHostAsync().ConfigureAwait(false);

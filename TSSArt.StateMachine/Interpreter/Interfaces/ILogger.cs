@@ -9,11 +9,12 @@ namespace TSSArt.StateMachine
 	public interface ILogger
 	{
 		bool      IsTracingEnabled { get; }
-		ValueTask LogInfo(SessionId sessionId, string? stateMachineName, string? label, DataModelValue data, CancellationToken token);
-		ValueTask LogError(ErrorType errorType, SessionId sessionId, string? stateMachineName, string? sourceEntityId, Exception exception, CancellationToken token);
-		void      TraceProcessingEvent(SessionId sessionId, EventType eventType, string name, SendId? sendId, InvokeId? invokeId, DataModelValue data, string? originType, string? origin);
-		void      TraceEnteringState(SessionId sessionId, IIdentifier stateId);
-		void      TraceExitingState(SessionId sessionId, IIdentifier stateId);
-		void      TracePerformingTransition(SessionId sessionId, string type, string? evt, string? target);
+		ValueTask ExecuteLog(ILoggerContext loggerContext, string? label, DataModelValue data, CancellationToken token);
+		ValueTask LogError(ILoggerContext loggerContext, ErrorType errorType, Exception exception, string? sourceEntityId, CancellationToken token);
+		void      TraceProcessingEvent(ILoggerContext loggerContext, IEvent evt);
+		void      TraceEnteringState(ILoggerContext loggerContext, IIdentifier stateId);
+		void      TraceExitingState(ILoggerContext loggerContext, IIdentifier stateId);
+		void      TracePerformingTransition(ILoggerContext loggerContext, TransitionType type, string? eventDescriptor, string? target);
+		void      TraceInterpreterState(ILoggerContext loggerContext, StateMachineInterpreterState state);
 	}
 }

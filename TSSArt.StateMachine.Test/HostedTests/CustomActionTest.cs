@@ -16,7 +16,7 @@ namespace TSSArt.StateMachine.Test.HostedTests
 			await Host.WaitAllStateMachinesAsync();
 
 			// assert
-			Logger.Verify(l => l.LogInfo(It.IsAny<SessionId>(), "StartSystemActionChild", "StartSystemActionChild", default, It.IsAny<CancellationToken>()));
+			Logger.Verify(l => l.ExecuteLog(It.IsAny<ILoggerContext>(), "StartSystemActionChild", default, It.IsAny<CancellationToken>()));
 		}
 	}
 }

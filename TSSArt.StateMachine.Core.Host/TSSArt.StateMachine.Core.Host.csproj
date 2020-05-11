@@ -40,6 +40,7 @@
   <ItemGroup>
     <ProjectReference Include="..\TSSArt.StateMachine.EcmaScript\TSSArt.StateMachine.EcmaScript.csproj" />
     <ProjectReference Include="..\TSSArt.StateMachine.HttpIoProcessor\TSSArt.StateMachine.HttpIoProcessor.csproj" />
+    <ProjectReference Include="..\TSSArt.StateMachine.Logger.Serilog\TSSArt.StateMachine.Logger.Serilog.csproj" />
     <ProjectReference Include="..\TSSArt.StateMachine.UserInteractionService\TSSArt.StateMachine.UserInteractionService.csproj" />
     <ProjectReference Include="..\TSSArt.StateMachine.WebBrowserService.CefSharp\TSSArt.StateMachine.WebBrowserService.CefSharp.csproj" />
     <ProjectReference Include="..\TSSArt.StateMachine.WebBrowserService\TSSArt.StateMachine.WebBrowserService.csproj" />
@@ -50,5 +51,9 @@
     <EmbeddedResource Include="Scxml\autorun.scxml" />
     <EmbeddedResource Include="Scxml\dialog.scxml" />
   </ItemGroup>
+
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="taskkill /f /im $(TargetName).exe 2&gt;nul 1&gt;nul &amp; exit 0" />
+  </Target>
 
 </Project>

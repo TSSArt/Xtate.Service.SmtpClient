@@ -11,16 +11,16 @@ namespace TSSArt.StateMachine
 
 		private DefaultLogger() { }
 
-		public ValueTask LogInfo(SessionId sessionId, string? stateMachineName, string? label, DataModelValue data, CancellationToken token)
+		public ValueTask ExecuteLog(ILoggerContext loggerContext, string? label, DataModelValue data, CancellationToken token)
 		{
-			Trace.TraceInformation(Resources.DefaultLogger_LogInfo, stateMachineName, sessionId.Value, label, data);
+			Trace.TraceInformation(Resources.DefaultLogger_LogInfo, loggerContext?.StateMachineName, loggerContext?.SessionId?.Value, label, data);
 
 			return default;
 		}
 
-		public ValueTask LogError(ErrorType errorType, SessionId sessionId, string? stateMachineName, string? sourceEntityId, Exception exception, CancellationToken token)
+		public ValueTask LogError(ILoggerContext loggerContext, ErrorType errorType, Exception exception, string? sourceEntityId, CancellationToken token)
 		{
-			Trace.TraceError(Resources.DefaultLogger_LogError, errorType, stateMachineName, sessionId.Value, sourceEntityId, exception);
+			Trace.TraceError(Resources.DefaultLogger_LogError, errorType, loggerContext?.StateMachineName, loggerContext?.SessionId?.Value, sourceEntityId, exception);
 
 			return default;
 		}
@@ -31,24 +31,30 @@ namespace TSSArt.StateMachine
 		public bool IsTracingEnabled => false;
 #endif
 
-		public void TraceEnteringState(SessionId sessionId, IIdentifier stateId)
+		public void TraceProcessingEvent(ILoggerContext loggerContext, IEvent evt)
 		{
-			Trace.TraceInformation(Resources.DefaultLogger_TraceEnteringState, stateId.Value, sessionId.Value);
+			Trace.TraceInformation(Resources.DefaultLogger_TraceProcessingEvent, evt.Type, EventName.ToName(evt.NameParts), evt.SendId?.Value, evt.InvokeId?.Value,
+								   evt.Data, evt.OriginType, evt.Origin, loggerContext?.SessionId?.Value);
 		}
 
-		public void TraceExitingState(SessionId sessionId, IIdentifier stateId)
+		public void TraceEnteringState(ILoggerContext loggerContext, IIdentifier stateId)
 		{
-			Trace.TraceInformation(Resources.DefaultLogger_TraceExitingState, stateId.Value, sessionId.Value);
+			Trace.TraceInformation(Resources.DefaultLogger_TraceEnteringState, stateId.Value, loggerContext?.SessionId?.Value);
 		}
 
-		public void TracePerformingTransition(SessionId sessionId, string type, string? evt, string? target)
+		public void TraceExitingState(ILoggerContext loggerContext, IIdentifier stateId)
 		{
-			Trace.TraceInformation(Resources.DefaultLogger_TracePerformingTransition, type, target, evt, sessionId.Value);
+			Trace.TraceInformation(Resources.DefaultLogger_TraceExitingState, stateId.Value, loggerContext?.SessionId?.Value);
 		}
 
-		public void TraceProcessingEvent(SessionId sessionId, EventType eventType, string name, SendId? sendId, InvokeId? invokeId, DataModelValue data, string? originType, string? origin)
+		public void TracePerformingTransition(ILoggerContext loggerContext, TransitionType type, string? eventDescriptor, string? target)
 		{
-			Trace.TraceInformation(Resources.DefaultLogger_TraceProcessingEvent, eventType, name, sendId, invokeId, data, originType, origin, sessionId.Value);
+			Trace.TraceInformation(Resources.DefaultLogger_TracePerformingTransition, type, target, eventDescriptor, loggerContext?.SessionId?.Value);
+		}
+
+		public void TraceInterpreterState(ILoggerContext loggerContext, StateMachineInterpreterState state)
+		{
+			Trace.TraceInformation(Resources.DefaultLogger_TraceInterpreterState, state, loggerContext?.SessionId?.Value);
 		}
 	}
 }

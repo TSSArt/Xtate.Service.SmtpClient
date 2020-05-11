@@ -6,22 +6,22 @@ using System.Threading.Tasks;
 
 namespace TSSArt.StateMachine
 {
-	internal class StateMachineContext : IStateMachineContext, IExecutionContext
+	internal class StateMachineContext : IStateMachineContext, IExecutionContext, ILoggerContext
 	{
 		private static readonly Uri InternalTarget = new Uri(uriString: "_internal", UriKind.Relative);
 
 		private readonly ImmutableDictionary<object, object> _contextRuntimeItems;
 		private readonly IDataModelValueProvider             _dataModelValueProvider;
-		private readonly ExternalCommunicationWrapper        _externalCommunication;
-		private readonly LoggerWrapper                       _logger;
+		private readonly IExternalCommunication              _externalCommunication;
+		private readonly ILogger                             _logger;
 		private readonly SessionId                           _sessionId;
 		private readonly string?                             _stateMachineName;
 		private          DataModelObject?                    _dataModel;
 		private          KeyList<StateEntityNode>?           _historyValue;
 		private          IContextItems?                      _runtimeItems;
 
-		public StateMachineContext(string? stateMachineName, SessionId sessionId, IDataModelValueProvider dataModelValueProvider, LoggerWrapper logger,
-								   ExternalCommunicationWrapper externalCommunication, ImmutableDictionary<object, object> contextRuntimeItems)
+		public StateMachineContext(string? stateMachineName, SessionId sessionId, IDataModelValueProvider dataModelValueProvider, ILogger logger,
+								   IExternalCommunication externalCommunication, ImmutableDictionary<object, object> contextRuntimeItems)
 		{
 			_stateMachineName = stateMachineName;
 			_sessionId = sessionId;
@@ -62,13 +62,21 @@ namespace TSSArt.StateMachine
 
 		public ValueTask Cancel(SendId sendId, CancellationToken token) => _externalCommunication.CancelEvent(sendId, token);
 
-		public ValueTask Log(string? label, DataModelValue arguments, CancellationToken token) => _logger.Log(_stateMachineName, label, arguments, token);
+		public ValueTask Log(string? label, DataModelValue arguments, CancellationToken token) => _logger.ExecuteLog(this, label, arguments, token);
 
 		public ValueTask StartInvoke(InvokeData invokeData, CancellationToken token = default) => _externalCommunication.StartInvoke(invokeData, token);
 
 		public ValueTask CancelInvoke(InvokeId invokeId, CancellationToken token) => _externalCommunication.CancelInvoke(invokeId, token);
 
 		public IContextItems RuntimeItems => _runtimeItems ??= new ContextItems(_contextRuntimeItems);
+
+	#endregion
+
+	#region Interface ILoggerContext
+
+		SessionId? ILoggerContext.SessionId => _sessionId;
+
+		string? ILoggerContext.StateMachineName => _stateMachineName;
 
 	#endregion
 

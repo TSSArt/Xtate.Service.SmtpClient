@@ -5,6 +5,11 @@
 		Accepted,
 		Started,
 		Exited,
-		Waiting
+		Waiting,
+		Resumed,
+		Halted,
+		Destroying,
+		Suspended,
+		QueueClosed
 	}
 }

@@ -16,7 +16,7 @@ namespace TSSArt.StateMachine
 	using DefaultHistoryContent = Dictionary<IIdentifier, ImmutableArray<IExecEvaluator>>;
 
 	[PublicAPI]
-	public sealed class StateMachineInterpreter : IDataModelValueProvider
+	public sealed partial class StateMachineInterpreter : IDataModelValueProvider
 	{
 		private const string StateStorageKey                  = "state";
 		private const string StateMachineDefinitionStorageKey = "smd";
@@ -29,8 +29,8 @@ namespace TSSArt.StateMachine
 		private readonly CancellationToken                        _destroyToken;
 		private readonly IErrorProcessor                          _errorProcessor;
 		private readonly ChannelReader<IEvent>                    _eventChannel;
-		private readonly ExternalCommunicationWrapper             _externalCommunication;
-		private readonly LoggerWrapper                            _logger;
+		private readonly IExternalCommunication?                  _externalCommunication;
+		private readonly ILogger                                  _logger;
 		private readonly INotifyStateChanged?                     _notifyStateChanged;
 		private readonly PersistenceLevel                         _persistenceLevel;
 		private readonly ImmutableArray<IResourceLoader>          _resourceLoaders;
@@ -58,8 +58,8 @@ namespace TSSArt.StateMachine
 			_resourceLoaders = options.ResourceLoaders;
 			_customActionProviders = options.CustomActionProviders;
 			_dataModelHandlerFactories = options.DataModelHandlerFactories;
-			_logger = new LoggerWrapper(options.Logger ?? DefaultLogger.Instance, sessionId);
-			_externalCommunication = new ExternalCommunicationWrapper(options.ExternalCommunication, sessionId);
+			_logger = options.Logger ?? DefaultLogger.Instance;
+			_externalCommunication = options.ExternalCommunication;
 			_storageProvider = options.StorageProvider ?? NullStorageProvider.Instance;
 			_contextRuntimeItems = options.ContextRuntimeItems ?? ImmutableDictionary<object, object>.Empty;
 			_errorProcessor = options.ErrorProcessor ?? DefaultErrorProcessor.Instance;
@@ -373,17 +373,20 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private ValueTask NotifyAccepted() => _notifyStateChanged?.OnChanged(StateMachineInterpreterState.Accepted) ?? default;
-		private ValueTask NotifyStarted()  => _notifyStateChanged?.OnChanged(StateMachineInterpreterState.Started) ?? default;
-		private ValueTask NotifyExited()   => _notifyStateChanged?.OnChanged(StateMachineInterpreterState.Exited) ?? default;
-		private ValueTask NotifyWaiting()  => _notifyStateChanged?.OnChanged(StateMachineInterpreterState.Waiting) ?? default;
+		private ValueTask NotifyAccepted() => NotifyInterpreterState(StateMachineInterpreterState.Accepted);
+		private ValueTask NotifyStarted()  => NotifyInterpreterState(StateMachineInterpreterState.Started);
+		private ValueTask NotifyExited()   => NotifyInterpreterState(StateMachineInterpreterState.Exited);
+		private ValueTask NotifyWaiting()  => NotifyInterpreterState(StateMachineInterpreterState.Waiting);
 
-		private async ValueTask<DataModelValue> Run(IStateMachine? stateMachine)
+		private ValueTask NotifyInterpreterState(StateMachineInterpreterState state)
 		{
-			_model = await BuildInterpreterModel(stateMachine).ConfigureAwait(false);
-			_context = await CreateContext().ConfigureAwait(false);
-			_anyTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_suspendToken, _destroyToken, _stopToken);
-			await using var _ = _context.ConfigureAwait(false);
+			LogInterpreterState(state);
+
+			return _notifyStateChanged?.OnChanged(state) ?? default;
+		}
+
+		private async ValueTask RunSteps()
+		{
 			try
 			{
 				await DoOperation(StateBagKey.NotifyAccepted, NotifyAccepted).ConfigureAwait(false);
@@ -393,37 +396,79 @@ namespace TSSArt.StateMachine
 				await DoOperation(StateBagKey.NotifyStarted, NotifyStarted).ConfigureAwait(false);
 				await DoOperation(StateBagKey.InitialEnterStates, InitialEnterStates).ConfigureAwait(false);
 				await DoOperation(StateBagKey.MainEventLoop, MainEventLoop).ConfigureAwait(false);
-				await DoOperation(StateBagKey.ExitInterpreter, ExitInterpreter).ConfigureAwait(false);
-				await DoOperation(StateBagKey.NotifyExited, NotifyExited).ConfigureAwait(false);
 			}
-			catch (ChannelClosedException ex)
+			catch (StateMachineLiveLockException ex)
 			{
-				throw new StateMachineQueueClosedException(Resources.Exception_State_Machine_external_queue_has_been_closed, ex);
-			}
-			catch (StateMachineLiveLockException)
-			{
-				await CleanupPersistedData().ConfigureAwait(false);
-
-				throw;
-			}
-			catch (OperationCanceledException ex) when (ex.CancellationToken == _stopToken || ex.CancellationToken == _anyTokenSource.Token && _stopToken.IsCancellationRequested)
-			{
-				throw new OperationCanceledException(Resources.Exception_State_Machine_has_been_halted, ex, _stopToken.IsCancellationRequested ? _stopToken : default);
+				throw await DestroyingSteps(ex).ConfigureAwait(false);
 			}
 			catch (OperationCanceledException ex) when (ex.CancellationToken == _destroyToken || ex.CancellationToken == _anyTokenSource.Token && _destroyToken.IsCancellationRequested)
 			{
-				await DoOperation(StateBagKey.ExitInterpreter, ExitInterpreter).ConfigureAwait(false);
-				await DoOperation(StateBagKey.NotifyExited, NotifyExited).ConfigureAwait(false);
-				await CleanupPersistedData().ConfigureAwait(false);
+				throw await DestroyingSteps(ex).ConfigureAwait(false);
+			}
+			catch (StateMachineUnhandledErrorException ex) when (ex.UnhandledErrorBehaviour == UnhandledErrorBehaviour.DestroyStateMachine)
+			{
+				throw await DestroyingSteps(ex).ConfigureAwait(false);
+			}
 
-				throw new StateMachineDestroyedException(Resources.Exception_State_Machine_has_been_destroyed, ex, _destroyToken.IsCancellationRequested ? _destroyToken : default);
+			await ExitSteps().ConfigureAwait(false);
+		}
+
+		private async ValueTask ExitSteps()
+		{
+			await DoOperation(StateBagKey.ExitInterpreter, ExitInterpreter).ConfigureAwait(false);
+			await DoOperation(StateBagKey.NotifyExited, NotifyExited).ConfigureAwait(false);
+			await CleanupPersistedData().ConfigureAwait(false);
+		}
+
+		private async ValueTask<StateMachineDestroyedException> DestroyingSteps(Exception destroyException)
+		{
+			LogInterpreterState(StateMachineInterpreterState.Destroying);
+
+			await ExitSteps().ConfigureAwait(false);
+
+			return new StateMachineDestroyedException(Resources.Exception_State_Machine_has_been_destroyed, destroyException);
+		}
+
+		private async ValueTask<DataModelValue> Run(IStateMachine? stateMachine)
+		{
+			_model = await BuildInterpreterModel(stateMachine).ConfigureAwait(false);
+			_context = await CreateContext().ConfigureAwait(false);
+			_anyTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_suspendToken, _destroyToken, _stopToken);
+			await using var _ = _context.ConfigureAwait(false);
+
+			if (stateMachine == null)
+			{
+				LogInterpreterState(StateMachineInterpreterState.Resumed);
+			}
+
+			try
+			{
+				await RunSteps().ConfigureAwait(false);
+			}
+			catch (ChannelClosedException ex)
+			{
+				LogInterpreterState(StateMachineInterpreterState.QueueClosed);
+
+				throw new StateMachineQueueClosedException(Resources.Exception_State_Machine_external_queue_has_been_closed, ex);
+			}
+			catch (OperationCanceledException ex) when (ex.CancellationToken == _stopToken || ex.CancellationToken == _anyTokenSource.Token && _stopToken.IsCancellationRequested)
+			{
+				LogInterpreterState(StateMachineInterpreterState.Halted);
+
+				throw new OperationCanceledException(Resources.Exception_State_Machine_has_been_halted, ex, _stopToken.IsCancellationRequested ? _stopToken : default);
+			}
+			catch (StateMachineUnhandledErrorException ex) when (ex.UnhandledErrorBehaviour == UnhandledErrorBehaviour.HaltStateMachine)
+			{
+				LogInterpreterState(StateMachineInterpreterState.Halted);
+
+				throw new OperationCanceledException(Resources.Exception_State_Machine_has_been_halted, ex, _stopToken.IsCancellationRequested ? _stopToken : default);
 			}
 			catch (OperationCanceledException ex) when (ex.CancellationToken == _suspendToken || ex.CancellationToken == _anyTokenSource.Token && _suspendToken.IsCancellationRequested)
 			{
-				throw new StateMachineSuspendedException(Resources.Exception_State_Machine_has_been_suspended, ex, _suspendToken.IsCancellationRequested ? _suspendToken : default);
-			}
+				LogInterpreterState(StateMachineInterpreterState.Suspended);
 
-			await CleanupPersistedData().ConfigureAwait(false);
+				throw new StateMachineSuspendedException(Resources.Exception_State_Machine_has_been_suspended, ex);
+			}
 
 			return _doneData;
 		}
@@ -499,7 +544,7 @@ namespace TSSArt.StateMachine
 		{
 			var internalEvent = _context.InternalQueue.Dequeue();
 
-			_logger.ProcessingEvent(internalEvent);
+			LogProcessingEvent(internalEvent);
 
 			_context.DataModel.SetInternal(property: @"_event", new DataModelDescriptor(DataConverter.FromEvent(internalEvent), DataModelAccess.ReadOnly));
 
@@ -521,18 +566,11 @@ namespace TSSArt.StateMachine
 					return;
 
 				case UnhandledErrorBehaviour.HaltStateMachine:
-				{
-					evt.Is<Exception>(out var exception);
-
-					throw new StateMachineUnhandledErrorException(Resources.Exception_Unhandled_exception, exception, _stopToken);
-				}
-
 				case UnhandledErrorBehaviour.DestroyStateMachine:
-				{
+
 					evt.Is<Exception>(out var exception);
 
-					throw new StateMachineUnhandledErrorException(Resources.Exception_Unhandled_exception, exception, _destroyToken);
-				}
+					throw new StateMachineUnhandledErrorException(Resources.Exception_Unhandled_exception, exception, _unhandledErrorBehaviour);
 
 				default:
 					Infrastructure.UnexpectedValue();
@@ -637,7 +675,7 @@ namespace TSSArt.StateMachine
 		{
 			var externalEvent = await ReadExternalEvent().ConfigureAwait(false);
 
-			_logger.ProcessingEvent(externalEvent);
+			LogProcessingEvent(externalEvent);
 
 			_context.DataModel.SetInternal(property: @"_event", new DataModelDescriptor(DataConverter.FromEvent(externalEvent), DataModelAccess.ReadOnly));
 
@@ -654,7 +692,7 @@ namespace TSSArt.StateMachine
 
 					if (invoke.AutoForward)
 					{
-						await ForwardEvent(invoke.InvokeId, externalEvent).ConfigureAwait(false);
+						await ForwardEvent(invoke, externalEvent).ConfigureAwait(false);
 					}
 				}
 			}
@@ -689,7 +727,7 @@ namespace TSSArt.StateMachine
 					return evt;
 				}
 
-				if (_externalCommunication.IsInvokeActive(evt.InvokeId))
+				if (IsInvokeActive(evt.InvokeId))
 				{
 					return evt;
 				}
@@ -901,7 +939,7 @@ namespace TSSArt.StateMachine
 
 			foreach (var state in states)
 			{
-				_logger.ExitingState(state);
+				LogExitingState(state);
 
 				foreach (var onExit in state.OnExit)
 				{
@@ -966,7 +1004,7 @@ namespace TSSArt.StateMachine
 					await DoOperation(StateBagKey.InitializeDataModel, state.DataModel, InitializeDataModel, state.DataModel).ConfigureAwait(false);
 				}
 
-				_logger.EnteringState(state);
+				LogEnteringState(state);
 
 				foreach (var onEntry in state.OnEntry)
 				{
@@ -1277,7 +1315,7 @@ namespace TSSArt.StateMachine
 		{
 			foreach (var transition in transitions)
 			{
-				_logger.PerformingTransition(transition);
+				LogPerformingTransition(transition);
 
 				await DoOperation(StateBagKey.RunExecutableEntity, transition, RunExecutableEntity, transition.ActionEvaluators).ConfigureAwait(false);
 			}
@@ -1326,9 +1364,9 @@ namespace TSSArt.StateMachine
 
 			SendId? sendId = null;
 
-			var errorType = _logger.IsPlatformError(exception)
+			var errorType = IsPlatformError(exception)
 					? ErrorType.Platform
-					: _externalCommunication.IsCommunicationError(exception, out sendId)
+					: IsCommunicationError(exception, out sendId)
 							? ErrorType.Communication
 							: ErrorType.Execution;
 
@@ -1346,7 +1384,7 @@ namespace TSSArt.StateMachine
 
 			try
 			{
-				await _logger.Error(errorType, _model.Root.Name, sourceEntityId, exception, _stopToken).ConfigureAwait(false);
+				await LogError(errorType, sourceEntityId, exception, _stopToken).ConfigureAwait(false);
 			}
 			catch (Exception ex)
 			{
@@ -1387,7 +1425,19 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private ValueTask ForwardEvent(InvokeId invokeId, IEvent evt) => _externalCommunication.ForwardEvent(evt, invokeId, _stopToken);
+		private async ValueTask ForwardEvent(InvokeNode invoke, IEvent evt)
+		{
+			try
+			{
+				Infrastructure.Assert(invoke.InvokeId != null);
+
+				await ForwardEvent(evt, invoke.InvokeId, _stopToken).ConfigureAwait(false);
+			}
+			catch (Exception ex) when (IsError(ex))
+			{
+				await Error(invoke, ex).ConfigureAwait(false);
+			}
+		}
 
 		private ValueTask ApplyFinalize(InvokeNode invoke) => invoke.Finalize != null ? RunExecutableEntity(invoke.Finalize.ActionEvaluators) : default;
 
@@ -1511,11 +1561,11 @@ namespace TSSArt.StateMachine
 			if (IsPersistingEnabled)
 			{
 				var storage = await _storageProvider.GetTransactionalStorage(partition: default, StateStorageKey, _stopToken).ConfigureAwait(false);
-				context = new StateMachinePersistedContext(_model.Root.Name, _sessionId, this, storage, _model.EntityMap, _logger, _externalCommunication, _contextRuntimeItems);
+				context = new StateMachinePersistedContext(_model.Root.Name, _sessionId, this, storage, _model.EntityMap, _logger, this, _contextRuntimeItems);
 			}
 			else
 			{
-				context = new StateMachineContext(_model.Root.Name, _sessionId, this, _logger, _externalCommunication, _contextRuntimeItems);
+				context = new StateMachineContext(_model.Root.Name, _sessionId, this, _logger, this, _contextRuntimeItems);
 			}
 
 			_dataModelHandler.ExecutionContextCreated(context.ExecutionContext, out _dataModelVars);
