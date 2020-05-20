@@ -1,6 +1,6 @@
 ﻿using System.Collections.Immutable;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public struct TransitionEntity : ITransition, IVisitorEntity<TransitionEntity, ITransition>, IAncestorProvider
 	{

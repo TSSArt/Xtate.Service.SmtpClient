@@ -1,6 +1,6 @@
 ﻿using System.Collections.Immutable;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public struct IfEntity : IIf, IVisitorEntity<IfEntity, IIf>, IAncestorProvider
 	{

@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public sealed partial class StateMachineHost : IServiceFactory
 	{

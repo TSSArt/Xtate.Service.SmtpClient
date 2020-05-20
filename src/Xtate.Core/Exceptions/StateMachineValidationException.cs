@@ -3,10 +3,10 @@ using System.Collections.Immutable;
 using System.Runtime.Serialization;
 using System.Text;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	[Serializable]
-	public class StateMachineValidationException : StateMachineException
+	public class StateMachineValidationException : XtateException
 	{
 		protected StateMachineValidationException(SerializationInfo info, StreamingContext context) : base(info, context) { }
 

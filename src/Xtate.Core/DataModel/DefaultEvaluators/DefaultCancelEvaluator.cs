@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	[PublicAPI]
 	public class DefaultCancelEvaluator : ICancel, IExecEvaluator, IAncestorProvider
@@ -41,10 +41,10 @@ namespace TSSArt.StateMachine
 
 			if (string.IsNullOrEmpty(sendId))
 			{
-				throw new StateMachineExecutionException(Resources.Exception_SendIdIsEmpty);
+				throw new ExecutionException(Resources.Exception_SendIdIsEmpty);
 			}
 
-			await executionContext.Cancel(StateMachine.SendId.FromString(sendId), token).ConfigureAwait(false);
+			await executionContext.Cancel(Xtate.SendId.FromString(sendId), token).ConfigureAwait(false);
 		}
 
 	#endregion

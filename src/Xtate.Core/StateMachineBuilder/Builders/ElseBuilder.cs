@@ -1,4 +1,4 @@
-﻿namespace TSSArt.StateMachine
+﻿namespace Xtate
 {
 	public class ElseBuilder : BuilderBase, IElseBuilder
 	{

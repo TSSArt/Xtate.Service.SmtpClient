@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal sealed class CompoundNode : StateNode, IStoreSupport, IDebugEntityId
 	{

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal abstract class StateEntityNode : IStateEntity, IStoreSupport, IDocumentId
 	{

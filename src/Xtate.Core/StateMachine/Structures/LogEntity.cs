@@ -1,4 +1,4 @@
-﻿namespace TSSArt.StateMachine
+﻿namespace Xtate
 {
 	public struct LogEntity : ILog, IVisitorEntity<LogEntity, ILog>, IAncestorProvider
 	{

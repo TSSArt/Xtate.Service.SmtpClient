@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Xml;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public static class EventName
 	{

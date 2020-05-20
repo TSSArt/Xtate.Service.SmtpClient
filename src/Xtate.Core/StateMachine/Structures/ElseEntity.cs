@@ -1,4 +1,4 @@
-﻿namespace TSSArt.StateMachine
+﻿namespace Xtate
 {
 	public struct ElseEntity : IElse, IVisitorEntity<ElseEntity, IElse>, IAncestorProvider
 	{

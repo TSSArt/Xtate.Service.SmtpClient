@@ -2,16 +2,16 @@
 using System.Collections.Immutable;
 using System.Globalization;
 using System.Xml;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	[PublicAPI]
 	public class ScxmlDirector : XmlDirector<ScxmlDirector>
 	{
-		private const string ScxmlNs       = "http://www.w3.org/2005/07/scxml";
-		private const string TSSArtScxmlNs = "http://tssart.com/scxml";
-		private const char   Space         = ' ';
+		private const string ScxmlNs      = "http://www.w3.org/2005/07/scxml";
+		private const string XtateScxmlNs = "http://xtate.net/scxml";
+		private const char   Space        = ' ';
 
 		private static readonly string[] Keywords =
 		{
@@ -64,7 +64,7 @@ namespace TSSArt.StateMachine
 			if (xmlNameTable == null) throw new ArgumentNullException(nameof(xmlNameTable));
 
 			xmlNameTable.Add(ScxmlNs);
-			xmlNameTable.Add(TSSArtScxmlNs);
+			xmlNameTable.Add(XtateScxmlNs);
 
 			foreach (var keyword in Keywords)
 			{
@@ -302,9 +302,10 @@ namespace TSSArt.StateMachine
 				  .MultipleElements(ScxmlNs, name: "final", (dr, b) => b.AddFinal(dr.ReadFinal()))
 				  .OptionalElement(ScxmlNs, name: "datamodel", (dr, b) => b.SetDataModel(dr.ReadDataModel()))
 				  .OptionalElement(ScxmlNs, name: "script", (dr, b) => b.SetScript(dr.ReadScript()))
-				  .OptionalAttribute(TSSArtScxmlNs, name: "synchronous", (dr, b) => b.SetSynchronousEventProcessing(XmlConvert.ToBoolean(dr.Current)))
-				  .OptionalAttribute(TSSArtScxmlNs, name: "queueSize", (dr, b) => b.SetExternalQueueSize(XmlConvert.ToInt32(dr.Current)))
-				  .OptionalAttribute(TSSArtScxmlNs, name: "persistence", (dr, b) => b.SetPersistenceLevel((PersistenceLevel) Enum.Parse(typeof(PersistenceLevel), dr.Current)));
+				  .OptionalAttribute(XtateScxmlNs, name: "synchronous", (dr, b) => b.SetSynchronousEventProcessing(XmlConvert.ToBoolean(dr.Current)))
+				  .OptionalAttribute(XtateScxmlNs, name: "queueSize", (dr, b) => b.SetExternalQueueSize(XmlConvert.ToInt32(dr.Current)))
+				  .OptionalAttribute(XtateScxmlNs, name: "persistence", (dr, b) => b.SetPersistenceLevel((PersistenceLevel) Enum.Parse(typeof(PersistenceLevel), dr.Current)))
+				  .OptionalAttribute(XtateScxmlNs, name: "onError", (dr, b) => b.SetUnhandledErrorBehaviour((UnhandledErrorBehaviour) Enum.Parse(typeof(UnhandledErrorBehaviour), dr.Current)));
 
 		private IState ReadState() => Populate(_factory.CreateStateBuilder(CreateAncestor()), StatePolicy).Build();
 

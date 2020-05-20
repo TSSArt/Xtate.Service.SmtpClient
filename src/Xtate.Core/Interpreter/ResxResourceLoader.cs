@@ -4,9 +4,9 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	[PublicAPI]
 	public sealed class ResxResourceLoader : IResourceLoader
@@ -73,7 +73,7 @@ namespace TSSArt.StateMachine
 
 			if (stream == null)
 			{
-				throw new StateMachineResourceNotFoundException(Res.Format(Resources.Exception_Resource_not_found, uri));
+				throw new ResourceNotFoundException(Res.Format(Resources.Exception_Resource_not_found, uri));
 			}
 
 			return stream;

@@ -1,4 +1,4 @@
-﻿namespace TSSArt.StateMachine
+﻿namespace Xtate
 {
 	public struct ScriptExpression : IScriptExpression, IVisitorEntity<ScriptExpression, IScriptExpression>, IAncestorProvider
 	{

@@ -4,9 +4,9 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Xml;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	[PublicAPI]
 	public abstract class XmlDirector<TDirector> : IXmlLineInfo where TDirector : XmlDirector<TDirector>

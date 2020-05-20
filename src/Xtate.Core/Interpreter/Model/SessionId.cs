@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	[Serializable]
 	public sealed class SessionId : LazyId

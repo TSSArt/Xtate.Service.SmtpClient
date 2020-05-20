@@ -1,6 +1,6 @@
 ﻿using System.Collections.Immutable;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal sealed class DataModelNode : IDataModel, IStoreSupport, IAncestorProvider, IDocumentId
 	{

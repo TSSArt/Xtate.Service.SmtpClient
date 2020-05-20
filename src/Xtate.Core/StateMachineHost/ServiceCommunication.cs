@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal class ServiceCommunication : IServiceCommunication
 	{
@@ -24,12 +24,12 @@ namespace TSSArt.StateMachine
 		{
 			if (evt.Type != null || evt.SendId != null || evt.DelayMs != 0)
 			{
-				throw new StateMachineProcessorException(Resources.Exception_Type__SendId__DelayMs_can_t_be_specified_for_this_event);
+				throw new ProcessorException(Resources.Exception_Type__SendId__DelayMs_can_t_be_specified_for_this_event);
 			}
 
 			if (evt.Target != EventEntity.ParentTarget && evt.Target != null)
 			{
-				throw new StateMachineProcessorException(Resources.Exception_Target_should_be_equal_to___parent__or_null);
+				throw new ProcessorException(Resources.Exception_Target_should_be_equal_to___parent__or_null);
 			}
 
 			_origin ??= new Uri("#_" + _invokeId.Value);

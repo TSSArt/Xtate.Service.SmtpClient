@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public sealed class DefaultParam : IParam, IAncestorProvider, IDebugEntityId
 	{

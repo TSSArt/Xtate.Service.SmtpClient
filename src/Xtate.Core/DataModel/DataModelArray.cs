@@ -9,9 +9,9 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	[PublicAPI]
 	[DebuggerTypeProxy(typeof(DebugView))]
@@ -91,7 +91,7 @@ namespace TSSArt.StateMachine
 					return;
 				}
 
-				throw new StateMachineInfrastructureException(Resources.Exception_Access_can_t_be_changed);
+				throw new InfrastructureException(Resources.Exception_Access_can_t_be_changed);
 			}
 		}
 

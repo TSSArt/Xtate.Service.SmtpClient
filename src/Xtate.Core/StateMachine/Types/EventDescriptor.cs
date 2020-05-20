@@ -1,7 +1,7 @@
 ﻿using System;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	[PublicAPI]
 	public sealed class EventDescriptor : IEventDescriptor

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal struct DocumentIdRecord
 	{

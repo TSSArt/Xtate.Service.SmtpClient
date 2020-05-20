@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.Contracts;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal interface IVisitorEntity<TEntity, in TIEntity> where TEntity : struct, IVisitorEntity<TEntity, TIEntity>, TIEntity
 	{

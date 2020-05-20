@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Xml;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	[PublicAPI]
 	public static class ErrorProcessorExtensions

@@ -4,7 +4,7 @@ using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal class StateMachineContext : IStateMachineContext, IExecutionContext, ILoggerContext
 	{
@@ -107,7 +107,7 @@ namespace TSSArt.StateMachine
 
 			if (evt.DelayMs != 0)
 			{
-				throw new StateMachineExecutionException(Resources.Exception_Internal_events_can_t_be_delayed);
+				throw new ExecutionException(Resources.Exception_Internal_events_can_t_be_delayed);
 			}
 
 			return true;

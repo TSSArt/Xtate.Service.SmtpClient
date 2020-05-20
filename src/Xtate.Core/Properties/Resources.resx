@@ -418,7 +418,7 @@
     <value>Partition argument should be null.</value>
   </data>
   <data name="Assertion_ObjectsStructureMismatch" xml:space="preserve">
-    <value>Objects structure mismatch</value>
+    <value>Objects structure mismatch.</value>
   </data>
   <data name="ErrorMessage_Value_expression__does_not_implement_IValueEvaluator_" xml:space="preserve">
     <value>'Value expression' does not implement IValueEvaluator.</value>

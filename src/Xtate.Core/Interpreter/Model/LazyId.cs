@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	[Serializable]
 	public abstract class LazyId : ILazyValue, IObject

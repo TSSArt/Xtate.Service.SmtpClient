@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal class StateMachineHostContext : IAsyncDisposable
 	{
@@ -138,7 +138,7 @@ namespace TSSArt.StateMachine
 				}
 			}
 
-			throw new StateMachineProcessorException(Resources.Exception_Cannot_find_ResourceLoader_to_load_external_resource);
+			throw new ProcessorException(Resources.Exception_Cannot_find_ResourceLoader_to_load_external_resource);
 		}
 
 		protected async ValueTask<(IStateMachine StateMachine, Uri? Location)> LoadStateMachine(StateMachineOrigin origin, Uri? hostBaseUri, IErrorProcessor errorProcessor, CancellationToken token)
@@ -321,7 +321,7 @@ namespace TSSArt.StateMachine
 				}
 			}
 
-			throw new StateMachineProcessorException(Resources.Exception_Cannot_find_target);
+			throw new ProcessorException(Resources.Exception_Cannot_find_target);
 		}
 
 		public void TriggerDestroySignal(SessionId sessionId)

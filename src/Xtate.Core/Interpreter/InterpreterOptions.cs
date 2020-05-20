@@ -1,7 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.Threading;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public struct InterpreterOptions
 	{

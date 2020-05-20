@@ -9,9 +9,9 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	using DefaultHistoryContent = Dictionary<IIdentifier, ImmutableArray<IExecEvaluator>>;
 
@@ -165,13 +165,13 @@ namespace TSSArt.StateMachine
 
 				if (bucket.TryGet(Key.Version, out int version) && version != 1)
 				{
-					throw new StateMachinePersistenceException(Resources.Exception_Persisted_state_can_t_be_read__Unsupported_version_);
+					throw new PersistenceException(Resources.Exception_Persisted_state_can_t_be_read__Unsupported_version_);
 				}
 
 				var storedSessionId = bucket.GetSessionId(Key.SessionId);
 				if (storedSessionId != null && storedSessionId != _sessionId)
 				{
-					throw new StateMachinePersistenceException(Resources.Exception_Persisted_state_can_t_be_read__Stored_and_provided_SessionIds_does_not_match);
+					throw new PersistenceException(Resources.Exception_Persisted_state_can_t_be_read__Stored_and_provided_SessionIds_does_not_match);
 				}
 
 				if (!bucket.TryGet(Key.StateMachineDefinition, out var memory))
@@ -455,13 +455,13 @@ namespace TSSArt.StateMachine
 			{
 				LogInterpreterState(StateMachineInterpreterState.Halted);
 
-				throw new OperationCanceledException(Resources.Exception_State_Machine_has_been_halted, ex, _stopToken.IsCancellationRequested ? _stopToken : default);
+				throw new OperationCanceledException(Resources.Exception_State_Machine_has_been_halted, ex, _stopToken);
 			}
 			catch (StateMachineUnhandledErrorException ex) when (ex.UnhandledErrorBehaviour == UnhandledErrorBehaviour.HaltStateMachine)
 			{
 				LogInterpreterState(StateMachineInterpreterState.Halted);
 
-				throw new OperationCanceledException(Resources.Exception_State_Machine_has_been_halted, ex, _stopToken.IsCancellationRequested ? _stopToken : default);
+				throw;
 			}
 			catch (OperationCanceledException ex) when (ex.CancellationToken == _suspendToken || ex.CancellationToken == _anyTokenSource.Token && _suspendToken.IsCancellationRequested)
 			{
@@ -1552,7 +1552,7 @@ namespace TSSArt.StateMachine
 				}
 			}
 
-			throw new StateMachineProcessorException(Resources.Exception_Cannot_find_ResourceLoader_to_load_external_resource);
+			throw new ProcessorException(Resources.Exception_Cannot_find_ResourceLoader_to_load_external_resource);
 		}
 
 		private async ValueTask<IStateMachineContext> CreateContext()

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public class LogBuilder : BuilderBase, ILogBuilder
 	{

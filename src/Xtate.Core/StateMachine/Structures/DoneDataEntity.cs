@@ -1,6 +1,6 @@
 ﻿using System.Collections.Immutable;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public struct DoneDataEntity : IDoneData, IVisitorEntity<DoneDataEntity, IDoneData>, IAncestorProvider
 	{
