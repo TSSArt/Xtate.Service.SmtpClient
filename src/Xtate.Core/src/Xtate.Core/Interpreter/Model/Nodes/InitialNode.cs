@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal sealed class InitialNode : StateEntityNode, IInitial, IAncestorProvider, IDebugEntityId
 	{

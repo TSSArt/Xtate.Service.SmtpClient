@@ -1,0 +1,23 @@
+﻿<Project>
+
+  <Import Project="RepoPaths.props" />
+  <Import Project="GlobalVersion.props" />
+
+  <PropertyGroup>
+    <UseProjectReference>true</UseProjectReference>
+    <LangVersion Condition="$(LangVersion)==''">latest</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0' or '$(TargetFramework)'=='net461'">
+    <NoWarn Condition="!$(NoWarn.Contains(';8600'))">$(NoWarn);8600</NoWarn>
+    <NoWarn Condition="!$(NoWarn.Contains(';8601'))">$(NoWarn);8601</NoWarn>
+    <NoWarn Condition="!$(NoWarn.Contains(';8602'))">$(NoWarn);8602</NoWarn>
+    <NoWarn Condition="!$(NoWarn.Contains(';8603'))">$(NoWarn);8603</NoWarn>
+    <NoWarn Condition="!$(NoWarn.Contains(';8604'))">$(NoWarn);8604</NoWarn>
+    <NoWarn Condition="!$(NoWarn.Contains(';8619'))">$(NoWarn);8619</NoWarn>
+  </PropertyGroup>
+
+  <Import Condition="Exists($([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../')))"
+                   Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+</Project>

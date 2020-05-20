@@ -1,0 +1,13 @@
+﻿<Project>
+
+  <PropertyGroup>
+    <XtateCoreRepoPath>$(MSBuildThisFileDirectory)src\Xtate.Core\</XtateCoreRepoPath>
+    <XtateDataModelEcmaScriptRepoPath>$(MSBuildThisFileDirectory)src\Xtate.DataModel.EcmaScript\</XtateDataModelEcmaScriptRepoPath>
+    <XtateIoProcessorHttpRepoPath>$(MSBuildThisFileDirectory)src\Xtate.IoProcessor.Http\</XtateIoProcessorHttpRepoPath>
+    <XtateLoggerSerilogRepoPath>$(MSBuildThisFileDirectory)src\Xtate.Logger.Serilog\</XtateLoggerSerilogRepoPath>
+    <XtateServiceHttpClientRepoPath>$(MSBuildThisFileDirectory)src\Xtate.Service.HttpClient\</XtateServiceHttpClientRepoPath>
+    <XtateServiceSmtpClientRepoPath>$(MSBuildThisFileDirectory)src\Xtate.Service.SmtpClient\</XtateServiceSmtpClientRepoPath>
+    <XtateSerializationRepoPath>$(MSBuildThisFileDirectory)src\Xtate.Serialization\</XtateSerializationRepoPath>
+  </PropertyGroup>
+
+</Project>

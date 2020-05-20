@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public class StorageAction : CustomActionBase
 	{
@@ -27,7 +27,7 @@ namespace TSSArt.StateMachine
 			_template = xmlReader.GetAttribute(Template)?.ToUpperInvariant();
 			_rule = xmlReader.GetAttribute(Rule);
 
-			//<storage xmlns="http://tssart.com/scxml/customaction/mid" location="username"
+			//<storage xmlns="http://xtate.net/scxml/customaction/mid" location="username"
 			//operation="create" template="userid" rule="[a-z]{1,20}" />
 			//<mid:storage location="username" operation="get" variable="username" />
 			//<mid:storage location="password" operation="set" variable="password" />

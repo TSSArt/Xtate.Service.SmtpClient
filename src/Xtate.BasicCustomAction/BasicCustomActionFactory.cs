@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Xml;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
-	[CustomActionProvider("http://tssart.com/scxml/customaction/basic")]
+	[CustomActionProvider("http://xtate.net/scxml/customaction/basic")]
 	public class BasicCustomActionFactory : CustomActionFactoryBase
 	{
 		public static readonly ICustomActionFactory Instance = new BasicCustomActionFactory();

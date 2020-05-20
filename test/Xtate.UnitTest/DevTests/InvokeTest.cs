@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
-namespace TSSArt.StateMachine.Test
+namespace Xtate.Test
 {
 	[TestClass]
 	public class InvokeTest

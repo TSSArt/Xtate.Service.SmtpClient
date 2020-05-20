@@ -1,6 +1,6 @@
 ﻿<!-- ReSharper disable MarkupAttributeTypo -->
 <!-- ReSharper disable CommentTypo -->
-<scxml xmlns="http://www.w3.org/2005/07/scxml" xmlns:mid="http://tssart.com/scxml/customaction/mid" version="1.0"
+<scxml xmlns="http://www.w3.org/2005/07/scxml" xmlns:mid="http://xtate.net/scxml/customaction/mid" version="1.0"
        datamodel="ecmascript">
   <datamodel>
     <data id="siteUrl" expr="'https://test.tssart.com/'" />
@@ -129,7 +129,7 @@
     </state>
 
     <final id="authenticateLoggedIn">
-      <onentry xmlns:mid="http://tssart.com/scxml/customaction/mid">
+      <onentry xmlns:mid="http://xtate.net/scxml/customaction/mid">
         <mid:storage location="username" operation="set" variable="username" />
         <mid:storage location="password" operation="set" variable="password" />
         <send typeexpr="origintype" targetexpr="origin" event="authenticate.ok">
@@ -198,7 +198,7 @@
 
     <state id="RegisterAccount">
       <onentry>
-        <storage xmlns="http://tssart.com/scxml/customaction/mid" location="username" operation="create"
+        <storage xmlns="http://xtate.net/scxml/customaction/mid" location="username" operation="create"
                  template="userid" rule="[a-z0-9]{1,20}" />
       </onentry>
 
@@ -225,8 +225,8 @@
         srcexpr="'http://mid.dev.tssart.com/MailServer/Web2/api/Mail?lastReceivedOnUtc=2019-01-01&amp;email=' + email"
         type="http">
         <param name="accept" expr="'application/json'" />
-        <finalize xmlns:basic="http://tssart.com/scxml/customaction/basic"
-                  xmlns:mime="http://tssart.com/scxml/customaction/mime">
+        <finalize xmlns:basic="http://xtate.net/scxml/customaction/basic"
+                  xmlns:mime="http://xtate.net/scxml/customaction/mime">
           <assign location="emailContent" expr="_event.data.content.EmailEntries[0].ContentRaw" />
           <basic:base64decode source="emailContent" destination="emailContent" />
           <mime:parseEmail source="emailContent" destination="setPasswordUrl"
@@ -276,7 +276,7 @@
 
     <state id="SetPassword">
       <onentry>
-        <storage xmlns="http://tssart.com/scxml/customaction/mid" location="password" operation="create"
+        <storage xmlns="http://xtate.net/scxml/customaction/mid" location="password" operation="create"
                  template="password" rule="[a-zA-Z0-9]{16}" />
       </onentry>
 

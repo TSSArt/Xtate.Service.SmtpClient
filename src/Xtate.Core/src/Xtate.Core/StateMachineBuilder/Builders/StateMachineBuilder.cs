@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.ComponentModel;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	[PublicAPI]
 	public class StateMachineBuilder : BuilderBase, IStateMachineBuilder
@@ -105,8 +105,6 @@ namespace TSSArt.StateMachine
 			_injectOptions = true;
 		}
 
-	#endregion
-
 		public void SetUnhandledErrorBehaviour(UnhandledErrorBehaviour unhandledErrorBehaviour)
 		{
 			if (unhandledErrorBehaviour < UnhandledErrorBehaviour.DestroyStateMachine || unhandledErrorBehaviour > UnhandledErrorBehaviour.IgnoreError)
@@ -117,5 +115,7 @@ namespace TSSArt.StateMachine
 			_options.UnhandledErrorBehaviour = unhandledErrorBehaviour;
 			_injectOptions = true;
 		}
+
+	#endregion
 	}
 }

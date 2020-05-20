@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal sealed class StateMachineHostPersistedContext : StateMachineHostContext
 	{
@@ -383,7 +383,7 @@ namespace TSSArt.StateMachine
 
 			public StateMachineMeta(Bucket bucket)
 			{
-				SessionId = bucket.GetSessionId(Key.SessionId) ?? throw new StateMachinePersistenceException(Resources.Exception_Missed_SessionId);
+				SessionId = bucket.GetSessionId(Key.SessionId) ?? throw new PersistenceException(Resources.Exception_Missed_SessionId);
 				Location = bucket.GetUri(Key.Location);
 				Name = bucket.GetString(Key.Name);
 
@@ -471,8 +471,8 @@ namespace TSSArt.StateMachine
 
 			public InvokedServiceMeta(Bucket bucket)
 			{
-				ParentSessionId = bucket.GetSessionId(Key.ParentSessionId) ?? throw new StateMachinePersistenceException(Resources.Exception_Missed_ParentSessionId);
-				InvokeId = bucket.GetInvokeId(Key.InvokeId) ?? throw new StateMachinePersistenceException(Resources.Exception_InvokedServiceMeta_Missed_InvokeId);
+				ParentSessionId = bucket.GetSessionId(Key.ParentSessionId) ?? throw new PersistenceException(Resources.Exception_Missed_ParentSessionId);
+				InvokeId = bucket.GetInvokeId(Key.InvokeId) ?? throw new PersistenceException(Resources.Exception_InvokedServiceMeta_Missed_InvokeId);
 				SessionId = bucket.GetSessionId(Key.SessionId);
 			}
 

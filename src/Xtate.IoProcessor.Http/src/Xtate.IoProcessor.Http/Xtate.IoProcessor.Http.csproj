@@ -1,43 +1,41 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <Import Condition="'$(Version)'==''" Project="..\..\Version.props" />
+
   <PropertyGroup>
     <TargetFrameworks>netstandard2.1;netstandard2.0;net461</TargetFrameworks>
-    <LangVersion>latest</LangVersion>
-    <RootNamespace>TSSArt.StateMachine</RootNamespace>
+    <RootNamespace>Xtate</RootNamespace>
     <Nullable>enable</Nullable>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0' or '$(TargetFramework)'=='net461'">
-    <NoWarn>$(NoWarn);8600;8601;8602;8603;8604;8619</NoWarn>
+    <PackageId>Xtate.IoProcessor.Http</PackageId>
+    <RepositoryUrl>https://github.com/TSSArt/Xtate.IoProcessor.Http</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.2.0" />
     <PackageReference Include="System.Text.Json" Version="4.7.1" />
-  </ItemGroup>
 
-  <ItemGroup Condition="'$(Configuration)'=='Debug'">
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.5.0">
       <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.0.0">
       <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="3.0.0">
       <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="ConfigureAwaitChecker.Analyzer" Version="4.0.0">
       <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\TSSArt.StateMachine.Serialization\TSSArt.StateMachine.Serialization.csproj" />
-    <ProjectReference Include="..\TSSArt.StateMachine\TSSArt.StateMachine.csproj" />
+  <ItemGroup Condition="'$(UseProjectReference)'=='true'">
+    <ProjectReference Include="$(XtateCoreRepoPath)src\Xtate.Core\Xtate.Core.csproj" />
+    <ProjectReference Include="$(XtateSerializationRepoPath)src\Xtate.Serialization\Xtate.Serialization.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(UseProjectReference)'==''">
+    <PackageReference Include="Xtate.Core" Version="$(Version)" />
+    <PackageReference Include="Xtate.Serialization" Version="$(Version)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -52,8 +50,14 @@
     <EmbeddedResource Update="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <CustomToolNamespace>TSSArt.StateMachine</CustomToolNamespace>
+      <CustomToolNamespace>Xtate</CustomToolNamespace>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>$(MSBuildProjectName).Test</_Parameter1>
+    </AssemblyAttribute>
   </ItemGroup>
 
 </Project>

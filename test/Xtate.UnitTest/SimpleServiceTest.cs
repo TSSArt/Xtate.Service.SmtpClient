@@ -1,9 +1,9 @@
 ﻿using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TSSArt.StateMachine.EcmaScript;
+using Xtate.EcmaScript;
 
-namespace TSSArt.StateMachine.Test
+namespace Xtate.Test
 {
 	[SimpleService("passthrough")]
 	public class PassthroughService : SimpleServiceBase

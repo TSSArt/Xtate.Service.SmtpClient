@@ -4,9 +4,9 @@ using System.Net.Mime;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	[PublicAPI]
 	public sealed class WebResourceLoader : IResourceLoader

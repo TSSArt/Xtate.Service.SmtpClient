@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Xml;
 
-namespace TSSArt.StateMachine.Test
+namespace Xtate.Test
 {
 	public static class StateMachineGenerator
 	{

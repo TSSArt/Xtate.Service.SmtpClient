@@ -1,6 +1,6 @@
 ﻿using System.Collections.Immutable;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public interface IStateMachineBuilder
 	{
@@ -18,5 +18,6 @@ namespace TSSArt.StateMachine
 		void SetPersistenceLevel(PersistenceLevel persistenceLevel);
 		void SetSynchronousEventProcessing(bool value);
 		void SetExternalQueueSize(int size);
+		void SetUnhandledErrorBehaviour(UnhandledErrorBehaviour unhandledErrorBehaviour);
 	}
 }

@@ -1,7 +1,7 @@
 using System;
-using TSSArt.StateMachine.Services;
+using Xtate.Services;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public static class UserInteractionExtensions
 	{

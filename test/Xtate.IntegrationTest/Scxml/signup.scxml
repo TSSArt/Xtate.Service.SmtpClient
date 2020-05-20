@@ -1,7 +1,7 @@
 ﻿<scxml xmlns="http://www.w3.org/2005/07/scxml"
-       xmlns:mid="http://tssart.com/scxml/customaction/mid"
-       xmlns:basic="http://tssart.com/scxml/customaction/basic"
-       xmlns:mime="http://tssart.com/scxml/customaction/mime"
+       xmlns:mid="http://xtate.net/scxml/customaction/mid"
+       xmlns:basic="http://xtate.net/scxml/customaction/basic"
+       xmlns:mime="http://xtate.net/scxml/customaction/mime"
        version="1.0" datamodel="ecmascript" initial="signup">
   <datamodel>
     <data id="loginUrl" />

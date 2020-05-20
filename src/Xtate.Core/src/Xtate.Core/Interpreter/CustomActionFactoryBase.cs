@@ -4,7 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Xml;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public abstract class CustomActionFactoryBase : ICustomActionFactory
 	{
@@ -19,7 +19,7 @@ namespace TSSArt.StateMachine
 
 			if (customActionProviderAttribute == null)
 			{
-				throw new StateMachineInfrastructureException(Res.Format(Resources.Exception_CustomActionProviderAttributeWasNotProvided, GetType()));
+				throw new InfrastructureException(Res.Format(Resources.Exception_CustomActionProviderAttributeWasNotProvided, GetType()));
 			}
 
 			_namespace = customActionProviderAttribute.Namespace;

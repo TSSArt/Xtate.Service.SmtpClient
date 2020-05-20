@@ -7,7 +7,7 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Engines;
 using BenchmarkDotNet.Running;
 
-namespace TSSArt.StateMachine.BenchmarkTest
+namespace Xtate.BenchmarkTest
 {
 	public static class Program
 	{

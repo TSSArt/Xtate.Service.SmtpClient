@@ -1,4 +1,4 @@
-﻿<scxml xmlns="http://www.w3.org/2005/07/scxml" xmlns:basic="http://tssart.com/scxml/customaction/basic" version="1.0"
+﻿<scxml xmlns="http://www.w3.org/2005/07/scxml" xmlns:basic="http://xtate.net/scxml/customaction/basic" version="1.0"
        datamodel="ecmascript" initial="recaptchaV2">
   <datamodel>
     <data id="url" />

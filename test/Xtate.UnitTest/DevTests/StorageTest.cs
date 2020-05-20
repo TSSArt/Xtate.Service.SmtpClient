@@ -4,9 +4,9 @@ using System.Reflection;
 using System.Text;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TSSArt.StateMachine.EcmaScript;
+using Xtate.EcmaScript;
 
-namespace TSSArt.StateMachine.Test
+namespace Xtate.Test
 {
 	[TestClass]
 	public class StorageTest
@@ -247,7 +247,7 @@ namespace TSSArt.StateMachine.Test
 		[TestMethod]
 		public void StoreWithStorageTest()
 		{
-			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("TSSArt.StateMachine.Test.Resources.All.xml");
+			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Xtate.UnitTest.Resources.All.xml");
 
 			var xmlReader = XmlReader.Create(stream);
 
@@ -344,8 +344,8 @@ namespace TSSArt.StateMachine.Test
 		{
 			var storage = new InMemoryStorage();
 			var bucket = new Bucket(storage).Nested(11);
-			bucket.Add(key: 5, new Uri("tssart://localhost"));
-			Assert.AreEqual(expected: "/[11]/[5]=tssart://localhost/", Dump(storage));
+			bucket.Add(key: 5, new Uri("xtate://localhost"));
+			Assert.AreEqual(expected: "/[11]/[5]=xtate://localhost/", Dump(storage));
 		}
 
 		[TestMethod]

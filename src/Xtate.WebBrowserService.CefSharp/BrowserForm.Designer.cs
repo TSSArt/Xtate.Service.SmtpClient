@@ -1,4 +1,4 @@
-﻿namespace TSSArt.StateMachine.Services
+﻿namespace Xtate.Services
 {
 	partial class BrowserForm
 	{

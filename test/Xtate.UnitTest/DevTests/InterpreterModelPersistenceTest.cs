@@ -2,9 +2,9 @@
 using System.Reflection;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using TSSArt.StateMachine.EcmaScript;
+using Xtate.EcmaScript;
 
-namespace TSSArt.StateMachine.Test
+namespace Xtate.Test
 {
 	[TestClass]
 	public class InterpreterModelPersistenceTest
@@ -15,7 +15,7 @@ namespace TSSArt.StateMachine.Test
 		[TestInitialize]
 		public void Initialize()
 		{
-			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("TSSArt.StateMachine.Test.Resources.All.xml");
+			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Xtate.UnitTest.Resources.All.xml");
 
 			var xmlReader = XmlReader.Create(stream);
 

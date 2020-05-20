@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	[Serializable]
 	public sealed class InvokeId : LazyId

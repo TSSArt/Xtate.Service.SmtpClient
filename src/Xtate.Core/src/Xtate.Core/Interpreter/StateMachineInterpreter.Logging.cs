@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public sealed partial class StateMachineInterpreter : ILoggerContext
 	{
@@ -20,7 +20,7 @@ namespace TSSArt.StateMachine
 		{
 			for (; exception != null; exception = exception.InnerException)
 			{
-				if (exception is StateMachinePlatformException ex && ex.SessionId == _sessionId)
+				if (exception is PlatformException ex && ex.SessionId == _sessionId)
 				{
 					return true;
 				}
@@ -37,7 +37,7 @@ namespace TSSArt.StateMachine
 			}
 			catch (Exception ex)
 			{
-				throw new StateMachinePlatformException(ex, _sessionId);
+				throw new PlatformException(ex, _sessionId);
 			}
 		}
 
@@ -49,7 +49,7 @@ namespace TSSArt.StateMachine
 			}
 			catch (Exception ex)
 			{
-				throw new StateMachinePlatformException(ex, _sessionId);
+				throw new PlatformException(ex, _sessionId);
 			}
 		}
 

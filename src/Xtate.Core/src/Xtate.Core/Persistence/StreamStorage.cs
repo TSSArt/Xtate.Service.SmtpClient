@@ -4,9 +4,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	[PublicAPI]
 	internal sealed class StreamStorage : ITransactionalStorage
@@ -354,6 +354,6 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		private static StateMachinePersistenceException GetIncorrectDataFormatException(Exception? ex = default) => new StateMachinePersistenceException(Resources.Exception_Incorrect_data_format, ex);
+		private static PersistenceException GetIncorrectDataFormatException(Exception? ex = default) => new PersistenceException(Resources.Exception_Incorrect_data_format, ex);
 	}
 }

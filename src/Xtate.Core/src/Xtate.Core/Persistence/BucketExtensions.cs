@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal static class BucketExtensions
 	{
@@ -45,7 +45,7 @@ namespace TSSArt.StateMachine
 
 				if (item == null)
 				{
-					throw new StateMachinePersistenceException(Resources.Exception_Item_can_t_be_null);
+					throw new PersistenceException(Resources.Exception_Item_can_t_be_null);
 				}
 
 				builder.Add(item);

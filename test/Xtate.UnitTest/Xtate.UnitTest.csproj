@@ -2,13 +2,8 @@
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.0;net461</TargetFrameworks>
-    <LangVersion>latest</LangVersion>
     <IsPackable>false</IsPackable>
     <Nullable>enable</Nullable>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(TargetFramework)'=='net461'">
-    <NoWarn>$(NoWarn);8600;8601;8602;8603;8604;8619</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,14 +22,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TSSArt.StateMachine.BasicCustomAction\TSSArt.StateMachine.BasicCustomAction.csproj" />
-    <ProjectReference Include="..\TSSArt.StateMachine.EcmaScript\TSSArt.StateMachine.EcmaScript.csproj" />
-    <ProjectReference Include="..\TSSArt.StateMachine.HttpClientService\TSSArt.StateMachine.HttpClientService.csproj" />
-    <ProjectReference Include="..\TSSArt.StateMachine.MimeCustomAction\TSSArt.StateMachine.MimeCustomAction.csproj" />
-    <ProjectReference Include="..\TSSArt.StateMachine.Serialization\TSSArt.StateMachine.Serialization.csproj" />
-    <ProjectReference Include="..\TSSArt.StateMachine.SmtpClientService\TSSArt.StateMachine.SmtpClientService.csproj" />
-    <ProjectReference Include="..\TSSArt.StateMachine.WebBrowserService\TSSArt.StateMachine.WebBrowserService.csproj" />
-    <ProjectReference Include="..\TSSArt.StateMachine\TSSArt.StateMachine.csproj" />
+    <ProjectReference Include="..\..\src\Xtate.Core\src\Xtate.Core\Xtate.Core.csproj" />
+    <ProjectReference Include="..\..\src\Xtate.DataModel.EcmaScript\src\Xtate.DataModel.EcmaScript\Xtate.DataModel.EcmaScript.csproj" />
+    <ProjectReference Include="..\..\src\Xtate.Logger.Serilog\src\Xtate.Logger.Serilog\Xtate.Logger.Serilog.csproj" />
+    <ProjectReference Include="..\..\src\Xtate.IoProcessor.Http\src\Xtate.IoProcessor.Http\Xtate.IoProcessor.Http.csproj" />
+    <ProjectReference Include="..\..\src\Xtate.Service.HttpClient\src\Xtate.Service.HttpClient\Xtate.Service.HttpClient.csproj" />
+    <ProjectReference Include="..\..\src\Xtate.Service.SmtpClient\src\Xtate.Service.SmtpClient\Xtate.Service.SmtpClient.csproj" />
+    <ProjectReference Include="..\..\src\Xtate.BasicCustomAction\Xtate.BasicCustomAction.csproj" />
+    <ProjectReference Include="..\..\src\Xtate.MimeCustomAction\Xtate.MimeCustomAction.csproj" />
+    <ProjectReference Include="..\..\src\Xtate.WebBrowserService\Xtate.WebBrowserService.csproj" />
   </ItemGroup>
 
 </Project>

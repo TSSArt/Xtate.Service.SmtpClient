@@ -1,6 +1,6 @@
 ﻿using System.Xml;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public interface ICustomActionFactory
 	{

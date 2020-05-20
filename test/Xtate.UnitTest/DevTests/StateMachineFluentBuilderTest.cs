@@ -4,7 +4,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace TSSArt.StateMachine.Test
+namespace Xtate.Test
 {
 	[TestClass]
 	[SuppressMessage(category: "ReSharper", checkId: "RedundantCapturedContext")]
@@ -88,7 +88,7 @@ namespace TSSArt.StateMachine.Test
 		}
 
 		[TestMethod]
-		public async Task LiveLockErrorConditionTest()
+		public Task LiveLockErrorConditionTest()
 		{
 			var builder = new StateMachineFluentBuilder(BuilderFactory.Instance);
 
@@ -109,11 +109,11 @@ namespace TSSArt.StateMachine.Test
 				await StateMachineInterpreter.RunAsync(SessionId.New(), builder.Build(), eventChannel, options);
 			}
 
-			await Assert.ThrowsExceptionAsync<StateMachineDestroyedException>(AssertAction);
+			return Assert.ThrowsExceptionAsync<StateMachineDestroyedException>(AssertAction);
 		}
 
 		[TestMethod]
-		public async Task LiveLockPingPongTest()
+		public Task LiveLockPingPongTest()
 		{
 			var builder = new StateMachineFluentBuilder(BuilderFactory.Instance);
 
@@ -135,7 +135,7 @@ namespace TSSArt.StateMachine.Test
 
 			async Task AssertAction() => await StateMachineInterpreter.RunAsync(SessionId.New(), builder.Build(), eventChannel);
 
-			await Assert.ThrowsExceptionAsync<StateMachineDestroyedException>(AssertAction);
+			return Assert.ThrowsExceptionAsync<StateMachineDestroyedException>(AssertAction);
 		}
 	}
 }

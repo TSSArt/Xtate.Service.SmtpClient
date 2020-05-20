@@ -2,9 +2,9 @@ using System;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using TSSArt.StateMachine.EcmaScript;
+using Xtate.EcmaScript;
 
-namespace TSSArt.StateMachine.Core.Host
+namespace Xtate.Core.Host
 {
 	internal static class Program
 	{
@@ -23,7 +23,7 @@ namespace TSSArt.StateMachine.Core.Host
 											   .AddHttpIoProcessor(baseUri)
 											   .DisableVerboseValidation()
 											   .AddResourceLoader(ResxResourceLoader.Instance)
-											   .SetLogger(SerilogLogger.CreateLogger())
+											   .SetSerilogLogger()
 											   .Build();
 
 			await stateMachineHost.StartHostAsync().ConfigureAwait(false);

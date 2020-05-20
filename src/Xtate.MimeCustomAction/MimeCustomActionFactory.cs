@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Xml;
 
-namespace TSSArt.StateMachine.Services
+namespace Xtate.Services
 {
-	[CustomActionProvider("http://tssart.com/scxml/customaction/mime")]
+	[CustomActionProvider("http://xtate.net/scxml/customaction/mime")]
 	public class MimeCustomActionFactory : CustomActionFactoryBase
 	{
 		public static readonly ICustomActionFactory Instance = new MimeCustomActionFactory();

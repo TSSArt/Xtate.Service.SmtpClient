@@ -1,4 +1,4 @@
-﻿namespace TSSArt.StateMachine
+﻿namespace Xtate
 {
 	public struct ParamEntity : IParam, IVisitorEntity<ParamEntity, IParam>, IAncestorProvider
 	{

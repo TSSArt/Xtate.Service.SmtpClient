@@ -2,9 +2,9 @@
 using System.Text;
 using System.Threading.Tasks;
 
-namespace TSSArt.StateMachine.Services
+namespace Xtate.Services
 {
-	[SimpleService("http://tssart.com/scxml/service/#SMTPClient", Alias = "smtp")]
+	[SimpleService("http://xtate.net/scxml/service/#SMTPClient", Alias = "smtp")]
 	public class SmtpClientService : SimpleServiceBase
 	{
 		public static readonly IServiceFactory Factory = SimpleServiceFactory<SmtpClientService>.Instance;

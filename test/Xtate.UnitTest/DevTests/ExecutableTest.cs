@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using TSSArt.StateMachine.EcmaScript;
+using Xtate.EcmaScript;
 
-namespace TSSArt.StateMachine.Test
+namespace Xtate.Test
 {
 	[TestClass]
 	public class ExecutableTest

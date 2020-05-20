@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using TSSArt.StateMachine.EcmaScript;
+using Xtate.EcmaScript;
 
-namespace TSSArt.StateMachine.Test
+namespace Xtate.Test
 {
 	[TestClass]
 	public class ScxmlDirectorTest
@@ -20,7 +20,7 @@ namespace TSSArt.StateMachine.Test
 		[TestInitialize]
 		public void Initialize()
 		{
-			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("TSSArt.StateMachine.Test.Resources.Main.xml");
+			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Xtate.UnitTest.Resources.Main.xml");
 
 			var xmlReader = XmlReader.Create(stream);
 

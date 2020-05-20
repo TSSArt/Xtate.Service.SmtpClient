@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Xml;
-
 #if NETSTANDARD2_1
 using System.Buffers;
 
 #endif
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public class Base64DecodeAction : CustomActionBase
 	{

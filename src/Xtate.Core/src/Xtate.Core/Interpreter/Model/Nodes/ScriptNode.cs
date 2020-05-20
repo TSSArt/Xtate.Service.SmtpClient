@@ -1,4 +1,4 @@
-﻿namespace TSSArt.StateMachine
+﻿namespace Xtate
 {
 	internal sealed class ScriptNode : ExecutableEntityNode, IScript, IAncestorProvider
 	{

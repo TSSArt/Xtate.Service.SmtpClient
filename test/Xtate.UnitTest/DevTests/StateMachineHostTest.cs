@@ -9,10 +9,10 @@ using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using TSSArt.StateMachine.EcmaScript;
-using TSSArt.StateMachine.Services;
+using Xtate.EcmaScript;
+using Xtate.Services;
 
-namespace TSSArt.StateMachine.Test
+namespace Xtate.Test
 {
 	[TestClass]
 	[SuppressMessage(category: "ReSharper", checkId: "StringLiteralTypo")]
@@ -42,7 +42,7 @@ namespace TSSArt.StateMachine.Test
 
 			var stateMachineHost = new StateMachineHost(options);
 			await stateMachineHost.StartHostAsync();
-			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("TSSArt.StateMachine.Test.Resources.All.xml");
+			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Xtate.UnitTest.Resources.All.xml");
 			var reader = new StreamReader(stream ?? throw new InvalidOperationException());
 			var _ = stateMachineHost.ExecuteStateMachineAsync(await reader.ReadToEndAsync());
 		}
@@ -159,7 +159,7 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 <state id='WaitForEmail'>
     <invoke srcexpr='&quot;http://mid.dev.tssart.com/MailServer/Web2/api/Mail?lastReceivedOnUtc=2019-01-01&amp;email=&quot; + email' type='http'>
 		<param name='accept' expr=""'application/json'""/>
-		<finalize xmlns:basic='http://tssart.com/scxml/customaction/basic' xmlns:mime='http://tssart.com/scxml/customaction/mime'>
+		<finalize xmlns:basic='http://xtate.net/scxml/customaction/basic' xmlns:mime='http://xtate.net/scxml/customaction/mime'>
 			<assign location='emailContent' expr='_event.data.content.EmailEntries[0].ContentRaw' />
 			<basic:base64decode source='emailContent' destination='emailContent' />
 			<mime:parseEmail source='emailContent' destination='confirmationUrl' xpath='' attr='' regex='' />

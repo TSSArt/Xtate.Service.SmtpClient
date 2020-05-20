@@ -18,7 +18,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	[IoProcessor("http://www.w3.org/TR/scxml/#BasicHTTPEventProcessor", Alias = "http")]
 	public sealed class HttpIoProcessor : IoProcessorBase, IAsyncDisposable
@@ -99,7 +99,7 @@ namespace TSSArt.StateMachine
 				{
 					if (listenAddress != null)
 					{
-						throw new StateMachineProcessorException(Resources.Exception_Found_more_then_one_interface_to_listen);
+						throw new ProcessorException(Resources.Exception_Found_more_then_one_interface_to_listen);
 					}
 
 					listenAddress = address;
@@ -108,7 +108,7 @@ namespace TSSArt.StateMachine
 
 			if (listenAddress == null)
 			{
-				throw new StateMachineProcessorException(Resources.Exception_Can_t_match_network_interface_to_listen);
+				throw new ProcessorException(Resources.Exception_Can_t_match_network_interface_to_listen);
 			}
 
 			return new IPEndPoint(listenAddress, uri.Port);

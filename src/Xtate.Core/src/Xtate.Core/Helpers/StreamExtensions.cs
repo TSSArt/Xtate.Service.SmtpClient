@@ -1,12 +1,13 @@
 ﻿using System.IO;
 using System.Runtime.CompilerServices;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
+
 #if !NETSTANDARD2_1
 using System.Threading.Tasks;
 
 #endif
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	[PublicAPI]
 	public static class StreamExtensions

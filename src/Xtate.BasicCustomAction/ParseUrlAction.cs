@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Xml;
 using Microsoft.AspNetCore.WebUtilities;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public class ParseUrlAction : CustomActionBase
 	{

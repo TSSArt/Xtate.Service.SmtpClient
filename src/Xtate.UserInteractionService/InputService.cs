@@ -2,9 +2,9 @@
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace TSSArt.StateMachine.Services
+namespace Xtate.Services
 {
-	[SimpleService("http://tssart.com/scxml/service/#Input", Alias = "input")]
+	[SimpleService("http://xtate.net/scxml/service/#Input", Alias = "input")]
 	public class InputService : SimpleServiceBase
 	{
 		public static readonly IServiceFactory Factory = SimpleServiceFactory<InputService>.Instance;

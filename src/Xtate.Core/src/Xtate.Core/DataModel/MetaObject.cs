@@ -2,7 +2,7 @@
 using System.Dynamic;
 using System.Linq.Expressions;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal class MetaObject : DynamicMetaObject
 	{

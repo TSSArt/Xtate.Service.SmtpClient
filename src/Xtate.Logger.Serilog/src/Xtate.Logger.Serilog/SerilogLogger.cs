@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	[PublicAPI]
 	public class SerilogLogger : ILogger
@@ -25,12 +25,11 @@ namespace TSSArt.StateMachine
 
 		private readonly Logger _logger;
 
-		private SerilogLogger()
+		public SerilogLogger(LoggerConfiguration configuration)
 		{
-			_logger = new LoggerConfiguration()
-					  .MinimumLevel.Verbose()
-					  .WriteTo.Async(a => a.Seq(@"http://beast:5341/"))
-					  .CreateLogger();
+			if (configuration == null) throw new ArgumentNullException(nameof(configuration));
+
+			_logger = configuration.CreateLogger();
 		}
 
 	#region Interface ILogger
@@ -205,8 +204,6 @@ namespace TSSArt.StateMachine
 		public bool IsTracingEnabled => _logger.IsEnabled(LogEventLevel.Verbose);
 
 	#endregion
-
-		public static ILogger CreateLogger() => new SerilogLogger();
 
 		private class LoggerEnricher : ILogEventEnricher
 		{

@@ -1,4 +1,4 @@
-﻿namespace TSSArt.StateMachine
+﻿namespace Xtate
 {
 	public struct ValueExpression : IValueExpression, IVisitorEntity<ValueExpression, IValueExpression>, IAncestorProvider
 	{

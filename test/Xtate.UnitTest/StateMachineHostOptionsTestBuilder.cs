@@ -1,6 +1,6 @@
 ﻿using System.Collections.Immutable;
 
-namespace TSSArt.StateMachine.Test
+namespace Xtate.Test
 {
 	public static class StateMachineHostOptionsTestBuilder
 	{

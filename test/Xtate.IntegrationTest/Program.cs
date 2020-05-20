@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using TSSArt.StateMachine.EcmaScript;
-using TSSArt.StateMachine.Services;
+using Xtate.EcmaScript;
+using Xtate.Services;
 
-namespace TSSArt.StateMachine.IntegrationTest
+namespace Xtate.IntegrationTest
 {
 	internal static class Program
 	{
-		private static readonly Uri ScxmlBase = new Uri("res://TSSArt.StateMachine.IntegrationTest/TSSArt.StateMachine.IntegrationTest/Scxml/");
+		private static readonly Uri ScxmlBase = new Uri("res://Xtate.IntegrationTest/Xtate.IntegrationTest/Scxml/");
 
 		private static async Task Main(string[] args)
 		{

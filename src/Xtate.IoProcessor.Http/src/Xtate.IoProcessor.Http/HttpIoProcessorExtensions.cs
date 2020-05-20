@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Net;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	[PublicAPI]
 	public static class HttpIoProcessorExtensions

@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace TSSArt.StateMachine.Test.DevTests
+namespace Xtate.Test.DevTests
 {
 	[TestClass]
 	public class SessionIdTest

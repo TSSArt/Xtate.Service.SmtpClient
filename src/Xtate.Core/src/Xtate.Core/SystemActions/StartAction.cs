@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public class StartAction : ICustomActionExecutor
 	{
@@ -62,7 +62,7 @@ namespace TSSArt.StateMachine
 
 			if (source == null)
 			{
-				throw new StateMachineProcessorException(Resources.StartAction_Execute_Source_not_specified);
+				throw new ProcessorException(Resources.StartAction_Execute_Source_not_specified);
 			}
 
 			var sessionId = SessionId.New();
@@ -97,7 +97,7 @@ namespace TSSArt.StateMachine
 				return host;
 			}
 
-			throw new StateMachineProcessorException(Resources.Exception_Can_t_get_access_to_IHost_interface);
+			throw new ProcessorException(Resources.Exception_Can_t_get_access_to_IHost_interface);
 		}
 
 		private async ValueTask<Uri?> GetSource(IExecutionContext executionContext, CancellationToken token)

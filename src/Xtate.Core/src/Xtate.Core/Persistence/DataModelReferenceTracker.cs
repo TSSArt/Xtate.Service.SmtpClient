@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal sealed class DataModelReferenceTracker : IDisposable
 	{

@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using TSSArt.StateMachine.EcmaScript;
+using Xtate.EcmaScript;
 
-namespace TSSArt.StateMachine.Test
+namespace Xtate.Test
 {
 	[TestClass]
 	[SuppressMessage(category: "ReSharper", checkId: "RedundantCapturedContext")]
@@ -157,7 +157,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(WithNameOnEntry, innerXml: "<log expr='_x.interpreter.name'/>");
 
-			_logger.Verify(l => l.ExecuteLog(It.IsAny<ILoggerContext>(), null, new DataModelValue("TSSArt.StateMachine.StateMachineInterpreter"), default), Times.Once);
+			_logger.Verify(l => l.ExecuteLog(It.IsAny<ILoggerContext>(), null, new DataModelValue("Xtate.StateMachineInterpreter"), default), Times.Once);
 			_logger.VerifyGet(l => l.IsTracingEnabled);
 			_logger.VerifyNoOtherCalls();
 		}
@@ -167,7 +167,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(WithNameOnEntry, innerXml: "<log expr='_x.datamodel.name'/>");
 
-			_logger.Verify(l => l.ExecuteLog(It.IsAny<ILoggerContext>(), null, new DataModelValue("TSSArt.StateMachine.EcmaScript.EcmaScriptDataModelHandler"), default), Times.Once);
+			_logger.Verify(l => l.ExecuteLog(It.IsAny<ILoggerContext>(), null, new DataModelValue("Xtate.EcmaScript.EcmaScriptDataModelHandler"), default), Times.Once);
 			_logger.VerifyGet(l => l.IsTracingEnabled);
 			_logger.VerifyNoOtherCalls();
 		}
@@ -177,7 +177,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(WithNameOnEntry, innerXml: "<log expr='_x.datamodel.assembly'/>");
 
-			_logger.Verify(l => l.ExecuteLog(It.IsAny<ILoggerContext>(), null, new DataModelValue("TSSArt.StateMachine.EcmaScript"), default), Times.Once);
+			_logger.Verify(l => l.ExecuteLog(It.IsAny<ILoggerContext>(), null, new DataModelValue("Xtate.DataModel.EcmaScript"), default), Times.Once);
 			_logger.VerifyGet(l => l.IsTracingEnabled);
 			_logger.VerifyNoOtherCalls();
 		}
@@ -187,7 +187,7 @@ namespace TSSArt.StateMachine.Test
 		{
 			await RunStateMachine(WithNameOnEntry, innerXml: "<log expr='_x.datamodel.version'/>");
 
-			_logger.Verify(l => l.ExecuteLog(It.IsAny<ILoggerContext>(), null, new DataModelValue("1.0.0"), default), Times.Once);
+			_logger.Verify(l => l.ExecuteLog(It.IsAny<ILoggerContext>(), null, It.IsAny<DataModelValue>(), default), Times.Once);
 			_logger.VerifyGet(l => l.IsTracingEnabled);
 			_logger.VerifyNoOtherCalls();
 		}

@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal sealed class CustomActionDispatcher : ICustomAction, ICustomActionDispatcher, ICustomActionContext
 	{
@@ -46,7 +46,7 @@ namespace TSSArt.StateMachine
 
 			if (_executor != null)
 			{
-				throw new StateMachineInfrastructureException(Resources.Exception_Registration_should_no_occur_after_initialization);
+				throw new InfrastructureException(Resources.Exception_Registration_should_no_occur_after_initialization);
 			}
 
 			_locations ??= ImmutableArray.CreateBuilder<ILocationExpression>();
@@ -63,7 +63,7 @@ namespace TSSArt.StateMachine
 
 			if (_executor != null)
 			{
-				throw new StateMachineInfrastructureException(Resources.Exception_Registration_should_no_occur_after_initialization);
+				throw new InfrastructureException(Resources.Exception_Registration_should_no_occur_after_initialization);
 			}
 
 			_values ??= ImmutableArray.CreateBuilder<IValueExpression>();

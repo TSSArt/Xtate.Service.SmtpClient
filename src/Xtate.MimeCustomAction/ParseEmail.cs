@@ -7,13 +7,12 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using HtmlAgilityPack;
 using MimeKit;
-
 #if NETSTANDARD2_1
 using System.Buffers;
 
 #endif
 
-namespace TSSArt.StateMachine.Services
+namespace Xtate.Services
 {
 	public class ParseEmail : CustomActionBase
 	{

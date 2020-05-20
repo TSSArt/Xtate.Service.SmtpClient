@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace TSSArt.StateMachine {
+namespace Xtate {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace TSSArt.StateMachine {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("TSSArt.StateMachine.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Xtate.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -70,7 +70,7 @@ namespace TSSArt.StateMachine {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Not expected token type.
+        ///   Looks up a localized string similar to Not expected token type..
         /// </summary>
         internal static string Exception_Not_expected_token_type {
             get {
@@ -79,7 +79,7 @@ namespace TSSArt.StateMachine {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Undefined value not allowed.
+        ///   Looks up a localized string similar to Undefined value not allowed..
         /// </summary>
         internal static string Exception_Undefined_value_not_allowed {
             get {

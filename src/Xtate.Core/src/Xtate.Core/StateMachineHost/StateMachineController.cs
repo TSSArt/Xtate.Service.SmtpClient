@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal class StateMachineController : IService, IExternalCommunication, INotifyStateChanged, ILoggerContext, IAsyncDisposable
 	{

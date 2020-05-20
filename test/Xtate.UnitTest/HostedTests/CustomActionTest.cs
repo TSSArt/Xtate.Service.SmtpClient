@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 
-namespace TSSArt.StateMachine.Test.HostedTests
+namespace Xtate.Test.HostedTests
 {
 	[TestClass]
 	public class CustomActionTest : HostedTestBase

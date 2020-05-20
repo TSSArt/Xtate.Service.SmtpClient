@@ -4,9 +4,9 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
 
-namespace TSSArt.StateMachine.Test.HostedTests
+namespace Xtate.Test.HostedTests
 {
 	[SuppressMessage(category: "ReSharper", checkId: "RedundantCapturedContext")]
 	public abstract class HostedTestBase

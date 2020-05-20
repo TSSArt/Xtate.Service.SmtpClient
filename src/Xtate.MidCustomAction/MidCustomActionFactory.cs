@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Xml;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	[PublicAPI]
-	[CustomActionProvider("http://tssart.com/scxml/customaction/mid")]
+	[CustomActionProvider("http://xtate.net/scxml/customaction/mid")]
 	public class MidCustomActionFactory : CustomActionFactoryBase
 	{
 		public static readonly ICustomActionFactory Instance = new MidCustomActionFactory();

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Immutable;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public abstract class DataModelHandlerBase : StateMachineVisitor, IDataModelHandler
 	{

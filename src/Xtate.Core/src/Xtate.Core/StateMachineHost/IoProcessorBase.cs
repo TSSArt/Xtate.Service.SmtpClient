@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public abstract class IoProcessorBase : IIoProcessor
 	{
@@ -18,7 +18,7 @@ namespace TSSArt.StateMachine
 
 			if (ioProcessorAttribute == null)
 			{
-				throw new StateMachineInfrastructureException(Res.Format(Resources.Exception_IoProcessorAttributeWasNotProvided, GetType()));
+				throw new InfrastructureException(Res.Format(Resources.Exception_IoProcessorAttributeWasNotProvided, GetType()));
 			}
 
 			IoProcessorId = new Uri(ioProcessorAttribute.Type, UriKind.RelativeOrAbsolute);
