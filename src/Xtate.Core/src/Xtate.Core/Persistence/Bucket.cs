@@ -28,10 +28,10 @@ namespace Xtate
 			_node = node;
 		}
 
-		public Bucket Nested<TKey>(TKey key)
+		public Bucket Nested<TKey>(TKey key) where TKey : notnull
 		{
-			Span<byte> buf = stackalloc byte[Helper<TKey>.KeyConverter.GetLength(key)];
-			Helper<TKey>.KeyConverter.Write(key, buf);
+			Span<byte> buf = stackalloc byte[KeyHelper<TKey>.Converter.GetLength(key)];
+			KeyHelper<TKey>.Converter.Write(key, buf);
 			CreateNewEntry(buf, out var storage);
 			return storage;
 		}
@@ -70,9 +70,9 @@ namespace Xtate
 			return 8;
 		}
 
-		private int GetFullKeySize<TKey>(TKey key)
+		private int GetFullKeySize<TKey>(TKey key) where TKey : notnull
 		{
-			var size = Helper<TKey>.KeyConverter.GetLength(key) + GetSize(_block);
+			var size = KeyHelper<TKey>.Converter.GetLength(key) + GetSize(_block);
 
 			for (var n = _node; n != null; n = n.Previous!)
 			{
@@ -82,16 +82,16 @@ namespace Xtate
 			return size;
 		}
 
-		private Span<byte> CreateFullKey<TKey>(Span<byte> buf, TKey key)
+		private Span<byte> CreateFullKey<TKey>(Span<byte> buf, TKey key) where TKey : notnull
 		{
-			var len = Helper<TKey>.KeyConverter.GetLength(key);
+			var len = KeyHelper<TKey>.Converter.GetLength(key);
 			var nextBuf = WritePrevious(_node, len + 8, ref buf);
 
 			var size = GetSize(_block);
 			var length = buf.Length - nextBuf.Length + len + size;
 
 			BinaryPrimitives.WriteUInt64LittleEndian(nextBuf, _block);
-			Helper<TKey>.KeyConverter.Write(key, nextBuf.Slice(size, len));
+			KeyHelper<TKey>.Converter.Write(key, nextBuf.Slice(size, len));
 
 			return buf.Slice(start: 0, length);
 		}
@@ -113,7 +113,7 @@ namespace Xtate
 			return buf;
 		}
 
-		public void Add<TKey>(TKey key, Span<byte> value)
+		public void Add<TKey>(TKey key, Span<byte> value) where TKey : notnull
 		{
 			if (value.Length == 0)
 			{
@@ -125,7 +125,7 @@ namespace Xtate
 			_node.Storage.Write(CreateFullKey(buf, key), value);
 		}
 
-		public void Add<TKey, TValue>([NotNull] TKey key, [NotNull] TValue value)
+		public void Add<TKey, TValue>(TKey key, TValue value) where TKey : notnull
 		{
 			if (value == null)
 			{
@@ -135,44 +135,44 @@ namespace Xtate
 
 			Span<byte> buf = stackalloc byte[GetFullKeySize(key)];
 
-			Span<byte> bufVal = stackalloc byte[Helper<TValue>.ValueConverter.GetLength(value)];
-			Helper<TValue>.ValueConverter.Write(value, bufVal);
+			Span<byte> bufVal = stackalloc byte[ValueHelper<TValue>.Converter.GetLength(value)];
+			ValueHelper<TValue>.Converter.Write(value, bufVal);
 			_node.Storage.Write(CreateFullKey(buf, key), bufVal);
 		}
 
-		public void Remove<TKey>([NotNull] TKey key)
+		public void Remove<TKey>(TKey key) where TKey : notnull
 		{
 			Span<byte> buf = stackalloc byte[GetFullKeySize(key)];
 			_node.Storage.Write(CreateFullKey(buf, key), ReadOnlySpan<byte>.Empty);
 		}
 
-		public void RemoveSubtree<TKey>([NotNull] TKey key)
+		public void RemoveSubtree<TKey>(TKey key) where TKey : notnull
 		{
 			Span<byte> buf = stackalloc byte[GetFullKeySize(key)];
 			_node.Storage.Write(ReadOnlySpan<byte>.Empty, CreateFullKey(buf, key));
 		}
 
-		public bool TryGet<TKey>([NotNull] TKey key, out ReadOnlyMemory<byte> value)
+		public bool TryGet<TKey>(TKey key, out ReadOnlyMemory<byte> value) where TKey : notnull
 		{
 			Span<byte> buf = stackalloc byte[GetFullKeySize(key)];
 			value = _node.Storage.Read(CreateFullKey(buf, key));
 			return !value.IsEmpty;
 		}
 
-		public bool TryGet<TKey, TValue>([NotNull] TKey key, [NotNullWhen(true)] [MaybeNullWhen(false)]
-										 out TValue value)
+		public bool TryGet<TKey, TValue>(TKey key, [NotNullWhen(true)] [MaybeNullWhen(false)]
+										 out TValue value) where TKey : notnull
 		{
 			Span<byte> buf = stackalloc byte[GetFullKeySize(key)];
 			var memory = _node.Storage.Read(CreateFullKey(buf, key));
 
 			if (memory.Length == 0)
 			{
-				value = default!;
+				value = default;
 				return false;
 			}
 
-			value = Helper<TValue>.ValueConverter.Read(memory.Span);
-			return true;
+			value = ValueHelper<TValue>.Converter.Read(memory.Span);
+			return value != null;
 		}
 
 		public class RootType
@@ -194,10 +194,9 @@ namespace Xtate
 			}
 		}
 
-		private static class Helper<T>
+		private static class KeyHelper<T> where T : notnull
 		{
-			public static readonly ConverterBase<T> KeyConverter   = GetKeyConverter();
-			public static readonly ConverterBase<T> ValueConverter = GetValueConverter();
+			public static readonly ConverterBase<T> Converter   = GetKeyConverter();
 
 			private static ConverterBase<T> GetKeyConverter()
 			{
@@ -229,6 +228,11 @@ namespace Xtate
 					default: return new UnsupportedConverter<T>(@"key");
 				}
 			}
+		}
+
+		private static class ValueHelper<T>
+		{
+			public static readonly ConverterBase<T> Converter = GetValueConverter();
 
 			private static ConverterBase<T> GetValueConverter()
 			{
@@ -327,15 +331,14 @@ namespace Xtate
 
 		private abstract class ConverterBase<T>
 		{
-			public abstract int GetLength([NotNull] T key);
+			public abstract int GetLength(T key);
 
-			public abstract void Write([NotNull] T key, Span<byte> bytes);
+			public abstract void Write(T key, Span<byte> bytes);
 
-			[return: NotNull]
 			public abstract T Read(ReadOnlySpan<byte> bytes);
 		}
 
-		private abstract class KeyConverterBase<TKey, TInternal> : ConverterBase<TKey>
+		private abstract class KeyConverterBase<TKey, TInternal> : ConverterBase<TKey> where TKey : notnull
 		{
 			public sealed override int GetLength(TKey key) => GetLength(TypeConverter<TKey, TInternal>.Convert(key));
 
@@ -348,7 +351,7 @@ namespace Xtate
 			protected abstract void Write(TInternal key, Span<byte> bytes);
 		}
 
-		private abstract class EnumIndexKeyConverter<TKey> : KeyConverterBase<TKey, int>
+		private abstract class EnumIndexKeyConverter<TKey> : KeyConverterBase<TKey, int> where TKey : notnull
 		{
 			protected override int GetLength(int key) => GetEncodedLength(GetValue(key));
 
@@ -441,17 +444,17 @@ namespace Xtate
 			}
 		}
 
-		private class EnumKeyConverter<TEnum> : EnumIndexKeyConverter<TEnum>
+		private class EnumKeyConverter<TEnum> : EnumIndexKeyConverter<TEnum> where TEnum : notnull
 		{
 			protected override ulong GetValue(int key) => ((ulong) unchecked((uint) key) << 2) + 1;
 		}
 
-		private class IndexKeyConverter<TIndex> : EnumIndexKeyConverter<TIndex>
+		private class IndexKeyConverter<TIndex> : EnumIndexKeyConverter<TIndex> where TIndex : notnull
 		{
 			protected override ulong GetValue(int index) => ((ulong) unchecked((uint) index) << 2) + 2;
 		}
 
-		private class StringKeyConverter<TString> : KeyConverterBase<TString, string>
+		private class StringKeyConverter<TString> : KeyConverterBase<TString, string> where TString : notnull
 		{
 			protected override int GetLength(string key)
 			{
@@ -476,7 +479,7 @@ namespace Xtate
 			}
 		}
 
-		private class RootKeyConverter<T> : KeyConverterBase<T, RootType>
+		private class RootKeyConverter<T> : KeyConverterBase<T, RootType> where T : notnull
 		{
 			protected override int GetLength(RootType key) => 0;
 
