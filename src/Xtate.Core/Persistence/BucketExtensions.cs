@@ -120,7 +120,7 @@ namespace Xtate
 				case DataModelValueType.Null: return DataModelValue.Null;
 				case DataModelValueType.String when bucket.TryGet(Key.Item, out string? value): return new DataModelValue(value);
 				case DataModelValueType.Number when bucket.TryGet(Key.Item, out double value): return new DataModelValue(value);
-				case DataModelValueType.DateTime when bucket.TryGet(Key.Item, out DateTimeOffset value): return new DataModelValue(value);
+				case DataModelValueType.DateTime when bucket.TryGet(Key.Item, out DataModelDateTime value): return new DataModelValue(value);
 				case DataModelValueType.Boolean when bucket.TryGet(Key.Item, out bool value): return new DataModelValue(value);
 
 				case DataModelValueType.Object when bucket.TryGet(Key.RefId, out int refId):
@@ -155,7 +155,7 @@ namespace Xtate
 					break;
 
 				case DataModelValueType.DateTime:
-					bucket.Add(Key.Item, item.AsDateTimeOffset());
+					bucket.Add(Key.Item, item.AsDateTime());
 					break;
 
 				case DataModelValueType.Boolean:
