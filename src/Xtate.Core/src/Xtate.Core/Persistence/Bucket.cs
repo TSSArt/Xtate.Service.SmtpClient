@@ -196,7 +196,7 @@ namespace Xtate
 
 		private static class KeyHelper<T> where T : notnull
 		{
-			public static readonly ConverterBase<T> Converter   = GetKeyConverter();
+			public static readonly ConverterBase<T> Converter = GetKeyConverter();
 
 			private static ConverterBase<T> GetKeyConverter()
 			{
@@ -250,8 +250,10 @@ namespace Xtate
 					case TypeCode.Double: return new DoubleValueConverter<T>();
 					case TypeCode.Boolean: return new BooleanValueConverter<T>();
 					case TypeCode.String: return new StringValueConverter<T>();
+					case TypeCode.DateTime: return new DateTimeValueConverter<T>();
 					case TypeCode.Object when type == typeof(Uri): return new UriValueConverter<T>();
 					case TypeCode.Object when type == typeof(DateTimeOffset): return new DateTimeOffsetValueConverter<T>();
+					case TypeCode.Object when type == typeof(DataModelDateTime): return new DataModelDateTimeValueConverter<T>();
 
 					default: return new UnsupportedConverter<T>(@"value");
 				}
@@ -579,6 +581,24 @@ namespace Xtate
 			protected override double Get(ReadOnlySpan<byte> bytes) => BitConverter.Int64BitsToDouble(BinaryPrimitives.ReadInt64LittleEndian(bytes));
 		}
 
+		private class DataModelDateTimeValueConverter<TValue> : ValueConverterBase<TValue, DataModelDateTime>
+		{
+			protected override int GetLength(DataModelDateTime val) => 10;
+
+			protected override void Write(DataModelDateTime val, Span<byte> bytes) => val.WriteTo(bytes);
+
+			protected override DataModelDateTime Get(ReadOnlySpan<byte> bytes) => DataModelDateTime.ReadFrom(bytes);
+		}
+
+		private class DateTimeValueConverter<TValue> : ValueConverterBase<TValue, DateTime>
+		{
+			protected override int GetLength(DateTime val) => 8;
+
+			protected override void Write(DateTime val, Span<byte> bytes) => BinaryPrimitives.WriteInt64LittleEndian(bytes, val.ToBinary());
+
+			protected override DateTime Get(ReadOnlySpan<byte> bytes) => DateTime.FromBinary(BinaryPrimitives.ReadInt64LittleEndian(bytes));
+		}
+
 		private class DateTimeOffsetValueConverter<TValue> : ValueConverterBase<TValue, DateTimeOffset>
 		{
 			protected override int GetLength(DateTimeOffset val) => 10;
@@ -593,7 +613,7 @@ namespace Xtate
 			{
 				var ticks = BinaryPrimitives.ReadInt64LittleEndian(bytes);
 				var offsetMinutes = BinaryPrimitives.ReadInt16LittleEndian(bytes.Slice(8));
-				return new DateTimeOffset(new DateTime(ticks), new TimeSpan(hours: 0, offsetMinutes, seconds: 0));
+				return new DateTimeOffset(ticks, new TimeSpan(hours: 0, offsetMinutes, seconds: 0));
 			}
 		}
 

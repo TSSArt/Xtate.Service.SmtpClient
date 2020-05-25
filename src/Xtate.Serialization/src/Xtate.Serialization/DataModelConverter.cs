@@ -83,7 +83,8 @@ namespace Xtate
 							JsonTokenType.True => true,
 							JsonTokenType.False => false,
 							JsonTokenType.Null => DataModelValue.Null,
-							JsonTokenType.String when reader.TryGetDateTimeOffset(out var datetime) => datetime,
+							JsonTokenType.String when reader.TryGetDateTime(out var datetime) && datetime.Kind != DateTimeKind.Local => datetime,
+							JsonTokenType.String when reader.TryGetDateTimeOffset(out var datetimeOffset) => datetimeOffset,
 							JsonTokenType.String => reader.GetString(),
 							JsonTokenType.Number => reader.GetDouble(),
 							JsonTokenType.StartObject => JsonSerializer.Deserialize<DataModelObject>(ref reader, options),
@@ -118,7 +119,22 @@ namespace Xtate
 						break;
 
 					case DataModelValueType.DateTime:
-						writer.WriteStringValue(value.AsDateTimeOffset());
+						var dataModelDateTime = value.AsDateTime();
+						switch (dataModelDateTime.Type)
+						{
+							case DataModelDateTimeType.DateTime:
+								writer.WriteStringValue(dataModelDateTime.ToDateTime());
+								break;
+
+							case DataModelDateTimeType.DateTimeOffset:
+								writer.WriteStringValue(dataModelDateTime.ToDateTimeOffset());
+								break;
+
+							default:
+								Infrastructure.UnexpectedValue();
+								break;
+						}
+
 						break;
 
 					case DataModelValueType.Boolean:

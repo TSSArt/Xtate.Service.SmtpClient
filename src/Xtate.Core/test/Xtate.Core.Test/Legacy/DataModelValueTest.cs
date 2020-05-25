@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace Xtate.Test.DevTests
+namespace Xtate.Core.Test.Legacy
 {
 	[TestClass]
 	[SuppressMessage(category: "ReSharper", checkId: "ExpressionIsAlwaysNull")]

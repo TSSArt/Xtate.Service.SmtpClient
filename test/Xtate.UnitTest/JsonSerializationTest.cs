@@ -297,7 +297,7 @@ namespace Xtate.Test
 
 			// assert
 			Assert.AreEqual(DataModelValueType.DateTime, val.Type);
-			Assert.AreEqual(new DateTimeOffset(year: 2012, month: 04, day: 23, hour: 18, minute: 25, second: 43, millisecond: 511, TimeSpan.Zero), val.AsDateTimeOffset());
+			Assert.AreEqual(new DateTime(year: 2012, month: 04, day: 23, hour: 18, minute: 25, second: 43, millisecond: 511, DateTimeKind.Utc), val.AsDateTime().ToDateTime());
 		}
 
 		[TestMethod]
@@ -310,7 +310,7 @@ namespace Xtate.Test
 
 			// assert
 			Assert.AreEqual(DataModelValueType.DateTime, val.Type);
-			Assert.AreEqual(new DateTimeOffset(year: 2012, month: 04, day: 23, hour: 18, minute: 25, second: 43, millisecond: 511, TimeSpan.FromHours(5)), val.AsDateTimeOffset());
+			Assert.AreEqual(new DateTimeOffset(year: 2012, month: 04, day: 23, hour: 18, minute: 25, second: 43, millisecond: 511, TimeSpan.FromHours(5)), val.AsDateTime().ToDateTimeOffset());
 		}
 
 		[TestMethod]
