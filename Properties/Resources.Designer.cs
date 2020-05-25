@@ -852,11 +852,29 @@ namespace Xtate {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Adjusted with offset value does not fall into acceptable range..
+        /// </summary>
+        internal static string Exception_Adjusted_with_offset_value_does_not_fall_into_acceptable_range {
+            get {
+                return ResourceManager.GetString("Exception_Adjusted_with_offset_value_does_not_fall_into_acceptable_range", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Another asynchronous operation in progress..
         /// </summary>
         internal static string Exception_Another_asynchronous_operation_in_progress {
             get {
                 return ResourceManager.GetString("Exception_Another_asynchronous_operation_in_progress", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Argument must be DataModelDateTime type..
+        /// </summary>
+        internal static string Exception_Argument_must_be_DataModelDateTime_type {
+            get {
+                return ResourceManager.GetString("Exception_Argument_must_be_DataModelDateTime_type", resourceCulture);
             }
         }
         
@@ -1580,6 +1598,15 @@ namespace Xtate {
         internal static string Exception_Unknown_State_Entity_type {
             get {
                 return ResourceManager.GetString("Exception_Unknown_State_Entity_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unspecified or UTC kind should have zero offset..
+        /// </summary>
+        internal static string Exception_Unspecified_or_UTC_kind_should_have_zero_offset {
+            get {
+                return ResourceManager.GetString("Exception_Unspecified_or_UTC_kind_should_have_zero_offset", resourceCulture);
             }
         }
         

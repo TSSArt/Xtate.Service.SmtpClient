@@ -63,11 +63,11 @@ namespace Xtate
 			_int64 = BitConverter.DoubleToInt64Bits(value);
 		}
 
-		public DataModelValue(int value) : this((double) value) { }
-
 		public DataModelValue(DateTimeOffset value) => _value = DateTimeValue.GetDateTimeValue(value, out _int64);
 
-		public DataModelValue(DateTime value) : this((DateTimeOffset) value) { }
+		public DataModelValue(DateTime value) => _value = DateTimeValue.GetDateTimeValue(value, out _int64);
+
+		public DataModelValue(DataModelDateTime value) => _value = DateTimeValue.GetDateTimeValue(value, out _int64);
 
 		public DataModelValue(bool value)
 		{
@@ -80,6 +80,8 @@ namespace Xtate
 			_value = lazyValue ?? NullValue;
 			_int64 = 0;
 		}
+
+		internal bool IsLazyValue => _value is ILazyValue;
 
 		public DataModelValueType Type =>
 				_value switch
@@ -109,7 +111,7 @@ namespace Xtate
 						DataModelValueType.Object => TypeCode.Object,
 						DataModelValueType.Array => TypeCode.Object,
 						DataModelValueType.Number => TypeCode.Double,
-						DataModelValueType.DateTime => TypeCode.Object,
+						DataModelValueType.DateTime => AsDateTime().GetTypeCode(),
 						DataModelValueType.Boolean => TypeCode.Boolean,
 						_ => Infrastructure.UnexpectedValue<TypeCode>()
 				};
@@ -117,136 +119,131 @@ namespace Xtate
 		bool IConvertible.ToBoolean(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToBoolean(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToBoolean(AsDateTime()),
-						DataModelValueType.Boolean => Convert.ToBoolean(AsBoolean()),
+						DataModelValueType.Number => AsNumber().ToBoolean(provider),
+						DataModelValueType.DateTime => AsDateTime().ToBoolean(provider),
+						DataModelValueType.Boolean => AsBoolean().ToBoolean(provider),
 						_ => Convert.ToBoolean(ToObject(), provider)
 				};
 
 		byte IConvertible.ToByte(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToByte(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToByte(AsDateTime()),
-						DataModelValueType.Boolean => Convert.ToByte(AsBoolean()),
+						DataModelValueType.Number => AsNumber().ToByte(provider),
+						DataModelValueType.DateTime => AsDateTime().ToByte(provider),
+						DataModelValueType.Boolean => AsBoolean().ToByte(provider),
 						_ => Convert.ToByte(ToObject(), provider)
 				};
 
 		char IConvertible.ToChar(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToChar(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToChar(AsDateTime()),
-						DataModelValueType.Boolean => Convert.ToChar(AsBoolean()),
+						DataModelValueType.Number => AsNumber().ToChar(provider),
+						DataModelValueType.DateTime => AsDateTime().ToChar(provider),
+						DataModelValueType.Boolean => AsBoolean().ToChar(provider),
 						_ => Convert.ToChar(ToObject(), provider)
 				};
 
 		decimal IConvertible.ToDecimal(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToDecimal(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToDecimal(AsDateTime()),
-						DataModelValueType.Boolean => Convert.ToDecimal(AsBoolean()),
+						DataModelValueType.Number => AsNumber().ToDecimal(provider),
+						DataModelValueType.DateTime => AsDateTime().ToDecimal(provider),
+						DataModelValueType.Boolean => AsBoolean().ToDecimal(provider),
 						_ => Convert.ToDecimal(ToObject(), provider)
 				};
 
 		double IConvertible.ToDouble(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToDouble(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToDouble(AsDateTime()),
-						DataModelValueType.Boolean => Convert.ToDouble(AsBoolean()),
+						DataModelValueType.Number => AsNumber().ToDouble(provider),
+						DataModelValueType.DateTime => AsDateTime().ToDouble(provider),
+						DataModelValueType.Boolean => AsBoolean().ToDouble(provider),
 						_ => Convert.ToDouble(ToObject(), provider)
 				};
 
 		short IConvertible.ToInt16(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToInt16(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToInt16(AsDateTime()),
-						DataModelValueType.Boolean => Convert.ToInt16(AsBoolean()),
+						DataModelValueType.Number => AsNumber().ToInt16(provider),
+						DataModelValueType.DateTime => AsDateTime().ToInt16(provider),
+						DataModelValueType.Boolean => AsBoolean().ToInt16(provider),
 						_ => Convert.ToInt16(ToObject(), provider)
 				};
 
 		int IConvertible.ToInt32(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToInt32(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToInt32(AsDateTime()),
-						DataModelValueType.Boolean => Convert.ToInt32(AsBoolean()),
+						DataModelValueType.Number => AsNumber().ToInt32(provider),
+						DataModelValueType.DateTime => AsDateTime().ToInt32(provider),
+						DataModelValueType.Boolean => AsBoolean().ToInt32(provider),
 						_ => Convert.ToInt32(ToObject(), provider)
 				};
 
 		long IConvertible.ToInt64(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToInt64(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToInt64(AsDateTime()),
-						DataModelValueType.Boolean => Convert.ToInt64(AsBoolean()),
+						DataModelValueType.Number => AsNumber().ToInt64(provider),
+						DataModelValueType.DateTime => AsDateTime().ToInt64(provider),
+						DataModelValueType.Boolean => AsBoolean().ToInt64(provider),
 						_ => Convert.ToInt64(ToObject(), provider)
 				};
 
 		sbyte IConvertible.ToSByte(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToSByte(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToSByte(AsDateTime()),
-						DataModelValueType.Boolean => Convert.ToSByte(AsBoolean()),
+						DataModelValueType.Number => AsNumber().ToSByte(provider),
+						DataModelValueType.DateTime => AsDateTime().ToSByte(provider),
+						DataModelValueType.Boolean => AsBoolean().ToSByte(provider),
 						_ => Convert.ToSByte(ToObject(), provider)
 				};
 
 		float IConvertible.ToSingle(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToSingle(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToSingle(AsDateTime()),
-						DataModelValueType.Boolean => Convert.ToSingle(AsBoolean()),
+						DataModelValueType.Number => AsNumber().ToSingle(provider),
+						DataModelValueType.DateTime => AsDateTime().ToSingle(provider),
+						DataModelValueType.Boolean => AsBoolean().ToSingle(provider),
 						_ => Convert.ToSingle(ToObject(), provider)
 				};
 
 		ushort IConvertible.ToUInt16(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToUInt16(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToUInt16(AsDateTime()),
-						DataModelValueType.Boolean => Convert.ToUInt16(AsBoolean()),
+						DataModelValueType.Number => AsNumber().ToUInt16(provider),
+						DataModelValueType.DateTime => AsDateTime().ToUInt16(provider),
+						DataModelValueType.Boolean => AsBoolean().ToUInt16(provider),
 						_ => Convert.ToUInt16(ToObject(), provider)
 				};
 
 		uint IConvertible.ToUInt32(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToUInt32(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToUInt32(AsDateTime()),
-						DataModelValueType.Boolean => Convert.ToUInt32(AsBoolean()),
+						DataModelValueType.Number => AsNumber().ToUInt32(provider),
+						DataModelValueType.DateTime => AsDateTime().ToUInt32(provider),
+						DataModelValueType.Boolean => AsBoolean().ToUInt32(provider),
 						_ => Convert.ToUInt32(ToObject(), provider)
 				};
 
 		ulong IConvertible.ToUInt64(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToUInt64(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToUInt64(AsDateTime()),
-						DataModelValueType.Boolean => Convert.ToUInt64(AsBoolean()),
+						DataModelValueType.Number => AsNumber().ToUInt64(provider),
+						DataModelValueType.DateTime => AsDateTime().ToUInt64(provider),
+						DataModelValueType.Boolean => AsBoolean().ToUInt64(provider),
 						_ => Convert.ToUInt64(ToObject(), provider)
 				};
 
 		DateTime IConvertible.ToDateTime(IFormatProvider provider) =>
 				Type switch
 				{
-						DataModelValueType.Number => Convert.ToDateTime(AsNumber()),
-						DataModelValueType.DateTime => Convert.ToDateTime(AsDateTime()),
-						DataModelValueType.Boolean => Convert.ToDateTime(AsBoolean()),
+						DataModelValueType.Number => AsNumber().ToDateTime(provider),
+						DataModelValueType.DateTime => AsDateTime().ToDateTime(provider),
+						DataModelValueType.Boolean => AsBoolean().ToDateTime(provider),
 						_ => Convert.ToDateTime(ToObject(), provider)
 				};
 
 		object IConvertible.ToType(Type conversionType, IFormatProvider provider)
 		{
-			if (conversionType == typeof(string))
-			{
-				return ToString(format: null, provider);
-			}
-
 			if (conversionType == typeof(DateTimeOffset))
 			{
 				return ToDateTimeOffset(this);
@@ -254,20 +251,18 @@ namespace Xtate
 
 			return Type switch
 			{
-					DataModelValueType.Number => ToType(AsNumber()),
-					DataModelValueType.DateTime => ToType(AsDateTime()),
-					DataModelValueType.Boolean => ToType(AsBoolean()),
+					DataModelValueType.Number => AsNumber().ToType(conversionType, provider),
+					DataModelValueType.DateTime => AsDateTime().ToType(conversionType, provider),
+					DataModelValueType.Boolean => AsBoolean().ToType(conversionType, provider),
 					_ => Convert.ChangeType(ToObject(), conversionType, provider)
 			};
-
-			object ToType<T>(T val) where T : IConvertible => val.ToType(conversionType, provider);
 
 			DateTimeOffset ToDateTimeOffset(in DataModelValue val) =>
 					val.Type switch
 					{
-							DataModelValueType.Number => new DateTimeOffset(Convert.ToDateTime(val.AsNumber())),
-							DataModelValueType.DateTime => val.AsDateTimeOffset(),
-							DataModelValueType.Boolean => new DateTimeOffset(Convert.ToDateTime(val.AsBoolean())),
+							DataModelValueType.Number => new DateTimeOffset(val.AsNumber().ToDateTime(provider)),
+							DataModelValueType.DateTime => val.AsDateTime().ToDateTimeOffset(),
+							DataModelValueType.Boolean => new DateTimeOffset(val.AsBoolean().ToDateTime(provider)),
 							_ => new DateTimeOffset(Convert.ToDateTime(val.ToObject(), provider))
 					};
 		}
@@ -285,6 +280,7 @@ namespace Xtate
 		public bool Equals(DataModelValue other)
 		{
 			var val = this;
+
 			while (val._value is ILazyValue lazyValue)
 			{
 				val = lazyValue.Value;
@@ -307,7 +303,7 @@ namespace Xtate
 			return Type switch
 			{
 					DataModelValueType.Number => AsNumber().ToString(format, formatProvider),
-					DataModelValueType.DateTime => AsDateTimeOffset().ToString(format ?? "o", formatProvider),
+					DataModelValueType.DateTime => AsDateTime().ToString(format, formatProvider),
 					DataModelValueType.Boolean => AsBoolean().ToString(formatProvider),
 					_ => ObjectToString(ToObject(), format, formatProvider)
 			};
@@ -327,10 +323,10 @@ namespace Xtate
 				{
 						null => null,
 						{ } val when val == NullValue => null,
-						{ } val when val == NumberValue => AsNumber(),
-						{ } val when val == BooleanValue => AsBoolean(),
+						{ } val when val == NumberValue => BitConverter.Int64BitsToDouble(_int64),
+						{ } val when val == BooleanValue => _int64 != 0,
 						string str => str,
-						DateTimeValue val => new DateTimeOffset(new DateTime(_int64), val.Offset),
+						DateTimeValue val => val.GetDataModelDateTime(_int64).ToObject(),
 						DataModelObject obj => obj,
 						DataModelArray arr => arr,
 						ILazyValue lazyValue => lazyValue.Value.ToObject(),
@@ -343,7 +339,6 @@ namespace Xtate
 		public static implicit operator DataModelValue(DataModelArray? val)  => FromDataModelArray(val);
 		public static implicit operator DataModelValue(string? val)          => FromString(val);
 		public static implicit operator DataModelValue(double val)           => FromDouble(val);
-		public static implicit operator DataModelValue(int val)              => FromInt32(val);
 		public static implicit operator DataModelValue(DateTimeOffset val)   => FromDateTimeOffset(val);
 		public static implicit operator DataModelValue(DateTime val)         => FromDateTime(val);
 		public static implicit operator DataModelValue(bool val)             => FromBoolean(val);
@@ -352,15 +347,14 @@ namespace Xtate
 		public static DataModelValue FromDataModelArray(DataModelArray? val)   => new DataModelValue(val);
 		public static DataModelValue FromString(string? val)                   => new DataModelValue(val);
 		public static DataModelValue FromDouble(double val)                    => new DataModelValue(val);
-		public static DataModelValue FromInt32(int val)                        => new DataModelValue(val);
 		public static DataModelValue FromDateTimeOffset(DateTimeOffset val)    => new DataModelValue(val);
 		public static DataModelValue FromDateTime(DateTime val)                => new DataModelValue(val);
 		public static DataModelValue FromBoolean(bool val)                     => new DataModelValue(val);
 		public static DataModelValue FromLazyValue(ILazyValue val)             => new DataModelValue(val);
 
-		public bool IsUndefinedOrNull() => _value == null || _value == NullValue;
+		public bool IsUndefinedOrNull() => _value == null || _value == NullValue || _value is ILazyValue val && val.Value.IsUndefinedOrNull();
 
-		public bool IsUndefined() => _value == null;
+		public bool IsUndefined() => _value == null || _value is ILazyValue val && val.Value.IsUndefined();
 
 		public DataModelObject AsObject() =>
 				_value switch
@@ -451,10 +445,6 @@ namespace Xtate
 								? val.Value.AsNumberOrDefault()
 								: null;
 
-		public int AsInteger() => (int) AsNumber();
-
-		public int? AsIntegerOrDefault() => (int?) AsNumberOrDefault()!;
-
 		public bool AsBoolean() =>
 				_value == BooleanValue
 						? _int64 != 0
@@ -469,29 +459,35 @@ namespace Xtate
 								? val.Value.AsBooleanOrDefault()
 								: null;
 
-		public DateTimeOffset AsDateTimeOffset() =>
+		public DataModelDateTime AsDateTime() =>
 				_value switch
 				{
-						DateTimeValue val => val.GetDateTimeOffset(_int64),
-						ILazyValue lazyVal => lazyVal.Value.AsDateTimeOffset(),
+						DateTimeValue val => val.GetDataModelDateTime(_int64),
+						ILazyValue lazyVal => lazyVal.Value.AsDateTime(),
 						_ => throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_DateTime)
 				};
 
-		public DateTimeOffset? AsDateTimeOffsetOrDefault() =>
+		public DataModelDateTime? AsDateTimeOrDefault() =>
 				_value switch
 				{
-						DateTimeValue val => val.GetDateTimeOffset(_int64),
-						ILazyValue lazyVal => lazyVal.Value.AsDateTimeOffsetOrDefault(),
+						DateTimeValue val => val.GetDataModelDateTime(_int64),
+						ILazyValue lazyVal => lazyVal.Value.AsDateTimeOrDefault(),
 						_ => null
 				};
 
-		public DateTime AsDateTime() => AsDateTimeOffset().UtcDateTime;
-
-		public DateTime? AsDateTimeOrDefault() => AsDateTimeOffsetOrDefault()?.UtcDateTime;
-
 		public override bool Equals(object obj) => obj is DataModelValue other && Equals(other);
 
-		public override int GetHashCode() => (_value != null ? _value.GetHashCode() : 0) + _int64.GetHashCode();
+		public override int GetHashCode()
+		{
+			var val = this;
+
+			while (val._value is ILazyValue lazyValue)
+			{
+				val = lazyValue.Value;
+			}
+
+			return (val._value != null ? val._value.GetHashCode() : 0) + val._int64.GetHashCode();
+		}
 
 		public static bool operator ==(DataModelValue left, DataModelValue right) => left.Equals(right);
 
@@ -523,6 +519,7 @@ namespace Xtate
 				{
 						DataModelObject obj => new DataModelValue(obj.DeepCloneWithMap(targetAccess, ref map)),
 						DataModelArray arr => new DataModelValue(arr.DeepCloneWithMap(targetAccess, ref map)),
+						ILazyValue val => val.Value.DeepCloneWithMap(targetAccess, ref map),
 						_ => this
 				};
 
@@ -533,8 +530,13 @@ namespace Xtate
 				case DataModelObject obj:
 					obj.MakeDeepConstant();
 					break;
+
 				case DataModelArray arr:
 					arr.MakeDeepConstant();
+					break;
+
+				case ILazyValue val:
+					val.Value.MakeDeepConstant();
 					break;
 			}
 		}
@@ -704,43 +706,69 @@ namespace Xtate
 
 		private sealed class DateTimeValue
 		{
-			private static readonly TimeSpan MinOffset = new TimeSpan(hours: -14, minutes: 0, seconds: 0);
-			private static readonly TimeSpan MaxOffset = new TimeSpan(hours: 14, minutes: 0, seconds: 0);
+			private const int Base             = 120000; // should be multiple of CacheGranularity and great then Boundary
+			private const int CacheGranularity = 15;
+			private const int Boundary         = 65536;
 
 			private static ImmutableDictionary<int, DateTimeValue> _cachedOffsets = ImmutableDictionary<int, DateTimeValue>.Empty;
 
-			public DateTimeValue(TimeSpan offset) => Offset = offset;
+			private readonly int _data;
 
-			public TimeSpan Offset { get; }
+			private DateTimeValue(int data) => _data = data;
 
-			public static DateTimeValue GetDateTimeValue(DateTimeOffset dateTimeOffset, out long utcTicks)
+			public static DateTimeValue GetDateTimeValue(DataModelDateTime dataModelDateTime, out long utcTicks)
 			{
-				utcTicks = dateTimeOffset.UtcTicks;
+				int data;
 
-				var offset = dateTimeOffset.Offset;
-
-				Infrastructure.Assert(MinOffset <= offset && offset <= MaxOffset && offset.Ticks % TimeSpan.TicksPerMinute == 0);
-
-				var val = (int) (offset.Ticks / TimeSpan.TicksPerMinute);
-
-				if (val % 15 != 0)
+				switch (dataModelDateTime.Type)
 				{
-					return new DateTimeValue(offset);
+					case DataModelDateTimeType.DateTime:
+
+						var dateTime = dataModelDateTime.ToDateTime();
+						utcTicks = dateTime.Ticks;
+						data = CacheGranularity * (int) dateTime.Kind;
+						break;
+
+					case DataModelDateTimeType.DateTimeOffset:
+
+						var dateTimeOffset = dataModelDateTime.ToDateTimeOffset();
+						utcTicks = dateTimeOffset.UtcTicks;
+						data = (int) (dateTimeOffset.Offset.Ticks / TimeSpan.TicksPerMinute + Base);
+						break;
+
+					default:
+						utcTicks = 0;
+						return Infrastructure.UnexpectedValue<DateTimeValue>();
+				}
+
+				if (data % CacheGranularity != 0)
+				{
+					return new DateTimeValue(data);
 				}
 
 				var cachedOffsets = _cachedOffsets;
 
-				if (!cachedOffsets.TryGetValue(val, out var dateTimeValue))
+				if (!cachedOffsets.TryGetValue(data, out var dateTimeValue))
 				{
-					dateTimeValue = new DateTimeValue(offset);
+					dateTimeValue = new DateTimeValue(data);
 
-					_cachedOffsets = cachedOffsets.Add(val, dateTimeValue);
+					_cachedOffsets = cachedOffsets.Add(data, dateTimeValue);
 				}
 
 				return dateTimeValue;
 			}
 
-			public DateTimeOffset GetDateTimeOffset(long utcTicks) => new DateTimeOffset(new DateTime(utcTicks + Offset.Ticks), Offset);
+			public DataModelDateTime GetDataModelDateTime(long utcTicks)
+			{
+				if (_data <= Boundary)
+				{
+					return new DateTime(utcTicks, (DateTimeKind) (_data / CacheGranularity));
+				}
+
+				var offsetTicks = (_data - Base) * TimeSpan.TicksPerMinute;
+
+				return new DateTimeOffset(utcTicks + offsetTicks, new TimeSpan(offsetTicks));
+			}
 
 			public override int GetHashCode() => 0;
 
@@ -852,7 +880,7 @@ namespace Xtate
 						return true;
 
 					case TypeCode.DateTime:
-						result = _value.AsDateTime();
+						result = _value.AsDateTime().ToDateTime();
 						return true;
 
 					case TypeCode.String:
@@ -876,7 +904,7 @@ namespace Xtate
 
 				if (binder.Type == typeof(DateTimeOffset))
 				{
-					result = _value.AsDateTimeOffset();
+					result = _value.AsDateTime().ToDateTimeOffset();
 
 					return true;
 				}
