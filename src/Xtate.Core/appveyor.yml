@@ -1,3 +1,5 @@
+build_cloud: docker
+
 configuration: Release
 
 image: Visual Studio 2019
