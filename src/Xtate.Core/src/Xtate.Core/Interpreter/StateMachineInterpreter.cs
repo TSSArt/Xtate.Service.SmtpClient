@@ -10,6 +10,9 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 using Xtate.Annotations;
+using Xtate.DataModel.None;
+using Xtate.DataModel.Runtime;
+using Xtate.DataModel.XPath;
 
 namespace Xtate
 {
@@ -256,6 +259,9 @@ namespace Xtate
 
 				case RuntimeDataModelHandler.DataModelType:
 					return RuntimeDataModelHandler.Factory;
+
+				case XPathDataModelHandler.DataModelType:
+					return XPathDataModelHandler.Factory;
 
 				default:
 					errorProcessor.AddError<StateMachineInterpreter>(entity: null, Res.Format(Resources.Exception_Cant_find_DataModelHandlerFactory_for_DataModel_type, dataModelType));

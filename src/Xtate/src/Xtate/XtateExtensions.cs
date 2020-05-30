@@ -1,6 +1,4 @@
-﻿using Xtate.EcmaScript;
-
-namespace Xtate
+﻿namespace Xtate
 {
 	public static class XtateExtensions
 	{

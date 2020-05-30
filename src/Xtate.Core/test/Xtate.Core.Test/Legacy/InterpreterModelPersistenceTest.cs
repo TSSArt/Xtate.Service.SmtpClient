@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Reflection;
 using System.Xml;
+using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Xtate.EcmaScript;
+using Moq;
 
-namespace Xtate.Test
+namespace Xtate.Core.Test.Legacy
 {
 	[TestClass]
+	[Ignore]
 	public class InterpreterModelPersistenceTest
 	{
 		private IStateMachine     _allStateMachine  = default!;
@@ -15,7 +17,7 @@ namespace Xtate.Test
 		[TestInitialize]
 		public void Initialize()
 		{
-			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Xtate.UnitTest.Resources.All.xml");
+			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Xtate.Core.Test.Legacy.test.scxml");
 
 			var xmlReader = XmlReader.Create(stream);
 
@@ -23,7 +25,8 @@ namespace Xtate.Test
 
 			_allStateMachine = director.ConstructStateMachine(StateMachineValidator.Instance);
 
-			_dataModelHandler = EcmaScriptDataModelHandler.Factory.CreateHandler(DefaultErrorProcessor.Instance);
+			var dmHandler = new Mock<IDataModelHandler>();
+			_dataModelHandler = dmHandler.Object;
 		}
 
 		[TestMethod]

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Xtate.EcmaScript;
+using Xtate.DataModel.EcmaScript;
 
 namespace Xtate.Test
 {

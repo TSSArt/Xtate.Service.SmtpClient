@@ -9,9 +9,8 @@ using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using Xtate.EcmaScript;
 
-namespace Xtate.Test
+namespace Xtate.DataModel.EcmaScript.Test
 {
 	[TestClass]
 	[SuppressMessage(category: "ReSharper", checkId: "RedundantCapturedContext")]
@@ -167,7 +166,7 @@ namespace Xtate.Test
 		{
 			await RunStateMachine(WithNameOnEntry, innerXml: "<log expr='_x.datamodel.name'/>");
 
-			_logger.Verify(l => l.ExecuteLog(It.IsAny<ILoggerContext>(), null, new DataModelValue("Xtate.EcmaScript.EcmaScriptDataModelHandler"), default), Times.Once);
+			_logger.Verify(l => l.ExecuteLog(It.IsAny<ILoggerContext>(), null, new DataModelValue("Xtate.DataModel.EcmaScript.EcmaScriptDataModelHandler"), default), Times.Once);
 			_logger.VerifyGet(l => l.IsTracingEnabled);
 			_logger.VerifyNoOtherCalls();
 		}

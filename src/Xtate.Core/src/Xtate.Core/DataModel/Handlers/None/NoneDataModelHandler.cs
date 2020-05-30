@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Xtate
+namespace Xtate.DataModel.None
 {
 	internal sealed class NoneDataModelHandler : DataModelHandlerBase
 	{

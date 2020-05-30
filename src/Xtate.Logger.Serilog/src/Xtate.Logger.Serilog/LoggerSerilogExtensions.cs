@@ -2,7 +2,7 @@
 using Serilog;
 using Xtate.Annotations;
 
-namespace Xtate.EcmaScript
+namespace Xtate
 {
 	[PublicAPI]
 	public static class LoggerSerilogExtensions

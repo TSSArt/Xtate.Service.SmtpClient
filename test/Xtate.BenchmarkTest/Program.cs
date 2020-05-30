@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Engines;
 using BenchmarkDotNet.Running;
+using Xtate.DataModel.XPath;
 
 namespace Xtate.BenchmarkTest
 {
@@ -65,7 +66,7 @@ namespace Xtate.BenchmarkTest
 		{
 			_stateMachine = new StateMachineFluentBuilder(BuilderFactory.Instance).BeginFinal().SetId("1").EndFinal().Build();
 			_channelReader = Channel.CreateUnbounded<IEvent>();
-			_dataModelHandler = NoneDataModelHandler.Factory.CreateHandler(DefaultErrorProcessor.Instance);
+			_dataModelHandler = XPathDataModelHandler.Factory.CreateHandler(DefaultErrorProcessor.Instance);
 			_host = new StateMachineHostBuilder().SetLogger(_logger).Build();
 			_host.StartHostAsync().Wait();
 		}
