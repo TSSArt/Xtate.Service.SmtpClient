@@ -121,6 +121,18 @@ namespace Xtate
 				base.Visit(ref entity);
 			}
 
+			protected override void Visit(ref IInlineContent entity)
+			{
+				if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+				if (entity.Value == null)
+				{
+					AddError(entity, Resources.ErrorMessage_ContentValueCantBeNull);
+				}
+
+				base.Visit(ref entity);
+			}
+
 			protected override void Visit(ref IContent entity)
 			{
 				if (entity == null) throw new ArgumentNullException(nameof(entity));

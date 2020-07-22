@@ -4,6 +4,8 @@
 	{
 		ILocationExpression? Location      { get; }
 		IValueExpression?    Expression    { get; }
-		string?              InlineContent { get; }
+		IInlineContent?      InlineContent { get; }
+		string?              Type          { get; }
+		string?              Attribute     { get; }
 	}
 }

@@ -147,13 +147,13 @@ namespace Xtate
 			return new DateTime(ticks);
 		}
 
-		public void WriteTo(Span<byte> span)
+		public void WriteTo(in Span<byte> span)
 		{
 			BinaryPrimitives.WriteUInt64LittleEndian(span, _data);
 			BinaryPrimitives.WriteInt16LittleEndian(span.Slice(8), _offset);
 		}
 
-		public static DataModelDateTime ReadFrom(ReadOnlySpan<byte> span) => new DataModelDateTime(span);
+		public static DataModelDateTime ReadFrom(in ReadOnlySpan<byte> span) => new DataModelDateTime(span);
 
 		private static int Compare(in DataModelDateTime t1, in DataModelDateTime t2)
 		{
@@ -222,7 +222,7 @@ namespace Xtate
 			data.DateTimeParsed = DateTime.TryParse(val, provider, style | DateTimeStyles.RoundtripKind, out data.DateTime);
 			data.DateTimeOffsetParsed = DateTimeOffset.TryParse(val, provider, style, out data.DateTimeOffset);
 
-			return ProcessParseData(in data, out dataModelDateTime);
+			return ProcessParseData(ref data, out dataModelDateTime);
 		}
 
 		public static bool TryParseExact(string val, string format, IFormatProvider? provider, DateTimeStyles style, out DataModelDateTime dataModelDateTime)
@@ -232,7 +232,7 @@ namespace Xtate
 			data.DateTimeParsed = DateTime.TryParseExact(val, format, provider, style | DateTimeStyles.RoundtripKind, out data.DateTime);
 			data.DateTimeOffsetParsed = DateTimeOffset.TryParseExact(val, format, provider, style, out data.DateTimeOffset);
 
-			return ProcessParseData(in data, out dataModelDateTime);
+			return ProcessParseData(ref data, out dataModelDateTime);
 		}
 
 		public static bool TryParseExact(string val, string[] formats, IFormatProvider? provider, DateTimeStyles style, out DataModelDateTime dataModelDateTime)
@@ -242,7 +242,7 @@ namespace Xtate
 			data.DateTimeParsed = DateTime.TryParseExact(val, formats, provider, style | DateTimeStyles.RoundtripKind, out data.DateTime);
 			data.DateTimeOffsetParsed = DateTimeOffset.TryParseExact(val, formats, provider, style, out data.DateTimeOffset);
 
-			return ProcessParseData(in data, out dataModelDateTime);
+			return ProcessParseData(ref data, out dataModelDateTime);
 		}
 
 		public static DataModelDateTime Parse(string val) => Parse(val, provider: null);
@@ -259,7 +259,7 @@ namespace Xtate
 
 			data.DateTimeParsed = DateTime.TryParse(val, provider, style | DateTimeStyles.RoundtripKind, out data.DateTime);
 
-			ProcessParseData(in data, out var result);
+			ProcessParseData(ref data, out var result);
 
 			return result;
 		}
@@ -276,7 +276,7 @@ namespace Xtate
 
 			data.DateTimeParsed = DateTime.TryParseExact(val, format, provider, style | DateTimeStyles.RoundtripKind, out data.DateTime);
 
-			ProcessParseData(in data, out var result);
+			ProcessParseData(ref data, out var result);
 
 			return result;
 		}
@@ -293,12 +293,12 @@ namespace Xtate
 
 			data.DateTimeParsed = DateTime.TryParseExact(val, formats, provider, style | DateTimeStyles.RoundtripKind, out data.DateTime);
 
-			ProcessParseData(in data, out var result);
+			ProcessParseData(ref data, out var result);
 
 			return result;
 		}
 
-		private static bool ProcessParseData(in ParseData data, out DataModelDateTime dataModelDateTime)
+		private static bool ProcessParseData(ref ParseData data, out DataModelDateTime dataModelDateTime)
 		{
 			if (!data.DateTimeParsed && !data.DateTimeOffsetParsed)
 			{

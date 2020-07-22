@@ -15,9 +15,11 @@ namespace Xtate
 			_data = data;
 
 			ExpressionEvaluator = data.Expression?.As<IObjectEvaluator>();
+			InlineContentEvaluator = data.Expression?.As<IObjectEvaluator>();
 		}
 
-		public IObjectEvaluator? ExpressionEvaluator { get; }
+		public IObjectEvaluator? ExpressionEvaluator    { get; }
+		public IObjectEvaluator? InlineContentEvaluator { get; }
 
 	#region Interface IAncestorProvider
 
@@ -27,10 +29,10 @@ namespace Xtate
 
 	#region Interface IData
 
+		public string                   Id            => _data.Id!;
 		public IValueExpression?        Expression    => _data.Expression;
 		public IExternalDataExpression? Source        => _data.Source;
-		public string                   Id            => _data.Id!;
-		public string?                  InlineContent => _data.InlineContent;
+		public IInlineContent?          InlineContent => _data.InlineContent;
 
 	#endregion
 
@@ -55,7 +57,7 @@ namespace Xtate
 			bucket.Add(Key.Id, Id);
 			bucket.AddEntity(Key.Source, Source);
 			bucket.AddEntity(Key.Expression, Expression);
-			bucket.Add(Key.InlineContent, InlineContent);
+			bucket.Add(Key.InlineContent, InlineContent?.Value);
 		}
 
 	#endregion

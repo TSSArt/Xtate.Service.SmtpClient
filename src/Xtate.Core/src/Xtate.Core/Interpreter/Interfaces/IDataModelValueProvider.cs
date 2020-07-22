@@ -7,5 +7,6 @@
 		DataModelValue Host             { get; }
 		DataModelValue Interpreter      { get; }
 		DataModelValue DataModelHandler { get; }
+		bool           CaseInsensitive  { get; }
 	}
 }

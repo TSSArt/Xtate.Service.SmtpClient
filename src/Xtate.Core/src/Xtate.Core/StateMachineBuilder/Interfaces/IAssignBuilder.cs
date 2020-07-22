@@ -6,6 +6,8 @@
 
 		void SetLocation(ILocationExpression location);
 		void SetExpression(IValueExpression expression);
-		void SetInlineContent(string inlineContent);
+		void SetInlineContent(IInlineContent inlineContent);
+		void SetType(string type);
+		void SetAttribute(string attribute);
 	}
 }

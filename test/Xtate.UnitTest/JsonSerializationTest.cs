@@ -350,7 +350,7 @@ namespace Xtate.Test
 
 			// assert
 			Assert.AreEqual(DataModelValueType.Array, val.Type);
-			Assert.AreEqual(expected: 1, val.AsArray().Length);
+			Assert.AreEqual(expected: 1, val.AsArray().Count);
 			Assert.AreEqual(expected: 1, val.AsArray()[0]);
 		}
 

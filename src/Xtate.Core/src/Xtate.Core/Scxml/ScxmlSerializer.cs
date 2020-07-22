@@ -435,10 +435,7 @@ namespace Xtate
 				_writer.WriteAttributeString(localName: "expr", entity.Expression.Expression);
 			}
 
-			if (entity.InlineContent != null)
-			{
-				_writer.WriteRaw(entity.InlineContent);
-			}
+			base.Visit(ref entity);
 
 			_writer.WriteEndElement();
 		}
@@ -491,10 +488,7 @@ namespace Xtate
 				_writer.WriteAttributeString(localName: "expr", entity.Expression.Expression);
 			}
 
-			if (entity.InlineContent != null)
-			{
-				_writer.WriteRaw(entity.InlineContent);
-			}
+			base.Visit(ref entity);
 
 			_writer.WriteEndElement();
 		}
@@ -602,6 +596,16 @@ namespace Xtate
 		}
 
 		protected override void Visit(ref IContentBody entity)
+		{
+			if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+			if (entity.Value != null)
+			{
+				_writer.WriteRaw(entity.Value);
+			}
+		}
+
+		protected override void Visit(ref IInlineContent entity)
 		{
 			if (entity == null) throw new ArgumentNullException(nameof(entity));
 

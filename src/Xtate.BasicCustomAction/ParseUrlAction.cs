@@ -22,15 +22,6 @@ namespace Xtate
 			RegisterResultLocation(xmlReader.GetAttribute(Result));
 		}
 
-		internal static void FillXmlNameTable(XmlNameTable xmlNameTable)
-		{
-			xmlNameTable.Add(Url);
-			xmlNameTable.Add(UrlExpr);
-			xmlNameTable.Add(Parameter);
-			xmlNameTable.Add(ParameterExpr);
-			xmlNameTable.Add(Result);
-		}
-
 		protected override DataModelValue Evaluate(IReadOnlyDictionary<string, DataModelValue> arguments)
 		{
 			if (arguments == null) throw new ArgumentNullException(nameof(arguments));
@@ -41,7 +32,17 @@ namespace Xtate
 
 			if (parameter == null)
 			{
-				return parameters.ToDataModelObject(p => p.Key, p => p.Value.ToString());
+				var result = new DataModelObject();
+
+				foreach (var pair in parameters)
+				{
+					foreach (var value in pair.Value)
+					{
+						result.Add(pair.Key, value);
+					}
+				}
+
+				return result;
 			}
 
 			var values = parameters[parameter];

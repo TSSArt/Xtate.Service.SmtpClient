@@ -8,8 +8,11 @@ namespace Xtate.Test
 		private static IStateMachine FromScxml(string scxml)
 		{
 			using var stringReader = new StringReader(scxml);
-			using var xmlReader = XmlReader.Create(stringReader);
-			return new ScxmlDirector(xmlReader, BuilderFactory.Instance, DefaultErrorProcessor.Instance).ConstructStateMachine(StateMachineValidator.Instance);
+			XmlNameTable nt = new NameTable();
+			var xmlNamespaceManager = new XmlNamespaceManager(nt);
+			using var xmlReader = XmlReader.Create(stringReader, settings: null, new XmlParserContext(nt, xmlNamespaceManager, xmlLang: default, xmlSpace: default));
+
+			return new ScxmlDirector(xmlReader, BuilderFactory.Instance, DefaultErrorProcessor.Instance, xmlNamespaceManager).ConstructStateMachine(StateMachineValidator.Instance);
 		}
 
 		public static IStateMachine FromInnerScxml_EcmaScript(string innerScxml) =>

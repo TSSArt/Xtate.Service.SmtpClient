@@ -1,26 +1,24 @@
-﻿using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System;
+using System.Text.Json;
 
 namespace Xtate.DataModel.EcmaScript
 {
-	internal class EcmaScriptContentBodyEvaluator : DefaultContentBodyEvaluator, IObjectEvaluator
+	internal class EcmaScriptContentBodyEvaluator : DefaultContentBodyEvaluator
 	{
-		public EcmaScriptContentBodyEvaluator(in ContentBody contentBody) : base(in contentBody) { }
+		public EcmaScriptContentBodyEvaluator(in ContentBody contentBody) : base(contentBody) { }
 
-	#region Interface IObjectEvaluator
-
-		public ValueTask<IObject> EvaluateObject(IExecutionContext executionContext, CancellationToken token)
+		protected override DataModelValue ParseToDataModel(ref Exception? parseException)
 		{
 			try
 			{
-				return new ValueTask<IObject>(DataModelConverter.FromJson(Value));
+				return DataModelConverter.FromJson(Value);
 			}
-			catch (JsonException) { }
+			catch (JsonException ex)
+			{
+				parseException = ex;
 
-			return new ValueTask<IObject>(new DataModelValue(Value));
+				return Value.NormalizeSpaces();
+			}
 		}
-
-	#endregion
 	}
 }

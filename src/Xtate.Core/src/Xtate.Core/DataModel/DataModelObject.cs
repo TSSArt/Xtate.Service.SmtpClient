@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -13,77 +14,42 @@ namespace Xtate
 {
 	[PublicAPI]
 	[DebuggerTypeProxy(typeof(DebugView))]
-	[DebuggerDisplay(value: "Count = {_properties.Count}")]
-	public sealed class DataModelObject : IDynamicMetaObjectProvider, IFormattable
+	[DebuggerDisplay(value: "Count = {" + nameof(Count) + "}")]
+	[Serializable]
+	public sealed class DataModelObject : DataModelList, IDynamicMetaObjectProvider, IFormattable, IEnumerable<KeyValuePair<string, DataModelValue>>
 	{
-		public delegate void ChangedHandler(ChangedAction action, string property, DataModelDescriptor descriptor);
+		public static readonly DataModelObject Empty = new DataModelObject(DataModelAccess.Constant, caseInsensitive: false);
 
-		public enum ChangedAction
+		public DataModelObject() : this(DataModelAccess.Writable, caseInsensitive: false) { }
+
+		public DataModelObject(bool caseInsensitive) : this(DataModelAccess.Writable, caseInsensitive) { }
+
+		internal DataModelObject(bool isReadOnly, bool caseInsensitive) : this(isReadOnly ? DataModelAccess.ReadOnly : DataModelAccess.Writable, caseInsensitive) { }
+
+		private DataModelObject(DataModelAccess access, bool caseInsensitive) : base(access, caseInsensitive) { }
+
+		public DataModelValue this[string key]
 		{
-			Set,
-			Remove
-		}
-
-		public static readonly DataModelObject Empty = new DataModelObject(DataModelAccess.Constant, capacity: 0);
-
-		private readonly Dictionary<string, DataModelDescriptor> _properties;
-
-		private DataModelAccess _access;
-
-		public DataModelObject() : this(capacity: 0) { }
-
-		public DataModelObject(int capacity) : this(DataModelAccess.Writable, capacity) { }
-
-		internal DataModelObject(bool isReadOnly, int capacity) : this(isReadOnly ? DataModelAccess.ReadOnly : DataModelAccess.Writable, capacity) { }
-
-		private DataModelObject(DataModelAccess access, int capacity)
-		{
-			_access = access;
-			_properties = new Dictionary<string, DataModelDescriptor>(capacity);
-		}
-
-		public DataModelAccess Access
-		{
-			get => _access;
-
-			internal set
+			get
 			{
-				if (value == _access)
-				{
-					return;
-				}
+				TryGet(key, CaseInsensitive, out var entry);
 
-				if (value == DataModelAccess.ReadOnly && _access == DataModelAccess.Writable)
-				{
-					_access = DataModelAccess.ReadOnly;
-
-					return;
-				}
-
-				if (value == DataModelAccess.Constant)
-				{
-					_access = DataModelAccess.Constant;
-
-					foreach (var pair in _properties)
-					{
-						pair.Value.Value.MakeDeepConstant();
-					}
-
-					return;
-				}
-
-				throw new InfrastructureException(Resources.Exception_Access_can_t_be_changed);
+				return entry.Value;
 			}
+
+			set => Set(key, CaseInsensitive, value, metadata: default);
 		}
 
-		public ICollection<string> Properties => _properties.Keys;
-
-		public int Count => _properties.Count;
-
-		public DataModelValue this[string property]
+		public DataModelValue this[string key, bool caseInsensitive]
 		{
-			get => GetDescriptor(property).Value;
-			set => SetProperty(property, new DataModelDescriptor(value), DataModelAccess.Writable, throwOnDeny: true);
+			get
+			{
+				TryGet(key, caseInsensitive, out var entry);
+
+				return entry.Value;
+			}
+
+			set => Set(key, caseInsensitive, value, metadata: default);
 		}
 
 	#region Interface IDynamicMetaObjectProvider
@@ -92,21 +58,43 @@ namespace Xtate
 
 	#endregion
 
+	#region Interface IEnumerable
+
+		IEnumerator IEnumerable.GetEnumerator() => new KeyValueEnumerator(this);
+
+	#endregion
+
+	#region Interface IEnumerable<KeyValuePair<string,DataModelValue>>
+
+		IEnumerator<KeyValuePair<string, DataModelValue>> IEnumerable<KeyValuePair<string, DataModelValue>>.GetEnumerator() => new KeyValuePairEnumerator(this);
+
+	#endregion
+
 	#region Interface IFormattable
 
 		public string ToString(string? format, IFormatProvider? formatProvider)
 		{
+			if (Count == 0)
+			{
+				return "()";
+			}
+
 			var sb = new StringBuilder();
+			var addDelimiter = false;
 
 			sb.Append('(');
-			foreach (var pair in _properties)
+			foreach (var keyValue in KeyValues)
 			{
-				if (sb.Length > 1)
+				if (addDelimiter)
 				{
 					sb.Append(',');
 				}
+				else
+				{
+					addDelimiter = true;
+				}
 
-				sb.Append(pair.Key).Append('=').Append(pair.Value.Value.ToString(format: null, formatProvider));
+				sb.Append(keyValue.Key).Append("=").Append(keyValue.Value.ToString(format: null, formatProvider));
 			}
 
 			sb.Append(')');
@@ -116,200 +104,92 @@ namespace Xtate
 
 	#endregion
 
-		public void EnsureCapacity(int capacity)
+		public void Add(string key, in DataModelValue value)
 		{
-			if (_access == DataModelAccess.Constant)
-			{
-				return;
-			}
+			if (key == null) throw new ArgumentNullException(nameof(key));
 
-#if NETSTANDARD2_1
-			_properties.EnsureCapacity(capacity);
-#else
-			var _ = _properties;
-			var __ = capacity;
-#endif
+			Add(key, value, metadata: default);
 		}
 
-		public event ChangedHandler? Changed;
+		public bool ContainsKey(string key) => TryGet(key, CaseInsensitive, out _);
 
-		public void MakeReadOnly() => Access = DataModelAccess.ReadOnly;
+		public bool ContainsKey(string key, bool caseInsensitive) => TryGet(key, caseInsensitive, out _);
 
-		public void MakeDeepConstant() => Access = DataModelAccess.Constant;
+		public bool RemoveFirst(string key) => RemoveFirst(key, CaseInsensitive);
 
-		public DataModelObject CloneAsWritable() => DeepClone(DataModelAccess.Writable);
-
-		public DataModelObject CloneAsReadOnly() => DeepClone(DataModelAccess.ReadOnly);
-
-		public DataModelObject AsConstant() => DeepClone(DataModelAccess.Constant);
-
-		internal DataModelDescriptor GetDescriptor(string property) => _properties.TryGetValue(property, out var descriptor) ? descriptor : default;
-
-		private static bool NoAccess(DataModelAccess objectAccess, DataModelAccess requestedAccess, bool throwOnDeny)
+		public bool RemoveFirst(string key, bool caseInsensitive)
 		{
-			if (objectAccess == DataModelAccess.Writable)
+			if (TryGet(key, caseInsensitive, out var entry))
+			{
+				if (CanRemove(entry.Index))
+				{
+					Remove(entry.Index);
+				}
+				else
+				{
+					Set(entry.Index, key: default, value: default, metadata: default);
+				}
+
+				return true;
+			}
+
+			return false;
+		}
+
+		public bool RemoveAll(string key) => RemoveAll(key, CaseInsensitive);
+
+		public bool RemoveAll(string key, bool caseInsensitive)
+		{
+			var enumerator = ListEntries(key, caseInsensitive).GetEnumerator();
+
+			try
+			{
+				return RemoveNext(ref enumerator);
+			}
+			finally
+			{
+				enumerator.Dispose();
+			}
+		}
+
+		private bool RemoveNext(ref EntryByKeyEnumerator enumerator)
+		{
+			if (!enumerator.MoveNext())
 			{
 				return false;
 			}
 
-			if (objectAccess != DataModelAccess.Constant && requestedAccess == DataModelAccess.ReadOnly)
-			{
-				return false;
-			}
+			var index = enumerator.Current.Index;
 
-			if (throwOnDeny)
+			RemoveNext(ref enumerator);
+
+			if (CanRemove(index))
 			{
-				throw new InvalidOperationException(Resources.Exception_Object_can_not_be_modified);
+				Remove(index);
+			}
+			else
+			{
+				Set(index, key: default, value: default, metadata: default);
 			}
 
 			return true;
 		}
 
-		public bool CanSet(string property) => SetProperty(property, descriptor: default, DataModelAccess.Constant, throwOnDeny: false);
+		private protected override DataModelList CreateNewInstance(DataModelAccess access) => new DataModelObject(access, CaseInsensitive);
 
-		private bool SetProperty(string property, DataModelDescriptor descriptor, DataModelAccess requestedAccess, bool throwOnDeny)
-		{
-			if (NoAccess(_access, requestedAccess, throwOnDeny))
-			{
-				return false;
-			}
+		private protected override DataModelList GetEmptyInstance() => Empty;
 
-			if (_properties.TryGetValue(property, out var oldDescriptor))
-			{
-				if (NoAccess(oldDescriptor.Access, requestedAccess, throwOnDeny))
-				{
-					return false;
-				}
-
-				if (requestedAccess != DataModelAccess.Constant)
-				{
-					Changed?.Invoke(ChangedAction.Remove, property, oldDescriptor);
-				}
-			}
-
-			if (requestedAccess != DataModelAccess.Constant)
-			{
-				_properties[property] = descriptor;
-
-				Changed?.Invoke(ChangedAction.Set, property, descriptor);
-			}
-
-			return true;
-		}
-
-		public bool CanRemove(string property) => RemoveProperty(property, DataModelAccess.Constant, throwOnDeny: false);
-
-		private bool RemoveProperty(string property, DataModelAccess requestedAccess, bool throwOnDeny)
-		{
-			if (NoAccess(_access, requestedAccess, throwOnDeny))
-			{
-				return false;
-			}
-
-			if (!_properties.TryGetValue(property, out var oldDescriptor))
-			{
-				return false;
-			}
-
-			if (NoAccess(oldDescriptor.Access, requestedAccess, throwOnDeny))
-			{
-				return false;
-			}
-
-			if (requestedAccess != DataModelAccess.Constant)
-			{
-				Changed?.Invoke(ChangedAction.Remove, property, oldDescriptor);
-
-				_properties.Remove(property);
-			}
-
-			return true;
-		}
-
-		internal bool SetInternal(string property, DataModelDescriptor descriptor, bool throwOnDeny = true) => SetProperty(property, descriptor, DataModelAccess.ReadOnly, throwOnDeny);
-
-		internal bool RemoveInternal(string property, bool throwOnDeny = true) => RemoveProperty(property, DataModelAccess.ReadOnly, throwOnDeny);
-
-		public bool Contains(string property) => _properties.ContainsKey(property);
-
-		public void Remove(string property) => RemoveProperty(property, DataModelAccess.Writable, throwOnDeny: true);
-
-		public DataModelObject DeepClone(DataModelAccess targetAccess)
-		{
-			Dictionary<object, object>? map = null;
-
-			return DeepCloneWithMap(targetAccess, ref map);
-		}
-
-		internal DataModelObject DeepCloneWithMap(DataModelAccess targetAccess, ref Dictionary<object, object>? map)
-		{
-			if (targetAccess == DataModelAccess.Constant)
-			{
-				if (_properties.Count == 0)
-				{
-					return Empty;
-				}
-
-				if (_access == DataModelAccess.Constant)
-				{
-					return this;
-				}
-			}
-
-			map ??= new Dictionary<object, object>();
-
-			if (map.TryGetValue(this, out var val))
-			{
-				return (DataModelObject) val;
-			}
-
-			var clone = new DataModelObject(targetAccess, _properties.Count);
-
-			map[this] = clone;
-
-			foreach (var pair in _properties)
-			{
-				clone._properties[pair.Key] = new DataModelDescriptor(pair.Value.Value.DeepCloneWithMap(targetAccess, ref map), targetAccess);
-			}
-
-			return clone;
-		}
+		public KeyValuePairEnumerator GetEnumerator() => new KeyValuePairEnumerator(this);
 
 		public override string ToString() => ToString(format: null, formatProvider: null);
 
-		[DebuggerDisplay(value: "{" + nameof(_value) + "}", Name = "{" + nameof(_name) + ",nq}")]
-		private struct NameValue
-		{
-			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-			private readonly string _name;
+		public DataModelObject CloneAsWritable() => (DataModelObject) DeepClone(DataModelAccess.Writable);
 
-			[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-			private readonly DataModelValue _value;
+		public DataModelObject CloneAsReadOnly() => (DataModelObject) DeepClone(DataModelAccess.ReadOnly);
 
-			public NameValue(string name, DataModelValue value)
-			{
-				_name = name;
-				_value = value;
-			}
-		}
+		public DataModelObject AsConstant() => (DataModelObject) DeepClone(DataModelAccess.Constant);
 
-		[PublicAPI]
-		[ExcludeFromCodeCoverage]
-		private class DebugView
-		{
-			private readonly DataModelObject _dataModelObject;
-
-			public DebugView(DataModelObject dataModelObject) => _dataModelObject = dataModelObject;
-
-			[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
-			public NameValue[] Items =>
-					_dataModelObject
-							._properties.OrderBy(p => p.Key)
-							.Select(p => new NameValue(p.Key, p.Value.Value))
-							.ToArray();
-		}
-
-		private class Dynamic : DynamicObject
+		internal class Dynamic : DynamicObject
 		{
 			private static readonly IDynamicMetaObjectProvider Instance = new Dynamic(default!);
 
@@ -327,25 +207,23 @@ namespace Xtate
 
 			public override bool TryGetMember(GetMemberBinder binder, out object? result)
 			{
-				if (binder == null) throw new ArgumentNullException(nameof(binder));
-
-				result = _obj[binder.Name].ToObject();
+				result = _obj[binder.Name, binder.IgnoreCase].ToObject();
 
 				return true;
 			}
 
 			public override bool TrySetMember(SetMemberBinder binder, object value)
 			{
-				if (binder == null) throw new ArgumentNullException(nameof(binder));
-
-				_obj[binder.Name] = DataModelValue.FromObject(value);
+				_obj[binder.Name, binder.IgnoreCase] = DataModelValue.FromObject(value);
 
 				return true;
 			}
 
 			public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object? result)
 			{
-				if (indexes.Length == 1 && indexes[0] is string key)
+				var arg = indexes.Length == 1 ? indexes[0] : null;
+
+				if (arg is string key)
 				{
 					result = _obj[key].ToObject();
 
@@ -359,7 +237,9 @@ namespace Xtate
 
 			public override bool TrySetIndex(SetIndexBinder binder, object[] indexes, object value)
 			{
-				if (indexes.Length == 1 && indexes[0] is string key)
+				var arg = indexes.Length == 1 ? indexes[0] : null;
+
+				if (arg is string key)
 				{
 					_obj[key] = DataModelValue.FromObject(value);
 
@@ -371,7 +251,7 @@ namespace Xtate
 
 			public override bool TryConvert(ConvertBinder binder, out object? result)
 			{
-				if (binder.Type == typeof(DataModelObject))
+				if (binder.Type == typeof(DataModelList) || binder.Type == typeof(DataModelObject))
 				{
 					result = _obj;
 
@@ -385,12 +265,89 @@ namespace Xtate
 					return true;
 				}
 
-				result = default;
+				result = null;
+
+				return false;
+			}
+		}
+
+		[ExcludeFromCodeCoverage]
+		[DebuggerDisplay(value: "{" + nameof(_value) + "}", Name = "{" + nameof(_key) + ",nq}")]
+		private readonly struct DebugKeyValue
+		{
+			[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+			private readonly string? _key;
+
+			[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+			private readonly DataModelValue _value;
+
+			public DebugKeyValue(KeyValue keyValue)
+			{
+				_key = keyValue.Key;
+				_value = keyValue.Value;
+			}
+		}
+
+		[ExcludeFromCodeCoverage]
+		[PublicAPI]
+		private class DebugView
+		{
+			private readonly DataModelList _dataModelList;
+
+			public DebugView(DataModelList dataModelList) => _dataModelList = dataModelList;
+
+			[DebuggerBrowsable(DebuggerBrowsableState.RootHidden)]
+			public DebugKeyValue[] Items => _dataModelList.KeyValues.Select(keyValue => new DebugKeyValue(keyValue)).ToArray();
+		}
+
+		[PublicAPI]
+		public struct KeyValuePairEnumerator : IEnumerator<KeyValuePair<string, DataModelValue>>
+		{
+			private KeyValueEnumerator _enumerator;
+
+			internal KeyValuePairEnumerator(DataModelList list)
+			{
+				_enumerator = list.KeyValues.GetEnumerator();
+				Current = default;
+			}
+
+		#region Interface IDisposable
+
+			public void Dispose() => _enumerator.Dispose();
+
+		#endregion
+
+		#region Interface IEnumerator
+
+			public bool MoveNext()
+			{
+				while (_enumerator.MoveNext())
+				{
+					var current = _enumerator.Current;
+					if (current.Key != null)
+					{
+						Current = new KeyValuePair<string, DataModelValue>(current.Key, current.Value);
+
+						return true;
+					}
+				}
+
+				Current = default;
 
 				return false;
 			}
 
-			public override IEnumerable<string> GetDynamicMemberNames() => _obj.Properties;
+			public void Reset() => _enumerator.Reset();
+
+			object IEnumerator.Current => _enumerator.Current;
+
+		#endregion
+
+		#region Interface IEnumerator<KeyValuePair<string,DataModelValue>>
+
+			public KeyValuePair<string, DataModelValue> Current { get; private set; }
+
+		#endregion
 		}
 	}
 }

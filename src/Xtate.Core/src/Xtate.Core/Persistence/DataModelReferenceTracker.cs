@@ -13,7 +13,7 @@ namespace Xtate
 
 		private int _nextRefId;
 
-		public DataModelReferenceTracker(Bucket bucket)
+		public DataModelReferenceTracker(in Bucket bucket)
 		{
 			_bucket = bucket;
 			bucket.TryGet(Bucket.RootKey, out _nextRefId);
@@ -66,7 +66,7 @@ namespace Xtate
 					_ => Infrastructure.UnexpectedValue<DataModelPersistingController>()
 			};
 
-			_objects[obj] = new Entry { RefCount = 0, RefId = refId, Controller = controller };
+			_objects[obj] = new Entry { RefCount = null, RefId = refId, Controller = controller };
 			_refIds[refId] = obj;
 		}
 
@@ -78,7 +78,8 @@ namespace Xtate
 			switch (type)
 			{
 				case DataModelValueType.Object:
-					var obj = new DataModelObject();
+					bucket.TryGet(Key.CaseInsensitive, out bool caseInsensitive);
+					var obj = new DataModelObject(caseInsensitive);
 					var objController = ObjectControllerCreator(bucket, obj);
 					obj.Access = access;
 					_objects[obj] = new Entry { RefCount = 0, RefId = refId, Controller = objController };
@@ -120,7 +121,7 @@ namespace Xtate
 			return entry.RefId;
 		}
 
-		public int GetRefId(DataModelValue value) =>
+		public int GetRefId(in DataModelValue value) =>
 				value.Type switch
 				{
 						DataModelValueType.Object => GetRefId(value.AsObject(), ObjectControllerCreator, incrementReference: false),
@@ -128,7 +129,7 @@ namespace Xtate
 						_ => Infrastructure.UnexpectedValue<int>()
 				};
 
-		public void AddReference(DataModelValue value)
+		public void AddReference(in DataModelValue value)
 		{
 			switch (value.Type)
 			{
@@ -141,10 +142,10 @@ namespace Xtate
 			}
 		}
 
-		private DataModelPersistingController ObjectControllerCreator(Bucket bucket, object obj) => new DataModelObjectPersistingController(bucket, this, (DataModelObject) obj);
-		private DataModelPersistingController ArrayControllerCreator(Bucket bucket, object obj)  => new DataModelArrayPersistingController(bucket, this, (DataModelArray) obj);
+		private DataModelPersistingController ObjectControllerCreator(Bucket bucket, object obj) => new DataModelListPersistingController(bucket, this, (DataModelObject) obj);
+		private DataModelPersistingController ArrayControllerCreator(Bucket bucket, object obj)  => new DataModelListPersistingController(bucket, this, (DataModelArray) obj);
 
-		public void RemoveReference(DataModelValue value)
+		public void RemoveReference(in DataModelValue value)
 		{
 			switch (value.Type)
 			{
@@ -160,7 +161,7 @@ namespace Xtate
 			{
 				if (_objects.TryGetValue(obj, out var entry))
 				{
-					if (-- entry.RefCount <= 0)
+					if (-- entry.RefCount == 0)
 					{
 						entry.Controller.Dispose();
 						_bucket.RemoveSubtree(entry.RefId);
@@ -178,7 +179,7 @@ namespace Xtate
 		private struct Entry
 		{
 			public DataModelPersistingController Controller;
-			public int                           RefCount;
+			public int?                          RefCount;
 			public int                           RefId;
 		}
 	}

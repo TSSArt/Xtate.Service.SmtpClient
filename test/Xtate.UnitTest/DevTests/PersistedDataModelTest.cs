@@ -6,16 +6,16 @@ namespace Xtate.Test
 	[TestClass]
 	public class PersistedDataModelTest
 	{
-		private DataModelArrayPersistingController  _arrayController = default!;
-		private Bucket                              _bucket;
-		private DataModelArray                      _dataModelArray          = default!;
-		private DataModelObject                     _dataModelObject         = default!;
-		private DataModelObjectPersistingController _objectController        = default!;
-		private DataModelArray                      _restoredDataModelArray  = default!;
-		private DataModelObject                     _restoredDataModelObject = default!;
-		private DataModelReferenceTracker           _restoredTracker         = default!;
-		private InMemoryStorage                     _storage                 = default!;
-		private DataModelReferenceTracker           _tracker                 = default!;
+		private DataModelListPersistingController _arrayController = default!;
+		private Bucket                            _bucket;
+		private DataModelArray                    _dataModelArray          = default!;
+		private DataModelObject                   _dataModelObject         = default!;
+		private DataModelListPersistingController _objectController        = default!;
+		private DataModelArray                    _restoredDataModelArray  = default!;
+		private DataModelObject                   _restoredDataModelObject = default!;
+		private DataModelReferenceTracker         _restoredTracker         = default!;
+		private InMemoryStorage                   _storage                 = default!;
+		private DataModelReferenceTracker         _tracker                 = default!;
 
 		[TestInitialize]
 		public void Initialize()
@@ -28,12 +28,12 @@ namespace Xtate.Test
 			_restoredTracker = new DataModelReferenceTracker(bucket.Nested("refs"));
 
 			_dataModelObject = new DataModelObject();
-			_objectController = new DataModelObjectPersistingController(_bucket, _tracker, _dataModelObject);
+			_objectController = new DataModelListPersistingController(_bucket, _tracker, _dataModelObject);
 
 			_restoredDataModelObject = new DataModelObject();
 
 			_dataModelArray = new DataModelArray();
-			_arrayController = new DataModelArrayPersistingController(_bucket, _tracker, _dataModelArray);
+			_arrayController = new DataModelListPersistingController(_bucket, _tracker, _dataModelArray);
 
 			_restoredDataModelArray = new DataModelArray();
 		}
@@ -49,7 +49,7 @@ namespace Xtate.Test
 		[TestMethod]
 		public void EmptyObjectTest()
 		{
-			using var controller = new DataModelObjectPersistingController(_bucket, _tracker, _restoredDataModelObject);
+			using var controller = new DataModelListPersistingController(_bucket, _tracker, _restoredDataModelObject);
 
 			Assert.AreEqual(expected: 0, _restoredDataModelObject.Count);
 			Assert.AreEqual(expected: 0, _storage.GetTransactionLogSize());
@@ -60,7 +60,7 @@ namespace Xtate.Test
 		{
 			_dataModelObject["b"] = new DataModelValue("ee");
 
-			using var controller = new DataModelObjectPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
+			using var controller = new DataModelListPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
 
 			Assert.AreEqual(expected: 1, _restoredDataModelObject.Count);
 			Assert.AreEqual(expected: "ee", _restoredDataModelObject["b"].AsString());
@@ -75,9 +75,9 @@ namespace Xtate.Test
 			_dataModelObject["a"] = new DataModelValue("qq");
 			_dataModelObject["b"] = new DataModelValue("ee");
 
-			_dataModelObject.Remove("b");
+			_dataModelObject.RemoveAll("b");
 
-			using var controller = new DataModelObjectPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
+			using var controller = new DataModelListPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
 
 			Assert.AreEqual(expected: 1, _restoredDataModelObject.Count);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
@@ -90,14 +90,14 @@ namespace Xtate.Test
 			_dataModelObject["a"] = new DataModelValue("qq");
 			_dataModelObject["b"] = new DataModelValue("ee");
 
-			_dataModelObject.Remove("a");
-			_dataModelObject.Remove("b");
+			_dataModelObject.RemoveAll("a");
+			_dataModelObject.RemoveAll("b");
 
-			using var controller = new DataModelObjectPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
+			using var controller = new DataModelListPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
 
 			Assert.AreEqual(expected: 0, _restoredDataModelObject.Count);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
-			Assert.AreEqual(expected: 11, StorageTest.GetEntriesCount(_storage));
+			Assert.AreEqual(expected: 13, StorageTest.GetEntriesCount(_storage));
 		}
 
 		[TestMethod]
@@ -106,7 +106,7 @@ namespace Xtate.Test
 			var obj = new DataModelObject { ["t"] = new DataModelValue("test") };
 			_dataModelObject["a"] = new DataModelValue(obj);
 
-			using var controller = new DataModelObjectPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
+			using var controller = new DataModelListPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
 
 			Assert.AreEqual(expected: "test", _restoredDataModelObject["a"].AsObject()["t"].AsString());
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
@@ -118,9 +118,9 @@ namespace Xtate.Test
 		{
 			_dataModelArray[0] = new DataModelValue("qq");
 
-			var _ = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
+			var _ = new DataModelListPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
-			Assert.AreEqual(expected: 1, _restoredDataModelArray.Length);
+			Assert.AreEqual(expected: 1, _restoredDataModelArray.Count);
 			Assert.AreEqual(expected: "qq", _restoredDataModelArray[0].AsString());
 		}
 
@@ -132,9 +132,9 @@ namespace Xtate.Test
 
 			_dataModelArray.RemoveAt(1);
 
-			var _ = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
+			var _ = new DataModelListPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
-			Assert.AreEqual(expected: 1, _restoredDataModelArray.Length);
+			Assert.AreEqual(expected: 1, _restoredDataModelArray.Count);
 			Assert.AreEqual(expected: "qq", _restoredDataModelArray[0].AsString());
 		}
 
@@ -147,9 +147,9 @@ namespace Xtate.Test
 			_dataModelArray.RemoveAt(0);
 			_dataModelArray.RemoveAt(0);
 
-			var _ = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
+			var _ = new DataModelListPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
-			Assert.AreEqual(expected: 0, _restoredDataModelArray.Length);
+			Assert.AreEqual(expected: 0, _restoredDataModelArray.Count);
 		}
 
 		[TestMethod]
@@ -159,9 +159,9 @@ namespace Xtate.Test
 
 			_dataModelArray.RemoveAt(1);
 
-			var _ = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
+			var _ = new DataModelListPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
-			Assert.AreEqual(expected: 1, _restoredDataModelArray.Length);
+			Assert.AreEqual(expected: 1, _restoredDataModelArray.Count);
 			Assert.AreEqual(expected: 1.2, _restoredDataModelArray[0].AsNumber());
 		}
 
@@ -172,9 +172,9 @@ namespace Xtate.Test
 
 			_dataModelArray.RemoveAt(1);
 
-			var _ = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
+			var _ = new DataModelListPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
-			Assert.AreEqual(expected: 1, _restoredDataModelArray.Length);
+			Assert.AreEqual(expected: 1, _restoredDataModelArray.Count);
 			Assert.AreEqual(new DateTime(year: 2000, month: 1, day: 1), _restoredDataModelArray[0].AsDateTime().ToDateTime());
 		}
 
@@ -185,9 +185,9 @@ namespace Xtate.Test
 
 			_dataModelArray.RemoveAt(1);
 
-			var _ = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
+			var _ = new DataModelListPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
-			Assert.AreEqual(expected: 1, _restoredDataModelArray.Length);
+			Assert.AreEqual(expected: 1, _restoredDataModelArray.Count);
 			Assert.AreEqual(expected: true, _restoredDataModelArray[0].AsBoolean());
 		}
 
@@ -198,9 +198,9 @@ namespace Xtate.Test
 
 			_dataModelArray.RemoveAt(1);
 
-			var _ = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
+			var _ = new DataModelListPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
-			Assert.AreEqual(expected: 1, _restoredDataModelArray.Length);
+			Assert.AreEqual(expected: 1, _restoredDataModelArray.Count);
 			Assert.AreEqual(expected: "test", _restoredDataModelArray[0].AsString());
 		}
 
@@ -214,9 +214,9 @@ namespace Xtate.Test
 
 			_dataModelArray[0] = new DataModelValue(obj);
 
-			var _ = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
+			var _ = new DataModelListPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
-			Assert.AreEqual(expected: 1, _restoredDataModelArray.Length);
+			Assert.AreEqual(expected: 1, _restoredDataModelArray.Count);
 			Assert.AreEqual(expected: "value", _restoredDataModelArray[0].AsObject()["prop"].AsString());
 		}
 
@@ -230,9 +230,9 @@ namespace Xtate.Test
 
 			_dataModelArray[0] = new DataModelValue(obj);
 
-			var _ = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
+			var _ = new DataModelListPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
-			Assert.AreEqual(expected: 1, _restoredDataModelArray.Length);
+			Assert.AreEqual(expected: 1, _restoredDataModelArray.Count);
 			Assert.AreEqual(expected: "value", _restoredDataModelArray[0].AsArray()[0].AsString());
 		}
 
@@ -242,9 +242,9 @@ namespace Xtate.Test
 			_dataModelArray.Add(new DataModelValue(5));
 			_dataModelArray.Clear();
 
-			var _ = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
+			var _ = new DataModelListPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
-			Assert.AreEqual(expected: 0, _restoredDataModelArray.Length);
+			Assert.AreEqual(expected: 0, _restoredDataModelArray.Count);
 		}
 
 		[TestMethod]
@@ -253,9 +253,9 @@ namespace Xtate.Test
 			_dataModelArray.Add(new DataModelValue(5));
 			_dataModelArray.Insert(index: 0, new DataModelValue(4));
 
-			var _ = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
+			var _ = new DataModelListPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
-			Assert.AreEqual(expected: 2, _restoredDataModelArray.Length);
+			Assert.AreEqual(expected: 2, _restoredDataModelArray.Count);
 			Assert.AreEqual(expected: 4, _restoredDataModelArray[0].AsNumber());
 			Assert.AreEqual(expected: 5, _restoredDataModelArray[1].AsNumber());
 		}
@@ -266,9 +266,9 @@ namespace Xtate.Test
 			_dataModelArray.Add(new DataModelValue(5));
 			_dataModelArray.SetLength(5);
 
-			var _ = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
+			var _ = new DataModelListPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
-			Assert.AreEqual(expected: 5, _restoredDataModelArray.Length);
+			Assert.AreEqual(expected: 5, _restoredDataModelArray.Count);
 			Assert.AreEqual(expected: 5, _restoredDataModelArray[0].AsNumber());
 			Assert.AreEqual(DataModelValueType.Undefined, _restoredDataModelArray[4].Type);
 		}
@@ -278,17 +278,17 @@ namespace Xtate.Test
 		{
 			var obj = new DataModelObject();
 
-			obj.SetInternal(property: "t", new DataModelDescriptor(new DataModelValue(value: "test"), DataModelAccess.ReadOnly));
+			obj.SetInternal(key: "t", caseInsensitive: false, new DataModelValue(value: "test"), DataModelAccess.ReadOnly);
 
 			_dataModelObject["a"] = new DataModelValue(obj);
 
-			using var controller = new DataModelObjectPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
+			using var controller = new DataModelListPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
 
-			Assert.AreEqual(DataModelAccess.ReadOnly, _restoredDataModelObject["a"].AsObject().GetDescriptor("t").Access);
-			Assert.AreEqual(expected: false, _restoredDataModelObject["a"].AsObject().CanSet("t"));
-			Assert.AreEqual(expected: true, _restoredDataModelObject.CanSet("a"));
+			Assert.IsTrue(_restoredDataModelObject["a"].AsObject().TryGet(key: "t", caseInsensitive: false, out var entry) && entry.Access == DataModelAccess.ReadOnly);
+			Assert.AreEqual(expected: false, _restoredDataModelObject["a"].AsObject().CanSet(key: "t", caseInsensitive: false));
+			Assert.AreEqual(expected: true, _restoredDataModelObject.CanSet(key: "a", caseInsensitive: false));
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
-			Assert.AreEqual(expected: 11, StorageTest.GetEntriesCount(_storage));
+			Assert.AreEqual(expected: 12, StorageTest.GetEntriesCount(_storage));
 		}
 
 		[TestMethod]
@@ -301,13 +301,13 @@ namespace Xtate.Test
 			obj.MakeReadOnly();
 			_dataModelObject["a"] = new DataModelValue(obj);
 
-			using var controller = new DataModelObjectPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
+			using var controller = new DataModelListPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
 
-			Assert.AreEqual(DataModelAccess.Writable, _restoredDataModelObject["a"].AsObject().GetDescriptor("t").Access);
-			Assert.AreEqual(expected: false, _restoredDataModelObject["a"].AsObject().CanSet("t"));
-			Assert.AreEqual(expected: true, _restoredDataModelObject.CanSet("a"));
+			Assert.IsTrue(_restoredDataModelObject["a"].AsObject().TryGet(key: "t", caseInsensitive: false, out var entry) && entry.Access == DataModelAccess.Writable);
+			Assert.AreEqual(expected: false, _restoredDataModelObject["a"].AsObject().CanSet(key: "t", caseInsensitive: false));
+			Assert.AreEqual(expected: true, _restoredDataModelObject.CanSet(key: "a", caseInsensitive: false));
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
-			Assert.AreEqual(expected: 11, StorageTest.GetEntriesCount(_storage));
+			Assert.AreEqual(expected: 12, StorageTest.GetEntriesCount(_storage));
 		}
 
 		[TestMethod]
@@ -320,13 +320,13 @@ namespace Xtate.Test
 			array.MakeReadOnly();
 			_dataModelObject["a"] = new DataModelValue(array);
 
-			using var controller = new DataModelObjectPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
+			using var controller = new DataModelListPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
 
-			Assert.AreEqual(DataModelAccess.Writable, _restoredDataModelObject["a"].AsArray().GetDescriptor(0).Access);
+			Assert.IsTrue(_restoredDataModelObject["a"].AsArray().TryGet(index: 0, out var entry) && entry.Access == DataModelAccess.Writable);
 			Assert.AreEqual(expected: false, _restoredDataModelObject["a"].AsArray().CanSet(index: 0));
-			Assert.AreEqual(expected: true, _restoredDataModelObject.CanSet("a"));
+			Assert.AreEqual(expected: true, _restoredDataModelObject.CanSet(key: "a", caseInsensitive: false));
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
-			Assert.AreEqual(expected: 11, StorageTest.GetEntriesCount(_storage));
+			Assert.AreEqual(expected: 12, StorageTest.GetEntriesCount(_storage));
 		}
 
 		[TestMethod]
@@ -336,13 +336,13 @@ namespace Xtate.Test
 					  {
 							  ["t"] = new DataModelValue("test")
 					  };
-			_dataModelObject.SetInternal(property: "a", new DataModelDescriptor(new DataModelValue(obj), DataModelAccess.ReadOnly));
+			_dataModelObject.SetInternal(key: "a", caseInsensitive: false, new DataModelValue(obj), DataModelAccess.ReadOnly);
 
-			using var controller = new DataModelObjectPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
+			using var controller = new DataModelListPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
 
-			Assert.AreEqual(DataModelAccess.Writable, _restoredDataModelObject["a"].AsObject().GetDescriptor("t").Access);
-			Assert.AreEqual(expected: true, _restoredDataModelObject["a"].AsObject().CanSet("t"));
-			Assert.AreEqual(expected: false, _restoredDataModelObject.CanSet("a"));
+			Assert.IsTrue(_restoredDataModelObject["a"].AsObject().TryGet(key: "t", caseInsensitive: false, out var entry) && entry.Access == DataModelAccess.Writable);
+			Assert.AreEqual(expected: true, _restoredDataModelObject["a"].AsObject().CanSet(key: "t", caseInsensitive: false));
+			Assert.AreEqual(expected: false, _restoredDataModelObject.CanSet(key: "a", caseInsensitive: false));
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
 			Assert.AreEqual(expected: 11, StorageTest.GetEntriesCount(_storage));
 		}
@@ -352,7 +352,7 @@ namespace Xtate.Test
 		{
 			var obj1 = new DataModelObject { ["prop1-rw"] = new DataModelValue("val1") };
 			var root = new DataModelObject { ["obj1"] = new DataModelValue(obj1) };
-			var _ = new DataModelObjectPersistingController(_bucket, _restoredTracker, root);
+			var _ = new DataModelListPersistingController(_bucket, _restoredTracker, root);
 		}
 
 		[TestMethod]
@@ -362,16 +362,16 @@ namespace Xtate.Test
 					   {
 							   ["prop1-rw"] = new DataModelValue("val1")
 					   };
-			obj1.SetInternal(property: "prop1-ro", new DataModelDescriptor(new DataModelValue("val1"), DataModelAccess.ReadOnly));
+			obj1.SetInternal(key: "prop1-ro", caseInsensitive: false, new DataModelValue("val1"), DataModelAccess.ReadOnly);
 
 			var obj2 = new DataModelObject
 					   {
 							   ["prop2-rw"] = new DataModelValue("val1")
 					   };
-			obj1.SetInternal(property: "prop2-ro", new DataModelDescriptor(new DataModelValue("val1"), DataModelAccess.ReadOnly));
+			obj1.SetInternal(key: "prop2-ro", caseInsensitive: false, new DataModelValue("val1"), DataModelAccess.ReadOnly);
 
 			_dataModelObject["numeric-rw"] = new DataModelValue(11);
-			obj1.SetInternal(property: "numeric-ro", new DataModelDescriptor(new DataModelValue(22), DataModelAccess.ReadOnly));
+			obj1.SetInternal(key: "numeric-ro", caseInsensitive: false, new DataModelValue(22), DataModelAccess.ReadOnly);
 
 			_dataModelObject["obj1a"] = new DataModelValue(obj1);
 			_dataModelObject["obj1b"] = new DataModelValue(obj1);
@@ -393,7 +393,7 @@ namespace Xtate.Test
 			Assert.AreEqual(expected: "val-extra2", _dataModelObject["obj2a"].AsObject()["extra2"].AsString());
 			Assert.AreEqual(expected: "val-extra2", _dataModelObject["obj2b"].AsObject()["extra2"].AsString());
 
-			var _ = new DataModelObjectPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
+			var _ = new DataModelListPersistingController(_bucket, _restoredTracker, _restoredDataModelObject);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
 			Assert.AreSame(_restoredDataModelObject["obj1a"].AsObject(), _restoredDataModelObject["obj1b"].AsObject());
 			Assert.AreSame(_restoredDataModelObject["obj2a"].AsObject(), _restoredDataModelObject["obj2b"].AsObject());
@@ -410,16 +410,16 @@ namespace Xtate.Test
 					   {
 							   [1] = new DataModelValue("val1")
 					   };
-			obj1.SetInternal(index: 0, new DataModelDescriptor(new DataModelValue("val1"), DataModelAccess.ReadOnly));
+			obj1.SetInternal(index: 0, key: null, new DataModelValue("val1"), DataModelAccess.ReadOnly);
 
 			var obj2 = new DataModelArray
 					   {
 							   [1] = new DataModelValue("val1")
 					   };
-			obj1.SetInternal(index: 0, new DataModelDescriptor(new DataModelValue("val1"), DataModelAccess.ReadOnly));
+			obj1.SetInternal(index: 0, key: null, new DataModelValue("val1"), DataModelAccess.ReadOnly);
 
 			_dataModelArray[0] = new DataModelValue(11);
-			obj1.SetInternal(index: 1, new DataModelDescriptor(new DataModelValue(22), DataModelAccess.ReadOnly));
+			obj1.SetInternal(index: 1, key: null, new DataModelValue(22), DataModelAccess.ReadOnly);
 			_dataModelArray[2] = new DataModelValue(obj1);
 			_dataModelArray[3] = new DataModelValue(obj1);
 			_dataModelArray[4] = new DataModelValue(obj2);
@@ -440,7 +440,7 @@ namespace Xtate.Test
 			Assert.AreEqual(expected: "val-extra2", _dataModelArray[4].AsArray()[3].AsString());
 			Assert.AreEqual(expected: "val-extra2", _dataModelArray[5].AsArray()[3].AsString());
 
-			var _ = new DataModelArrayPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
+			var _ = new DataModelListPersistingController(_bucket, _restoredTracker, _restoredDataModelArray);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
 			Assert.AreSame(_restoredDataModelArray[2].AsArray(), _restoredDataModelArray[3].AsArray());
 			Assert.AreSame(_restoredDataModelArray[4].AsArray(), _restoredDataModelArray[5].AsArray());
@@ -457,10 +457,10 @@ namespace Xtate.Test
 
 			_dataModelObject["obj1a"] = new DataModelValue(obj1);
 
-			Assert.AreEqual(expected: "prop1-rw", new Bucket(_storage).Nested("refs").Nested(0).Nested(0).GetString(Key.Property));
-			Assert.IsTrue(new Bucket(_storage).Nested("refs").Nested(0).Nested(0).TryGet(Key.Property, out string _));
+			Assert.AreEqual(expected: "prop1-rw", new Bucket(_storage).Nested("refs").Nested(0).Nested(0).GetString(Key.Key));
+			Assert.IsTrue(new Bucket(_storage).Nested("refs").Nested(0).Nested(0).TryGet(Key.Key, out string _));
 			_dataModelObject["obj1a"] = default;
-			Assert.IsFalse(new Bucket(_storage).Nested("refs").Nested(0).Nested(0).TryGet(Key.Property, out string _));
+			Assert.IsFalse(new Bucket(_storage).Nested("refs").Nested(0).Nested(0).TryGet(Key.Key, out string _));
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
 		}
 	}

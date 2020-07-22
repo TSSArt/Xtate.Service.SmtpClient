@@ -24,7 +24,7 @@
 			Condition = source.Condition;
 		}
 
-		bool IVisitorEntity<ElseIfEntity, IElseIf>.RefEquals(in ElseIfEntity other) => ReferenceEquals(Condition, other.Condition);
+		bool IVisitorEntity<ElseIfEntity, IElseIf>.RefEquals(ref ElseIfEntity other) => ReferenceEquals(Condition, other.Condition);
 
 	#endregion
 	}

@@ -111,7 +111,7 @@ namespace Xtate
 			}
 			catch (Exception ex)
 			{
-				var evt = new EventObject(EventType.External, EventName.ErrorExecution, DataConverter.FromException(ex), sendId: null, invokeId);
+				var evt = new EventObject(EventType.External, EventName.ErrorExecution, DataConverter.FromException(ex, caseInsensitive: false), sendId: null, invokeId);
 				await service.Send(evt, token: default).ConfigureAwait(false);
 			}
 			finally

@@ -51,7 +51,7 @@ namespace Xtate.Test
 			//Assert
 			Assert.AreEqual("value1", result.str);
 			Assert.AreEqual(11, result.@int);
-			Assert.AreEqual(3, result.arr.Length);
+			Assert.AreEqual(3, result.arr.length);
 			Assert.AreEqual(1, result.arr[0]);
 			Assert.AreEqual(2.5, result.arr[1]);
 			Assert.AreEqual("3", result["arr"][2]);

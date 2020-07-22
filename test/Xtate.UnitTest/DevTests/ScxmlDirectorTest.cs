@@ -22,9 +22,11 @@ namespace Xtate.Test
 		{
 			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Xtate.UnitTest.Resources.Main.xml");
 
-			var xmlReader = XmlReader.Create(stream);
+			XmlNameTable nt = new NameTable();
+			var xmlNamespaceManager = new XmlNamespaceManager(nt);
+			var xmlReader = XmlReader.Create(stream, settings: null, new XmlParserContext(nt, xmlNamespaceManager, xmlLang: default, xmlSpace: default));
 
-			var director = new ScxmlDirector(xmlReader, BuilderFactory.Instance, DefaultErrorProcessor.Instance);
+			var director = new ScxmlDirector(xmlReader, BuilderFactory.Instance, DefaultErrorProcessor.Instance, xmlNamespaceManager);
 
 			_stateMachine = director.ConstructStateMachine(StateMachineValidator.Instance);
 		}

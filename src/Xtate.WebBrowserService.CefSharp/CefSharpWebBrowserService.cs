@@ -28,31 +28,31 @@ namespace Xtate.Services
 
 			Application.Run(form);
 
-			var result = new DataModelObject(capacity: 2);
+			var result = new DataModelObject();
 
 			if (form.DialogResult == DialogResult.OK)
 			{
-				result["status"] = "ok";
+				result.Add(key: "status", value: "ok");
 
 				if (form.Result != null)
 				{
-					var parameters = new DataModelObject(capacity: form.Result.Count);
+					var parameters = new DataModelObject();
 
 					foreach (var pair in form.Result)
 					{
-						parameters[pair.Key] = pair.Value;
+						parameters.Add(pair.Key, pair.Value);
 					}
 
-					result["parameters"] = parameters;
+					result.Add(key: "parameters", parameters);
 				}
 				else
 				{
-					result["parameters"] = DataModelObject.Empty;
+					result.Add(key: "parameters", DataModelObject.Empty);
 				}
 			}
 			else
 			{
-				result["status"] = "cancel";
+				result.Add(key: "status", value: "cancel");
 			}
 
 			return result;

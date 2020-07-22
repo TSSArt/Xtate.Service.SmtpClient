@@ -14,7 +14,7 @@
 
 		void IVisitorEntity<ElseEntity, IElse>.Init(IElse source) => Ancestor = source;
 
-		bool IVisitorEntity<ElseEntity, IElse>.RefEquals(in ElseEntity other) => true;
+		bool IVisitorEntity<ElseEntity, IElse>.RefEquals(ref ElseEntity other) => true;
 
 	#endregion
 	}

@@ -26,7 +26,7 @@ namespace Xtate
 			Action = source.Action;
 		}
 
-		bool IVisitorEntity<FinalizeEntity, IFinalize>.RefEquals(in FinalizeEntity other) => Action == other.Action;
+		bool IVisitorEntity<FinalizeEntity, IFinalize>.RefEquals(ref FinalizeEntity other) => Action == other.Action;
 
 	#endregion
 	}

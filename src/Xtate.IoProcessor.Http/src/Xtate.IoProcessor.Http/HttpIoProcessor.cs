@@ -195,9 +195,9 @@ namespace Xtate
 
 		private static bool IsStringDictionary(DataModelObject dataModelObject)
 		{
-			foreach (var name in dataModelObject.Properties)
+			foreach (var pair in dataModelObject)
 			{
-				switch (dataModelObject[name].Type)
+				switch (pair.Value.Type)
 				{
 					case DataModelValueType.Object:
 					case DataModelValueType.Array:
@@ -229,10 +229,9 @@ namespace Xtate
 
 			if (dataModelObject != null)
 			{
-				foreach (var name in dataModelObject.Properties)
+				foreach (var pair in dataModelObject)
 				{
-					var value = dataModelObject[name].ToObject();
-					yield return new KeyValuePair<string, string>(name, Convert.ToString(value, CultureInfo.InvariantCulture));
+					yield return new KeyValuePair<string, string>(pair.Key, Convert.ToString(pair.Value, CultureInfo.InvariantCulture));
 				}
 			}
 		}
@@ -307,7 +306,7 @@ namespace Xtate
 			if (mediaType == MediaTypeApplicationFormUrlEncoded)
 			{
 				var pairs = QueryHelpers.ParseQuery(body);
-				var dataModelObject = new DataModelObject(pairs.Count);
+				var dataModelObject = new DataModelObject();
 
 				foreach (var pair in pairs)
 				{
@@ -317,7 +316,10 @@ namespace Xtate
 					}
 					else
 					{
-						dataModelObject[pair.Key] = new DataModelValue(pair.Value.ToString());
+						foreach (var stringValue in pair.Value)
+						{
+							dataModelObject.Add(pair.Key, stringValue);
+						}
 					}
 				}
 

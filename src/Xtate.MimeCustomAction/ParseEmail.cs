@@ -37,19 +37,6 @@ namespace Xtate.Services
 			RegisterResultLocation(xmlReader.GetAttribute(Result));
 		}
 
-		internal static void FillXmlNameTable(XmlNameTable xmlNameTable)
-		{
-			xmlNameTable.Add(Content);
-			xmlNameTable.Add(ContentExpr);
-			xmlNameTable.Add(Xpath);
-			xmlNameTable.Add(XpathExpr);
-			xmlNameTable.Add(Attr);
-			xmlNameTable.Add(AttrExpr);
-			xmlNameTable.Add(Regex);
-			xmlNameTable.Add(RegexExpr);
-			xmlNameTable.Add(Result);
-		}
-
 		protected override DataModelValue Evaluate(IReadOnlyDictionary<string, DataModelValue> args)
 		{
 			if (args == null) throw new ArgumentNullException(nameof(args));
@@ -121,10 +108,10 @@ namespace Xtate.Services
 
 			var groupNames = regex.GetGroupNames();
 
-			var obj = new DataModelObject(groupNames.Length);
+			var obj = new DataModelObject();
 			foreach (var name in groupNames)
 			{
-				obj[name] = match.Groups[name].Value;
+				obj.Add(name, match.Groups[name].Value);
 			}
 
 			return obj;
@@ -163,10 +150,10 @@ namespace Xtate.Services
 
 				var groupNames = regex.GetGroupNames();
 
-				var obj = new DataModelObject(groupNames.Length);
+				var obj = new DataModelObject();
 				foreach (var name in groupNames)
 				{
-					obj[name] = match.Groups[name].Value;
+					obj.Add(name, match.Groups[name].Value);
 				}
 
 				return obj;

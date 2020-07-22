@@ -25,7 +25,7 @@
 			Transition = source.Transition;
 		}
 
-		bool IVisitorEntity<InitialEntity, IInitial>.RefEquals(in InitialEntity other) => ReferenceEquals(Transition, other.Transition);
+		bool IVisitorEntity<InitialEntity, IInitial>.RefEquals(ref InitialEntity other) => ReferenceEquals(Transition, other.Transition);
 
 	#endregion
 	}

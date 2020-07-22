@@ -23,13 +23,6 @@ namespace Xtate
 			RegisterResultLocation(xmlReader.GetAttribute(Result));
 		}
 
-		internal static void FillXmlNameTable(XmlNameTable xmlNameTable)
-		{
-			xmlNameTable.Add(Content);
-			xmlNameTable.Add(ContentExpr);
-			xmlNameTable.Add(Result);
-		}
-
 		protected override DataModelValue Evaluate(IReadOnlyDictionary<string, DataModelValue> arguments)
 		{
 			if (arguments == null) throw new ArgumentNullException(nameof(arguments));

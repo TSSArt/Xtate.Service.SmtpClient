@@ -36,6 +36,8 @@ namespace Xtate
 			Visit(ref invoke);
 		}
 
+		public virtual bool CaseInsensitive => false;
+
 	#endregion
 
 		protected void AddErrorMessage(object? entity, string message, Exception? exception = default) => _errorProcessor.AddError(GetType(), entity, message, exception);
@@ -142,6 +144,13 @@ namespace Xtate
 			base.Build(ref contentBody, ref contentBodyProperties);
 
 			contentBody = new DefaultContentBodyEvaluator(contentBodyProperties);
+		}
+
+		protected override void Build(ref IInlineContent inlineContent, ref InlineContent inlineContentProperties)
+		{
+			base.Build(ref inlineContent, ref inlineContentProperties);
+
+			inlineContent = new DefaultInlineContentEvaluator(inlineContentProperties);
 		}
 	}
 }

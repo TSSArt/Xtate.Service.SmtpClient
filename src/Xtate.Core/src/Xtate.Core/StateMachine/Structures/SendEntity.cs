@@ -57,7 +57,7 @@ namespace Xtate
 			NameList = source.NameList;
 		}
 
-		bool IVisitorEntity<SendEntity, ISend>.RefEquals(in SendEntity other) =>
+		bool IVisitorEntity<SendEntity, ISend>.RefEquals(ref SendEntity other) =>
 				DelayMs == other.DelayMs &&
 				Parameters == other.Parameters &&
 				NameList == other.NameList &&

@@ -26,7 +26,7 @@
 			Source = source.Source;
 		}
 
-		bool IVisitorEntity<ScriptEntity, IScript>.RefEquals(in ScriptEntity other) =>
+		bool IVisitorEntity<ScriptEntity, IScript>.RefEquals(ref ScriptEntity other) =>
 				ReferenceEquals(Content, other.Content) &&
 				ReferenceEquals(Source, other.Source);
 

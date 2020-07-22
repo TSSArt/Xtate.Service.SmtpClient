@@ -1,14 +1,111 @@
 ﻿using System;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
-using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Moq;
 
 namespace Xtate.Core.Test.Legacy
 {
+	public class Evaluator : IExternalScriptExpression, IIntegerEvaluator, IStringEvaluator, IExecEvaluator, IArrayEvaluator, IObjectEvaluator, IBooleanEvaluator, ILocationEvaluator, IValueExpression,
+							 ILocationExpression, IConditionExpression, IScriptExpression
+	{
+		public Evaluator(string? expression) => Expression = expression;
+
+		public Evaluator(Uri? entityUri) => Uri = entityUri;
+
+	#region Interface IArrayEvaluator
+
+		public ValueTask<IObject[]> EvaluateArray(IExecutionContext executionContext, CancellationToken token) => new ValueTask<IObject[]>(new IObject[0]);
+
+	#endregion
+
+	#region Interface IBooleanEvaluator
+
+		public ValueTask<bool> EvaluateBoolean(IExecutionContext executionContext, CancellationToken token) => new ValueTask<bool>(false);
+
+	#endregion
+
+	#region Interface IExecEvaluator
+
+		public ValueTask Execute(IExecutionContext executionContext, CancellationToken token) => default;
+
+	#endregion
+
+	#region Interface IExternalScriptExpression
+
+		public Uri? Uri { get; }
+
+	#endregion
+
+	#region Interface IIntegerEvaluator
+
+		public ValueTask<int> EvaluateInteger(IExecutionContext executionContext, CancellationToken token) => new ValueTask<int>(0);
+
+	#endregion
+
+	#region Interface ILocationEvaluator
+
+		public void DeclareLocalVariable(IExecutionContext executionContext) { }
+
+		public ValueTask SetValue(IObject value, IExecutionContext executionContext, CancellationToken token) => default;
+
+		public ValueTask<IObject> GetValue(IExecutionContext executionContext, CancellationToken token) => new ValueTask<IObject>((IObject) null!);
+
+		public string GetName(IExecutionContext executionContext) => "?";
+
+	#endregion
+
+	#region Interface IObjectEvaluator
+
+		public ValueTask<IObject> EvaluateObject(IExecutionContext executionContext, CancellationToken token) => new ValueTask<IObject>((IObject) null!);
+
+	#endregion
+
+	#region Interface IStringEvaluator
+
+		public ValueTask<string> EvaluateString(IExecutionContext executionContext, CancellationToken token) => new ValueTask<string>("");
+
+	#endregion
+
+	#region Interface IValueExpression
+
+		public string? Expression { get; }
+
+	#endregion
+	}
+
+	public class TestDataModelHandler : DataModelHandlerBase
+	{
+		public TestDataModelHandler() : base(DefaultErrorProcessor.Instance) { }
+
+		protected override void Visit(ref IValueExpression expression)
+		{
+			expression = new Evaluator(expression.Expression);
+		}
+
+		protected override void Visit(ref ILocationExpression expression)
+		{
+			expression = new Evaluator(expression.Expression);
+		}
+
+		protected override void Visit(ref IConditionExpression entity)
+		{
+			entity = new Evaluator(entity.Expression);
+		}
+
+		protected override void Visit(ref IScriptExpression entity)
+		{
+			entity = new Evaluator(entity.Expression);
+		}
+
+		protected override void Visit(ref IExternalScriptExpression entity)
+		{
+			entity = new Evaluator(entity.Uri);
+		}
+	}
+
 	[TestClass]
-	[Ignore]
 	public class InterpreterModelPersistenceTest
 	{
 		private IStateMachine     _allStateMachine  = default!;
@@ -21,12 +118,11 @@ namespace Xtate.Core.Test.Legacy
 
 			var xmlReader = XmlReader.Create(stream);
 
-			var director = new ScxmlDirector(xmlReader, BuilderFactory.Instance, DefaultErrorProcessor.Instance);
+			var director = new ScxmlDirector(xmlReader, BuilderFactory.Instance, DefaultErrorProcessor.Instance, namespaceResolver: null);
 
 			_allStateMachine = director.ConstructStateMachine(StateMachineValidator.Instance);
 
-			var dmHandler = new Mock<IDataModelHandler>();
-			_dataModelHandler = dmHandler.Object;
+			_dataModelHandler = new TestDataModelHandler();
 		}
 
 		[TestMethod]

@@ -175,7 +175,7 @@ namespace Xtate
 					var name = reader.GetString();
 					var value = JsonSerializer.Deserialize<DataModelValue>(ref reader, options);
 
-					obj[name] = value;
+					obj.Add(name, value);
 
 					reader.Read();
 				}
@@ -194,18 +194,20 @@ namespace Xtate
 
 				writer.WriteStartObject();
 
-				foreach (var name in obj.Properties)
+				foreach (var pair in obj)
 				{
-					var value = obj[name];
-					if (!value.IsUndefined())
+					if (!string.IsNullOrEmpty(pair.Key))
 					{
-						writer.WritePropertyName(name);
-						JsonSerializer.Serialize(writer, value, options);
-					}
-					else if ((_options & DataModelConverterOptions.UndefinedToSkipOrNull) == DataModelConverterOptions.UndefinedToNull)
-					{
-						writer.WritePropertyName(name);
-						writer.WriteNullValue();
+						if (!pair.Value.IsUndefined())
+						{
+							writer.WritePropertyName(pair.Key);
+							JsonSerializer.Serialize(writer, pair.Value, options);
+						}
+						else if ((_options & DataModelConverterOptions.UndefinedToSkipOrNull) == DataModelConverterOptions.UndefinedToNull)
+						{
+							writer.WritePropertyName(pair.Key);
+							writer.WriteNullValue();
+						}
 					}
 				}
 
@@ -245,7 +247,7 @@ namespace Xtate
 			{
 				writer.WriteStartArray();
 
-				var arrayLength = array.Length;
+				var arrayLength = array.Count;
 				for (var i = 0; i < arrayLength; i ++)
 				{
 					var value = array[i];

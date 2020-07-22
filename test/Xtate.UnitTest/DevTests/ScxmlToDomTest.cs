@@ -10,8 +10,12 @@ namespace Xtate.Test
 		private static IStateMachine GetStateMachine(string scxml)
 		{
 			using var textReader = new StringReader(scxml);
-			using var reader = XmlReader.Create(textReader);
-			return new ScxmlDirector(reader, BuilderFactory.Instance, DefaultErrorProcessor.Instance).ConstructStateMachine(StateMachineValidator.Instance);
+
+			XmlNameTable nt = new NameTable();
+			var xmlNamespaceManager = new XmlNamespaceManager(nt);
+			using var xmlReader = XmlReader.Create(textReader, settings: null, new XmlParserContext(nt, xmlNamespaceManager, xmlLang: default, xmlSpace: default));
+
+			return new ScxmlDirector(xmlReader, BuilderFactory.Instance, DefaultErrorProcessor.Instance, xmlNamespaceManager).ConstructStateMachine(StateMachineValidator.Instance);
 		}
 
 		private static IStateMachine GetStateMachineWithRoot(string xml) => GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0'>" + xml + "</scxml>");
@@ -180,7 +184,7 @@ namespace Xtate.Test
 
 			Assert.AreEqual(expected: "b", sm.DataModel.Data[1].Id);
 			Assert.IsNull(sm.DataModel.Data[1].Source);
-			Assert.AreEqual(expected: "", sm.DataModel.Data[1].InlineContent);
+			Assert.AreEqual(expected: "", sm.DataModel.Data[1].InlineContent?.Value);
 
 			Assert.AreEqual(expected: "c", sm.DataModel.Data[2].Id);
 			Assert.AreEqual(expected: "c-src", sm.DataModel.Data[2].Source!.Uri!.ToString());
@@ -192,7 +196,7 @@ namespace Xtate.Test
 
 			Assert.AreEqual(expected: "e", sm.DataModel.Data[4].Id);
 			Assert.IsNull(sm.DataModel.Data[4].Source);
-			Assert.AreEqual(expected: "e-body", sm.DataModel.Data[4].InlineContent);
+			Assert.AreEqual(expected: "e-body", sm.DataModel.Data[4].InlineContent?.Value);
 		}
 
 		[TestMethod]

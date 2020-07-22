@@ -6,7 +6,6 @@ namespace Xtate.Test.DevTests
 	public class StartStateMachineActionTest
 	{
 		[TestMethod]
-		[Ignore]
 		public void RunStateMachineTest()
 		{
 			// arrange

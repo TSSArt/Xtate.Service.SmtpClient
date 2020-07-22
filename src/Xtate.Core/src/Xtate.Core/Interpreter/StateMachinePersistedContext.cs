@@ -7,7 +7,7 @@ namespace Xtate
 	internal sealed class StateMachinePersistedContext : StateMachineContext, IPersistenceContext
 	{
 		private readonly OrderedSetPersistingController<StateEntityNode> _configurationController;
-		private readonly DataModelObjectPersistingController             _dataModelObjectPersistingController;
+		private readonly DataModelListPersistingController               _dataModelPersistingController;
 		private readonly DataModelReferenceTracker                       _dataModelReferenceTracker;
 		private readonly KeyListPersistingController<StateEntityNode>    _historyValuePersistingController;
 		private readonly EntityQueuePersistingController<IEvent>         _internalQueuePersistingController;
@@ -28,7 +28,7 @@ namespace Xtate
 			_configurationController = new OrderedSetPersistingController<StateEntityNode>(bucket.Nested(StorageSection.Configuration), Configuration, entityMap);
 			_statesToInvokeController = new OrderedSetPersistingController<StateEntityNode>(bucket.Nested(StorageSection.StatesToInvoke), StatesToInvoke, entityMap);
 			_dataModelReferenceTracker = new DataModelReferenceTracker(bucket.Nested(StorageSection.DataModelReferences));
-			_dataModelObjectPersistingController = new DataModelObjectPersistingController(bucket.Nested(StorageSection.DataModel), _dataModelReferenceTracker, DataModel);
+			_dataModelPersistingController = new DataModelListPersistingController(bucket.Nested(StorageSection.DataModel), _dataModelReferenceTracker, DataModel);
 			_historyValuePersistingController = new KeyListPersistingController<StateEntityNode>(bucket.Nested(StorageSection.HistoryValue), HistoryValue, entityMap);
 			_internalQueuePersistingController = new EntityQueuePersistingController<IEvent>(bucket.Nested(StorageSection.InternalQueue), InternalQueue, EventCreator);
 			_state = bucket.Nested(StorageSection.StateBag);
@@ -67,7 +67,7 @@ namespace Xtate
 
 			_internalQueuePersistingController.Dispose();
 			_historyValuePersistingController.Dispose();
-			_dataModelObjectPersistingController.Dispose();
+			_dataModelPersistingController.Dispose();
 			_dataModelReferenceTracker.Dispose();
 			_statesToInvokeController.Dispose();
 			_configurationController.Dispose();

@@ -6,6 +6,6 @@
 		void  SetId(string id);
 		void  SetSource(IExternalDataExpression source);
 		void  SetExpression(IValueExpression expression);
-		void  SetInlineContent(string inlineContent);
+		void  SetInlineContent(IInlineContent inlineContent);
 	}
 }

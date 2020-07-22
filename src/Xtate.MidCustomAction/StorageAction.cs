@@ -33,14 +33,6 @@ namespace Xtate
 			//<mid:storage location="password" operation="set" variable="password" />
 		}
 
-		internal static void FillXmlNameTable(XmlNameTable xmlNameTable)
-		{
-			xmlNameTable.Add(Location);
-			xmlNameTable.Add(Operation);
-			xmlNameTable.Add(Template);
-			xmlNameTable.Add(Rule);
-		}
-
 		protected override DataModelValue Evaluate(IReadOnlyDictionary<string, DataModelValue> arguments)
 		{
 			if (arguments == null) throw new ArgumentNullException(nameof(arguments));

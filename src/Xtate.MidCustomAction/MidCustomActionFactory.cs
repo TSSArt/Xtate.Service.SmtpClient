@@ -1,6 +1,4 @@
-﻿using System;
-using System.Xml;
-using Xtate.Annotations;
+﻿using Xtate.Annotations;
 
 namespace Xtate
 {
@@ -13,15 +11,6 @@ namespace Xtate
 		private MidCustomActionFactory()
 		{
 			Register(name: "storage", (xmlReader, context) => new StorageAction(xmlReader, context));
-		}
-
-		protected override void FillXmlNameTable(XmlNameTable xmlNameTable)
-		{
-			if (xmlNameTable == null) throw new ArgumentNullException(nameof(xmlNameTable));
-
-			base.FillXmlNameTable(xmlNameTable);
-
-			StorageAction.FillXmlNameTable(xmlNameTable);
 		}
 	}
 }
