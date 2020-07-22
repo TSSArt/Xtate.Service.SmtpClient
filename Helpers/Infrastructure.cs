@@ -103,5 +103,7 @@ namespace Xtate
 
 			throw new NotSupportedException();
 		}
+
+		public static void IgnoredException(Exception _) { }
 	}
 }

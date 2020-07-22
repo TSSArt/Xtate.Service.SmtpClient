@@ -24,7 +24,7 @@
 			Expression = source.Expression;
 		}
 
-		bool IVisitorEntity<ValueExpression, IValueExpression>.RefEquals(in ValueExpression other) => ReferenceEquals(Expression, other.Expression);
+		bool IVisitorEntity<ValueExpression, IValueExpression>.RefEquals(ref ValueExpression other) => ReferenceEquals(Expression, other.Expression);
 
 	#endregion
 	}

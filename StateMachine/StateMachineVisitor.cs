@@ -69,7 +69,7 @@ namespace Xtate
 
 			public void Update(ref TIEntity entity)
 			{
-				if (ReferenceEquals(_entity, entity) && !_original.RefEquals(in Properties))
+				if (ReferenceEquals(_entity, entity) && !_original.RefEquals(ref Properties))
 				{
 					entity = Properties;
 				}
@@ -376,6 +376,13 @@ namespace Xtate
 		protected virtual void Visit(ref IContentBody entity)
 		{
 			var data = new VisitData<ContentBody, IContentBody>(entity);
+			Build(ref entity, ref data.Properties);
+			data.Update(ref entity);
+		}
+
+		protected virtual void Visit(ref IInlineContent entity)
+		{
+			var data = new VisitData<InlineContent, IInlineContent>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
@@ -810,6 +817,10 @@ namespace Xtate
 			var expression = properties.Expression;
 			VisitWrapper(ref expression);
 			properties.Expression = expression;
+
+			var inlineContent = properties.InlineContent;
+			VisitWrapper(ref inlineContent);
+			properties.InlineContent = inlineContent;
 		}
 
 		protected virtual void Build(ref ICancel entity, ref CancelEntity properties)
@@ -929,6 +940,10 @@ namespace Xtate
 			VisitWrapper(ref expression);
 			properties.Expression = expression;
 
+			var inlineContent = properties.InlineContent;
+			VisitWrapper(ref inlineContent);
+			properties.InlineContent = inlineContent;
+
 			var source = properties.Source;
 			VisitWrapper(ref source);
 			properties.Source = source;
@@ -1022,6 +1037,8 @@ namespace Xtate
 		protected virtual void Build(ref IExternalDataExpression entity, ref ExternalDataExpression properties) { }
 
 		protected virtual void Build(ref IContentBody entity, ref ContentBody properties) { }
+
+		protected virtual void Build(ref IInlineContent entity, ref InlineContent properties) { }
 
 	#endregion
 
@@ -1328,6 +1345,14 @@ namespace Xtate
 		}
 
 		private void VisitWrapper(ref IContentBody? entity)
+		{
+			if (entity == null) return;
+			Enter(entity);
+			Visit(ref entity);
+			Exit();
+		}
+
+		private void VisitWrapper(ref IInlineContent? entity)
 		{
 			if (entity == null) return;
 			Enter(entity);

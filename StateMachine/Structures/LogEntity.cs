@@ -26,7 +26,7 @@
 			Label = source.Label;
 		}
 
-		bool IVisitorEntity<LogEntity, ILog>.RefEquals(in LogEntity other) =>
+		bool IVisitorEntity<LogEntity, ILog>.RefEquals(ref LogEntity other) =>
 				ReferenceEquals(Expression, other.Expression) &&
 				ReferenceEquals(Label, other.Label);
 

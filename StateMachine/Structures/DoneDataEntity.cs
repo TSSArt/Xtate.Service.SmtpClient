@@ -28,7 +28,7 @@ namespace Xtate
 			Parameters = source.Parameters;
 		}
 
-		bool IVisitorEntity<DoneDataEntity, IDoneData>.RefEquals(in DoneDataEntity other) =>
+		bool IVisitorEntity<DoneDataEntity, IDoneData>.RefEquals(ref DoneDataEntity other) =>
 				ReferenceEquals(Content, other.Content) &&
 				Parameters == other.Parameters;
 

@@ -4,6 +4,8 @@ namespace Xtate
 {
 	public interface IDataModelHandler
 	{
+		bool CaseInsensitive { get; }
+
 		void Process(ref IExecutableEntity executableEntity);
 
 		void Process(ref IDataModel dataModel);

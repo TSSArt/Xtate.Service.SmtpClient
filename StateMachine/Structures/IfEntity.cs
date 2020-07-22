@@ -28,7 +28,7 @@ namespace Xtate
 			Condition = source.Condition!;
 		}
 
-		bool IVisitorEntity<IfEntity, IIf>.RefEquals(in IfEntity other) =>
+		bool IVisitorEntity<IfEntity, IIf>.RefEquals(ref IfEntity other) =>
 				Action == other.Action &&
 				ReferenceEquals(Condition, other.Condition);
 

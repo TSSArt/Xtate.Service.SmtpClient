@@ -105,7 +105,9 @@ namespace Xtate
 								  Ancestor = new EntityData(bucket),
 								  Location = RestoreLocationExpression(bucket.Nested(Key.Location)),
 								  Expression = RestoreValueExpression(bucket.Nested(Key.Expression)),
-								  InlineContent = bucket.GetString(Key.InlineContent)
+								  Type = bucket.GetString(Key.Type),
+								  Attribute = bucket.GetString(Key.Attribute),
+								  InlineContent = bucket.TryGet(Key.InlineContent, out string? content) ? new InlineContent { Value = content } : (IInlineContent?) null
 						  }
 						: (IAssign?) null;
 
@@ -178,7 +180,7 @@ namespace Xtate
 								  Id = bucket.GetString(Key.Id),
 								  Source = RestoreExternalDataExpression(bucket.Nested(Key.Source)),
 								  Expression = RestoreValueExpression(bucket.Nested(Key.Expression)),
-								  InlineContent = bucket.GetString(Key.InlineContent)
+								  InlineContent = bucket.TryGet(Key.InlineContent, out string? content) ? new InlineContent { Value = content } : (IInlineContent?) null
 						  }
 						: (IData?) null;
 

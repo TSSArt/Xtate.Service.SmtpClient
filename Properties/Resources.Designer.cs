@@ -268,6 +268,15 @@ namespace Xtate {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to attr attribute should no be empty..
+        /// </summary>
+        internal static string ErrorMessage_attr_attribute_should_no_be_empty {
+            get {
+                return ResourceManager.GetString("ErrorMessage_attr_attribute_should_no_be_empty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to SendId or SendIdExpression should be specified in Cancel element..
         /// </summary>
         internal static string ErrorMessage_CancelItemSendIdAndExpressionMissed {
@@ -695,6 +704,15 @@ namespace Xtate {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Scripting not supported in XPATH data model..
+        /// </summary>
+        internal static string ErrorMessage_Scripting_not_supported_in_XPATH_data_model {
+            get {
+                return ResourceManager.GetString("ErrorMessage_Scripting_not_supported_in_XPATH_data_model", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Scripting not supported in &apos;runtime&apos; data model..
         /// </summary>
         internal static string ErrorMessage_ScriptingNotSupportedInRuntimeDataModel {
@@ -960,6 +978,33 @@ namespace Xtate {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Capacity can&apos;t be less then properties count..
+        /// </summary>
+        internal static string Exception_Capacity_can_t_be_less_then_properties_count {
+            get {
+                return ResourceManager.GetString("Exception_Capacity_can_t_be_less_then_properties_count", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Capacity can&apos;t be less then size of list..
+        /// </summary>
+        internal static string Exception_Capacity_can_t_be_less_then_size_of_array {
+            get {
+                return ResourceManager.GetString("Exception_Capacity_can_t_be_less_then_size_of_array", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Capcity should not be negative..
+        /// </summary>
+        internal static string Exception_Capcity_should_not_be_negative {
+            get {
+                return ResourceManager.GetString("Exception_Capcity_should_not_be_negative", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Channel can&apos;t consume previously persisted object..
         /// </summary>
         internal static string Exception_Channel_can_t_consume_previously_persisted_object {
@@ -1014,6 +1059,24 @@ namespace Xtate {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to DataModelValue is not MetadataModelElement..
+        /// </summary>
+        internal static string Exception_DataModelValue_is_not_DataModelElement {
+            get {
+                return ResourceManager.GetString("Exception_DataModelValue_is_not_DataModelElement", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to DataModelValue is not DataModelList..
+        /// </summary>
+        internal static string Exception_DataModelValue_is_not_DataModelList {
+            get {
+                return ResourceManager.GetString("Exception_DataModelValue_is_not_DataModelList", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to DataModelValue is not DataModelObject..
         /// </summary>
         internal static string Exception_DataModelValue_is_not_DataModelObject {
@@ -1059,11 +1122,29 @@ namespace Xtate {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Destination list is not long enough to copy all the items in the collection. Check list index and length..
+        /// </summary>
+        internal static string Exception_Destination_array_is_not_long_enough {
+            get {
+                return ResourceManager.GetString("Exception_Destination_array_is_not_long_enough", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error on event consumer side..
         /// </summary>
         internal static string Exception_Error_on_event_consumer_side {
             get {
                 return ResourceManager.GetString("Exception_Error_on_event_consumer_side", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error on parsing XPath expression..
+        /// </summary>
+        internal static string Exception_Error_on_parsing_XPath_expression {
+            get {
+                return ResourceManager.GetString("Exception_Error_on_parsing_XPath_expression", resourceCulture);
             }
         }
         
@@ -1146,6 +1227,24 @@ namespace Xtate {
         internal static string Exception_Incorrect_encoding {
             get {
                 return ResourceManager.GetString("Exception_Incorrect_encoding", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Index should be non-negative and less then array size..
+        /// </summary>
+        internal static string Exception_Index_should_be_non_negative_and_less_then_aarray_size {
+            get {
+                return ResourceManager.GetString("Exception_Index_should_be_non_negative_and_less_then_aarray_size", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Index value must be non-negative integer..
+        /// </summary>
+        internal static string Exception_Index_value_must_be_non_negative_integer {
+            get {
+                return ResourceManager.GetString("Exception_Index_value_must_be_non_negative_integer", resourceCulture);
             }
         }
         
@@ -1376,6 +1475,42 @@ namespace Xtate {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Result of XPath expression can&apos;t be identified..
+        /// </summary>
+        internal static string Exception_Result_of_XPath_expression_can_t_be_identified {
+            get {
+                return ResourceManager.GetString("Exception_Result_of_XPath_expression_can_t_be_identified", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Result of XPath expression should be boolean value..
+        /// </summary>
+        internal static string Exception_Result_of_XPath_expression_should_be_boolean_value {
+            get {
+                return ResourceManager.GetString("Exception_Result_of_XPath_expression_should_be_boolean_value", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Result of XPath expression should be element..
+        /// </summary>
+        internal static string Exception_Result_of_XPath_expression_should_be_element {
+            get {
+                return ResourceManager.GetString("Exception_Result_of_XPath_expression_should_be_element", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Result of XPath expression should be string value..
+        /// </summary>
+        internal static string Exception_Result_of_XPath_expression_should_be_string_value {
+            get {
+                return ResourceManager.GetString("Exception_Result_of_XPath_expression_should_be_string_value", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Root path can be set only before visiting..
         /// </summary>
         internal static string Exception_Root_path_can_be_set_only_before_visiting {
@@ -1547,6 +1682,15 @@ namespace Xtate {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unexpected type attribute value: {0}..
+        /// </summary>
+        internal static string Exception_Unexpected_type_attribute_value {
+            get {
+                return ResourceManager.GetString("Exception_Unexpected_type_attribute_value", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unexpected TypeInfo value.
         ///.
         /// </summary>
@@ -1598,6 +1742,24 @@ namespace Xtate {
         internal static string Exception_Unknown_State_Entity_type {
             get {
                 return ResourceManager.GetString("Exception_Unknown_State_Entity_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown XPath function. Namespace:&apos;{0}&apos;, Name:&apos;{1}&apos;..
+        /// </summary>
+        internal static string Exception_Unknown_XPath_function {
+            get {
+                return ResourceManager.GetString("Exception_Unknown_XPath_function", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown XPath variable. Namespace:&apos;{0}&apos;, Name:&apos;{1}&apos;..
+        /// </summary>
+        internal static string Exception_Unknown_XPath_variable {
+            get {
+                return ResourceManager.GetString("Exception_Unknown_XPath_variable", resourceCulture);
             }
         }
         
@@ -1665,6 +1827,15 @@ namespace Xtate {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Value Expression must be present..
+        /// </summary>
+        internal static string Exception_Value_Expression_must_be_present {
+            get {
+                return ResourceManager.GetString("Exception_Value_Expression_must_be_present", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Value is not SCXML..
         /// </summary>
         internal static string Exception_Value_is_not_SCXML {
@@ -1688,6 +1859,15 @@ namespace Xtate {
         internal static string Exception_Value_is_not_StateMachine {
             get {
                 return ResourceManager.GetString("Exception_Value_is_not_StateMachine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Value must be non negative integer..
+        /// </summary>
+        internal static string Exception_Value_must_be_non_negative_integer {
+            get {
+                return ResourceManager.GetString("Exception_Value_must_be_non_negative_integer", resourceCulture);
             }
         }
         

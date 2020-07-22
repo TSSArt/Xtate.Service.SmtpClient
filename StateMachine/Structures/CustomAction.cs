@@ -32,7 +32,7 @@ namespace Xtate
 			Values = source.Values;
 		}
 
-		bool IVisitorEntity<CustomAction, ICustomAction>.RefEquals(in CustomAction other) =>
+		bool IVisitorEntity<CustomAction, ICustomAction>.RefEquals(ref CustomAction other) =>
 				ReferenceEquals(Xml, other.Xml) &&
 				Locations == other.Locations &&
 				Values == other.Values;

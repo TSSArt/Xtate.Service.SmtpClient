@@ -26,7 +26,7 @@ namespace Xtate
 			Uri = source.Uri;
 		}
 
-		bool IVisitorEntity<ExternalDataExpression, IExternalDataExpression>.RefEquals(in ExternalDataExpression other) => ReferenceEquals(Uri, other.Uri);
+		bool IVisitorEntity<ExternalDataExpression, IExternalDataExpression>.RefEquals(ref ExternalDataExpression other) => ReferenceEquals(Uri, other.Uri);
 
 	#endregion
 	}

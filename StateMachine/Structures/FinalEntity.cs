@@ -39,7 +39,7 @@ namespace Xtate
 			DoneData = source.DoneData;
 		}
 
-		bool IVisitorEntity<FinalEntity, IFinal>.RefEquals(in FinalEntity other) =>
+		bool IVisitorEntity<FinalEntity, IFinal>.RefEquals(ref FinalEntity other) =>
 				OnExit == other.OnExit &&
 				OnEntry == other.OnEntry &&
 				ReferenceEquals(Id, other.Id) &&

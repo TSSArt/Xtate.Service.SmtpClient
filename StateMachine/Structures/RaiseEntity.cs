@@ -24,7 +24,7 @@
 			OutgoingEvent = source.OutgoingEvent;
 		}
 
-		bool IVisitorEntity<RaiseEntity, IRaise>.RefEquals(in RaiseEntity other) => ReferenceEquals(OutgoingEvent, other.OutgoingEvent);
+		bool IVisitorEntity<RaiseEntity, IRaise>.RefEquals(ref RaiseEntity other) => ReferenceEquals(OutgoingEvent, other.OutgoingEvent);
 
 	#endregion
 	}

@@ -24,8 +24,6 @@ namespace Xtate
 		private const string StateStorageKey                  = "state";
 		private const string StateMachineDefinitionStorageKey = "smd";
 
-		private static readonly DataModelValue InterpreterObject = new DataModelValue(new LazyValue(CreateInterpreterObject));
-
 		private readonly ImmutableDictionary<object, object>      _contextRuntimeItems;
 		private readonly ImmutableArray<ICustomActionFactory>     _customActionProviders;
 		private readonly ImmutableArray<IDataModelHandlerFactory> _dataModelHandlerFactories;
@@ -71,6 +69,7 @@ namespace Xtate
 			_stateMachineValidator = StateMachineValidator.Instance;
 			_dataModelVars = ImmutableDictionary<string, string>.Empty;
 			_unhandledErrorBehaviour = options.UnhandledErrorBehaviour;
+			Interpreter = new DataModelValue(new LazyValue(CreateInterpreterObject));
 			DataModelHandler = new DataModelValue(new LazyValue(CreateDataModelHandlerObject));
 			Configuration = new DataModelValue(options.Configuration?.AsConstant() ?? DataModelObject.Empty);
 			Host = new DataModelValue(options.Host?.AsConstant() ?? DataModelObject.Empty);
@@ -102,13 +101,15 @@ namespace Xtate
 
 		public DataModelValue Arguments { get; }
 
-		public DataModelValue Interpreter => InterpreterObject;
+		public DataModelValue Interpreter { get; }
 
 		public DataModelValue Configuration { get; }
 
 		public DataModelValue Host { get; }
 
 		public DataModelValue DataModelHandler { get; }
+
+		public bool CaseInsensitive => _dataModelHandler.CaseInsensitive;
 
 	#endregion
 
@@ -146,10 +147,16 @@ namespace Xtate
 			_stateMachineValidator.Validate(stateMachine, wrapperErrorProcessor);
 
 			var interpreterModelBuilder = new InterpreterModelBuilder(stateMachine, _dataModelHandler, _customActionProviders, wrapperErrorProcessor);
-			interpreterModel = await interpreterModelBuilder.Build(_resourceLoaders, _stopToken).ConfigureAwait(false);
 
-			_errorProcessor.ThrowIfErrors();
-			wrapperErrorProcessor.ThrowIfErrors();
+			try
+			{
+				interpreterModel = await interpreterModelBuilder.Build(_resourceLoaders, _stopToken).ConfigureAwait(false);
+			}
+			finally
+			{
+				_errorProcessor.ThrowIfErrors();
+				wrapperErrorProcessor.ThrowIfErrors();
+			}
 
 			if (IsPersistingEnabled)
 			{
@@ -552,7 +559,8 @@ namespace Xtate
 
 			LogProcessingEvent(internalEvent);
 
-			_context.DataModel.SetInternal(property: @"_event", new DataModelDescriptor(DataConverter.FromEvent(internalEvent), DataModelAccess.ReadOnly));
+			var eventObject = DataConverter.FromEvent(internalEvent, _dataModelHandler.CaseInsensitive);
+			_context.DataModel.SetInternal(key: @"_event", _dataModelHandler.CaseInsensitive, eventObject, DataModelAccess.ReadOnly);
 
 			var transitions = await SelectTransitions(internalEvent).ConfigureAwait(false);
 
@@ -683,7 +691,8 @@ namespace Xtate
 
 			LogProcessingEvent(externalEvent);
 
-			_context.DataModel.SetInternal(property: @"_event", new DataModelDescriptor(DataConverter.FromEvent(externalEvent), DataModelAccess.ReadOnly));
+			var eventObject = DataConverter.FromEvent(externalEvent, _dataModelHandler.CaseInsensitive);
+			_context.DataModel.SetInternal(key: @"_event", _dataModelHandler.CaseInsensitive, eventObject, DataModelAccess.ReadOnly);
 
 			foreach (var state in _context.Configuration)
 			{
@@ -1384,7 +1393,7 @@ namespace Xtate
 					_ => Infrastructure.UnexpectedValue<ImmutableArray<IIdentifier>>()
 			};
 
-			var eventObject = new EventObject(EventType.Platform, nameParts, DataConverter.FromException(exception), sendId, invokeId: default, exception);
+			var eventObject = new EventObject(EventType.Platform, nameParts, DataConverter.FromException(exception, _dataModelHandler.CaseInsensitive), sendId, invokeId: default, exception);
 
 			_context.InternalQueue.Enqueue(eventObject);
 
@@ -1488,9 +1497,11 @@ namespace Xtate
 			}
 
 			var dictionary = Arguments.AsObject();
+			var caseInsensitive = _dataModelHandler.CaseInsensitive;
+
 			foreach (var node in rootDataModel.Data)
 			{
-				await InitializeData(node, dictionary[node.Id]).ConfigureAwait(false);
+				await InitializeData(node, dictionary[node.Id, caseInsensitive]).ConfigureAwait(false);
 			}
 		}
 
@@ -1506,7 +1517,7 @@ namespace Xtate
 		{
 			try
 			{
-				_context.DataModel[data.Id] = await GetValue(data, overrideValue).ConfigureAwait(false);
+				_context.DataModel[data.Id, _dataModelHandler.CaseInsensitive] = await GetValue(data, overrideValue).ConfigureAwait(false);
 			}
 			catch (Exception ex) when (IsError(ex))
 			{
@@ -1535,9 +1546,11 @@ namespace Xtate
 				return DataModelValue.FromObject(obj.ToObject());
 			}
 
-			if (data.InlineContent != null)
+			if (data.InlineContentEvaluator != null)
 			{
-				return data.InlineContent;
+				var obj = await data.InlineContentEvaluator.EvaluateObject(_context.ExecutionContext, _stopToken).ConfigureAwait(false);
+
+				return DataModelValue.FromObject(obj.ToObject());
 			}
 
 			return default;
@@ -1579,15 +1592,16 @@ namespace Xtate
 			return context;
 		}
 
-		private static DataModelValue CreateInterpreterObject()
+		private DataModelValue CreateInterpreterObject()
 		{
-			var interpreterObject = new DataModelObject(capacity: 2);
-
 			var type = typeof(StateMachineInterpreter);
 			var version = type.Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 
-			interpreterObject[@"name"] = new DataModelValue(type.FullName);
-			interpreterObject[@"version"] = new DataModelValue(version);
+			var interpreterObject = new DataModelObject(isReadOnly: false, _dataModelHandler.CaseInsensitive)
+									{
+											{ @"name", type.FullName },
+											{ @"version", version }
+									};
 
 			interpreterObject.MakeDeepConstant();
 
@@ -1596,15 +1610,16 @@ namespace Xtate
 
 		private DataModelValue CreateDataModelHandlerObject()
 		{
-			var dataModelHandlerObject = new DataModelObject(capacity: 4);
-
 			var type = _dataModelHandler.GetType();
 			var version = type.Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
 
-			dataModelHandlerObject[@"name"] = new DataModelValue(type.FullName);
-			dataModelHandlerObject[@"assembly"] = new DataModelValue(type.Assembly.GetName().Name);
-			dataModelHandlerObject[@"version"] = new DataModelValue(version);
-			dataModelHandlerObject[@"vars"] = DataModelValue.FromObject(_dataModelVars);
+			var dataModelHandlerObject = new DataModelObject(isReadOnly: false, _dataModelHandler.CaseInsensitive)
+										 {
+												 { @"name", type.FullName },
+												 { @"assembly", type.Assembly.GetName().Name },
+												 { @"version", version },
+												 { @"vars", DataModelValue.FromObject(_dataModelVars) }
+										 };
 
 			dataModelHandlerObject.MakeDeepConstant();
 
