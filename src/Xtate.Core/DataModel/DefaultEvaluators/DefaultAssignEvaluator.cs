@@ -18,10 +18,12 @@ namespace Xtate
 
 			LocationEvaluator = assign.Location.As<ILocationEvaluator>();
 			ExpressionEvaluator = assign.Expression?.As<IObjectEvaluator>();
+			InlineContentEvaluator = assign.InlineContent?.As<IObjectEvaluator>();
 		}
 
-		public ILocationEvaluator LocationEvaluator   { get; }
-		public IObjectEvaluator?  ExpressionEvaluator { get; }
+		public ILocationEvaluator LocationEvaluator      { get; }
+		public IObjectEvaluator?  ExpressionEvaluator    { get; }
+		public IObjectEvaluator?  InlineContentEvaluator { get; }
 
 	#region Interface IAncestorProvider
 
@@ -33,7 +35,9 @@ namespace Xtate
 
 		public ILocationExpression Location      => _assign.Location!;
 		public IValueExpression?   Expression    => _assign.Expression;
-		public string?             InlineContent => _assign.InlineContent;
+		public IInlineContent?     InlineContent => _assign.InlineContent;
+		public string?             Type          => _assign.Type;
+		public string?             Attribute     => _assign.Attribute;
 
 	#endregion
 
@@ -43,24 +47,26 @@ namespace Xtate
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
 
-			IObject value;
-
-			if (ExpressionEvaluator != null)
-			{
-				value = await ExpressionEvaluator.EvaluateObject(executionContext, token).ConfigureAwait(false);
-			}
-			else if (InlineContent != null)
-			{
-				value = new DefaultObject(InlineContent);
-			}
-			else
-			{
-				value = DefaultObject.Null;
-			}
+			var value = await EvaluateRightValue(executionContext, token).ConfigureAwait(false);
 
 			await LocationEvaluator.SetValue(value, executionContext, token).ConfigureAwait(false);
 		}
 
 	#endregion
+
+		protected virtual ValueTask<IObject> EvaluateRightValue(IExecutionContext executionContext, CancellationToken token)
+		{
+			if (ExpressionEvaluator != null)
+			{
+				return ExpressionEvaluator.EvaluateObject(executionContext, token);
+			}
+
+			if (InlineContentEvaluator != null)
+			{
+				return InlineContentEvaluator.EvaluateObject(executionContext, token);
+			}
+
+			return new ValueTask<IObject>(DefaultObject.Null);
+		}
 	}
 }

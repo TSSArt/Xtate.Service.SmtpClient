@@ -9,43 +9,33 @@ using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 using Xtate.Annotations;
 
 namespace Xtate
 {
-	public enum DataModelValueType
-	{
-		Undefined,
-		Null,
-		String,
-		Object,
-		Array,
-		Number,
-		DateTime,
-		Boolean
-	}
-
 	[PublicAPI]
 	[DebuggerTypeProxy(typeof(DebugView))]
 	[DebuggerDisplay(value: "{ToObject()} ({Type})")]
-	public readonly struct DataModelValue : IObject, IEquatable<DataModelValue>, IFormattable, IDynamicMetaObjectProvider, IConvertible
+	[Serializable]
+	public readonly struct DataModelValue : IObject, IEquatable<DataModelValue>, IFormattable, IDynamicMetaObjectProvider, IConvertible, ISerializable
 	{
-		private static readonly object NullValue    = new object();
-		private static readonly object NumberValue  = new object();
-		private static readonly object BooleanValue = new object();
+		private static readonly object NullValue    = new Marker(DataModelValueType.Null);
+		private static readonly object NumberValue  = new Marker(DataModelValueType.Number);
+		private static readonly object BooleanValue = new Marker(DataModelValueType.Boolean);
 
 		public static readonly DataModelValue Null = new DataModelValue((string?) null);
 
 		private readonly long    _int64;
 		private readonly object? _value;
 
-		public DataModelValue(DataModelObject? value)
+		private DataModelValue(SerializationInfo info, StreamingContext context)
 		{
-			_value = value ?? NullValue;
-			_int64 = 0;
+			_int64 = (int) info.GetValue(name: "L", typeof(long));
+			_value = info.GetValue(name: "V", typeof(object));
 		}
 
-		public DataModelValue(DataModelArray? value)
+		public DataModelValue(DataModelList? value)
 		{
 			_value = value ?? NullValue;
 			_int64 = 0;
@@ -279,6 +269,11 @@ namespace Xtate
 
 		public bool Equals(DataModelValue other)
 		{
+			if (ReferenceEquals(_value, other._value) && _int64 == other._int64)
+			{
+				return true;
+			}
+
 			var val = this;
 
 			while (val._value is ILazyValue lazyValue)
@@ -335,33 +330,70 @@ namespace Xtate
 
 	#endregion
 
-		public static implicit operator DataModelValue(DataModelObject? val) => FromDataModelObject(val);
-		public static implicit operator DataModelValue(DataModelArray? val)  => FromDataModelArray(val);
-		public static implicit operator DataModelValue(string? val)          => FromString(val);
-		public static implicit operator DataModelValue(double val)           => FromDouble(val);
-		public static implicit operator DataModelValue(DateTimeOffset val)   => FromDateTimeOffset(val);
-		public static implicit operator DataModelValue(DateTime val)         => FromDateTime(val);
-		public static implicit operator DataModelValue(bool val)             => FromBoolean(val);
+	#region Interface ISerializable
 
-		public static DataModelValue FromDataModelObject(DataModelObject? val) => new DataModelValue(val);
-		public static DataModelValue FromDataModelArray(DataModelArray? val)   => new DataModelValue(val);
-		public static DataModelValue FromString(string? val)                   => new DataModelValue(val);
-		public static DataModelValue FromDouble(double val)                    => new DataModelValue(val);
-		public static DataModelValue FromDateTimeOffset(DateTimeOffset val)    => new DataModelValue(val);
-		public static DataModelValue FromDateTime(DateTime val)                => new DataModelValue(val);
-		public static DataModelValue FromBoolean(bool val)                     => new DataModelValue(val);
-		public static DataModelValue FromLazyValue(ILazyValue val)             => new DataModelValue(val);
+		void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
+		{
+			var val = this;
+
+			while (val._value is ILazyValue lazyValue)
+			{
+				val = lazyValue.Value;
+			}
+
+			info.AddValue(name: "L", val._int64);
+			info.AddValue(name: "V", val._value);
+		}
+
+	#endregion
+
+		public static implicit operator DataModelValue(DataModelObject? val)  => new DataModelValue(val);
+		public static implicit operator DataModelValue(DataModelArray? val)   => new DataModelValue(val);
+		public static implicit operator DataModelValue(DataModelList? val)    => new DataModelValue(val);
+		public static implicit operator DataModelValue(string? val)           => new DataModelValue(val);
+		public static implicit operator DataModelValue(double val)            => new DataModelValue(val);
+		public static implicit operator DataModelValue(DataModelDateTime val) => new DataModelValue(val);
+		public static implicit operator DataModelValue(DateTimeOffset val)    => new DataModelValue(val);
+		public static implicit operator DataModelValue(DateTime val)          => new DataModelValue(val);
+		public static implicit operator DataModelValue(bool val)              => new DataModelValue(val);
+
+		public static DataModelValue FromDataModelObject(DataModelObject? val)    => val;
+		public static DataModelValue FromDataModelArray(DataModelArray? val)      => val;
+		public static DataModelValue FromDataModelList(DataModelList? val)        => val;
+		public static DataModelValue FromString(string? val)                      => val;
+		public static DataModelValue FromDouble(double val)                       => val;
+		public static DataModelValue FromDataModelDateTime(DataModelDateTime val) => val;
+		public static DataModelValue FromDateTimeOffset(DateTimeOffset val)       => val;
+		public static DataModelValue FromDateTime(DateTime val)                   => val;
+		public static DataModelValue FromBoolean(bool val)                        => val;
 
 		public bool IsUndefinedOrNull() => _value == null || _value == NullValue || _value is ILazyValue val && val.Value.IsUndefinedOrNull();
 
 		public bool IsUndefined() => _value == null || _value is ILazyValue val && val.Value.IsUndefined();
+
+		public DataModelList AsList() =>
+				_value switch
+				{
+						DataModelList list => list,
+						ILazyValue val => val.Value.AsList(),
+						_ => throw new ArgumentException(Resources.Exception_DataModelValue_is_not_DataModelList)
+				};
+
+		public DataModelList? AsListOrDefault() =>
+				_value switch
+				{
+						null => null,
+						DataModelList list => list,
+						ILazyValue val => val.Value.AsListOrDefault(),
+						_ => null
+				};
 
 		public DataModelObject AsObject() =>
 				_value switch
 				{
 						DataModelObject obj => obj,
 						ILazyValue val => val.Value.AsObject(),
-						_ => throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_DataModelObject)
+						_ => throw new ArgumentException(Resources.Exception_DataModelValue_is_not_DataModelObject)
 				};
 
 		public DataModelObject? AsNullableObject() =>
@@ -370,12 +402,13 @@ namespace Xtate
 						DataModelObject obj => obj,
 						{ } val when val == NullValue => null,
 						ILazyValue val => val.Value.AsNullableObject(),
-						_ => throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_DataModelObject)
+						_ => throw new ArgumentException(Resources.Exception_DataModelValue_is_not_DataModelObject)
 				};
 
 		public DataModelObject AsObjectOrEmpty() =>
 				_value switch
 				{
+						null => DataModelObject.Empty,
 						DataModelObject obj => obj,
 						ILazyValue val => val.Value.AsObjectOrEmpty(),
 						_ => DataModelObject.Empty
@@ -386,7 +419,7 @@ namespace Xtate
 				{
 						DataModelArray arr => arr,
 						ILazyValue val => val.Value.AsArray(),
-						_ => throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_DataModelArray)
+						_ => throw new ArgumentException(Resources.Exception_DataModelValue_is_not_DataModelArray)
 				};
 
 		public DataModelArray? AsNullableArray() =>
@@ -395,12 +428,13 @@ namespace Xtate
 						DataModelArray arr => arr,
 						{ } val when val == NullValue => null,
 						ILazyValue val => val.Value.AsNullableArray(),
-						_ => throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_DataModelArray)
+						_ => throw new ArgumentException(Resources.Exception_DataModelValue_is_not_DataModelArray)
 				};
 
 		public DataModelArray AsArrayOrEmpty() =>
 				_value switch
 				{
+						null => DataModelArray.Empty,
 						DataModelArray arr => arr,
 						ILazyValue val => val.Value.AsArrayOrEmpty(),
 						_ => DataModelArray.Empty
@@ -411,7 +445,7 @@ namespace Xtate
 				{
 						string str => str,
 						ILazyValue val => val.Value.AsString(),
-						_ => throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_String)
+						_ => throw new ArgumentException(Resources.Exception_DataModelValue_is_not_String)
 				};
 
 		public string? AsNullableString() =>
@@ -420,12 +454,13 @@ namespace Xtate
 						string str => str,
 						{ } val when val == NullValue => null,
 						ILazyValue val => val.Value.AsNullableString(),
-						_ => throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_String)
+						_ => throw new ArgumentException(Resources.Exception_DataModelValue_is_not_String)
 				};
 
 		public string? AsStringOrDefault() =>
 				_value switch
 				{
+						null => null,
 						string str => str,
 						ILazyValue val => val.Value.AsStringOrDefault(),
 						_ => null
@@ -436,7 +471,7 @@ namespace Xtate
 						? BitConverter.Int64BitsToDouble(_int64)
 						: _value is ILazyValue val
 								? val.Value.AsNumber()
-								: throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_Number);
+								: throw new ArgumentException(Resources.Exception_DataModelValue_is_not_Number);
 
 		public double? AsNumberOrDefault() =>
 				_value == NumberValue
@@ -450,7 +485,7 @@ namespace Xtate
 						? _int64 != 0
 						: _value is ILazyValue val
 								? val.Value.AsBoolean()
-								: throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_Boolean);
+								: throw new ArgumentException(Resources.Exception_DataModelValue_is_not_Boolean);
 
 		public bool? AsBooleanOrDefault() =>
 				_value == BooleanValue
@@ -464,12 +499,13 @@ namespace Xtate
 				{
 						DateTimeValue val => val.GetDataModelDateTime(_int64),
 						ILazyValue lazyVal => lazyVal.Value.AsDateTime(),
-						_ => throw new ArgumentException(message: Resources.Exception_DataModelValue_is_not_DateTime)
+						_ => throw new ArgumentException(Resources.Exception_DataModelValue_is_not_DateTime)
 				};
 
 		public DataModelDateTime? AsDateTimeOrDefault() =>
 				_value switch
 				{
+						null => null,
 						DateTimeValue val => val.GetDataModelDateTime(_int64),
 						ILazyValue lazyVal => lazyVal.Value.AsDateTimeOrDefault(),
 						_ => null
@@ -517,8 +553,9 @@ namespace Xtate
 		internal DataModelValue DeepCloneWithMap(DataModelAccess targetAccess, ref Dictionary<object, object>? map) =>
 				_value switch
 				{
-						DataModelObject obj => new DataModelValue(obj.DeepCloneWithMap(targetAccess, ref map)),
-						DataModelArray arr => new DataModelValue(arr.DeepCloneWithMap(targetAccess, ref map)),
+						null => this,
+						DataModelObject obj => new DataModelValue((DataModelObject) obj.DeepCloneWithMap(targetAccess, ref map)),
+						DataModelArray arr => new DataModelValue((DataModelArray) arr.DeepCloneWithMap(targetAccess, ref map)),
 						ILazyValue val => val.Value.DeepCloneWithMap(targetAccess, ref map),
 						_ => this
 				};
@@ -527,6 +564,9 @@ namespace Xtate
 		{
 			switch (_value)
 			{
+				case null:
+					break;
+
 				case DataModelObject obj:
 					obj.MakeDeepConstant();
 					break;
@@ -597,7 +637,7 @@ namespace Xtate
 						DataModelArray arr => new DataModelValue(arr),
 						IDictionary<string, object> dict => CreateDataModelObject(dict, ref map),
 						IDictionary<string, string> dict => CreateDataModelObject(dict, ref map),
-						IEnumerable arr => CreateDataModelArray(arr, ref map),
+						IEnumerable array => CreateDataModelArray(array, ref map),
 						ILazyValue val => new DataModelValue(val),
 						{ } when TryFromAnonymousType(value, ref map, out var val) => val,
 						_ => throw new ArgumentException(Resources.Exception_Unsupported_object_type, nameof(value))
@@ -607,7 +647,8 @@ namespace Xtate
 		{
 			var type = value.GetType();
 
-			if (!type.Name.Contains("AnonymousType") || type.GetCustomAttributes(typeof(CompilerGeneratedAttribute), inherit: false).Length == 0)
+			if (!type.Name.StartsWith("VB$") && !type.Name.StartsWith("<>") || !type.Name.Contains("AnonymousType") ||
+				type.GetCustomAttributes(typeof(CompilerGeneratedAttribute), inherit: false).Length == 0)
 			{
 				result = default;
 
@@ -623,15 +664,14 @@ namespace Xtate
 				return true;
 			}
 
-			var propertyInfos = value.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
-
-			var obj = new DataModelObject(propertyInfos.Length);
+			var caseInsensitive = type.Name.StartsWith("VB$");
+			var obj = new DataModelObject(caseInsensitive);
 
 			map[value] = obj;
 
-			foreach (var propertyInfo in propertyInfos)
+			foreach (var propertyInfo in value.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public))
 			{
-				obj[propertyInfo.Name] = FromObjectWithMap(propertyInfo.GetValue(value), ref map);
+				obj.Add(propertyInfo.Name, FromObjectWithMap(propertyInfo.GetValue(value), ref map), metadata: default);
 			}
 
 			result = new DataModelValue(obj);
@@ -648,13 +688,13 @@ namespace Xtate
 				return new DataModelValue((DataModelObject) val);
 			}
 
-			var obj = new DataModelObject(dictionary.Count);
+			var obj = new DataModelObject();
 
 			map[dictionary] = obj;
 
 			foreach (var pair in dictionary)
 			{
-				obj[pair.Key] = FromObjectWithMap(pair.Value, ref map);
+				obj.Add(pair.Key, FromObjectWithMap(pair.Value, ref map), metadata: default);
 			}
 
 			return new DataModelValue(obj);
@@ -669,41 +709,56 @@ namespace Xtate
 				return new DataModelValue((DataModelObject) val);
 			}
 
-			var obj = new DataModelObject(dictionary.Count);
+			var obj = new DataModelObject();
 
 			map[dictionary] = obj;
 
 			foreach (var pair in dictionary)
 			{
-				obj[pair.Key] = new DataModelValue(pair.Value);
+				obj.Add(pair.Key, new DataModelValue(pair.Value), metadata: default);
 			}
 
 			return new DataModelValue(obj);
 		}
 
-		private static DataModelValue CreateDataModelArray(IEnumerable array, ref Dictionary<object, object>? map)
+		private static DataModelValue CreateDataModelArray(IEnumerable enumerable, ref Dictionary<object, object>? map)
 		{
 			map ??= new Dictionary<object, object>();
 
-			if (map.TryGetValue(array, out var val))
+			if (map.TryGetValue(enumerable, out var val))
 			{
 				return new DataModelValue((DataModelArray) val);
 			}
 
-			var arr = new DataModelArray(array.Capacity());
+			var array = new DataModelArray();
 
-			map[array] = arr;
+			map[enumerable] = array;
 
-			foreach (var item in array)
+			foreach (var item in enumerable)
 			{
-				arr.Add(FromObjectWithMap(item, ref map));
+				array.Add(FromObjectWithMap(item, ref map));
 			}
 
-			return new DataModelValue(arr);
+			return new DataModelValue(array);
 		}
 
 		public override string ToString() => ToString(format: null, formatProvider: null);
 
+		[Serializable]
+		private sealed class Marker
+		{
+			private readonly DataModelValueType _mark;
+
+			public Marker(DataModelValueType mark) => _mark = mark;
+
+			private bool Equals(Marker other) => _mark == other._mark;
+
+			public override bool Equals(object? obj) => ReferenceEquals(this, obj) || obj is Marker other && Equals(other);
+
+			public override int GetHashCode() => (int) _mark;
+		}
+
+		[Serializable]
 		private sealed class DateTimeValue
 		{
 			private const int Base             = 120000; // should be multiple of CacheGranularity and great then Boundary
@@ -788,7 +843,7 @@ namespace Xtate
 			public object? Value => _dataModelValue.ToObject();
 		}
 
-		private class Dynamic : DynamicObject
+		internal class Dynamic : DynamicObject
 		{
 			private static readonly IDynamicMetaObjectProvider Instance = new Dynamic(default);
 
@@ -808,9 +863,7 @@ namespace Xtate
 			{
 				if (_value._value is DataModelObject obj)
 				{
-					result = obj[binder.Name].ToObject();
-
-					return true;
+					return new DataModelObject.Dynamic(obj).TryGetMember(binder, out result);
 				}
 
 				result = null;
@@ -822,9 +875,7 @@ namespace Xtate
 			{
 				if (_value._value is DataModelObject obj)
 				{
-					obj[binder.Name] = FromObject(value);
-
-					return true;
+					return new DataModelObject.Dynamic(obj).TrySetMember(binder, value);
 				}
 
 				return false;
@@ -832,18 +883,14 @@ namespace Xtate
 
 			public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object? result)
 			{
-				if (indexes.Length == 1 && indexes[0] is string key && _value._value is DataModelObject obj)
+				if (_value._value is DataModelObject obj)
 				{
-					result = obj[key].ToObject();
-
-					return true;
+					return new DataModelObject.Dynamic(obj).TryGetIndex(binder, indexes, out result);
 				}
 
-				if (indexes.Length == 1 && indexes[0] is IConvertible convertible && _value._value is DataModelArray arr)
+				if (_value._value is DataModelArray array)
 				{
-					result = arr[convertible.ToInt32(NumberFormatInfo.InvariantInfo)].ToObject();
-
-					return true;
+					return new DataModelArray.Dynamic(array).TryGetIndex(binder, indexes, out result);
 				}
 
 				result = null;
@@ -853,18 +900,14 @@ namespace Xtate
 
 			public override bool TrySetIndex(SetIndexBinder binder, object[] indexes, object value)
 			{
-				if (indexes.Length == 1 && indexes[0] is string key && _value._value is DataModelObject obj)
+				if (_value._value is DataModelObject obj)
 				{
-					obj[key] = FromObject(value);
-
-					return true;
+					return new DataModelObject.Dynamic(obj).TrySetIndex(binder, indexes, value);
 				}
 
-				if (indexes.Length == 1 && indexes[0] is IConvertible convertible && _value._value is DataModelArray arr)
+				if (_value._value is DataModelArray array)
 				{
-					arr[convertible.ToInt32(NumberFormatInfo.InvariantInfo)] = FromObject(value);
-
-					return true;
+					return new DataModelArray.Dynamic(array).TrySetIndex(binder, indexes, value);
 				}
 
 				return false;

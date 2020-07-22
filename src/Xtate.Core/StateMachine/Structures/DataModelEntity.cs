@@ -26,7 +26,7 @@ namespace Xtate
 			Data = source.Data;
 		}
 
-		bool IVisitorEntity<DataModelEntity, IDataModel>.RefEquals(in DataModelEntity other) => Data == other.Data;
+		bool IVisitorEntity<DataModelEntity, IDataModel>.RefEquals(ref DataModelEntity other) => Data == other.Data;
 
 	#endregion
 	}

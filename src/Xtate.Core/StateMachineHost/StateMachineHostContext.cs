@@ -11,8 +11,9 @@ namespace Xtate
 {
 	internal class StateMachineHostContext : IAsyncDisposable
 	{
-		private const           string            SessionIdPrefix               = "#_scxml_";
-		private const           string            InvokeIdPrefix                = "#_";
+		private const string SessionIdPrefix = "#_scxml_";
+		private const string InvokeIdPrefix  = "#_";
+
 		private static readonly XmlReaderSettings DefaultSyncXmlReaderSettings  = new XmlReaderSettings { Async = false, CloseInput = true };
 		private static readonly XmlReaderSettings DefaultAsyncXmlReaderSettings = new XmlReaderSettings { Async = true, CloseInput = true };
 
@@ -40,7 +41,13 @@ namespace Xtate
 
 			if (options.Configuration?.Count > 0)
 			{
-				_configuration = options.Configuration.ToDataModelObject(p => p.Key, p => p.Value);
+				_configuration = new DataModelObject();
+
+				foreach (var pair in options.Configuration)
+				{
+					_configuration.Add(pair.Key, pair.Value);
+				}
+
 				_configuration.MakeDeepConstant();
 			}
 		}
@@ -93,31 +100,21 @@ namespace Xtate
 
 		private static XmlReaderSettings GetXmlReaderSettings(bool useAsync = false) => useAsync ? DefaultAsyncXmlReaderSettings : DefaultSyncXmlReaderSettings;
 
-		private XmlParserContext GetXmlParserContext()
+		private static XmlParserContext GetXmlParserContext()
 		{
-			var xmlNameTable = new NameTable();
-			var nameTable = xmlNameTable;
-			ScxmlDirector.FillXmlNameTable(nameTable);
-
-			if (!_options.CustomActionFactories.IsDefaultOrEmpty)
-			{
-				foreach (var factory in _options.CustomActionFactories)
-				{
-					factory.FillXmlNameTable(nameTable);
-				}
-			}
-
+			var nameTable = new NameTable();
 			var nsManager = new XmlNamespaceManager(nameTable);
-			return new XmlParserContext(nameTable, nsManager, xmlLang: null, xmlSpace: default);
+			return new XmlParserContext(nameTable, nsManager, xmlLang: null, XmlSpace.None);
 		}
 
 		private static IBuilderFactory GetBuilderFactory() => BuilderFactory.Instance;
 
-		private IStateMachine GetStateMachine(string scxml, IErrorProcessor errorProcessor)
+		private static IStateMachine GetStateMachine(string scxml, IErrorProcessor errorProcessor)
 		{
 			using var stringReader = new StringReader(scxml);
-			using var xmlReader = XmlReader.Create(stringReader, GetXmlReaderSettings(), GetXmlParserContext());
-			var scxmlDirector = new ScxmlDirector(xmlReader, GetBuilderFactory(), errorProcessor);
+			var xmlParserContext = GetXmlParserContext();
+			using var xmlReader = XmlReader.Create(stringReader, GetXmlReaderSettings(), xmlParserContext);
+			var scxmlDirector = new ScxmlDirector(xmlReader, GetBuilderFactory(), errorProcessor, xmlParserContext.NamespaceManager);
 
 			return scxmlDirector.ConstructStateMachine();
 		}
@@ -130,8 +127,9 @@ namespace Xtate
 				{
 					if (resourceLoader.CanHandle(source))
 					{
-						using var xmlReader = await resourceLoader.RequestXmlReader(source, GetXmlReaderSettings(), GetXmlParserContext(), token).ConfigureAwait(false);
-						var scxmlDirector = new ScxmlDirector(xmlReader, GetBuilderFactory(), errorProcessor);
+						var xmlParserContext = GetXmlParserContext();
+						using var xmlReader = await resourceLoader.RequestXmlReader(source, GetXmlReaderSettings(), xmlParserContext, token).ConfigureAwait(false);
+						var scxmlDirector = new ScxmlDirector(xmlReader, GetBuilderFactory(), errorProcessor, xmlParserContext.NamespaceManager);
 
 						return scxmlDirector.ConstructStateMachine();
 					}
@@ -151,13 +149,16 @@ namespace Xtate
 					return (origin.AsStateMachine(), location);
 
 				case StateMachineOriginType.Scxml:
+				{
 					return (GetStateMachine(origin.AsScxml(), errorProcessor), location);
-
+				}
 				case StateMachineOriginType.Source:
+				{
 					location = CombineUri(location, origin.AsSource());
 					var stateMachine = await GetStateMachine(location, errorProcessor, token).ConfigureAwait(false);
-					return (stateMachine, location);
 
+					return (stateMachine, location);
+				}
 				default:
 					throw new ArgumentException(Resources.Exception_StateMachine_origin_missed);
 			}
@@ -208,7 +209,7 @@ namespace Xtate
 		{
 			if (stateMachineLocation != null)
 			{
-				var obj = new DataModelObject(capacity: 1) { ["location"] = stateMachineLocation.ToString() };
+				var obj = new DataModelObject { { "location", stateMachineLocation.ToString() } };
 				obj.MakeDeepConstant();
 
 				return obj;

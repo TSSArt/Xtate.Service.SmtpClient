@@ -5,6 +5,6 @@
 		string?                  Id            { get; }
 		IExternalDataExpression? Source        { get; }
 		IValueExpression?        Expression    { get; }
-		string?                  InlineContent { get; }
+		IInlineContent?          InlineContent { get; }
 	}
 }

@@ -31,6 +31,10 @@ namespace Xtate
 		}
 
 	#endregion
+
+		public static implicit operator DataModelValue(LazyValue lazyValue) => new DataModelValue(lazyValue);
+
+		public DataModelValue ToDataModelValue() => this;
 	}
 
 	public class LazyValue<TArg> : ILazyValue
@@ -67,6 +71,10 @@ namespace Xtate
 		}
 
 	#endregion
+
+		public static implicit operator DataModelValue(LazyValue<TArg> lazyValue) => new DataModelValue(lazyValue);
+
+		public DataModelValue ToDataModelValue() => this;
 	}
 
 	public class LazyValue<TArg1, TArg2> : ILazyValue
@@ -105,5 +113,9 @@ namespace Xtate
 		}
 
 	#endregion
+
+		public static implicit operator DataModelValue(LazyValue<TArg1, TArg2> lazyValue) => new DataModelValue(lazyValue);
+
+		public DataModelValue ToDataModelValue() => this;
 	}
 }

@@ -28,7 +28,7 @@
 			Name = source.Name;
 		}
 
-		bool IVisitorEntity<ParamEntity, IParam>.RefEquals(in ParamEntity other) =>
+		bool IVisitorEntity<ParamEntity, IParam>.RefEquals(ref ParamEntity other) =>
 				ReferenceEquals(Expression, other.Expression) &&
 				ReferenceEquals(Location, other.Location) &&
 				ReferenceEquals(Name, other.Name);

@@ -17,7 +17,7 @@ namespace Xtate
 		public string?                  Id            { get; set; }
 		public IExternalDataExpression? Source        { get; set; }
 		public IValueExpression?        Expression    { get; set; }
-		public string?                  InlineContent { get; set; }
+		public IInlineContent?          InlineContent { get; set; }
 
 	#endregion
 
@@ -38,7 +38,7 @@ namespace Xtate
 			InlineContent = source.InlineContent;
 		}
 
-		bool IVisitorEntity<DataEntity, IData>.RefEquals(in DataEntity other) =>
+		bool IVisitorEntity<DataEntity, IData>.RefEquals(ref DataEntity other) =>
 				ReferenceEquals(Id, other.Id) &&
 				ReferenceEquals(Source, other.Source) &&
 				ReferenceEquals(InlineContent, other.InlineContent) &&

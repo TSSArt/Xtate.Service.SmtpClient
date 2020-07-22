@@ -708,7 +708,7 @@ namespace Xtate.Core.Test
 			v.MakeDeepConstant();
 
 			// assert
-			Assert.IsFalse(_emptyDataModelObject.CanSet("prop"));
+			Assert.IsFalse(_emptyDataModelObject.CanSet(key: "prop", caseInsensitive: false));
 		}
 
 		[TestMethod]

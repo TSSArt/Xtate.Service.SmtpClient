@@ -34,7 +34,7 @@ namespace Xtate
 			Type = source.Type;
 		}
 
-		bool IVisitorEntity<TransitionEntity, ITransition>.RefEquals(in TransitionEntity other) =>
+		bool IVisitorEntity<TransitionEntity, ITransition>.RefEquals(ref TransitionEntity other) =>
 				Type == other.Type &&
 				Target == other.Target &&
 				Action == other.Action &&

@@ -679,4 +679,64 @@
   <data name="Exception_Adjusted_with_offset_value_does_not_fall_into_acceptable_range" xml:space="preserve">
     <value>Adjusted with offset value does not fall into acceptable range.</value>
   </data>
+  <data name="ErrorMessage_Scripting_not_supported_in_XPATH_data_model" xml:space="preserve">
+    <value>Scripting not supported in XPATH data model.</value>
+  </data>
+  <data name="Exception_Error_on_parsing_XPath_expression" xml:space="preserve">
+    <value>Error on parsing XPath expression.</value>
+  </data>
+  <data name="Exception_Result_of_XPath_expression_can_t_be_identified" xml:space="preserve">
+    <value>Result of XPath expression can't be identified.</value>
+  </data>
+  <data name="Exception_Value_Expression_must_be_present" xml:space="preserve">
+    <value>Value Expression must be present.</value>
+  </data>
+  <data name="Exception_Result_of_XPath_expression_should_be_string_value" xml:space="preserve">
+    <value>Result of XPath expression should be string value.</value>
+  </data>
+  <data name="Exception_Result_of_XPath_expression_should_be_boolean_value" xml:space="preserve">
+    <value>Result of XPath expression should be boolean value.</value>
+  </data>
+  <data name="Exception_Result_of_XPath_expression_should_be_element" xml:space="preserve">
+    <value>Result of XPath expression should be element.</value>
+  </data>
+  <data name="Exception_Capacity_can_t_be_less_then_properties_count" xml:space="preserve">
+    <value>Capacity can't be less then properties count.</value>
+  </data>
+  <data name="Exception_Destination_array_is_not_long_enough" xml:space="preserve">
+    <value>Destination list is not long enough to copy all the items in the collection. Check list index and length.</value>
+  </data>
+  <data name="Exception_Capcity_should_not_be_negative" xml:space="preserve">
+    <value>Capcity should not be negative.</value>
+  </data>
+  <data name="Exception_Index_should_be_non_negative_and_less_then_aarray_size" xml:space="preserve">
+    <value>Index should be non-negative and less then array size.</value>
+  </data>
+  <data name="Exception_Capacity_can_t_be_less_then_size_of_array" xml:space="preserve">
+    <value>Capacity can't be less then size of list.</value>
+  </data>
+  <data name="Exception_DataModelValue_is_not_DataModelElement" xml:space="preserve">
+	  <value>DataModelValue is not MetadataModelElement.</value>
+  </data>
+  <data name="Exception_Index_value_must_be_non_negative_integer" xml:space="preserve">
+    <value>Index value must be non-negative integer.</value>
+  </data>
+  <data name="Exception_Unknown_XPath_function" xml:space="preserve">
+    <value>Unknown XPath function. Namespace:'{0}', Name:'{1}'.</value>
+  </data>
+  <data name="Exception_Unknown_XPath_variable" xml:space="preserve">
+    <value>Unknown XPath variable. Namespace:'{0}', Name:'{1}'.</value>
+  </data>
+  <data name="Exception_Value_must_be_non_negative_integer" xml:space="preserve">
+    <value>Value must be non negative integer.</value>
+  </data>
+  <data name="Exception_DataModelValue_is_not_DataModelList" xml:space="preserve">
+    <value>DataModelValue is not DataModelList.</value>
+  </data>
+  <data name="Exception_Unexpected_type_attribute_value" xml:space="preserve">
+    <value>Unexpected type attribute value: {0}.</value>
+  </data>
+  <data name="ErrorMessage_attr_attribute_should_no_be_empty" xml:space="preserve">
+    <value>attr attribute should no be empty.</value>
+  </data>
 </root>

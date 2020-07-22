@@ -45,7 +45,7 @@ namespace Xtate
 			Script = source.Script;
 		}
 
-		bool IVisitorEntity<StateMachineEntity, IStateMachine>.RefEquals(in StateMachineEntity other) =>
+		bool IVisitorEntity<StateMachineEntity, IStateMachine>.RefEquals(ref StateMachineEntity other) =>
 				Binding == other.Binding &&
 				States == other.States &&
 				ReferenceEquals(Name, other.Name) &&

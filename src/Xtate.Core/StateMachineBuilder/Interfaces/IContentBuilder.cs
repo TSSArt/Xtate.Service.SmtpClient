@@ -5,6 +5,6 @@
 		IContent Build();
 
 		void SetExpression(IValueExpression expression);
-		void SetBody(string body);
+		void SetBody(IContentBody contentBody);
 	}
 }

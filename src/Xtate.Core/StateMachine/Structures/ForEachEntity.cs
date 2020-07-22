@@ -32,7 +32,7 @@ namespace Xtate
 			Item = source.Item;
 		}
 
-		bool IVisitorEntity<ForEachEntity, IForEach>.RefEquals(in ForEachEntity other) =>
+		bool IVisitorEntity<ForEachEntity, IForEach>.RefEquals(ref ForEachEntity other) =>
 				Action == other.Action &&
 				ReferenceEquals(Array, other.Array) &&
 				ReferenceEquals(Index, other.Index) &&

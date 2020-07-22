@@ -45,6 +45,10 @@ namespace Xtate
 
 	#endregion
 
+		public static implicit operator DataModelValue(LazyId? lazyId) => new DataModelValue(lazyId);
+
+		public DataModelValue ToDataModelValue() => this;
+
 		protected abstract string GenerateId();
 
 		[SuppressMessage(category: "ReSharper", checkId: "NonReadonlyMemberInGetHashCode", Justification = "_id used as designed")]

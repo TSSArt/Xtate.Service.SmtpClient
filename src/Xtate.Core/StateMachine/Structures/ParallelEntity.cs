@@ -47,7 +47,7 @@ namespace Xtate
 			Transitions = source.Transitions;
 		}
 
-		bool IVisitorEntity<ParallelEntity, IParallel>.RefEquals(in ParallelEntity other) =>
+		bool IVisitorEntity<ParallelEntity, IParallel>.RefEquals(ref ParallelEntity other) =>
 				ReferenceEquals(Id, other.Id) &&
 				ReferenceEquals(DataModel, other.DataModel) &&
 				Invoke == other.Invoke &&

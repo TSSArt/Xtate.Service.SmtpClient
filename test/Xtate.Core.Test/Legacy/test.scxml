@@ -2,7 +2,7 @@
 
 <!-- A wrapper state that contains all other states in this file
 - it represents the complete state machine -->
-<scxml xmlns="http://www.w3.org/2005/07/scxml"
+<scxml xmlns="http://www.w3.org/2005/07/scxml" xmlns:xt="http://xtate.net/2020/scxml"
        version="1.0"
        initial="State1"
        datamodel="test"
@@ -43,7 +43,19 @@
         <param name="Param1" expr="'expression'" />
       </send>
       <send>
-        <content>body</content>
+        <content>
+          <key1>
+            <xt:value type="numeric">0.5</xt:value>
+          </key1>
+          <key2 xt:type="numeric">0.5</key2>
+          <xt:entry>
+            <xt:key></xt:key>
+            <xt:value></xt:value>
+          </xt:entry>
+          <xt:value index="1" type="numeric">0.5</xt:value>
+        </content>
+
+
       </send>
       <cancel sendid="sendid" />
       <cancel sendidexpr="'sendid-expr'" />

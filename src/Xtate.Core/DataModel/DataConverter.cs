@@ -55,14 +55,12 @@ namespace Xtate
 		{
 			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
 
-			var length = (nameEvaluatorList.IsDefault ? 0 : nameEvaluatorList.Length) + (parameterList.IsDefault ? 0 : parameterList.Length);
-
-			if (length == 0)
+			if (nameEvaluatorList.IsDefaultOrEmpty && parameterList.IsDefaultOrEmpty)
 			{
 				return default;
 			}
 
-			var attributes = new DataModelObject(length);
+			var attributes = new DataModelObject(executionContext.DataModel.CaseInsensitive);
 
 			if (!nameEvaluatorList.IsDefaultOrEmpty)
 			{
@@ -71,7 +69,7 @@ namespace Xtate
 					var name = locationEvaluator.GetName(executionContext);
 					var value = await locationEvaluator.GetValue(executionContext, token).ConfigureAwait(false);
 
-					attributes[name] = DataModelValue.FromObject(value).AsConstant();
+					attributes.Add(name, DataModelValue.FromObject(value).AsConstant());
 				}
 			}
 
@@ -91,7 +89,7 @@ namespace Xtate
 						value = await param.LocationEvaluator.GetValue(executionContext, token).ConfigureAwait(false);
 					}
 
-					attributes[name] = DataModelValue.FromObject(value).AsConstant();
+					attributes.Add(name, DataModelValue.FromObject(value).AsConstant());
 				}
 			}
 
@@ -105,19 +103,19 @@ namespace Xtate
 			return new DataModelValue(content);
 		}
 
-		public static DataModelValue FromEvent(IEvent evt)
+		public static DataModelValue FromEvent(IEvent evt, bool caseInsensitive)
 		{
 			if (evt == null) throw new ArgumentNullException(nameof(evt));
 
-			var eventObject = new DataModelObject(capacity: 7)
+			var eventObject = new DataModelObject(caseInsensitive)
 							  {
-									  [@"name"] = new DataModelValue(EventName.ToName(evt.NameParts)),
-									  [@"type"] = new DataModelValue(GetTypeString(evt.Type)),
-									  [@"sendid"] = new DataModelValue(evt.SendId),
-									  [@"origin"] = new DataModelValue(evt.Origin?.ToString()),
-									  [@"origintype"] = new DataModelValue(evt.OriginType?.ToString()),
-									  [@"invokeid"] = new DataModelValue(evt.InvokeId),
-									  [@"data"] = evt.Data.AsConstant()
+									  { @"name", EventName.ToName(evt.NameParts) },
+									  { @"type", GetTypeString(evt.Type) },
+									  { @"sendid", evt.SendId },
+									  { @"origin", evt.Origin?.ToString() },
+									  { @"origintype", evt.OriginType?.ToString() },
+									  { @"invokeid", evt.InvokeId },
+									  { @"data", evt.Data.AsConstant() }
 							  };
 
 			eventObject.MakeDeepConstant();
@@ -136,18 +134,18 @@ namespace Xtate
 			}
 		}
 
-		public static DataModelValue FromException(Exception exception)
+		public static DataModelValue FromException(Exception exception, bool caseInsensitive)
 		{
 			if (exception == null) throw new ArgumentNullException(nameof(exception));
 
-			var exceptionData = new DataModelObject(capacity: 6)
+			var exceptionData = new DataModelObject(caseInsensitive)
 								{
-										[@"message"] = new DataModelValue(exception.Message),
-										[@"typeName"] = new DataModelValue(exception.GetType().Name),
-										[@"source"] = new DataModelValue(exception.Source),
-										[@"typeFullName"] = new DataModelValue(exception.GetType().FullName),
-										[@"stackTrace"] = new DataModelValue(exception.StackTrace),
-										[@"text"] = new DataModelValue(exception.ToString())
+										{ @"message", exception.Message },
+										{ @"typeName", exception.GetType().Name },
+										{ @"source", exception.Source },
+										{ @"typeFullName", exception.GetType().FullName },
+										{ @"stackTrace", exception.StackTrace },
+										{ @"text", exception.ToString() }
 								};
 
 			exceptionData.MakeDeepConstant();

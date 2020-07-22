@@ -49,7 +49,7 @@ namespace Xtate
 			Transitions = source.Transitions;
 		}
 
-		bool IVisitorEntity<StateEntity, IState>.RefEquals(in StateEntity other) =>
+		bool IVisitorEntity<StateEntity, IState>.RefEquals(ref StateEntity other) =>
 				ReferenceEquals(Id, other.Id) &&
 				ReferenceEquals(Initial, other.Initial) &&
 				ReferenceEquals(DataModel, other.DataModel) &&

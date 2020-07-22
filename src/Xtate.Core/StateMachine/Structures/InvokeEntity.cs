@@ -53,7 +53,7 @@ namespace Xtate
 			AutoForward = source.AutoForward;
 		}
 
-		bool IVisitorEntity<InvokeEntity, IInvoke>.RefEquals(in InvokeEntity other) =>
+		bool IVisitorEntity<InvokeEntity, IInvoke>.RefEquals(ref InvokeEntity other) =>
 				AutoForward == other.AutoForward &&
 				NameList == other.NameList &&
 				Parameters == other.Parameters &&

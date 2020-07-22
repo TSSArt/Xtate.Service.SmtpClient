@@ -7,6 +7,6 @@ namespace Xtate
 		void Init(TIEntity source);
 
 		[Pure]
-		bool RefEquals(in TEntity other);
+		bool RefEquals(ref TEntity other);
 	}
 }

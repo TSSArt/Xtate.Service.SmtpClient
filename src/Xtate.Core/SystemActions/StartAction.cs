@@ -76,16 +76,12 @@ namespace Xtate
 
 	#endregion
 
-		internal static void FillXmlNameTable(XmlNameTable xmlNameTable)
-		{
-			xmlNameTable.Add(Source);
-			xmlNameTable.Add(SourceExpr);
-			xmlNameTable.Add(IdLocation);
-		}
-
 		private static Uri? GetBaseUri(IExecutionContext executionContext)
 		{
-			var val = executionContext.DataModel["_x"].AsObjectOrEmpty()["host"].AsObjectOrEmpty()["location"].AsStringOrDefault();
+			var val = executionContext.DataModel[key: "_x", caseInsensitive: false]
+									  .AsObjectOrEmpty()[key: "host", caseInsensitive: false]
+									  .AsObjectOrEmpty()[key: "location", caseInsensitive: false]
+									  .AsStringOrDefault();
 
 			return val != null ? new Uri(val) : null;
 		}
