@@ -11,5 +11,7 @@ build:
 nuget:
   disable_publish_on_pr: true
 
-before_test:
-  - cmd: chcp 65001
+test_script:
+  - ps: >-
+    chcp 65001
+    dotnet test --logger Appveyor
