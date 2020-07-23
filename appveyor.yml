@@ -1,0 +1,12 @@
+image: Previous Visual Studio 2019
+
+configuration: Release
+
+before_build:
+  - msbuild -t:Restore
+
+build:
+  publish_nuget: true
+
+before_test:
+  - chcp 1252
