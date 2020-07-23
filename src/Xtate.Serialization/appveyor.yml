@@ -10,3 +10,6 @@ build:
 
 before_test:
   - ps: chcp 1252
+
+nuget:
+  account_feed: true
