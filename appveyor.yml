@@ -5,5 +5,8 @@ configuration: Release
 before_build:
   - msbuild -t:Restore
 
-artifacts:
-  - path: '**\*.nupkg'
+build:
+  publish_nuget: true
+
+nuget:
+  disable_publish_on_pr: true
