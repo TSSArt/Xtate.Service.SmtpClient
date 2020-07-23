@@ -10,3 +10,6 @@ build:
 
 nuget:
   disable_publish_on_pr: true
+
+before_test:
+  - cmd: chcp 65001
