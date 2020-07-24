@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Xtate.DataModel;
 
 namespace Xtate
 {
@@ -11,7 +12,7 @@ namespace Xtate
 
 		protected ExecutableEntityNode(in DocumentIdRecord documentIdNode, IExecutableEntity? entity)
 		{
-			if (entity == null) throw new ArgumentNullException(nameof(entity));
+			Infrastructure.Assert(entity != null);
 
 			_execEvaluator = entity.As<IExecEvaluator>();
 			_documentIdNode = documentIdNode;

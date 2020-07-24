@@ -1,4 +1,5 @@
 ﻿using System;
+using Xtate.DataModel;
 
 namespace Xtate
 {

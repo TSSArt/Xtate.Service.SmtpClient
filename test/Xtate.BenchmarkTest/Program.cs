@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Engines;
 using BenchmarkDotNet.Running;
+using Xtate.DataModel;
 using Xtate.DataModel.XPath;
 
 namespace Xtate.BenchmarkTest
