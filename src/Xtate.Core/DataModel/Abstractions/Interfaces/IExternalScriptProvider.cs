@@ -1,4 +1,4 @@
-﻿namespace Xtate
+﻿namespace Xtate.DataModel
 {
 	public interface IExternalScriptProvider
 	{

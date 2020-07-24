@@ -140,3 +140,4 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage(category:"Globalization", checkId:"CA1307:Specify StringComparison", Justification = "<Pending>", Scope = "member", Target = "~M:Xtate.DataModelList.KeyValue.GetHashCode~System.Int32")]
 [assembly: SuppressMessage(category:"Usage", checkId:"CA2227:Collection properties should be read only", Justification = "<Pending>", Scope = "member", Target = "~P:Xtate.InterpreterOptions.Host")]
 [assembly: SuppressMessage(category:"Usage", checkId:"CA2227:Collection properties should be read only", Justification = "<Pending>", Scope = "member", Target = "~P:Xtate.InterpreterOptions.Configuration")]
+[assembly: SuppressMessage(category:"Design", checkId:"CA1033:Interface methods should be callable by child types", Justification = "<Pending>", Scope = "member", Target = "~P:Xtate.DefaultDoneDataEvaluator.Xtate#IAncestorProvider#Ancestor")]

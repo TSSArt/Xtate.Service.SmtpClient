@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xtate.DataModel;
 
 namespace Xtate.Core.Test.Legacy
 {
