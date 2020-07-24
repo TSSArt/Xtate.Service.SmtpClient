@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Immutable;
 
-namespace Xtate
+namespace Xtate.DataModel
 {
 	public abstract class DataModelHandlerBase : StateMachineVisitor, IDataModelHandler
 	{
@@ -74,6 +74,13 @@ namespace Xtate
 			base.Build(ref send, ref sendProperties);
 
 			send = new DefaultSendEvaluator(sendProperties);
+		}
+
+		protected override void Build(ref IDoneData doneData, ref DoneDataEntity doneDataProperties)
+		{
+			base.Build(ref doneData, ref doneDataProperties);
+
+			doneData = new DefaultDoneDataEvaluator(doneDataProperties);
 		}
 
 		protected override void Build(ref IParam param, ref ParamEntity paramProperties)

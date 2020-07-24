@@ -4,7 +4,7 @@ using System.Net.Mime;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Xtate
+namespace Xtate.DataModel
 {
 	internal static class DataConverter
 	{

@@ -2,6 +2,7 @@
 using System.Collections.Immutable;
 using System.ComponentModel;
 using Xtate.Annotations;
+using Xtate.DataModel;
 
 namespace Xtate
 {

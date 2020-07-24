@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xtate.Annotations;
 
-namespace Xtate
+namespace Xtate.DataModel
 {
 	[PublicAPI]
 	public class DefaultLogEvaluator : ILog, IExecEvaluator, IAncestorProvider

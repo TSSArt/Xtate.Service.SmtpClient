@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Xtate
+namespace Xtate.DataModel
 {
 	public sealed class DefaultParam : IParam, IAncestorProvider, IDebugEntityId
 	{
