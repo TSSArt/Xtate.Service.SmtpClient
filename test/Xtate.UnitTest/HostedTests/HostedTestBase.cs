@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Xtate.Annotations;
+using Xtate.CustomAction;
 
 namespace Xtate.Test.HostedTests
 {

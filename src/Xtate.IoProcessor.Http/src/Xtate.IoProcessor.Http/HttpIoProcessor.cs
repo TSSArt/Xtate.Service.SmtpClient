@@ -18,7 +18,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
 
-namespace Xtate
+namespace Xtate.IoProcessor
 {
 	[IoProcessor("http://www.w3.org/TR/scxml/#BasicHTTPEventProcessor", Alias = "http")]
 	public sealed class HttpIoProcessor : IoProcessorBase, IAsyncDisposable

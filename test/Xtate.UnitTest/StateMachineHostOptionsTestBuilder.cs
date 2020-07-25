@@ -1,5 +1,7 @@
 ﻿using System.Collections.Immutable;
 using Xtate.DataModel;
+using Xtate.IoProcessor;
+using Xtate.Service;
 
 namespace Xtate.Test
 {

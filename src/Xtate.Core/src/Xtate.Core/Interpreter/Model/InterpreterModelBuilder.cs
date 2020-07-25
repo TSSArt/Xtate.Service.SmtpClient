@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
+using Xtate.CustomAction;
 using Xtate.DataModel;
 using Xtate.Persistence;
 
@@ -369,7 +370,7 @@ namespace Xtate
 			}
 		}
 
-		protected override void Build(ref ICustomAction customAction, ref CustomAction customActionProperties)
+		protected override void Build(ref ICustomAction customAction, ref CustomActionEntity customActionProperties)
 		{
 			var documentId = NewDocumentId();
 

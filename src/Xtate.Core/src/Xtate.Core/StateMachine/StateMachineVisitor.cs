@@ -326,7 +326,7 @@ namespace Xtate
 
 		protected virtual void Visit(ref ICustomAction entity)
 		{
-			var data = new VisitData<CustomAction, ICustomAction>(entity);
+			var data = new VisitData<CustomActionEntity, ICustomAction>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
@@ -1020,7 +1020,7 @@ namespace Xtate
 			properties.Action = action;
 		}
 
-		protected virtual void Build(ref ICustomAction entity, ref CustomAction properties) { }
+		protected virtual void Build(ref ICustomAction entity, ref CustomActionEntity properties) { }
 
 		protected virtual void Build(ref IElse entity, ref ElseEntity properties) { }
 

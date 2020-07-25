@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Xtate.Persistence;
 
-namespace Xtate
+namespace Xtate.Persistence
 {
 	internal sealed class NullStorageProvider : IStorageProvider, ITransactionalStorage
 	{

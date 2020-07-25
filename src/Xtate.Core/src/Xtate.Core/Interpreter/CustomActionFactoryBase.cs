@@ -4,7 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Xml;
 
-namespace Xtate
+namespace Xtate.CustomAction
 {
 	public abstract class CustomActionFactoryBase : ICustomActionFactory
 	{

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Immutable;
 
-namespace Xtate
+namespace Xtate.Builder
 {
 	public interface IStateBuilder
 	{

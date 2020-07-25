@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml;
 
-namespace Xtate
+namespace Xtate.CustomAction
 {
 	public class OperationAction : CustomActionBase
 	{

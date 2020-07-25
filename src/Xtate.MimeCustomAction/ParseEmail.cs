@@ -12,7 +12,7 @@ using System.Buffers;
 
 #endif
 
-namespace Xtate.Service
+namespace Xtate.CustomAction
 {
 	public class ParseEmail : CustomActionBase
 	{

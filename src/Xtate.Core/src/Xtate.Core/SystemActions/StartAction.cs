@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace Xtate
+namespace Xtate.CustomAction
 {
 	public class StartAction : ICustomActionExecutor
 	{

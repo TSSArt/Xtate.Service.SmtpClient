@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xtate.Builder;
 using Xtate.DataModel.EcmaScript;
 using Xtate.Persistence;
 using Xtate.Scxml;

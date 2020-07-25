@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Xml.Xsl;
-using Xtate.DataModel.XPath.Functions;
 
 namespace Xtate.DataModel.XPath
 {
@@ -12,7 +11,7 @@ namespace Xtate.DataModel.XPath
 
 		private XPathFunctionFactory()
 		{
-			RegisterFunction<In>();
+			RegisterFunction<InFunction>();
 		}
 
 		private void RegisterFunction<T>() where T : XPathFunctionDescriptorBase, new()

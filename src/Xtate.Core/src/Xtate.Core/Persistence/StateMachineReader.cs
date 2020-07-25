@@ -274,7 +274,7 @@ namespace Xtate.Persistence
 
 		private static ICustomAction? RestoreCustomAction(Bucket bucket) =>
 				Exist(bucket, TypeInfo.CustomActionNode)
-						? new CustomAction
+						? new CustomActionEntity
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Xml = bucket.GetString(Key.Content),

@@ -292,7 +292,7 @@ namespace Xtate.Scxml
 			_writer.WriteEndElement();
 		}
 
-		protected override void Build(ref ICustomAction entity, ref CustomAction properties)
+		protected override void Build(ref ICustomAction entity, ref CustomActionEntity properties)
 		{
 			if (entity == null) throw new ArgumentNullException(nameof(entity));
 

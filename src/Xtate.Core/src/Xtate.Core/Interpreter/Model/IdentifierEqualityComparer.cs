@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Xtate
 {
-	public class IdentifierEqualityComparer : IEqualityComparer<IIdentifier>
+	internal sealed class IdentifierEqualityComparer : IEqualityComparer<IIdentifier>
 	{
 		public static readonly IEqualityComparer<IIdentifier> Instance = new IdentifierEqualityComparer();
 

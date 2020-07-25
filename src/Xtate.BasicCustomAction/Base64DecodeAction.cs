@@ -7,7 +7,7 @@ using System.Buffers;
 
 #endif
 
-namespace Xtate
+namespace Xtate.CustomAction
 {
 	public class Base64DecodeAction : CustomActionBase
 	{

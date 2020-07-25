@@ -1,4 +1,4 @@
-﻿namespace Xtate
+﻿namespace Xtate.CustomAction
 {
 	[CustomActionProvider("http://xtate.net/scxml/customaction/basic")]
 	public class BasicCustomActionFactory : CustomActionFactoryBase

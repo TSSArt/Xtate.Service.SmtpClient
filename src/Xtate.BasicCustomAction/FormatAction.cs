@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using System.Xml;
 
-namespace Xtate
+namespace Xtate.CustomAction
 {
 	public class FormatAction : CustomActionBase
 	{

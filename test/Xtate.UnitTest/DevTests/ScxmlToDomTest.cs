@@ -1,6 +1,7 @@
 ﻿using System.IO;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xtate.Builder;
 using Xtate.Scxml;
 
 namespace Xtate.Test

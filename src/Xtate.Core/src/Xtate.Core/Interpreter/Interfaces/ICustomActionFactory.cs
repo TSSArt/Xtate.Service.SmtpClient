@@ -1,4 +1,4 @@
-﻿namespace Xtate
+﻿namespace Xtate.CustomAction
 {
 	public interface ICustomActionFactory
 	{

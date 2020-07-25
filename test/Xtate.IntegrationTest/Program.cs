@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using Xtate.CustomAction;
 using Xtate.Service;
 
 namespace Xtate.IntegrationTest
