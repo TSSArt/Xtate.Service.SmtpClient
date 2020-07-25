@@ -6,7 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xtate.Annotations;
 
-namespace Xtate
+namespace Xtate.Persistence
 {
 	[PublicAPI]
 	public class FileStorageProvider : IStorageProvider

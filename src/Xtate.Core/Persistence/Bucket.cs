@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Text;
 using Xtate.Annotations;
 
-namespace Xtate
+namespace Xtate.Persistence
 {
 	[PublicAPI]
 	[SuppressMessage(category: "ReSharper", checkId: "SuggestVarOrType_Elsewhere", Justification = "Span<> must be explicit")]

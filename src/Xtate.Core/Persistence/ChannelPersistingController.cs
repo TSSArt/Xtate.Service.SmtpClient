@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-namespace Xtate
+namespace Xtate.Persistence
 {
 	internal sealed class ChannelPersistingController<T> : Channel<T>, IDisposable
 	{

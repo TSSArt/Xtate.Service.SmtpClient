@@ -1,4 +1,6 @@
-﻿namespace Xtate
+﻿using Xtate.Persistence;
+
+namespace Xtate
 {
 	internal sealed class ContentNode : IContent, IStoreSupport, IAncestorProvider
 	{

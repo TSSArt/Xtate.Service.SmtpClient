@@ -1,6 +1,6 @@
 ﻿using Xtate.Annotations;
 
-namespace Xtate
+namespace Xtate.Persistence
 {
 	[PublicAPI]
 	internal interface IPersistedDocumentId

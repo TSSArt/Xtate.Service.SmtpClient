@@ -1,4 +1,6 @@
-﻿namespace Xtate
+﻿using Xtate.Persistence;
+
+namespace Xtate
 {
 	internal sealed class ScriptExpressionNode : IScriptExpression, IStoreSupport, IAncestorProvider
 	{

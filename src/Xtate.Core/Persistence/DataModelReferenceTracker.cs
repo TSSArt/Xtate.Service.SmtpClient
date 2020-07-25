@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Xtate
+namespace Xtate.Persistence
 {
 	internal sealed class DataModelReferenceTracker : IDisposable
 	{
