@@ -1,4 +1,4 @@
-﻿namespace Xtate
+﻿namespace Xtate.Persistence
 {
 	internal enum TypeInfo
 	{

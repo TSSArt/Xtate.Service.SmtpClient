@@ -14,6 +14,7 @@ using Xtate.DataModel;
 using Xtate.DataModel.None;
 using Xtate.DataModel.Runtime;
 using Xtate.DataModel.XPath;
+using Xtate.Persistence;
 
 namespace Xtate
 {

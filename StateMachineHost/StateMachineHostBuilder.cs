@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.ComponentModel;
 using Xtate.Annotations;
 using Xtate.DataModel;
+using Xtate.Persistence;
 
 namespace Xtate
 {

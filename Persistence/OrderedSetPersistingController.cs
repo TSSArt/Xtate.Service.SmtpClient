@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Immutable;
 
-namespace Xtate
+namespace Xtate.Persistence
 {
 	internal sealed class OrderedSetPersistingController<T> : IDisposable where T : class
 	{

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
 using System.Threading;
 using Xtate.DataModel;
+using Xtate.Persistence;
 
 namespace Xtate
 {
