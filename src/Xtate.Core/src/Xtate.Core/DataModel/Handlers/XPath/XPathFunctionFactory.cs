@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Xml.Xsl;
 using Xtate.DataModel.XPath.Functions;
 
 namespace Xtate.DataModel.XPath
@@ -7,7 +8,7 @@ namespace Xtate.DataModel.XPath
 	{
 		public static readonly XPathFunctionFactory Instance = new XPathFunctionFactory();
 
-		private readonly Dictionary<(string Namespace, string Name), XPathFunctionDescriptorBase> _functionDescriptors = new Dictionary<(string Namespace, string Name), XPathFunctionDescriptorBase>();
+		private readonly Dictionary<(string Namespace, string Name), IXsltContextFunction> _functionDescriptors = new Dictionary<(string Namespace, string Name), IXsltContextFunction>();
 
 		private XPathFunctionFactory()
 		{
@@ -21,7 +22,7 @@ namespace Xtate.DataModel.XPath
 			_functionDescriptors.Add((descriptor.Namespace, descriptor.Name), descriptor);
 		}
 
-		public XPathFunctionDescriptorBase ResolveFunction(string ns, string name)
+		public IXsltContextFunction ResolveFunction(string ns, string name)
 		{
 			if (_functionDescriptors.TryGetValue((ns, name), out var descriptor))
 			{

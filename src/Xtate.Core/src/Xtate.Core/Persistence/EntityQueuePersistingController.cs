@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Xtate
+namespace Xtate.Persistence
 {
 	internal sealed class EntityQueuePersistingController<T> : IDisposable where T : class
 	{

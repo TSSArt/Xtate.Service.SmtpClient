@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Xtate
+namespace Xtate.Persistence
 {
 	public interface ITransactionalStorage : IStorage, IAsyncDisposable
 	{

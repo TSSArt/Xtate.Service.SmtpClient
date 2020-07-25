@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using Xtate.DataModel;
 
-namespace Xtate
+namespace Xtate.Persistence
 {
 	internal sealed class StateMachineReader
 	{

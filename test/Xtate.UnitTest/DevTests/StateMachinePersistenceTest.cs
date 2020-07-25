@@ -12,6 +12,7 @@ using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Xtate.DataModel.EcmaScript;
+using Xtate.Persistence;
 
 namespace Xtate.Test
 {

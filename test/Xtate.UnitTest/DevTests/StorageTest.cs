@@ -5,6 +5,8 @@ using System.Text;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xtate.DataModel.EcmaScript;
+using Xtate.Persistence;
+using TypeInfo = Xtate.Persistence.TypeInfo;
 
 namespace Xtate.Test
 {

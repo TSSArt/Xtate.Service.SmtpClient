@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
-namespace Xtate
+namespace Xtate.Persistence
 {
 	internal static class BucketExtensions
 	{

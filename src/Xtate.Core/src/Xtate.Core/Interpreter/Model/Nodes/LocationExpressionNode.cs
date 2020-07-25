@@ -1,4 +1,6 @@
-﻿namespace Xtate
+﻿using Xtate.Persistence;
+
+namespace Xtate
 {
 	internal sealed class LocationExpressionNode : ILocationExpression, IStoreSupport, IAncestorProvider
 	{

@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Xtate
+namespace Xtate.Persistence
 {
 	internal sealed class StateMachinePersistedContext : StateMachineContext, IPersistenceContext
 	{

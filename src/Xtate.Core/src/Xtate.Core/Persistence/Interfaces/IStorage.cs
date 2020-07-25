@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Xtate
+namespace Xtate.Persistence
 {
 	public interface IStorage : IDisposable
 	{
