@@ -1,7 +1,7 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-namespace Xtate
+namespace Xtate.Service
 {
 	public interface IService
 	{

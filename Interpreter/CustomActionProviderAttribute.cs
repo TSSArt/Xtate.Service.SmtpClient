@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Xtate
+namespace Xtate.CustomAction
 {
 	[AttributeUsage(AttributeTargets.Class)]
 	public sealed class CustomActionProviderAttribute : Attribute

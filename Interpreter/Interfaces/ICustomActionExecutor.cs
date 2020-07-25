@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Xtate.Annotations;
 
-namespace Xtate
+namespace Xtate.CustomAction
 {
 	[PublicAPI]
 	public interface ICustomActionExecutor

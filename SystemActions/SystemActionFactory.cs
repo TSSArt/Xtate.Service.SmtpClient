@@ -1,6 +1,6 @@
 ﻿using Xtate.Annotations;
 
-namespace Xtate
+namespace Xtate.CustomAction
 {
 	[PublicAPI]
 	[CustomActionProvider("http://xtate.net/scxml/system")]

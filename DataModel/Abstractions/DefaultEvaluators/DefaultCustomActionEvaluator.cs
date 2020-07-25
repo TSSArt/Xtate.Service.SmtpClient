@@ -9,10 +9,10 @@ namespace Xtate.DataModel
 	[PublicAPI]
 	public class DefaultCustomActionEvaluator : ICustomAction, IExecEvaluator, IAncestorProvider
 	{
-		private readonly CustomAction            _customAction;
+		private readonly CustomActionEntity            _customAction;
 		private readonly ICustomActionDispatcher _customActionDispatcher;
 
-		public DefaultCustomActionEvaluator(in CustomAction customAction)
+		public DefaultCustomActionEvaluator(in CustomActionEntity customAction)
 		{
 			_customAction = customAction;
 

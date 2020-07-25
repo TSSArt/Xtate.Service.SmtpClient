@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xtate.Persistence;
 
-namespace Xtate
+namespace Xtate.IoProcessor
 {
 	public sealed class NamedIoProcessor : IIoProcessor, IDisposable
 	{

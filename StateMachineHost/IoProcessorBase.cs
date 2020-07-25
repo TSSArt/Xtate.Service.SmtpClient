@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Xtate
+namespace Xtate.IoProcessor
 {
 	public abstract class IoProcessorBase : IIoProcessor
 	{

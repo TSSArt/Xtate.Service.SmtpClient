@@ -5,9 +5,9 @@ namespace Xtate
 {
 	internal sealed class CustomActionNode : ExecutableEntityNode, ICustomAction, IAncestorProvider
 	{
-		private readonly CustomAction _entity;
+		private readonly CustomActionEntity _entity;
 
-		public CustomActionNode(in DocumentIdRecord documentIdNode, in CustomAction entity) : base(documentIdNode, (ICustomAction?) entity.Ancestor)
+		public CustomActionNode(in DocumentIdRecord documentIdNode, in CustomActionEntity entity) : base(documentIdNode, (ICustomAction?) entity.Ancestor)
 		{
 			Infrastructure.Assert(entity.Xml != null);
 

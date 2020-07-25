@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Xtate
+namespace Xtate.Builder
 {
 	public class HistoryBuilder : BuilderBase, IHistoryBuilder
 	{

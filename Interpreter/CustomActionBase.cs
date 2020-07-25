@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xtate.Annotations;
 
-namespace Xtate
+namespace Xtate.CustomAction
 {
 	[PublicAPI]
 	public class CustomActionBase : ICustomActionExecutor
