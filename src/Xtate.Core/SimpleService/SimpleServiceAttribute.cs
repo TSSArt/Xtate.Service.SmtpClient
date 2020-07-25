@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Xtate
+namespace Xtate.Service
 {
 	[AttributeUsage(AttributeTargets.Class)]
 	public sealed class SimpleServiceAttribute : Attribute

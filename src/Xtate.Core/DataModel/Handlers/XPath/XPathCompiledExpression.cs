@@ -1,5 +1,6 @@
 ﻿using System.Xml;
 using System.Xml.XPath;
+using Xtate.Scxml;
 
 namespace Xtate.DataModel.XPath
 {

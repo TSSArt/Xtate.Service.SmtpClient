@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xtate.Annotations;
 
-namespace Xtate
+namespace Xtate.Service
 {
 	[PublicAPI]
 	public abstract class SimpleServiceBase : IService, IAsyncDisposable, IDisposable

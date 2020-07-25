@@ -6,6 +6,7 @@ using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xtate.DataModel;
 using Xtate.Persistence;
+using Xtate.Scxml;
 
 namespace Xtate.Core.Test.Legacy
 {

@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 using System.Xml;
 using Xtate.Annotations;
 
-namespace Xtate
+namespace Xtate.Scxml
 {
 	[PublicAPI]
 	public class ScxmlSerializer : StateMachineVisitor

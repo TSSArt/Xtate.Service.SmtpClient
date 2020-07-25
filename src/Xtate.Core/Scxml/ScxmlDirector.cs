@@ -5,7 +5,7 @@ using System.Globalization;
 using System.Xml;
 using Xtate.Annotations;
 
-namespace Xtate
+namespace Xtate.Scxml
 {
 	[PublicAPI]
 	public class ScxmlDirector : XmlDirector<ScxmlDirector>
