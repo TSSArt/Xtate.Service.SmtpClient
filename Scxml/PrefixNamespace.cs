@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Xtate
+namespace Xtate.Scxml
 {
 	public readonly struct PrefixNamespace : IEquatable<PrefixNamespace>
 	{

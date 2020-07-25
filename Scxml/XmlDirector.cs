@@ -6,7 +6,7 @@ using System.Linq;
 using System.Xml;
 using Xtate.Annotations;
 
-namespace Xtate
+namespace Xtate.Scxml
 {
 	[PublicAPI]
 	public abstract class XmlDirector<TDirector> : IXmlLineInfo where TDirector : XmlDirector<TDirector>
