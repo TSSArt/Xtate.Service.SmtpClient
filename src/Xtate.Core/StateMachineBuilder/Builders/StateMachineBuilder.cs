@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 using System.ComponentModel;
 using Xtate.Annotations;
 
-namespace Xtate
+namespace Xtate.Builder
 {
 	[PublicAPI]
 	public class StateMachineBuilder : BuilderBase, IStateMachineBuilder

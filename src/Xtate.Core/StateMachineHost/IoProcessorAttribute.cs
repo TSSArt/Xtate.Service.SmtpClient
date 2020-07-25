@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Xtate
+namespace Xtate.IoProcessor
 {
 	[AttributeUsage(AttributeTargets.Class)]
 	public sealed class IoProcessorAttribute : Attribute

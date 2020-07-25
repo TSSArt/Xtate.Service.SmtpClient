@@ -2,7 +2,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Xtate.Annotations;
 
-namespace Xtate
+namespace Xtate.Builder
 {
 	[PublicAPI]
 	public class InitialFluentBuilder<TOuterBuilder> where TOuterBuilder : notnull

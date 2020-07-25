@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using Xtate.Annotations;
 
-namespace Xtate
+namespace Xtate.Builder
 {
 	[PublicAPI]
 	public class ParallelFluentBuilder<TOuterBuilder> where TOuterBuilder : notnull

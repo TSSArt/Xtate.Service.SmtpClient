@@ -1,4 +1,4 @@
-﻿namespace Xtate
+﻿namespace Xtate.Builder
 {
 	public interface IDoneDataBuilder
 	{

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Xtate
+namespace Xtate.CustomAction
 {
 	public interface ICustomActionContext
 	{

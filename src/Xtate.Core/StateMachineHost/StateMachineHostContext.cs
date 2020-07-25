@@ -6,7 +6,9 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
+using Xtate.Builder;
 using Xtate.Scxml;
+using Xtate.Service;
 
 namespace Xtate
 {

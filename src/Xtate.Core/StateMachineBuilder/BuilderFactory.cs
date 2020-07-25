@@ -1,7 +1,7 @@
 ﻿using System;
 using Xtate.Annotations;
 
-namespace Xtate
+namespace Xtate.Builder
 {
 	[PublicAPI]
 	public class BuilderFactory : IBuilderFactory

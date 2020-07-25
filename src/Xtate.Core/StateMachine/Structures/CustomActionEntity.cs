@@ -2,7 +2,7 @@
 
 namespace Xtate
 {
-	public struct CustomAction : ICustomAction, IVisitorEntity<CustomAction, ICustomAction>, IAncestorProvider
+	public struct CustomActionEntity : ICustomAction, IVisitorEntity<CustomActionEntity, ICustomAction>, IAncestorProvider
 	{
 		internal object? Ancestor;
 
@@ -22,9 +22,9 @@ namespace Xtate
 
 	#endregion
 
-	#region Interface IVisitorEntity<CustomAction,ICustomAction>
+	#region Interface IVisitorEntity<CustomActionEntity,ICustomAction>
 
-		void IVisitorEntity<CustomAction, ICustomAction>.Init(ICustomAction source)
+		void IVisitorEntity<CustomActionEntity, ICustomAction>.Init(ICustomAction source)
 		{
 			Ancestor = source;
 			Xml = source.Xml;
@@ -32,7 +32,7 @@ namespace Xtate
 			Values = source.Values;
 		}
 
-		bool IVisitorEntity<CustomAction, ICustomAction>.RefEquals(ref CustomAction other) =>
+		bool IVisitorEntity<CustomActionEntity, ICustomAction>.RefEquals(ref CustomActionEntity other) =>
 				ReferenceEquals(Xml, other.Xml) &&
 				Locations == other.Locations &&
 				Values == other.Values;

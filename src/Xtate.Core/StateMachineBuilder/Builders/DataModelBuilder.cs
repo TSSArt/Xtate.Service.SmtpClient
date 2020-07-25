@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Immutable;
 
-namespace Xtate
+namespace Xtate.Builder
 {
 	public class DataModelBuilder : BuilderBase, IDataModelBuilder
 	{

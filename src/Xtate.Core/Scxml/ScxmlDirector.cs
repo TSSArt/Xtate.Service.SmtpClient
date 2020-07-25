@@ -4,6 +4,7 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.Xml;
 using Xtate.Annotations;
+using Xtate.Builder;
 
 namespace Xtate.Scxml
 {

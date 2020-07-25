@@ -2,7 +2,7 @@
 using System.Collections.Immutable;
 using Xtate.Annotations;
 
-namespace Xtate
+namespace Xtate.Builder
 {
 	[PublicAPI]
 	public class StateMachineFluentBuilder

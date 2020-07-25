@@ -4,13 +4,14 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
+using Xtate.CustomAction;
 using Xtate.DataModel;
 
 namespace Xtate
 {
 	internal sealed class CustomActionDispatcher : ICustomAction, ICustomActionDispatcher, ICustomActionContext
 	{
-		private readonly CustomAction                         _customAction;
+		private readonly CustomActionEntity                         _customAction;
 		private readonly ImmutableArray<ICustomActionFactory> _customActionFactories;
 		private readonly IErrorProcessor                      _errorProcessor;
 
@@ -20,7 +21,7 @@ namespace Xtate
 		private ImmutableArray<IObjectEvaluator>             _objectEvaluators;
 		private ImmutableArray<IValueExpression>.Builder?    _values;
 
-		public CustomActionDispatcher(ImmutableArray<ICustomActionFactory> customActionFactories, IErrorProcessor errorProcessor, in CustomAction customAction)
+		public CustomActionDispatcher(ImmutableArray<ICustomActionFactory> customActionFactories, IErrorProcessor errorProcessor, in CustomActionEntity customAction)
 		{
 			_customActionFactories = customActionFactories;
 			_errorProcessor = errorProcessor;
