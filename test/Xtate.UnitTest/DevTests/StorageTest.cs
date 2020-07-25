@@ -6,6 +6,7 @@ using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xtate.DataModel.EcmaScript;
 using Xtate.Persistence;
+using Xtate.Scxml;
 using TypeInfo = Xtate.Persistence.TypeInfo;
 
 namespace Xtate.Test

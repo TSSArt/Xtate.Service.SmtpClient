@@ -4,7 +4,7 @@
     <TargetFrameworks>netcoreapp3.0;net461</TargetFrameworks>
     <UseWindowsForms>true</UseWindowsForms>
     <Platforms>x86;x64</Platforms>
-    <RootNamespace>Xtate.Services</RootNamespace>
+    <RootNamespace>Xtate.Service</RootNamespace>
     <Nullable>enable</Nullable>
     <CefSharpAnyCpuSupport>true</CefSharpAnyCpuSupport>
   </PropertyGroup>

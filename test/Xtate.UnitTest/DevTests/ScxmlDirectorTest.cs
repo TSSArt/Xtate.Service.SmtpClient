@@ -9,6 +9,7 @@ using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Xtate.DataModel.EcmaScript;
+using Xtate.Scxml;
 
 namespace Xtate.Test
 {

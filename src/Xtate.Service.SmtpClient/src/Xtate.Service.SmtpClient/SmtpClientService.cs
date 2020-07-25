@@ -2,7 +2,7 @@
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Xtate.Services
+namespace Xtate.Service
 {
 	[SimpleService("http://xtate.net/scxml/service/#SMTPClient", Alias = "smtp")]
 	public class SmtpClientService : SimpleServiceBase

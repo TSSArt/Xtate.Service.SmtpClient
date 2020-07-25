@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Xtate.Services
+namespace Xtate.Service
 {
 	[SimpleService("http://xtate.net/scxml/service/#Input", Alias = "input")]
 	public class InputService : SimpleServiceBase

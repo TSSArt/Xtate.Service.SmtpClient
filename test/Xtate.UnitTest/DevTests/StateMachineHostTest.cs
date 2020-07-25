@@ -10,7 +10,7 @@ using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Xtate.DataModel.EcmaScript;
-using Xtate.Services;
+using Xtate.Service;
 
 namespace Xtate.Test
 {

@@ -1,4 +1,4 @@
-﻿namespace Xtate.Services
+﻿namespace Xtate.Service
 {
 	[SimpleService("http://xtate.net/scxml/service/#WebBrowser", Alias = "browser")]
 	public abstract class WebBrowserService : SimpleServiceBase

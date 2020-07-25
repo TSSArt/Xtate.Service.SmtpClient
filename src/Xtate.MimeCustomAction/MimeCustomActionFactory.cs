@@ -1,4 +1,4 @@
-﻿namespace Xtate.Services
+﻿namespace Xtate.Service
 {
 	[CustomActionProvider("http://xtate.net/scxml/customaction/mime")]
 	public class MimeCustomActionFactory : CustomActionFactoryBase

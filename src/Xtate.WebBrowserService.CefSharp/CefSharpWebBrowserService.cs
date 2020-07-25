@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace Xtate.Services
+namespace Xtate.Service
 {
 	public class CefSharpWebBrowserService : WebBrowserService
 	{

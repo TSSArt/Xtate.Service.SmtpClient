@@ -9,7 +9,7 @@ using CefSharp.Internals;
 using CefSharp.WinForms;
 using Microsoft.AspNetCore.WebUtilities;
 
-namespace Xtate.Services
+namespace Xtate.Service
 {
 	public partial class BrowserForm : Form
 	{

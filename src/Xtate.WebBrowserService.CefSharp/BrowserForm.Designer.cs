@@ -1,4 +1,4 @@
-﻿namespace Xtate.Services
+﻿namespace Xtate.Service
 {
 	partial class BrowserForm
 	{

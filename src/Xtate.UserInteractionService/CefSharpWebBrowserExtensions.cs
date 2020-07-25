@@ -1,5 +1,5 @@
 using System;
-using Xtate.Services;
+using Xtate.Service;
 
 namespace Xtate
 {
