@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public interface INotifyStateChanged
 	{

@@ -2,8 +2,9 @@
 using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
+using Xtate.IoProcessor;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public sealed partial class StateMachineInterpreter : IExternalCommunication
 	{
@@ -24,7 +25,7 @@ namespace TSSArt.StateMachine
 			}
 			catch (Exception ex)
 			{
-				throw new StateMachineCommunicationException(ex, _sessionId);
+				throw new CommunicationException(ex, _sessionId);
 			}
 		}
 
@@ -41,7 +42,7 @@ namespace TSSArt.StateMachine
 			}
 			catch (Exception ex)
 			{
-				throw new StateMachineCommunicationException(ex, _sessionId);
+				throw new CommunicationException(ex, _sessionId);
 			}
 		}
 
@@ -62,12 +63,12 @@ namespace TSSArt.StateMachine
 			}
 			catch (Exception ex)
 			{
-				throw new StateMachineCommunicationException(ex, _sessionId, evt.SendId);
+				throw new CommunicationException(ex, _sessionId, evt.SendId);
 			}
 		}
 
 		ValueTask IExternalCommunication.ForwardEvent(IEvent evt, InvokeId invokeId, CancellationToken token) => ForwardEvent(evt, invokeId, token);
-		
+
 		async ValueTask IExternalCommunication.CancelEvent(SendId sendId, CancellationToken token)
 		{
 			try
@@ -81,7 +82,7 @@ namespace TSSArt.StateMachine
 			}
 			catch (Exception ex)
 			{
-				throw new StateMachineCommunicationException(ex, _sessionId, sendId);
+				throw new CommunicationException(ex, _sessionId, sendId);
 			}
 		}
 
@@ -93,7 +94,7 @@ namespace TSSArt.StateMachine
 		{
 			for (; exception != null; exception = exception.InnerException)
 			{
-				if (exception is StateMachineCommunicationException ex && ex.SessionId == _sessionId)
+				if (exception is CommunicationException ex && ex.SessionId == _sessionId)
 				{
 					sendId = ex.SendId;
 
@@ -119,7 +120,7 @@ namespace TSSArt.StateMachine
 			}
 			catch (Exception ex)
 			{
-				throw new StateMachineCommunicationException(ex, _sessionId);
+				throw new CommunicationException(ex, _sessionId);
 			}
 		}
 

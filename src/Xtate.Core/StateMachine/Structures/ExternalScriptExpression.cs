@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public struct ExternalScriptExpression : IExternalScriptExpression, IVisitorEntity<ExternalScriptExpression, IExternalScriptExpression>, IAncestorProvider
 	{
@@ -26,7 +26,7 @@ namespace TSSArt.StateMachine
 			Uri = source.Uri;
 		}
 
-		bool IVisitorEntity<ExternalScriptExpression, IExternalScriptExpression>.RefEquals(in ExternalScriptExpression other) => ReferenceEquals(Uri, other.Uri);
+		bool IVisitorEntity<ExternalScriptExpression, IExternalScriptExpression>.RefEquals(ref ExternalScriptExpression other) => ReferenceEquals(Uri, other.Uri);
 
 	#endregion
 	}

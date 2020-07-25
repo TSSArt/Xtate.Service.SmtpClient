@@ -1,4 +1,4 @@
-﻿namespace TSSArt.StateMachine
+﻿namespace Xtate.DataModel.Runtime
 {
 	internal sealed class RuntimeDataModelHandler : DataModelHandlerBase
 	{

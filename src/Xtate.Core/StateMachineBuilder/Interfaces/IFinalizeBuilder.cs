@@ -1,4 +1,4 @@
-﻿namespace TSSArt.StateMachine
+﻿namespace Xtate.Builder
 {
 	public interface IFinalizeBuilder
 	{

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
 
-namespace TSSArt.StateMachine
+namespace Xtate.Builder
 {
 	[PublicAPI]
 	public class HistoryFluentBuilder<TOuterBuilder> where TOuterBuilder : notnull

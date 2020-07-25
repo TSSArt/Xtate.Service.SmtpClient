@@ -3,7 +3,7 @@ using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace TSSArt.StateMachine
+namespace Xtate.Persistence
 {
 	internal class InMemoryStorage : IStorage
 	{

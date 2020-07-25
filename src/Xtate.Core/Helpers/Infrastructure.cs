@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	[PublicAPI]
 	[ExcludeFromCodeCoverage]
@@ -17,7 +17,7 @@ namespace TSSArt.StateMachine
 				return;
 			}
 
-			throw new StateMachineInfrastructureException(Resources.Exception_AssertionFailed);
+			throw new InfrastructureException(Resources.Exception_AssertionFailed);
 		}
 
 		[AssertionMethod]
@@ -29,7 +29,7 @@ namespace TSSArt.StateMachine
 				return;
 			}
 
-			throw new StateMachineInfrastructureException(message);
+			throw new InfrastructureException(message);
 		}
 
 		[AssertionMethod]
@@ -103,5 +103,7 @@ namespace TSSArt.StateMachine
 
 			throw new NotSupportedException();
 		}
+
+		public static void IgnoredException(Exception _) { }
 	}
 }

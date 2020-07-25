@@ -1,4 +1,4 @@
-﻿namespace TSSArt.StateMachine
+﻿namespace Xtate.Builder
 {
 	public interface IDataBuilder
 	{
@@ -6,6 +6,6 @@
 		void  SetId(string id);
 		void  SetSource(IExternalDataExpression source);
 		void  SetExpression(IValueExpression expression);
-		void  SetInlineContent(string inlineContent);
+		void  SetInlineContent(IInlineContent inlineContent);
 	}
 }

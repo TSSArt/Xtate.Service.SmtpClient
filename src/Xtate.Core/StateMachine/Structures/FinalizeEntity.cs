@@ -1,6 +1,6 @@
 ﻿using System.Collections.Immutable;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public struct FinalizeEntity : IFinalize, IVisitorEntity<FinalizeEntity, IFinalize>, IAncestorProvider
 	{
@@ -26,7 +26,7 @@ namespace TSSArt.StateMachine
 			Action = source.Action;
 		}
 
-		bool IVisitorEntity<FinalizeEntity, IFinalize>.RefEquals(in FinalizeEntity other) => Action == other.Action;
+		bool IVisitorEntity<FinalizeEntity, IFinalize>.RefEquals(ref FinalizeEntity other) => Action == other.Action;
 
 	#endregion
 	}

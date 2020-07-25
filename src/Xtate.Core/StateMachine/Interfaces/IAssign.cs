@@ -1,9 +1,11 @@
-﻿namespace TSSArt.StateMachine
+﻿namespace Xtate
 {
 	public interface IAssign : IExecutableEntity
 	{
 		ILocationExpression? Location      { get; }
 		IValueExpression?    Expression    { get; }
-		string?              InlineContent { get; }
+		IInlineContent?      InlineContent { get; }
+		string?              Type          { get; }
+		string?              Attribute     { get; }
 	}
 }

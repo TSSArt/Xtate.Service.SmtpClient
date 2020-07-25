@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public class StateMachineValidator : IStateMachineValidator
 	{
@@ -110,6 +110,18 @@ namespace TSSArt.StateMachine
 			}
 
 			protected override void Visit(ref IContentBody entity)
+			{
+				if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+				if (entity.Value == null)
+				{
+					AddError(entity, Resources.ErrorMessage_ContentValueCantBeNull);
+				}
+
+				base.Visit(ref entity);
+			}
+
+			protected override void Visit(ref IInlineContent entity)
 			{
 				if (entity == null) throw new ArgumentNullException(nameof(entity));
 

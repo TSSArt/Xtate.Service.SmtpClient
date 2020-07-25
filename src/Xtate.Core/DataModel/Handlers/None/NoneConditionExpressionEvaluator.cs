@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TSSArt.StateMachine
+namespace Xtate.DataModel.None
 {
 	internal sealed class NoneConditionExpressionEvaluator : IConditionExpression, IBooleanEvaluator, IAncestorProvider, IDebugEntityId
 	{

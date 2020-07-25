@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Immutable;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public struct ParallelEntity : IParallel, IVisitorEntity<ParallelEntity, IParallel>, IAncestorProvider, IDebugEntityId
 	{
@@ -47,7 +47,7 @@ namespace TSSArt.StateMachine
 			Transitions = source.Transitions;
 		}
 
-		bool IVisitorEntity<ParallelEntity, IParallel>.RefEquals(in ParallelEntity other) =>
+		bool IVisitorEntity<ParallelEntity, IParallel>.RefEquals(ref ParallelEntity other) =>
 				ReferenceEquals(Id, other.Id) &&
 				ReferenceEquals(DataModel, other.DataModel) &&
 				Invoke == other.Invoke &&

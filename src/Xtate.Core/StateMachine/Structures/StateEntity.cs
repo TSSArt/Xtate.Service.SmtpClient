@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Immutable;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public struct StateEntity : IState, IVisitorEntity<StateEntity, IState>, IAncestorProvider, IDebugEntityId
 	{
@@ -49,7 +49,7 @@ namespace TSSArt.StateMachine
 			Transitions = source.Transitions;
 		}
 
-		bool IVisitorEntity<StateEntity, IState>.RefEquals(in StateEntity other) =>
+		bool IVisitorEntity<StateEntity, IState>.RefEquals(ref StateEntity other) =>
 				ReferenceEquals(Id, other.Id) &&
 				ReferenceEquals(Initial, other.Initial) &&
 				ReferenceEquals(DataModel, other.DataModel) &&

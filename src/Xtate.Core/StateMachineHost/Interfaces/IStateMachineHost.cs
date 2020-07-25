@@ -1,8 +1,9 @@
 ﻿using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
+using Xtate.IoProcessor;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal interface IStateMachineHost
 	{

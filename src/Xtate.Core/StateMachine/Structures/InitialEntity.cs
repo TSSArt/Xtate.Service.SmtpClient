@@ -1,4 +1,4 @@
-﻿namespace TSSArt.StateMachine
+﻿namespace Xtate
 {
 	public struct InitialEntity : IInitial, IVisitorEntity<InitialEntity, IInitial>, IAncestorProvider
 	{
@@ -25,7 +25,7 @@
 			Transition = source.Transition;
 		}
 
-		bool IVisitorEntity<InitialEntity, IInitial>.RefEquals(in InitialEntity other) => ReferenceEquals(Transition, other.Transition);
+		bool IVisitorEntity<InitialEntity, IInitial>.RefEquals(ref InitialEntity other) => ReferenceEquals(Transition, other.Transition);
 
 	#endregion
 	}

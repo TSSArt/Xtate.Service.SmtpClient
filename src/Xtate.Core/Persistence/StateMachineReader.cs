@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
+using Xtate.DataModel;
 
-namespace TSSArt.StateMachine
+namespace Xtate.Persistence
 {
 	internal sealed class StateMachineReader
 	{
@@ -12,7 +13,7 @@ namespace TSSArt.StateMachine
 		{
 			_forwardEntities = forwardEntities;
 
-			return RestoreStateMachine(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element);
+			return RestoreStateMachine(bucket) ?? throw new PersistenceException(Resources.Exception_Can_t_restore_element);
 		}
 
 		private static bool Exist(Bucket bucket, TypeInfo typeInfo)
@@ -21,7 +22,7 @@ namespace TSSArt.StateMachine
 			{
 				if (storedTypeInfo != typeInfo)
 				{
-					throw new StateMachinePersistenceException(Resources.Exception_Unexpected_TypeInfo_value);
+					throw new PersistenceException(Resources.Exception_Unexpected_TypeInfo_value);
 				}
 
 				return true;
@@ -36,17 +37,17 @@ namespace TSSArt.StateMachine
 
 			if (_forwardEntities == null)
 			{
-				throw new StateMachinePersistenceException(Resources.Exception_Forward_entities_required_to_restore_state_machine);
+				throw new PersistenceException(Resources.Exception_Forward_entities_required_to_restore_state_machine);
 			}
 
 			if (!_forwardEntities.TryGetValue(documentId, out var entity))
 			{
-				throw new StateMachinePersistenceException(Resources.Exception_Forward_entity_can_not_be_found);
+				throw new PersistenceException(Resources.Exception_Forward_entity_can_not_be_found);
 			}
 
 			if (!(entity is IExecutableEntity executableEntity))
 			{
-				throw new StateMachinePersistenceException(Resources.Exception_Forward_entity_has_incorrect_type);
+				throw new PersistenceException(Resources.Exception_Forward_entity_has_incorrect_type);
 			}
 
 			return executableEntity;
@@ -105,7 +106,9 @@ namespace TSSArt.StateMachine
 								  Ancestor = new EntityData(bucket),
 								  Location = RestoreLocationExpression(bucket.Nested(Key.Location)),
 								  Expression = RestoreValueExpression(bucket.Nested(Key.Expression)),
-								  InlineContent = bucket.GetString(Key.InlineContent)
+								  Type = bucket.GetString(Key.Type),
+								  Attribute = bucket.GetString(Key.Attribute),
+								  InlineContent = bucket.TryGet(Key.InlineContent, out string? content) ? new InlineContent { Value = content } : (IInlineContent?) null
 						  }
 						: (IAssign?) null;
 
@@ -145,9 +148,9 @@ namespace TSSArt.StateMachine
 
 			return typeInfo switch
 			{
-					TypeInfo.ConditionExpressionNode => RestoreConditionExpression(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element),
+					TypeInfo.ConditionExpressionNode => RestoreConditionExpression(bucket) ?? throw new PersistenceException(Resources.Exception_Can_t_restore_element),
 					TypeInfo.RuntimeExecNode => ForwardExecEntity(bucket),
-					_ => throw new StateMachinePersistenceException(Resources.Exception_Unknown_Condition_type)
+					_ => throw new PersistenceException(Resources.Exception_Unknown_Condition_type)
 			};
 		}
 
@@ -178,7 +181,7 @@ namespace TSSArt.StateMachine
 								  Id = bucket.GetString(Key.Id),
 								  Source = RestoreExternalDataExpression(bucket.Nested(Key.Source)),
 								  Expression = RestoreValueExpression(bucket.Nested(Key.Expression)),
-								  InlineContent = bucket.GetString(Key.InlineContent)
+								  InlineContent = bucket.TryGet(Key.InlineContent, out string? content) ? new InlineContent { Value = content } : (IInlineContent?) null
 						  }
 						: (IData?) null;
 
@@ -224,19 +227,19 @@ namespace TSSArt.StateMachine
 			var typeInfo = bucket.Get<TypeInfo>(Key.TypeInfo);
 			return typeInfo switch
 			{
-					TypeInfo.AssignNode => RestoreAssign(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element),
-					TypeInfo.CancelNode => RestoreCancel(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element),
-					TypeInfo.CustomActionNode => RestoreCustomAction(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element),
-					TypeInfo.ForEachNode => RestoreForEach(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element),
-					TypeInfo.IfNode => RestoreIf(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element),
-					TypeInfo.ElseIfNode => RestoreElseIf(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element),
-					TypeInfo.ElseNode => RestoreElse(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element),
-					TypeInfo.LogNode => RestoreLog(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element),
-					TypeInfo.RaiseNode => RestoreRaise(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element),
-					TypeInfo.ScriptNode => RestoreScript(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element),
-					TypeInfo.SendNode => RestoreSend(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element),
+					TypeInfo.AssignNode => RestoreAssign(bucket) ?? throw new PersistenceException(Resources.Exception_Can_t_restore_element),
+					TypeInfo.CancelNode => RestoreCancel(bucket) ?? throw new PersistenceException(Resources.Exception_Can_t_restore_element),
+					TypeInfo.CustomActionNode => RestoreCustomAction(bucket) ?? throw new PersistenceException(Resources.Exception_Can_t_restore_element),
+					TypeInfo.ForEachNode => RestoreForEach(bucket) ?? throw new PersistenceException(Resources.Exception_Can_t_restore_element),
+					TypeInfo.IfNode => RestoreIf(bucket) ?? throw new PersistenceException(Resources.Exception_Can_t_restore_element),
+					TypeInfo.ElseIfNode => RestoreElseIf(bucket) ?? throw new PersistenceException(Resources.Exception_Can_t_restore_element),
+					TypeInfo.ElseNode => RestoreElse(bucket) ?? throw new PersistenceException(Resources.Exception_Can_t_restore_element),
+					TypeInfo.LogNode => RestoreLog(bucket) ?? throw new PersistenceException(Resources.Exception_Can_t_restore_element),
+					TypeInfo.RaiseNode => RestoreRaise(bucket) ?? throw new PersistenceException(Resources.Exception_Can_t_restore_element),
+					TypeInfo.ScriptNode => RestoreScript(bucket) ?? throw new PersistenceException(Resources.Exception_Can_t_restore_element),
+					TypeInfo.SendNode => RestoreSend(bucket) ?? throw new PersistenceException(Resources.Exception_Can_t_restore_element),
 					TypeInfo.RuntimeExecNode => ForwardExecEntity(bucket),
-					_ => throw new StateMachinePersistenceException(Resources.Exception_Unknown_Executable_Entity_type)
+					_ => throw new PersistenceException(Resources.Exception_Unknown_Executable_Entity_type)
 			};
 		}
 
@@ -271,7 +274,7 @@ namespace TSSArt.StateMachine
 
 		private static ICustomAction? RestoreCustomAction(Bucket bucket) =>
 				Exist(bucket, TypeInfo.CustomActionNode)
-						? new CustomAction
+						? new CustomActionEntity
 						  {
 								  Ancestor = new EntityData(bucket),
 								  Xml = bucket.GetString(Key.Content),
@@ -477,11 +480,11 @@ namespace TSSArt.StateMachine
 			var typeInfo = bucket.Get<TypeInfo>(Key.TypeInfo);
 			return typeInfo switch
 			{
-					TypeInfo.CompoundNode => RestoreCompound(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element),
-					TypeInfo.FinalNode => RestoreFinal(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element),
-					TypeInfo.ParallelNode => RestoreParallel(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element),
-					TypeInfo.StateNode => RestoreState(bucket) ?? throw new StateMachinePersistenceException(Resources.Exception_Can_t_restore_element),
-					_ => throw new StateMachinePersistenceException(Resources.Exception_Unknown_State_Entity_type)
+					TypeInfo.CompoundNode => RestoreCompound(bucket) ?? throw new PersistenceException(Resources.Exception_Can_t_restore_element),
+					TypeInfo.FinalNode => RestoreFinal(bucket) ?? throw new PersistenceException(Resources.Exception_Can_t_restore_element),
+					TypeInfo.ParallelNode => RestoreParallel(bucket) ?? throw new PersistenceException(Resources.Exception_Can_t_restore_element),
+					TypeInfo.StateNode => RestoreState(bucket) ?? throw new PersistenceException(Resources.Exception_Can_t_restore_element),
+					_ => throw new PersistenceException(Resources.Exception_Unknown_State_Entity_type)
 			};
 		}
 

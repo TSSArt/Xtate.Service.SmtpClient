@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public struct HistoryEntity : IHistory, IVisitorEntity<HistoryEntity, IHistory>, IAncestorProvider, IDebugEntityId
 	{
@@ -36,7 +36,7 @@ namespace TSSArt.StateMachine
 			Transition = source.Transition;
 		}
 
-		bool IVisitorEntity<HistoryEntity, IHistory>.RefEquals(in HistoryEntity other) =>
+		bool IVisitorEntity<HistoryEntity, IHistory>.RefEquals(ref HistoryEntity other) =>
 				Type == other.Type &&
 				ReferenceEquals(Id, other.Id) &&
 				ReferenceEquals(Transition, other.Transition);

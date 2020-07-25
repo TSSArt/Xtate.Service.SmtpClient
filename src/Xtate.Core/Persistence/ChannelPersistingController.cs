@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-namespace TSSArt.StateMachine
+namespace Xtate.Persistence
 {
 	internal sealed class ChannelPersistingController<T> : Channel<T>, IDisposable
 	{
@@ -45,7 +45,7 @@ namespace TSSArt.StateMachine
 			{
 				if (!_baseChannel.Writer.TryWrite(creator(bucket.Nested(i))))
 				{
-					throw new StateMachinePersistenceException(Resources.Exception_Channel_can_t_consume_previously_persisted_object);
+					throw new PersistenceException(Resources.Exception_Channel_can_t_consume_previously_persisted_object);
 				}
 			}
 

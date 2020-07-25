@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal sealed class DefaultLogger : ILogger
 	{

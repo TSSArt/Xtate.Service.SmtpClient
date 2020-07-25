@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TSSArt.StateMachine
+namespace Xtate.Builder
 {
 	public class ContentBuilder : BuilderBase, IContentBuilder
 	{
@@ -15,12 +15,7 @@ namespace TSSArt.StateMachine
 
 		public void SetExpression(IValueExpression expression) => _expression = expression ?? throw new ArgumentNullException(nameof(expression));
 
-		public void SetBody(string body)
-		{
-			if (body == null) throw new ArgumentNullException(nameof(body));
-
-			_body = new ContentBody { Value = body };
-		}
+		public void SetBody(IContentBody body) => _body = body ?? throw new ArgumentNullException(nameof(body));
 
 	#endregion
 	}

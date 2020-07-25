@@ -1,6 +1,6 @@
 ﻿using System.Collections.Immutable;
 
-namespace TSSArt.StateMachine
+namespace Xtate.Builder
 {
 	public class TransitionBuilder : BuilderBase, ITransitionBuilder
 	{

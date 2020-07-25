@@ -1,6 +1,7 @@
 ﻿using System;
+using Xtate.Persistence;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal sealed class ExternalDataExpressionNode : IExternalDataExpression, IStoreSupport, IAncestorProvider
 	{

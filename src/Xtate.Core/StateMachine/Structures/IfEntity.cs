@@ -1,6 +1,6 @@
 ﻿using System.Collections.Immutable;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public struct IfEntity : IIf, IVisitorEntity<IfEntity, IIf>, IAncestorProvider
 	{
@@ -28,7 +28,7 @@ namespace TSSArt.StateMachine
 			Condition = source.Condition!;
 		}
 
-		bool IVisitorEntity<IfEntity, IIf>.RefEquals(in IfEntity other) =>
+		bool IVisitorEntity<IfEntity, IIf>.RefEquals(ref IfEntity other) =>
 				Action == other.Action &&
 				ReferenceEquals(Condition, other.Condition);
 

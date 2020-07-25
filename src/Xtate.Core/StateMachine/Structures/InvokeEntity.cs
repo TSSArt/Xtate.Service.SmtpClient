@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Immutable;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public struct InvokeEntity : IInvoke, IVisitorEntity<InvokeEntity, IInvoke>, IAncestorProvider, IDebugEntityId
 	{
@@ -53,7 +53,7 @@ namespace TSSArt.StateMachine
 			AutoForward = source.AutoForward;
 		}
 
-		bool IVisitorEntity<InvokeEntity, IInvoke>.RefEquals(in InvokeEntity other) =>
+		bool IVisitorEntity<InvokeEntity, IInvoke>.RefEquals(ref InvokeEntity other) =>
 				AutoForward == other.AutoForward &&
 				NameList == other.NameList &&
 				Parameters == other.Parameters &&

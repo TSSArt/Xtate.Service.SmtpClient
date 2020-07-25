@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TSSArt.StateMachine
+namespace Xtate.Builder
 {
 	public class CustomActionBuilder : BuilderBase, ICustomActionBuilder
 	{
@@ -10,7 +10,7 @@ namespace TSSArt.StateMachine
 
 	#region Interface ICustomActionBuilder
 
-		public ICustomAction Build() => new CustomAction { Ancestor = Ancestor, Xml = _xml };
+		public ICustomAction Build() => new CustomActionEntity { Ancestor = Ancestor, Xml = _xml };
 
 		public void SetXml(string xml) => _xml = xml ?? throw new ArgumentNullException(nameof(xml));
 

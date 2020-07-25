@@ -4,9 +4,9 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Xml;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
 
-namespace TSSArt.StateMachine
+namespace Xtate.Scxml
 {
 	[PublicAPI]
 	public abstract class XmlDirector<TDirector> : IXmlLineInfo where TDirector : XmlDirector<TDirector>
@@ -196,11 +196,11 @@ namespace TSSArt.StateMachine
 
 		protected class Policy<TEntity>
 		{
-			private readonly Dictionary<(string ns, string name), (Action<TDirector, TEntity> located, AttributeType type)> _attributes =
-					new Dictionary<(string ns, string name), (Action<TDirector, TEntity> located, AttributeType type)>();
+			private readonly Dictionary<QualifiedName, (Action<TDirector, TEntity> located, AttributeType type)> _attributes =
+					new Dictionary<QualifiedName, (Action<TDirector, TEntity> located, AttributeType type)>();
 
-			private readonly Dictionary<(string ns, string name), (Action<TDirector, TEntity> located, ElementType type)> _elements =
-					new Dictionary<(string ns, string name), (Action<TDirector, TEntity> located, ElementType type)>();
+			private readonly Dictionary<QualifiedName, (Action<TDirector, TEntity> located, ElementType type)> _elements =
+					new Dictionary<QualifiedName, (Action<TDirector, TEntity> located, ElementType type)>();
 
 			public Action<TDirector, TEntity>? RawContentAction { get; set; }
 
@@ -212,29 +212,71 @@ namespace TSSArt.StateMachine
 
 			public void AddAttribute(string ns, string name, Action<TDirector, TEntity> located, AttributeType type)
 			{
-				_attributes.Add((ns, name), (located, type));
+				_attributes.Add(new QualifiedName(ns, name), (located, type));
 			}
 
 			public void AddElement(string ns, string name, Action<TDirector, TEntity> located, ElementType type)
 			{
-				_elements.Add((ns, name), (located, type));
+				_elements.Add(new QualifiedName(ns, name), (located, type));
 			}
 
 			public Action<TDirector, TEntity>? AttributeLocated(string ns, string name) =>
-					_attributes.TryGetValue((ns, name), out (Action<TDirector, TEntity> located, AttributeType type) val) ? val.located : null;
+					_attributes.TryGetValue(new QualifiedName(ns, name), out (Action<TDirector, TEntity> located, AttributeType type) val) ? val.located : null;
 
 			public Action<TDirector, TEntity>? ElementLocated(string ns, string name) =>
-					_elements.TryGetValue((ns, name), out (Action<TDirector, TEntity> located, ElementType type) val) ? val.located : UnknownElementAction;
+					_elements.TryGetValue(new QualifiedName(ns, name), out (Action<TDirector, TEntity> located, ElementType type) val) ? val.located : UnknownElementAction;
 
 			public ValidationContext CreateValidationContext(XmlReader xmlReader, IErrorProcessor errorProcessor) => new ValidationContext(this, xmlReader, errorProcessor);
 
+			public void FillNameTable(XmlNameTable nameTable)
+			{
+				if (nameTable == null) throw new ArgumentNullException(nameof(nameTable));
+
+				FillFromQualifiedName(_elements);
+				FillFromQualifiedName(_attributes);
+
+				void FillFromQualifiedName<T>(Dictionary<QualifiedName, T> dictionary)
+				{
+					foreach (var pair in dictionary)
+					{
+						var ns = nameTable.Add(pair.Key.Namespace);
+						Infrastructure.Assert(ns == pair.Key.Namespace);
+
+						var name = nameTable.Add(pair.Key.Name);
+						Infrastructure.Assert(name == pair.Key.Name);
+					}
+				}
+			}
+
+			private readonly struct QualifiedName : IEquatable<QualifiedName>
+			{
+				public readonly string Name;
+				public readonly string Namespace;
+
+				public QualifiedName(string ns, string name)
+				{
+					Namespace = ns;
+					Name = name;
+				}
+
+			#region Interface IEquatable<XmlDirector<TDirector>.Policy<TEntity>.QualifiedName>
+
+				public bool Equals(QualifiedName other) => ReferenceEquals(Namespace, other.Namespace) && ReferenceEquals(Name, other.Name);
+
+			#endregion
+
+				public override bool Equals(object? obj) => obj is QualifiedName other && Equals(other);
+
+				public override int GetHashCode() => unchecked((Namespace.Length << 16) + Name.Length);
+			}
+
 			public class ValidationContext
 			{
-				private readonly Dictionary<(string ns, string name), AttributeType>? _attributes;
-				private readonly Dictionary<(string ns, string name), ElementType>?   _elements;
-				private readonly IErrorProcessor                                      _errorProcessor;
-				private readonly bool                                                 _ignoreUnknownElements;
-				private readonly XmlReader                                            _xmlReader;
+				private readonly Dictionary<QualifiedName, AttributeType>? _attributes;
+				private readonly Dictionary<QualifiedName, ElementType>?   _elements;
+				private readonly IErrorProcessor                           _errorProcessor;
+				private readonly bool                                      _ignoreUnknownElements;
+				private readonly XmlReader                                 _xmlReader;
 
 				public ValidationContext(Policy<TEntity> policy, XmlReader xmlReader, IErrorProcessor errorProcessor)
 				{
@@ -244,7 +286,7 @@ namespace TSSArt.StateMachine
 
 					if (policy._attributes.Count > 0)
 					{
-						_attributes = new Dictionary<(string ns, string name), AttributeType>(policy._attributes.Count);
+						_attributes = new Dictionary<QualifiedName, AttributeType>(policy._attributes.Count);
 						foreach (var pair in policy._attributes)
 						{
 							_attributes.Add(pair.Key, pair.Value.type);
@@ -253,7 +295,7 @@ namespace TSSArt.StateMachine
 
 					if (policy._elements.Count > 0)
 					{
-						_elements = new Dictionary<(string ns, string name), ElementType>(policy._elements.Count);
+						_elements = new Dictionary<QualifiedName, ElementType>(policy._elements.Count);
 						foreach (var pair in policy._elements)
 						{
 							_elements.Add(pair.Key, pair.Value.type);
@@ -273,14 +315,14 @@ namespace TSSArt.StateMachine
 
 				public void ValidateAttribute(string ns, string name)
 				{
-					if (_attributes != null && _attributes.TryGetValue((ns, name), out var type))
+					if (_attributes != null && _attributes.TryGetValue(new QualifiedName(ns, name), out var type))
 					{
 						if (type == AttributeType.SysOptionalFound || type == AttributeType.SysRequiredFound)
 						{
 							AddError(CreateMessage(Resources.ErrorMessage_FoundDuplicateAttribute, ns, name));
 						}
 
-						_attributes[(ns, name)] = type + (int) AttributeType.SysIncrement;
+						_attributes[new QualifiedName(ns, name)] = type + (int) AttributeType.SysIncrement;
 					}
 				}
 
@@ -295,14 +337,14 @@ namespace TSSArt.StateMachine
 
 				public void ValidateElement(string ns, string name)
 				{
-					if (_elements != null && _elements.TryGetValue((ns, name), out var type))
+					if (_elements != null && _elements.TryGetValue(new QualifiedName(ns, name), out var type))
 					{
 						if (type == ElementType.SysOneFound || type == ElementType.SysZeroToOneFound)
 						{
 							AddError(CreateMessage(Resources.ErrorMessage_Only_one_element_allowed, ns, name));
 						}
 
-						_elements[(ns, name)] = type + (int) ElementType.SysIncrement;
+						_elements[new QualifiedName(ns, name)] = type + (int) ElementType.SysIncrement;
 					}
 					else if (!_ignoreUnknownElements)
 					{
@@ -321,9 +363,9 @@ namespace TSSArt.StateMachine
 
 				private static string CreateMessage(string format, string ns, string name) => string.Format(CultureInfo.InvariantCulture, format, string.IsNullOrEmpty(ns) ? name : ns + @":" + name);
 
-				private static string CreateMessage(string format, string delimiter, IEnumerable<(string ns, string name)> names)
+				private static string CreateMessage(string format, string delimiter, IEnumerable<QualifiedName> names)
 				{
-					var query = names.Select(n => string.IsNullOrEmpty(n.ns) ? n.name : n.ns + @":" + n.name);
+					var query = names.Select(n => string.IsNullOrEmpty(n.Namespace) ? n.Name : n.Namespace + @":" + n.Name);
 					return string.Format(CultureInfo.InvariantCulture, format, string.Join(delimiter, query));
 				}
 

@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TSSArt.StateMachine
+namespace Xtate.Service
 {
 	public sealed class SimpleServiceFactory<TService> : IServiceFactory where TService : SimpleServiceBase, new()
 	{
@@ -18,7 +18,7 @@ namespace TSSArt.StateMachine
 
 			if (serviceAttribute == null)
 			{
-				throw new StateMachineInfrastructureException(Res.Format(Resources.Exception_ServiceAttribute_did_not_provided_for_type, typeof(TService)));
+				throw new InfrastructureException(Res.Format(Resources.Exception_ServiceAttribute_did_not_provided_for_type, typeof(TService)));
 			}
 
 			_type = new Uri(serviceAttribute.Type, UriKind.RelativeOrAbsolute);

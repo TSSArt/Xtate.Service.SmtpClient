@@ -1,4 +1,4 @@
-﻿namespace TSSArt.StateMachine
+﻿namespace Xtate
 {
 	internal interface IDataModelValueProvider
 	{
@@ -7,5 +7,6 @@
 		DataModelValue Host             { get; }
 		DataModelValue Interpreter      { get; }
 		DataModelValue DataModelHandler { get; }
+		bool           CaseInsensitive  { get; }
 	}
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Immutable;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public struct FinalEntity : IFinal, IVisitorEntity<FinalEntity, IFinal>, IAncestorProvider, IDebugEntityId
 	{
@@ -39,7 +39,7 @@ namespace TSSArt.StateMachine
 			DoneData = source.DoneData;
 		}
 
-		bool IVisitorEntity<FinalEntity, IFinal>.RefEquals(in FinalEntity other) =>
+		bool IVisitorEntity<FinalEntity, IFinal>.RefEquals(ref FinalEntity other) =>
 				OnExit == other.OnExit &&
 				OnEntry == other.OnEntry &&
 				ReferenceEquals(Id, other.Id) &&

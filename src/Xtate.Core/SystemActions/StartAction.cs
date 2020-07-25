@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 
-namespace TSSArt.StateMachine
+namespace Xtate.CustomAction
 {
 	public class StartAction : ICustomActionExecutor
 	{
@@ -62,7 +62,7 @@ namespace TSSArt.StateMachine
 
 			if (source == null)
 			{
-				throw new StateMachineProcessorException(Resources.StartAction_Execute_Source_not_specified);
+				throw new ProcessorException(Resources.StartAction_Execute_Source_not_specified);
 			}
 
 			var sessionId = SessionId.New();
@@ -76,16 +76,12 @@ namespace TSSArt.StateMachine
 
 	#endregion
 
-		internal static void FillXmlNameTable(XmlNameTable xmlNameTable)
-		{
-			xmlNameTable.Add(Source);
-			xmlNameTable.Add(SourceExpr);
-			xmlNameTable.Add(IdLocation);
-		}
-
 		private static Uri? GetBaseUri(IExecutionContext executionContext)
 		{
-			var val = executionContext.DataModel["_x"].AsObjectOrEmpty()["host"].AsObjectOrEmpty()["location"].AsStringOrDefault();
+			var val = executionContext.DataModel[key: "_x", caseInsensitive: false]
+									  .AsObjectOrEmpty()[key: "host", caseInsensitive: false]
+									  .AsObjectOrEmpty()[key: "location", caseInsensitive: false]
+									  .AsStringOrDefault();
 
 			return val != null ? new Uri(val) : null;
 		}
@@ -97,7 +93,7 @@ namespace TSSArt.StateMachine
 				return host;
 			}
 
-			throw new StateMachineProcessorException(Resources.Exception_Can_t_get_access_to_IHost_interface);
+			throw new ProcessorException(Resources.Exception_Can_t_get_access_to_IHost_interface);
 		}
 
 		private async ValueTask<Uri?> GetSource(IExecutionContext executionContext, CancellationToken token)

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal sealed class KeyList<T>
 	{

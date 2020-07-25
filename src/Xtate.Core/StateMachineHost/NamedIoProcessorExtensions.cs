@@ -1,7 +1,8 @@
 ﻿using System;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
+using Xtate.IoProcessor;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	[PublicAPI]
 	public static class NamedIoProcessorExtensions

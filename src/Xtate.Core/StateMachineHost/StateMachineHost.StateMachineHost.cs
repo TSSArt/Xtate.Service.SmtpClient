@@ -3,8 +3,11 @@ using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
+using Xtate.DataModel;
+using Xtate.IoProcessor;
+using Xtate.Service;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public sealed partial class StateMachineHost : IStateMachineHost
 	{
@@ -66,7 +69,7 @@ namespace TSSArt.StateMachine
 				{
 					if (evt.DelayMs != 0)
 					{
-						throw new StateMachineProcessorException(Resources.Exception_Internal_events_can_t_be_delayed_);
+						throw new ProcessorException(Resources.Exception_Internal_events_can_t_be_delayed_);
 					}
 
 					return SendStatus.ToInternalQueue;
@@ -91,7 +94,7 @@ namespace TSSArt.StateMachine
 
 			if (!context.TryGetService(invokeId, out var service))
 			{
-				throw new StateMachineProcessorException(Resources.Exception_Invalid_InvokeId);
+				throw new ProcessorException(Resources.Exception_Invalid_InvokeId);
 			}
 
 			return service?.Send(evt, token) ?? default;
@@ -111,7 +114,7 @@ namespace TSSArt.StateMachine
 			}
 			catch (Exception ex)
 			{
-				var evt = new EventObject(EventType.External, EventName.ErrorExecution, DataConverter.FromException(ex), sendId: null, invokeId);
+				var evt = new EventObject(EventType.External, EventName.ErrorExecution, DataConverter.FromException(ex, caseInsensitive: false), sendId: null, invokeId);
 				await service.Send(evt, token: default).ConfigureAwait(false);
 			}
 			finally
@@ -150,7 +153,7 @@ namespace TSSArt.StateMachine
 				}
 			}
 
-			throw new StateMachineProcessorException(Resources.Exception_Invalid_type);
+			throw new ProcessorException(Resources.Exception_Invalid_type);
 		}
 
 		private void StateMachineHostInit()
@@ -241,7 +244,7 @@ namespace TSSArt.StateMachine
 		{
 			if (_ioProcessors == null)
 			{
-				throw new StateMachineProcessorException(Resources.Exception_StateMachineHost_stopped);
+				throw new ProcessorException(Resources.Exception_StateMachineHost_stopped);
 			}
 
 			foreach (var ioProcessor in _ioProcessors)
@@ -252,7 +255,7 @@ namespace TSSArt.StateMachine
 				}
 			}
 
-			throw new StateMachineProcessorException(Resources.Exception_Invalid_type);
+			throw new ProcessorException(Resources.Exception_Invalid_type);
 		}
 	}
 }

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 
-namespace TSSArt.StateMachine
+namespace Xtate.Persistence
 {
 	internal sealed class KeyListPersistingController<T> : IDisposable where T : class
 	{

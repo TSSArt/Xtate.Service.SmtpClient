@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Xtate.IoProcessor;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public sealed partial class StateMachineHost : IIoProcessor, IEventConsumer
 	{
@@ -29,7 +30,7 @@ namespace TSSArt.StateMachine
 		{
 			if (evt.Target == null)
 			{
-				throw new StateMachineProcessorException(Resources.Exception_Event_Target_did_not_specified);
+				throw new ProcessorException(Resources.Exception_Event_Target_did_not_specified);
 			}
 
 			var service = GetCurrentContext().GetService(sessionId, new Uri(evt.Target.Fragment));

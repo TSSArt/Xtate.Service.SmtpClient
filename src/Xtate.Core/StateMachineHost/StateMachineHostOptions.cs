@@ -1,8 +1,13 @@
 ﻿using System;
 using System.Collections.Immutable;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
+using Xtate.CustomAction;
+using Xtate.DataModel;
+using Xtate.IoProcessor;
+using Xtate.Persistence;
+using Xtate.Service;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	[PublicAPI]
 	public class StateMachineHostOptions

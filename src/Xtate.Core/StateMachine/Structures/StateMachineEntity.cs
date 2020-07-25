@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Immutable;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public struct StateMachineEntity : IStateMachine, IVisitorEntity<StateMachineEntity, IStateMachine>, IAncestorProvider, IDebugEntityId
 	{
@@ -45,7 +45,7 @@ namespace TSSArt.StateMachine
 			Script = source.Script;
 		}
 
-		bool IVisitorEntity<StateMachineEntity, IStateMachine>.RefEquals(in StateMachineEntity other) =>
+		bool IVisitorEntity<StateMachineEntity, IStateMachine>.RefEquals(ref StateMachineEntity other) =>
 				Binding == other.Binding &&
 				States == other.States &&
 				ReferenceEquals(Name, other.Name) &&

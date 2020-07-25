@@ -1,6 +1,6 @@
 ﻿using System.Collections.Immutable;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public struct DataModelEntity : IDataModel, IVisitorEntity<DataModelEntity, IDataModel>, IAncestorProvider
 	{
@@ -26,7 +26,7 @@ namespace TSSArt.StateMachine
 			Data = source.Data;
 		}
 
-		bool IVisitorEntity<DataModelEntity, IDataModel>.RefEquals(in DataModelEntity other) => Data == other.Data;
+		bool IVisitorEntity<DataModelEntity, IDataModel>.RefEquals(ref DataModelEntity other) => Data == other.Data;
 
 	#endregion
 	}

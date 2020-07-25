@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Immutable;
+using Xtate.DataModel;
+using Xtate.Persistence;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal sealed class OnEntryNode : IOnEntry, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{

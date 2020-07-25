@@ -1,4 +1,4 @@
-﻿namespace TSSArt.StateMachine
+﻿namespace Xtate
 {
 	public struct ElseIfEntity : IElseIf, IVisitorEntity<ElseIfEntity, IElseIf>, IAncestorProvider
 	{
@@ -24,7 +24,7 @@
 			Condition = source.Condition;
 		}
 
-		bool IVisitorEntity<ElseIfEntity, IElseIf>.RefEquals(in ElseIfEntity other) => ReferenceEquals(Condition, other.Condition);
+		bool IVisitorEntity<ElseIfEntity, IElseIf>.RefEquals(ref ElseIfEntity other) => ReferenceEquals(Condition, other.Condition);
 
 	#endregion
 	}

@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
+using Xtate.IoProcessor;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal class StateMachineContext : IStateMachineContext, IExecutionContext, ILoggerContext
 	{
@@ -107,7 +108,7 @@ namespace TSSArt.StateMachine
 
 			if (evt.DelayMs != 0)
 			{
-				throw new StateMachineExecutionException(Resources.Exception_Internal_events_can_t_be_delayed);
+				throw new ExecutionException(Resources.Exception_Internal_events_can_t_be_delayed);
 			}
 
 			return true;
@@ -118,13 +119,13 @@ namespace TSSArt.StateMachine
 			var platformLazy = new LazyValue<StateMachineContext>(GetPlatform, this);
 			var ioProcessorsLazy = new LazyValue<StateMachineContext>(GetIoProcessors, this);
 
-			var dataModel = new DataModelObject(capacity: 5);
+			var dataModel = new DataModelObject(isReadOnly: false, _dataModelValueProvider.CaseInsensitive);
 
-			dataModel.SetInternal(property: @"_name", new DataModelDescriptor(new DataModelValue(_stateMachineName), DataModelAccess.ReadOnly));
-			dataModel.SetInternal(property: @"_sessionid", new DataModelDescriptor(new DataModelValue(_sessionId), DataModelAccess.Constant));
-			dataModel.SetInternal(property: @"_event", new DataModelDescriptor(value: default, DataModelAccess.ReadOnly));
-			dataModel.SetInternal(property: @"_ioprocessors", new DataModelDescriptor(new DataModelValue(ioProcessorsLazy), DataModelAccess.Constant));
-			dataModel.SetInternal(property: @"_x", new DataModelDescriptor(new DataModelValue(platformLazy), DataModelAccess.Constant));
+			dataModel.AddInternal(key: @"_name", _stateMachineName, DataModelAccess.ReadOnly);
+			dataModel.AddInternal(key: @"_sessionid", _sessionId, DataModelAccess.Constant);
+			dataModel.AddInternal(key: @"_event", value: default, DataModelAccess.ReadOnly);
+			dataModel.AddInternal(key: @"_ioprocessors", ioProcessorsLazy, DataModelAccess.Constant);
+			dataModel.AddInternal(key: @"_x", platformLazy, DataModelAccess.Constant);
 
 			return dataModel;
 
@@ -132,15 +133,15 @@ namespace TSSArt.StateMachine
 			{
 				var valueProvider = context._dataModelValueProvider;
 
-				var obj = new DataModelObject(isReadOnly: true, capacity: 5);
+				var obj = new DataModelObject(isReadOnly: true, context._dataModelValueProvider.CaseInsensitive);
 
-				obj.SetInternal(property: @"interpreter", new DataModelDescriptor(valueProvider.Interpreter, DataModelAccess.Constant));
-				obj.SetInternal(property: @"datamodel", new DataModelDescriptor(valueProvider.DataModelHandler, DataModelAccess.Constant));
-				obj.SetInternal(property: @"configuration", new DataModelDescriptor(valueProvider.Configuration, DataModelAccess.Constant));
-				obj.SetInternal(property: @"host", new DataModelDescriptor(valueProvider.Host, DataModelAccess.Constant));
-				obj.SetInternal(property: @"args", new DataModelDescriptor(valueProvider.Arguments, DataModelAccess.ReadOnly));
+				obj.AddInternal(key: @"interpreter", valueProvider.Interpreter, DataModelAccess.Constant);
+				obj.AddInternal(key: @"datamodel", valueProvider.DataModelHandler, DataModelAccess.Constant);
+				obj.AddInternal(key: @"configuration", valueProvider.Configuration, DataModelAccess.Constant);
+				obj.AddInternal(key: @"host", valueProvider.Host, DataModelAccess.Constant);
+				obj.AddInternal(key: @"args", valueProvider.Arguments, DataModelAccess.ReadOnly);
 
-				return new DataModelValue(obj);
+				return obj;
 			}
 
 			static DataModelValue GetIoProcessors(StateMachineContext context)
@@ -149,25 +150,26 @@ namespace TSSArt.StateMachine
 
 				if (ioProcessors.IsDefaultOrEmpty)
 				{
-					return new DataModelValue(DataModelObject.Empty);
+					return DataModelObject.Empty;
 				}
 
-				var dictionary = new DataModelObject(capacity: ioProcessors.Length);
+				var obj = new DataModelObject(isReadOnly: false, context._dataModelValueProvider.CaseInsensitive);
 
 				foreach (var ioProcessor in ioProcessors)
 				{
 					var locationLazy = new LazyValue<IIoProcessor, SessionId>(GetLocation, ioProcessor, context._sessionId);
 
-					var entry = new DataModelObject(capacity: 1)
+					var entry = new DataModelObject(isReadOnly: false, context._dataModelValueProvider.CaseInsensitive)
 								{
-										[@"location"] = new DataModelValue(locationLazy)
+										{ @"location", locationLazy }
 								};
-					dictionary[ioProcessor.Id.ToString()] = new DataModelValue(entry);
+
+					obj.Add(ioProcessor.Id.ToString(), entry);
 				}
 
-				dictionary.MakeDeepConstant();
+				obj.MakeDeepConstant();
 
-				return new DataModelValue(dictionary);
+				return obj;
 			}
 
 			static DataModelValue GetLocation(IIoProcessor ioProcessor, SessionId sessionId) => new DataModelValue(ioProcessor.GetTarget(sessionId).ToString());

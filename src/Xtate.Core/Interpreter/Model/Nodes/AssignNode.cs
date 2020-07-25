@@ -1,6 +1,7 @@
 ﻿using System;
+using Xtate.Persistence;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal sealed class AssignNode : ExecutableEntityNode, IAssign, IAncestorProvider, IDebugEntityId
 	{
@@ -20,7 +21,11 @@ namespace TSSArt.StateMachine
 
 		public IValueExpression? Expression => _entity.Expression;
 
-		public string? InlineContent => _entity.InlineContent;
+		public IInlineContent? InlineContent => _entity.InlineContent;
+
+		public string? Type => _entity.Type;
+
+		public string? Attribute => _entity.Attribute;
 
 	#endregion
 
@@ -36,7 +41,9 @@ namespace TSSArt.StateMachine
 			bucket.Add(Key.DocumentId, DocumentId);
 			bucket.AddEntity(Key.Location, Location);
 			bucket.AddEntity(Key.Expression, Expression);
-			bucket.Add(Key.InlineContent, InlineContent);
+			bucket.Add(Key.InlineContent, InlineContent?.Value);
+			bucket.Add(Key.Type, Type);
+			bucket.Add(Key.Attribute, Attribute);
 		}
 	}
 }

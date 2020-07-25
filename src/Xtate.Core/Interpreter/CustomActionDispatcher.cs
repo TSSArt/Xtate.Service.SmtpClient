@@ -4,12 +4,14 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
+using Xtate.CustomAction;
+using Xtate.DataModel;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal sealed class CustomActionDispatcher : ICustomAction, ICustomActionDispatcher, ICustomActionContext
 	{
-		private readonly CustomAction                         _customAction;
+		private readonly CustomActionEntity                         _customAction;
 		private readonly ImmutableArray<ICustomActionFactory> _customActionFactories;
 		private readonly IErrorProcessor                      _errorProcessor;
 
@@ -19,7 +21,7 @@ namespace TSSArt.StateMachine
 		private ImmutableArray<IObjectEvaluator>             _objectEvaluators;
 		private ImmutableArray<IValueExpression>.Builder?    _values;
 
-		public CustomActionDispatcher(ImmutableArray<ICustomActionFactory> customActionFactories, IErrorProcessor errorProcessor, in CustomAction customAction)
+		public CustomActionDispatcher(ImmutableArray<ICustomActionFactory> customActionFactories, IErrorProcessor errorProcessor, in CustomActionEntity customAction)
 		{
 			_customActionFactories = customActionFactories;
 			_errorProcessor = errorProcessor;
@@ -46,7 +48,7 @@ namespace TSSArt.StateMachine
 
 			if (_executor != null)
 			{
-				throw new StateMachineInfrastructureException(Resources.Exception_Registration_should_no_occur_after_initialization);
+				throw new InfrastructureException(Resources.Exception_Registration_should_no_occur_after_initialization);
 			}
 
 			_locations ??= ImmutableArray.CreateBuilder<ILocationExpression>();
@@ -63,7 +65,7 @@ namespace TSSArt.StateMachine
 
 			if (_executor != null)
 			{
-				throw new StateMachineInfrastructureException(Resources.Exception_Registration_should_no_occur_after_initialization);
+				throw new InfrastructureException(Resources.Exception_Registration_should_no_occur_after_initialization);
 			}
 
 			_values ??= ImmutableArray.CreateBuilder<IValueExpression>();

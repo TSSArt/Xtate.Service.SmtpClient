@@ -1,4 +1,4 @@
-﻿namespace TSSArt.StateMachine
+﻿namespace Xtate.Persistence
 {
 	internal enum TypeInfo
 	{

@@ -1,4 +1,4 @@
-﻿namespace TSSArt.StateMachine
+﻿namespace Xtate
 {
 	public struct AssignEntity : IAssign, IVisitorEntity<AssignEntity, IAssign>, IAncestorProvider
 	{
@@ -14,7 +14,9 @@
 
 		public ILocationExpression? Location      { get; set; }
 		public IValueExpression?    Expression    { get; set; }
-		public string?              InlineContent { get; set; }
+		public IInlineContent?      InlineContent { get; set; }
+		public string?              Type          { get; set; }
+		public string?              Attribute     { get; set; }
 
 	#endregion
 
@@ -26,12 +28,16 @@
 			Location = source.Location;
 			InlineContent = source.InlineContent;
 			Expression = source.Expression;
+			Type = source.Type;
+			Attribute = source.Attribute;
 		}
 
-		bool IVisitorEntity<AssignEntity, IAssign>.RefEquals(in AssignEntity other) =>
+		bool IVisitorEntity<AssignEntity, IAssign>.RefEquals(ref AssignEntity other) =>
 				ReferenceEquals(Location, other.Location) &&
 				ReferenceEquals(Expression, other.Expression) &&
-				ReferenceEquals(InlineContent, other.InlineContent);
+				ReferenceEquals(InlineContent, other.InlineContent) &&
+				ReferenceEquals(Type, other.Type) &&
+				ReferenceEquals(Attribute, other.Attribute);
 
 	#endregion
 	}

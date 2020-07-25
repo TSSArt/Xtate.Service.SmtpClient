@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TSSArt.StateMachine
+namespace Xtate.DataModel.None
 {
 	internal sealed class NoneDataModelHandler : DataModelHandlerBase
 	{

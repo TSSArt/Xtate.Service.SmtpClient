@@ -1,6 +1,7 @@
 ﻿using System;
+using Xtate.Persistence;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal sealed class ElseNode : IElse, IStoreSupport, IAncestorProvider, IDocumentId, IDebugEntityId
 	{

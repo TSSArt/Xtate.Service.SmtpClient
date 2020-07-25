@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	[PublicAPI]
 	public sealed class Identifier : LazyId, IIdentifier, IEquatable<IIdentifier>

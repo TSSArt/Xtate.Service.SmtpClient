@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public struct DataEntity : IData, IVisitorEntity<DataEntity, IData>, IAncestorProvider, IDebugEntityId
 	{
@@ -17,7 +17,7 @@ namespace TSSArt.StateMachine
 		public string?                  Id            { get; set; }
 		public IExternalDataExpression? Source        { get; set; }
 		public IValueExpression?        Expression    { get; set; }
-		public string?                  InlineContent { get; set; }
+		public IInlineContent?          InlineContent { get; set; }
 
 	#endregion
 
@@ -38,7 +38,7 @@ namespace TSSArt.StateMachine
 			InlineContent = source.InlineContent;
 		}
 
-		bool IVisitorEntity<DataEntity, IData>.RefEquals(in DataEntity other) =>
+		bool IVisitorEntity<DataEntity, IData>.RefEquals(ref DataEntity other) =>
 				ReferenceEquals(Id, other.Id) &&
 				ReferenceEquals(Source, other.Source) &&
 				ReferenceEquals(InlineContent, other.InlineContent) &&

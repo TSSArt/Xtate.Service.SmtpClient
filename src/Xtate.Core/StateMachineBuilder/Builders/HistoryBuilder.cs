@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TSSArt.StateMachine
+namespace Xtate.Builder
 {
 	public class HistoryBuilder : BuilderBase, IHistoryBuilder
 	{

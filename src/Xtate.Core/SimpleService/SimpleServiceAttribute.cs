@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TSSArt.StateMachine
+namespace Xtate.Service
 {
 	[AttributeUsage(AttributeTargets.Class)]
 	public sealed class SimpleServiceAttribute : Attribute

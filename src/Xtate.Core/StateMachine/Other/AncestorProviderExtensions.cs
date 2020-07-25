@@ -2,7 +2,7 @@
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal static class AncestorProviderExtensions
 	{

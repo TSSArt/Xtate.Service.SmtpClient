@@ -1,4 +1,4 @@
-﻿namespace TSSArt.StateMachine
+﻿namespace Xtate
 {
 	public struct ScriptExpression : IScriptExpression, IVisitorEntity<ScriptExpression, IScriptExpression>, IAncestorProvider
 	{
@@ -24,7 +24,7 @@
 			Expression = source.Expression;
 		}
 
-		bool IVisitorEntity<ScriptExpression, IScriptExpression>.RefEquals(in ScriptExpression other) => ReferenceEquals(Expression, other.Expression);
+		bool IVisitorEntity<ScriptExpression, IScriptExpression>.RefEquals(ref ScriptExpression other) => ReferenceEquals(Expression, other.Expression);
 
 	#endregion
 	}

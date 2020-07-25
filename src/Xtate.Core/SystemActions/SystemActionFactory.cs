@@ -1,11 +1,9 @@
-﻿using System;
-using System.Xml;
-using TSSArt.StateMachine.Annotations;
+﻿using Xtate.Annotations;
 
-namespace TSSArt.StateMachine
+namespace Xtate.CustomAction
 {
 	[PublicAPI]
-	[CustomActionProvider("http://tssart.com/scxml/system")]
+	[CustomActionProvider("http://xtate.net/scxml/system")]
 	public class SystemActionFactory : CustomActionFactoryBase
 	{
 		public static readonly ICustomActionFactory Instance = new SystemActionFactory();
@@ -13,15 +11,6 @@ namespace TSSArt.StateMachine
 		private SystemActionFactory()
 		{
 			Register(name: "start", (xmlReader, context) => new StartAction(xmlReader, context));
-		}
-
-		protected override void FillXmlNameTable(XmlNameTable xmlNameTable)
-		{
-			if (xmlNameTable == null) throw new ArgumentNullException(nameof(xmlNameTable));
-
-			base.FillXmlNameTable(xmlNameTable);
-
-			StartAction.FillXmlNameTable(xmlNameTable);
 		}
 	}
 }

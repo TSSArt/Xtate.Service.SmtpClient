@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections.Immutable;
 using System.Xml;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
 
-namespace TSSArt.StateMachine
+namespace Xtate.Scxml
 {
 	[PublicAPI]
 	public class ScxmlSerializer : StateMachineVisitor
 	{
-		private const string ScxmlNs       = "http://www.w3.org/2005/07/scxml";
-		private const string TSSArtScxmlNs = "http://tssart.com/scxml";
-		private const string Space         = " ";
+		private const string ScxmlNs      = "http://www.w3.org/2005/07/scxml";
+		private const string XtateScxmlNs = "http://xtate.net/scxml";
+		private const string Space        = " ";
 
 		private readonly XmlWriter _writer;
 
@@ -54,22 +54,22 @@ namespace TSSArt.StateMachine
 		{
 			if (options.PersistenceLevel != null)
 			{
-				_writer.WriteAttributeString(localName: "persistence", TSSArtScxmlNs, options.PersistenceLevel.Value.ToString());
+				_writer.WriteAttributeString(localName: "persistence", XtateScxmlNs, options.PersistenceLevel.Value.ToString());
 			}
 
 			if (options.SynchronousEventProcessing != null)
 			{
-				_writer.WriteAttributeString(localName: "synchronous", TSSArtScxmlNs, XmlConvert.ToString(options.SynchronousEventProcessing.Value));
+				_writer.WriteAttributeString(localName: "synchronous", XtateScxmlNs, XmlConvert.ToString(options.SynchronousEventProcessing.Value));
 			}
 
 			if (options.ExternalQueueSize != null)
 			{
-				_writer.WriteAttributeString(localName: "queueSize", TSSArtScxmlNs, XmlConvert.ToString(options.ExternalQueueSize.Value));
+				_writer.WriteAttributeString(localName: "queueSize", XtateScxmlNs, XmlConvert.ToString(options.ExternalQueueSize.Value));
 			}
 
 			if (options.UnhandledErrorBehaviour != null)
 			{
-				_writer.WriteAttributeString(localName: "onError", TSSArtScxmlNs, options.UnhandledErrorBehaviour.Value.ToString());
+				_writer.WriteAttributeString(localName: "onError", XtateScxmlNs, options.UnhandledErrorBehaviour.Value.ToString());
 			}
 		}
 
@@ -292,7 +292,7 @@ namespace TSSArt.StateMachine
 			_writer.WriteEndElement();
 		}
 
-		protected override void Build(ref ICustomAction entity, ref CustomAction properties)
+		protected override void Build(ref ICustomAction entity, ref CustomActionEntity properties)
 		{
 			if (entity == null) throw new ArgumentNullException(nameof(entity));
 
@@ -435,10 +435,7 @@ namespace TSSArt.StateMachine
 				_writer.WriteAttributeString(localName: "expr", entity.Expression.Expression);
 			}
 
-			if (entity.InlineContent != null)
-			{
-				_writer.WriteRaw(entity.InlineContent);
-			}
+			base.Visit(ref entity);
 
 			_writer.WriteEndElement();
 		}
@@ -491,10 +488,7 @@ namespace TSSArt.StateMachine
 				_writer.WriteAttributeString(localName: "expr", entity.Expression.Expression);
 			}
 
-			if (entity.InlineContent != null)
-			{
-				_writer.WriteRaw(entity.InlineContent);
-			}
+			base.Visit(ref entity);
 
 			_writer.WriteEndElement();
 		}
@@ -602,6 +596,16 @@ namespace TSSArt.StateMachine
 		}
 
 		protected override void Visit(ref IContentBody entity)
+		{
+			if (entity == null) throw new ArgumentNullException(nameof(entity));
+
+			if (entity.Value != null)
+			{
+				_writer.WriteRaw(entity.Value);
+			}
+		}
+
+		protected override void Visit(ref IInlineContent entity)
 		{
 			if (entity == null) throw new ArgumentNullException(nameof(entity));
 

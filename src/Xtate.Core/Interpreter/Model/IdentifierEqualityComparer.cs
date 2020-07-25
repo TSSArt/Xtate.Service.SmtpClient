@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
-	public class IdentifierEqualityComparer : IEqualityComparer<IIdentifier>
+	internal sealed class IdentifierEqualityComparer : IEqualityComparer<IIdentifier>
 	{
 		public static readonly IEqualityComparer<IIdentifier> Instance = new IdentifierEqualityComparer();
 

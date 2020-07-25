@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Immutable;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public struct SendEntity : ISend, IVisitorEntity<SendEntity, ISend>, IAncestorProvider, IDebugEntityId
 	{
@@ -57,7 +57,7 @@ namespace TSSArt.StateMachine
 			NameList = source.NameList;
 		}
 
-		bool IVisitorEntity<SendEntity, ISend>.RefEquals(in SendEntity other) =>
+		bool IVisitorEntity<SendEntity, ISend>.RefEquals(ref SendEntity other) =>
 				DelayMs == other.DelayMs &&
 				Parameters == other.Parameters &&
 				NameList == other.NameList &&

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public struct ExternalDataExpression : IExternalDataExpression, IVisitorEntity<ExternalDataExpression, IExternalDataExpression>, IAncestorProvider
 	{
@@ -26,7 +26,7 @@ namespace TSSArt.StateMachine
 			Uri = source.Uri;
 		}
 
-		bool IVisitorEntity<ExternalDataExpression, IExternalDataExpression>.RefEquals(in ExternalDataExpression other) => ReferenceEquals(Uri, other.Uri);
+		bool IVisitorEntity<ExternalDataExpression, IExternalDataExpression>.RefEquals(ref ExternalDataExpression other) => ReferenceEquals(Uri, other.Uri);
 
 	#endregion
 	}

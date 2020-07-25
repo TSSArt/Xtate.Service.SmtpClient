@@ -1,4 +1,4 @@
-﻿namespace TSSArt.StateMachine
+﻿namespace Xtate
 {
 	public struct ConditionExpression : IConditionExpression, IVisitorEntity<ConditionExpression, IConditionExpression>, IAncestorProvider
 	{
@@ -24,7 +24,7 @@
 			Expression = source.Expression;
 		}
 
-		bool IVisitorEntity<ConditionExpression, IConditionExpression>.RefEquals(in ConditionExpression other) => ReferenceEquals(Expression, other.Expression);
+		bool IVisitorEntity<ConditionExpression, IConditionExpression>.RefEquals(ref ConditionExpression other) => ReferenceEquals(Expression, other.Expression);
 
 	#endregion
 	}

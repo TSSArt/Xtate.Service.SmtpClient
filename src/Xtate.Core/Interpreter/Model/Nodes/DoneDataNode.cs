@@ -1,22 +1,23 @@
 ﻿using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
+using Xtate.DataModel;
+using Xtate.Persistence;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal sealed class DoneDataNode : IDoneData, IStoreSupport, IAncestorProvider
 	{
-		private readonly IValueEvaluator?             _contentBodyEvaluator;
-		private readonly IObjectEvaluator?            _contentExpressionEvaluator;
-		private readonly DoneDataEntity               _doneData;
-		private readonly ImmutableArray<DefaultParam> _parameterList;
+		private readonly DoneDataEntity    _doneData;
+		private readonly IObjectEvaluator _doneDataEvaluator;
 
 		public DoneDataNode(in DoneDataEntity doneData)
 		{
 			_doneData = doneData;
-			_contentExpressionEvaluator = doneData.Content?.Expression?.As<IObjectEvaluator>();
-			_contentBodyEvaluator = doneData.Content?.Body?.As<IValueEvaluator>();
-			_parameterList = doneData.Parameters.AsArrayOf<IParam, DefaultParam>();
+
+			Infrastructure.Assert(doneData.Ancestor != null);
+
+			_doneDataEvaluator = doneData.Ancestor.As<IObjectEvaluator>();
 		}
 
 	#region Interface IAncestorProvider
@@ -44,7 +45,11 @@ namespace TSSArt.StateMachine
 
 	#endregion
 
-		public ValueTask<DataModelValue> Evaluate(IExecutionContext executionContext, CancellationToken token) =>
-				DataConverter.GetData(_contentBodyEvaluator, _contentExpressionEvaluator, nameEvaluatorList: default, _parameterList, executionContext, token);
+		public async ValueTask<DataModelValue> Evaluate(IExecutionContext executionContext, CancellationToken token)
+		{
+			var obj = await _doneDataEvaluator.EvaluateObject(executionContext, token).ConfigureAwait(false);
+
+			return DataModelValue.FromObject(obj);
+		}
 	}
 }

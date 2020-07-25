@@ -1,4 +1,4 @@
-﻿namespace TSSArt.StateMachine
+﻿namespace Xtate
 {
 	public struct LocationExpression : ILocationExpression, IVisitorEntity<LocationExpression, ILocationExpression>, IAncestorProvider
 	{
@@ -24,7 +24,7 @@
 			Expression = source.Expression;
 		}
 
-		bool IVisitorEntity<LocationExpression, ILocationExpression>.RefEquals(in LocationExpression other) => ReferenceEquals(Expression, other.Expression);
+		bool IVisitorEntity<LocationExpression, ILocationExpression>.RefEquals(ref LocationExpression other) => ReferenceEquals(Expression, other.Expression);
 
 	#endregion
 	}

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	[PublicAPI]
 	public abstract class StateMachineVisitor
@@ -69,7 +69,7 @@ namespace TSSArt.StateMachine
 
 			public void Update(ref TIEntity entity)
 			{
-				if (ReferenceEquals(_entity, entity) && !_original.RefEquals(in Properties))
+				if (ReferenceEquals(_entity, entity) && !_original.RefEquals(ref Properties))
 				{
 					entity = Properties;
 				}
@@ -326,7 +326,7 @@ namespace TSSArt.StateMachine
 
 		protected virtual void Visit(ref ICustomAction entity)
 		{
-			var data = new VisitData<CustomAction, ICustomAction>(entity);
+			var data = new VisitData<CustomActionEntity, ICustomAction>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
@@ -376,6 +376,13 @@ namespace TSSArt.StateMachine
 		protected virtual void Visit(ref IContentBody entity)
 		{
 			var data = new VisitData<ContentBody, IContentBody>(entity);
+			Build(ref entity, ref data.Properties);
+			data.Update(ref entity);
+		}
+
+		protected virtual void Visit(ref IInlineContent entity)
+		{
+			var data = new VisitData<InlineContent, IInlineContent>(entity);
 			Build(ref entity, ref data.Properties);
 			data.Update(ref entity);
 		}
@@ -810,6 +817,10 @@ namespace TSSArt.StateMachine
 			var expression = properties.Expression;
 			VisitWrapper(ref expression);
 			properties.Expression = expression;
+
+			var inlineContent = properties.InlineContent;
+			VisitWrapper(ref inlineContent);
+			properties.InlineContent = inlineContent;
 		}
 
 		protected virtual void Build(ref ICancel entity, ref CancelEntity properties)
@@ -929,6 +940,10 @@ namespace TSSArt.StateMachine
 			VisitWrapper(ref expression);
 			properties.Expression = expression;
 
+			var inlineContent = properties.InlineContent;
+			VisitWrapper(ref inlineContent);
+			properties.InlineContent = inlineContent;
+
 			var source = properties.Source;
 			VisitWrapper(ref source);
 			properties.Source = source;
@@ -1005,7 +1020,7 @@ namespace TSSArt.StateMachine
 			properties.Action = action;
 		}
 
-		protected virtual void Build(ref ICustomAction entity, ref CustomAction properties) { }
+		protected virtual void Build(ref ICustomAction entity, ref CustomActionEntity properties) { }
 
 		protected virtual void Build(ref IElse entity, ref ElseEntity properties) { }
 
@@ -1022,6 +1037,8 @@ namespace TSSArt.StateMachine
 		protected virtual void Build(ref IExternalDataExpression entity, ref ExternalDataExpression properties) { }
 
 		protected virtual void Build(ref IContentBody entity, ref ContentBody properties) { }
+
+		protected virtual void Build(ref IInlineContent entity, ref InlineContent properties) { }
 
 	#endregion
 
@@ -1328,6 +1345,14 @@ namespace TSSArt.StateMachine
 		}
 
 		private void VisitWrapper(ref IContentBody? entity)
+		{
+			if (entity == null) return;
+			Enter(entity);
+			Visit(ref entity);
+			Exit();
+		}
+
+		private void VisitWrapper(ref IInlineContent? entity)
 		{
 			if (entity == null) return;
 			Enter(entity);

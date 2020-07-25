@@ -1,6 +1,7 @@
 ﻿using System.Collections.Immutable;
+using Xtate.CustomAction;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal sealed class PreDataModelProcessor : StateMachineVisitor
 	{
@@ -18,7 +19,7 @@ namespace TSSArt.StateMachine
 			Visit(ref executableEntity);
 		}
 
-		protected override void Build(ref ICustomAction customAction, ref CustomAction customActionProperties)
+		protected override void Build(ref ICustomAction customAction, ref CustomActionEntity customActionProperties)
 		{
 			base.Build(ref customAction, ref customActionProperties);
 

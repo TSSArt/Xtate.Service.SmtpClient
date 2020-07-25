@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TSSArt.StateMachine
+namespace Xtate.Persistence
 {
 	internal abstract class DataModelPersistingController : IDisposable
 	{

@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Tasks;
+using Xtate.CustomAction;
+using Xtate.DataModel;
+using Xtate.Persistence;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal sealed class InterpreterModelBuilder : StateMachineVisitor
 	{
@@ -140,7 +143,7 @@ namespace TSSArt.StateMachine
 				}
 			}
 
-			throw new StateMachineProcessorException(Resources.Exception_Cannot_find_ResourceLoader_to_load_external_resource);
+			throw new ProcessorException(Resources.Exception_Cannot_find_ResourceLoader_to_load_external_resource);
 		}
 
 		private void RegisterEntity(IEntity entity) => _entities.Add(entity);
@@ -367,7 +370,7 @@ namespace TSSArt.StateMachine
 			}
 		}
 
-		protected override void Build(ref ICustomAction customAction, ref CustomAction customActionProperties)
+		protected override void Build(ref ICustomAction customAction, ref CustomActionEntity customActionProperties)
 		{
 			var documentId = NewDocumentId();
 

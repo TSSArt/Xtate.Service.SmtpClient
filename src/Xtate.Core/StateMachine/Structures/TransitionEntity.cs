@@ -1,6 +1,6 @@
 ﻿using System.Collections.Immutable;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public struct TransitionEntity : ITransition, IVisitorEntity<TransitionEntity, ITransition>, IAncestorProvider
 	{
@@ -34,7 +34,7 @@ namespace TSSArt.StateMachine
 			Type = source.Type;
 		}
 
-		bool IVisitorEntity<TransitionEntity, ITransition>.RefEquals(in TransitionEntity other) =>
+		bool IVisitorEntity<TransitionEntity, ITransition>.RefEquals(ref TransitionEntity other) =>
 				Type == other.Type &&
 				Target == other.Target &&
 				Action == other.Action &&

@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-namespace TSSArt.StateMachine
+namespace Xtate.Persistence
 {
 	internal sealed class StateMachinePersistedController : StateMachineController, IStorageProvider
 	{

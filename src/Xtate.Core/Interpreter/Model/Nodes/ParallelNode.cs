@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Immutable;
+using Xtate.Persistence;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	internal sealed class ParallelNode : StateEntityNode, IParallel, IAncestorProvider, IDebugEntityId
 	{

@@ -1,4 +1,4 @@
-﻿namespace TSSArt.StateMachine
+﻿namespace Xtate
 {
 	public struct ContentBody : IContentBody, IVisitorEntity<ContentBody, IContentBody>, IAncestorProvider
 	{
@@ -24,7 +24,7 @@
 			Value = source.Value;
 		}
 
-		bool IVisitorEntity<ContentBody, IContentBody>.RefEquals(in ContentBody other) => ReferenceEquals(Value, other.Value);
+		bool IVisitorEntity<ContentBody, IContentBody>.RefEquals(ref ContentBody other) => ReferenceEquals(Value, other.Value);
 
 	#endregion
 	}

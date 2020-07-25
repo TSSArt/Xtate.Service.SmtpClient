@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	[Serializable]
-	public class StateMachineDestroyedException : StateMachineException
+	public class StateMachineDestroyedException : XtateException
 	{
 		public StateMachineDestroyedException() { }
 

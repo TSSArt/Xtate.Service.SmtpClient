@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TSSArt.StateMachine
+namespace Xtate.CustomAction
 {
 	[AttributeUsage(AttributeTargets.Class)]
 	public sealed class CustomActionProviderAttribute : Attribute

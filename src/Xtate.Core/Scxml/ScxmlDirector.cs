@@ -1,25 +1,19 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
 using System.Xml;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
+using Xtate.Builder;
 
-namespace TSSArt.StateMachine
+namespace Xtate.Scxml
 {
 	[PublicAPI]
 	public class ScxmlDirector : XmlDirector<ScxmlDirector>
 	{
-		private const string ScxmlNs       = "http://www.w3.org/2005/07/scxml";
-		private const string TSSArtScxmlNs = "http://tssart.com/scxml";
-		private const char   Space         = ' ';
-
-		private static readonly string[] Keywords =
-		{
-				"array", "assign", "autoforward", "binding", "cancel", "cond", "content", "data", "datamodel", "delay", "delayexpr", "donedata", "else", "elseif", "event",
-				"eventexpr", "expr", "final", "finalize", "foreach", "history", "id", "idlocation", "if", "index", "initial", "invoke", "item", "label", "location", "log",
-				"name", "namelist", "onentry", "onexit", "parallel", "param", "persistence", "queueSize", "raise", "script", "scxml", "send", "sendid", "sendidexpr", "src",
-				"srcexpr", "state", "synchronous", "target", "targetexpr", "transition", "type", "typeexpr", "version"
-		};
+		private const string ScxmlNs      = "http://www.w3.org/2005/07/scxml";
+		private const string XtateScxmlNs = "http://xtate.net/scxml";
+		private const char   Space        = ' ';
 
 		private static readonly char[] SpaceSplitter = { Space };
 
@@ -50,26 +44,50 @@ namespace TSSArt.StateMachine
 		private static readonly Policy<IAssignBuilder>       AssignPolicy       = BuildPolicy<IAssignBuilder>(AssignBuildPolicy);
 		private static readonly Policy<ICancelBuilder>       CancelPolicy       = BuildPolicy<ICancelBuilder>(CancelBuildPolicy);
 
-		private readonly IErrorProcessor _errorProcessor;
-		private readonly IBuilderFactory _factory;
+		private readonly IErrorProcessor                        _errorProcessor;
+		private readonly IBuilderFactory                        _factory;
+		private readonly IXmlNamespaceResolver?                 _namespaceResolver;
+		private readonly XmlNameTable                           _nameTable;
+		private          List<ImmutableArray<PrefixNamespace>>? _nsCache;
 
-		public ScxmlDirector(XmlReader xmlReader, IBuilderFactory factory, IErrorProcessor errorProcessor) : base(xmlReader, errorProcessor)
+		public ScxmlDirector(XmlReader xmlReader, IBuilderFactory factory, IErrorProcessor errorProcessor, IXmlNamespaceResolver? namespaceResolver) : base(xmlReader, errorProcessor)
 		{
+			_namespaceResolver = namespaceResolver;
 			_factory = factory;
 			_errorProcessor = errorProcessor;
+			_nameTable = xmlReader.NameTable;
+
+			FillNameTable(_nameTable);
 		}
 
-		public static void FillXmlNameTable(XmlNameTable xmlNameTable)
+		private static void FillNameTable(XmlNameTable nameTable)
 		{
-			if (xmlNameTable == null) throw new ArgumentNullException(nameof(xmlNameTable));
-
-			xmlNameTable.Add(ScxmlNs);
-			xmlNameTable.Add(TSSArtScxmlNs);
-
-			foreach (var keyword in Keywords)
-			{
-				xmlNameTable.Add(keyword);
-			}
+			StateMachinePolicy.FillNameTable(nameTable);
+			StatePolicy.FillNameTable(nameTable);
+			ParallelPolicy.FillNameTable(nameTable);
+			FinalPolicy.FillNameTable(nameTable);
+			InitialPolicy.FillNameTable(nameTable);
+			HistoryPolicy.FillNameTable(nameTable);
+			TransitionPolicy.FillNameTable(nameTable);
+			LogPolicy.FillNameTable(nameTable);
+			SendPolicy.FillNameTable(nameTable);
+			ParamPolicy.FillNameTable(nameTable);
+			ContentPolicy.FillNameTable(nameTable);
+			OnEntryPolicy.FillNameTable(nameTable);
+			OnExitPolicy.FillNameTable(nameTable);
+			InvokePolicy.FillNameTable(nameTable);
+			FinalizePolicy.FillNameTable(nameTable);
+			ScriptPolicy.FillNameTable(nameTable);
+			DataModelPolicy.FillNameTable(nameTable);
+			DataPolicy.FillNameTable(nameTable);
+			DoneDataPolicy.FillNameTable(nameTable);
+			ForEachPolicy.FillNameTable(nameTable);
+			IfPolicy.FillNameTable(nameTable);
+			ElsePolicy.FillNameTable(nameTable);
+			ElseIfPolicy.FillNameTable(nameTable);
+			RaisePolicy.FillNameTable(nameTable);
+			AssignPolicy.FillNameTable(nameTable);
+			CancelPolicy.FillNameTable(nameTable);
 		}
 
 		public IStateMachine ConstructStateMachine(IStateMachineValidator? stateMachineValidator = default)
@@ -153,27 +171,27 @@ namespace TSSArt.StateMachine
 			return builder.MoveToImmutable();
 		}
 
-		private static IConditionExpression AsConditionalExpression(string expression)
+		private IConditionExpression AsConditionalExpression(string expression)
 		{
 			if (string.IsNullOrEmpty(expression))
 			{
 				throw new ArgumentException(Resources.Exception_ConditionDoesNotSpecified, nameof(expression));
 			}
 
-			return new ConditionExpression { Expression = expression };
+			return new ConditionExpression { Expression = expression, Ancestor = CreateAncestor(namespaces: true, nameTable: true) };
 		}
 
-		private static ILocationExpression AsLocationExpression(string expression)
+		private ILocationExpression AsLocationExpression(string expression)
 		{
 			if (string.IsNullOrEmpty(expression))
 			{
 				throw new ArgumentException(Resources.Exception_LocationDoesNotSpecified, nameof(expression));
 			}
 
-			return new LocationExpression { Expression = expression };
+			return new LocationExpression { Expression = expression, Ancestor = CreateAncestor(namespaces: true, nameTable: true) };
 		}
 
-		private static ImmutableArray<ILocationExpression> AsLocationExpressionList(string expression)
+		private ImmutableArray<ILocationExpression> AsLocationExpressionList(string expression)
 		{
 			if (string.IsNullOrEmpty(expression))
 			{
@@ -182,7 +200,7 @@ namespace TSSArt.StateMachine
 
 			if (expression.IndexOf(Space) < 0)
 			{
-				return ImmutableArray.Create<ILocationExpression>(new LocationExpression { Expression = expression });
+				return ImmutableArray.Create<ILocationExpression>(new LocationExpression { Expression = expression, Ancestor = CreateAncestor(namespaces: true, nameTable: true) });
 			}
 
 			var locationExpressions = expression.Split(SpaceSplitter, StringSplitOptions.RemoveEmptyEntries);
@@ -196,24 +214,38 @@ namespace TSSArt.StateMachine
 
 			foreach (var locationExpression in locationExpressions)
 			{
-				builder.Add(new LocationExpression { Expression = locationExpression });
+				builder.Add(new LocationExpression { Expression = locationExpression, Ancestor = CreateAncestor(namespaces: true, nameTable: true) });
 			}
 
 			return builder.MoveToImmutable();
 		}
 
-		private static IValueExpression AsValueExpression(string expression)
+		private IValueExpression AsValueExpression(string expression)
 		{
 			if (expression == null) throw new ArgumentNullException(nameof(expression));
 
-			return new ValueExpression { Expression = expression };
+			return new ValueExpression { Expression = expression, Ancestor = CreateAncestor(namespaces: true, nameTable: true) };
 		}
 
-		private static IScriptExpression AsScriptExpression(string expression)
+		private IScriptExpression AsScriptExpression(string expression)
 		{
 			if (expression == null) throw new ArgumentNullException(nameof(expression));
 
-			return new ScriptExpression { Expression = expression };
+			return new ScriptExpression { Expression = expression, Ancestor = CreateAncestor(namespaces: true, nameTable: true) };
+		}
+
+		private IInlineContent AsInlineContent(string inlineContent)
+		{
+			if (inlineContent == null) throw new ArgumentNullException(nameof(inlineContent));
+
+			return new InlineContent { Value = inlineContent, Ancestor = CreateAncestor(namespaces: true, nameTable: true) };
+		}
+
+		private IContentBody AsContentBody(string contentBody)
+		{
+			if (contentBody == null) throw new ArgumentNullException(nameof(contentBody));
+
+			return new ContentBody { Value = contentBody, Ancestor = CreateAncestor(namespaces: true, nameTable: true) };
 		}
 
 		private static IExternalScriptExpression AsExternalScriptExpression(string uri)
@@ -286,7 +318,95 @@ namespace TSSArt.StateMachine
 			throw new ArgumentException(Resources.Exception_UnsupportedScxmlVersion);
 		}
 
-		private object? CreateAncestor() => _errorProcessor.LineInfoRequired && HasLineInfo() ? new XmlLineInfo(LineNumber, LinePosition) : null;
+		private object? CreateAncestor(bool namespaces = false, bool nameTable = false)
+		{
+			var result = CreateXmlLineInfo(null);
+
+			if (namespaces)
+			{
+				result = CreateXmlNamespacesInfo(result);
+			}
+
+			if (nameTable)
+			{
+				result = CreateNameTableInfo(result);
+			}
+
+			return result;
+		}
+
+		private object? CreateXmlLineInfo(object? ancestor) => _errorProcessor.LineInfoRequired && HasLineInfo() ? new XmlLineInfo(LineNumber, LinePosition, ancestor) : ancestor;
+
+		private object? CreateNameTableInfo(object? ancestor) => new AncestorContainer(_nameTable, ancestor);
+
+		private object? CreateXmlNamespacesInfo(object? ancestor)
+		{
+			var namespaces = _namespaceResolver?.GetNamespacesInScope(XmlNamespaceScope.ExcludeXml);
+
+			if (namespaces == null || namespaces.Count == 0 || namespaces.Count == 1 && namespaces.ContainsKey(string.Empty))
+			{
+				return ancestor;
+			}
+
+			namespaces.Remove(string.Empty);
+
+			var array = ResolveThroughCache(namespaces);
+
+			if (array.IsDefaultOrEmpty)
+			{
+				return ancestor;
+			}
+
+			return new XmlNamespacesInfo(array, ancestor);
+		}
+
+		private ImmutableArray<PrefixNamespace> ResolveThroughCache(ICollection<KeyValuePair<string, string>> list)
+		{
+			_nsCache ??= new List<ImmutableArray<PrefixNamespace>>();
+
+			foreach (var item in _nsCache)
+			{
+				if (CompareArrays(item, list))
+				{
+					return item;
+				}
+			}
+
+			var builder = ImmutableArray.CreateBuilder<PrefixNamespace>(list.Count);
+
+			foreach (var pair in list)
+			{
+				builder.Add(new PrefixNamespace(pair.Key, pair.Value));
+			}
+
+			var array = builder.MoveToImmutable();
+
+			_nsCache.Add(array);
+
+			return array;
+		}
+
+		private static bool CompareArrays(ImmutableArray<PrefixNamespace> array, ICollection<KeyValuePair<string, string>> list)
+		{
+			if (array.Length != list.Count)
+			{
+				return false;
+			}
+
+			var index = 0;
+
+			foreach (var pair in list)
+			{
+				if (!ReferenceEquals(pair.Key, array[index].Prefix) || !ReferenceEquals(pair.Value, array[index].Namespace))
+				{
+					return false;
+				}
+
+				index ++;
+			}
+
+			return true;
+		}
 
 		private IStateMachine ReadStateMachine() => Populate(_factory.CreateStateMachineBuilder(CreateAncestor()), StateMachinePolicy).Build();
 
@@ -302,9 +422,10 @@ namespace TSSArt.StateMachine
 				  .MultipleElements(ScxmlNs, name: "final", (dr, b) => b.AddFinal(dr.ReadFinal()))
 				  .OptionalElement(ScxmlNs, name: "datamodel", (dr, b) => b.SetDataModel(dr.ReadDataModel()))
 				  .OptionalElement(ScxmlNs, name: "script", (dr, b) => b.SetScript(dr.ReadScript()))
-				  .OptionalAttribute(TSSArtScxmlNs, name: "synchronous", (dr, b) => b.SetSynchronousEventProcessing(XmlConvert.ToBoolean(dr.Current)))
-				  .OptionalAttribute(TSSArtScxmlNs, name: "queueSize", (dr, b) => b.SetExternalQueueSize(XmlConvert.ToInt32(dr.Current)))
-				  .OptionalAttribute(TSSArtScxmlNs, name: "persistence", (dr, b) => b.SetPersistenceLevel((PersistenceLevel) Enum.Parse(typeof(PersistenceLevel), dr.Current)));
+				  .OptionalAttribute(XtateScxmlNs, name: "synchronous", (dr, b) => b.SetSynchronousEventProcessing(XmlConvert.ToBoolean(dr.Current)))
+				  .OptionalAttribute(XtateScxmlNs, name: "queueSize", (dr, b) => b.SetExternalQueueSize(XmlConvert.ToInt32(dr.Current)))
+				  .OptionalAttribute(XtateScxmlNs, name: "persistence", (dr, b) => b.SetPersistenceLevel((PersistenceLevel) Enum.Parse(typeof(PersistenceLevel), dr.Current)))
+				  .OptionalAttribute(XtateScxmlNs, name: "onError", (dr, b) => b.SetUnhandledErrorBehaviour((UnhandledErrorBehaviour) Enum.Parse(typeof(UnhandledErrorBehaviour), dr.Current)));
 
 		private IState ReadState() => Populate(_factory.CreateStateBuilder(CreateAncestor()), StatePolicy).Build();
 
@@ -358,7 +479,7 @@ namespace TSSArt.StateMachine
 
 		private static void TransitionBuildPolicy(IPolicyBuilder<ITransitionBuilder> pb) =>
 				pb.OptionalAttribute(name: "event", (dr, b) => b.SetEvent(AsEventDescriptorList(dr.Current)))
-				  .OptionalAttribute(name: "cond", (dr, b) => b.SetCondition(AsConditionalExpression(dr.Current)))
+				  .OptionalAttribute(name: "cond", (dr, b) => b.SetCondition(dr.AsConditionalExpression(dr.Current)))
 				  .OptionalAttribute(name: "target", (dr, b) => b.SetTarget(AsIdentifierList(dr.Current)))
 				  .OptionalAttribute(name: "type", (dr, b) => b.SetType(AsEnum<TransitionType>(dr.Current)))
 				  .MultipleElements(ScxmlNs, name: "assign", (dr, b) => b.AddAction(dr.ReadAssign()))
@@ -375,22 +496,22 @@ namespace TSSArt.StateMachine
 
 		private static void LogBuildPolicy(IPolicyBuilder<ILogBuilder> pb) =>
 				pb.OptionalAttribute(name: "label", (dr, b) => b.SetLabel(dr.Current))
-				  .OptionalAttribute(name: "expr", (dr, b) => b.SetExpression(AsValueExpression(dr.Current)));
+				  .OptionalAttribute(name: "expr", (dr, b) => b.SetExpression(dr.AsValueExpression(dr.Current)));
 
 		private ISend ReadSend() => Populate(_factory.CreateSendBuilder(CreateAncestor()), SendPolicy).Build();
 
 		private static void SendBuildPolicy(IPolicyBuilder<ISendBuilder> pb) =>
 				pb.OptionalAttribute(name: "event", (dr, b) => b.SetEvent(dr.Current))
-				  .OptionalAttribute(name: "eventexpr", (dr, b) => b.SetEventExpression(AsValueExpression(dr.Current)))
+				  .OptionalAttribute(name: "eventexpr", (dr, b) => b.SetEventExpression(dr.AsValueExpression(dr.Current)))
 				  .OptionalAttribute(name: "target", (dr, b) => b.SetTarget(AsUri(dr.Current)))
-				  .OptionalAttribute(name: "targetexpr", (dr, b) => b.SetTargetExpression(AsValueExpression(dr.Current)))
+				  .OptionalAttribute(name: "targetexpr", (dr, b) => b.SetTargetExpression(dr.AsValueExpression(dr.Current)))
 				  .OptionalAttribute(name: "type", (dr, b) => b.SetType(AsUri(dr.Current)))
-				  .OptionalAttribute(name: "typeexpr", (dr, b) => b.SetTypeExpression(AsValueExpression(dr.Current)))
+				  .OptionalAttribute(name: "typeexpr", (dr, b) => b.SetTypeExpression(dr.AsValueExpression(dr.Current)))
 				  .OptionalAttribute(name: "id", (dr, b) => b.SetId(dr.Current))
-				  .OptionalAttribute(name: "idlocation", (dr, b) => b.SetIdLocation(AsLocationExpression(dr.Current)))
+				  .OptionalAttribute(name: "idlocation", (dr, b) => b.SetIdLocation(dr.AsLocationExpression(dr.Current)))
 				  .OptionalAttribute(name: "delay", (dr, b) => b.SetDelay(AsMilliseconds(dr.Current)))
-				  .OptionalAttribute(name: "delayexpr", (dr, b) => b.SetDelayExpression(AsValueExpression(dr.Current)))
-				  .OptionalAttribute(name: "namelist", (dr, b) => b.SetNameList(AsLocationExpressionList(dr.Current)))
+				  .OptionalAttribute(name: "delayexpr", (dr, b) => b.SetDelayExpression(dr.AsValueExpression(dr.Current)))
+				  .OptionalAttribute(name: "namelist", (dr, b) => b.SetNameList(dr.AsLocationExpressionList(dr.Current)))
 				  .MultipleElements(ScxmlNs, name: "param", (dr, b) => b.AddParameter(dr.ReadParam()))
 				  .OptionalElement(ScxmlNs, name: "content", (dr, b) => b.SetContent(dr.ReadContent()));
 
@@ -398,14 +519,14 @@ namespace TSSArt.StateMachine
 
 		private static void ParamBuildPolicy(IPolicyBuilder<IParamBuilder> pb) =>
 				pb.RequiredAttribute(name: "name", (dr, b) => b.SetName(dr.Current))
-				  .OptionalAttribute(name: "expr", (dr, b) => b.SetExpression(AsValueExpression(dr.Current)))
-				  .OptionalAttribute(name: "location", (dr, b) => b.SetLocation(AsLocationExpression(dr.Current)));
+				  .OptionalAttribute(name: "expr", (dr, b) => b.SetExpression(dr.AsValueExpression(dr.Current)))
+				  .OptionalAttribute(name: "location", (dr, b) => b.SetLocation(dr.AsLocationExpression(dr.Current)));
 
 		private IContent ReadContent() => Populate(_factory.CreateContentBuilder(CreateAncestor()), ContentPolicy).Build();
 
 		private static void ContentBuildPolicy(IPolicyBuilder<IContentBuilder> pb) =>
-				pb.OptionalAttribute(name: "expr", (dr, b) => b.SetExpression(AsValueExpression(dr.Current)))
-				  .RawContent((dr, b) => b.SetBody(dr.Current));
+				pb.OptionalAttribute(name: "expr", (dr, b) => b.SetExpression(dr.AsValueExpression(dr.Current)))
+				  .RawContent((dr, b) => b.SetBody(dr.AsContentBody(dr.Current)));
 
 		private IOnEntry ReadOnEntry() => Populate(_factory.CreateOnEntryBuilder(CreateAncestor()), OnEntryPolicy).Build();
 
@@ -437,12 +558,12 @@ namespace TSSArt.StateMachine
 
 		private static void InvokeBuildPolicy(IPolicyBuilder<IInvokeBuilder> pb) =>
 				pb.OptionalAttribute(name: "type", (dr, b) => b.SetType(AsUri(dr.Current)))
-				  .OptionalAttribute(name: "typeexpr", (dr, b) => b.SetTypeExpression(AsValueExpression(dr.Current)))
+				  .OptionalAttribute(name: "typeexpr", (dr, b) => b.SetTypeExpression(dr.AsValueExpression(dr.Current)))
 				  .OptionalAttribute(name: "src", (dr, b) => b.SetSource(AsUri(dr.Current)))
-				  .OptionalAttribute(name: "srcexpr", (dr, b) => b.SetSourceExpression(AsValueExpression(dr.Current)))
+				  .OptionalAttribute(name: "srcexpr", (dr, b) => b.SetSourceExpression(dr.AsValueExpression(dr.Current)))
 				  .OptionalAttribute(name: "id", (dr, b) => b.SetId(dr.Current))
-				  .OptionalAttribute(name: "idlocation", (dr, b) => b.SetIdLocation(AsLocationExpression(dr.Current)))
-				  .OptionalAttribute(name: "namelist", (dr, b) => b.SetNameList(AsLocationExpressionList(dr.Current)))
+				  .OptionalAttribute(name: "idlocation", (dr, b) => b.SetIdLocation(dr.AsLocationExpression(dr.Current)))
+				  .OptionalAttribute(name: "namelist", (dr, b) => b.SetNameList(dr.AsLocationExpressionList(dr.Current)))
 				  .OptionalAttribute(name: "autoforward", (dr, b) => b.SetAutoForward(XmlConvert.ToBoolean(dr.Current)))
 				  .MultipleElements(ScxmlNs, name: "param", (dr, b) => b.AddParam(dr.ReadParam()))
 				  .OptionalElement(ScxmlNs, name: "finalize", (dr, b) => b.SetFinalize(dr.ReadFinalize()))
@@ -451,20 +572,19 @@ namespace TSSArt.StateMachine
 		private IFinalize ReadFinalize() => Populate(_factory.CreateFinalizeBuilder(CreateAncestor()), FinalizePolicy).Build();
 
 		private static void FinalizeBuildPolicy(IPolicyBuilder<IFinalizeBuilder> pb) =>
-				pb
-						.MultipleElements(ScxmlNs, name: "assign", (dr, b) => b.AddAction(dr.ReadAssign()))
-						.MultipleElements(ScxmlNs, name: "foreach", (dr, b) => b.AddAction(dr.ReadForEach()))
-						.MultipleElements(ScxmlNs, name: "if", (dr, b) => b.AddAction(dr.ReadIf()))
-						.MultipleElements(ScxmlNs, name: "log", (dr, b) => b.AddAction(dr.ReadLog()))
-						.MultipleElements(ScxmlNs, name: "cancel", (dr, b) => b.AddAction(dr.ReadCancel()))
-						.MultipleElements(ScxmlNs, name: "script", (dr, b) => b.AddAction(dr.ReadScript()))
-						.UnknownElement((dr, b) => b.AddAction(dr.ReadCustomAction()));
+				pb.MultipleElements(ScxmlNs, name: "assign", (dr, b) => b.AddAction(dr.ReadAssign()))
+				  .MultipleElements(ScxmlNs, name: "foreach", (dr, b) => b.AddAction(dr.ReadForEach()))
+				  .MultipleElements(ScxmlNs, name: "if", (dr, b) => b.AddAction(dr.ReadIf()))
+				  .MultipleElements(ScxmlNs, name: "log", (dr, b) => b.AddAction(dr.ReadLog()))
+				  .MultipleElements(ScxmlNs, name: "cancel", (dr, b) => b.AddAction(dr.ReadCancel()))
+				  .MultipleElements(ScxmlNs, name: "script", (dr, b) => b.AddAction(dr.ReadScript()))
+				  .UnknownElement((dr, b) => b.AddAction(dr.ReadCustomAction()));
 
 		private IScript ReadScript() => Populate(_factory.CreateScriptBuilder(CreateAncestor()), ScriptPolicy).Build();
 
 		private static void ScriptBuildPolicy(IPolicyBuilder<IScriptBuilder> pb) =>
 				pb.OptionalAttribute(name: "src", (dr, b) => b.SetSource(AsExternalScriptExpression(dr.Current)))
-				  .RawContent((dr, b) => b.SetBody(AsScriptExpression(dr.Current)));
+				  .RawContent((dr, b) => b.SetBody(dr.AsScriptExpression(dr.Current)));
 
 		private IDataModel ReadDataModel() => Populate(_factory.CreateDataModelBuilder(CreateAncestor()), DataModelPolicy).Build();
 
@@ -473,10 +593,10 @@ namespace TSSArt.StateMachine
 		private IData ReadData() => Populate(_factory.CreateDataBuilder(CreateAncestor()), DataPolicy).Build();
 
 		private static void DataBuildPolicy(IPolicyBuilder<IDataBuilder> pb) =>
-				pb.RequiredAttribute(name: "id", (dr, b) => b.SetId(dr.Current))
+				pb.RequiredAttribute(name: "id", delegate(ScxmlDirector dr, IDataBuilder b) { b.SetId(dr.Current); })
 				  .OptionalAttribute(name: "src", (dr, b) => b.SetSource(AsExternalDataExpression(dr.Current)))
-				  .OptionalAttribute(name: "expr", (dr, b) => b.SetExpression(AsValueExpression(dr.Current)))
-				  .RawContent((dr, b) => b.SetInlineContent(dr.Current));
+				  .OptionalAttribute(name: "expr", (dr, b) => b.SetExpression(dr.AsValueExpression(dr.Current)))
+				  .RawContent((dr, b) => b.SetInlineContent(dr.AsInlineContent(dr.Current)));
 
 		private IDoneData ReadDoneData() => Populate(_factory.CreateDoneDataBuilder(CreateAncestor()), DoneDataPolicy).Build();
 
@@ -487,9 +607,9 @@ namespace TSSArt.StateMachine
 		private IForEach ReadForEach() => Populate(_factory.CreateForEachBuilder(CreateAncestor()), ForEachPolicy).Build();
 
 		private static void ForEachBuildPolicy(IPolicyBuilder<IForEachBuilder> pb) =>
-				pb.RequiredAttribute(name: "array", (dr, b) => b.SetArray(AsValueExpression(dr.Current)))
-				  .RequiredAttribute(name: "item", (dr, b) => b.SetItem(AsLocationExpression(dr.Current)))
-				  .OptionalAttribute(name: "index", (dr, b) => b.SetIndex(AsLocationExpression(dr.Current)))
+				pb.RequiredAttribute(name: "array", (dr, b) => b.SetArray(dr.AsValueExpression(dr.Current)))
+				  .RequiredAttribute(name: "item", (dr, b) => b.SetItem(dr.AsLocationExpression(dr.Current)))
+				  .OptionalAttribute(name: "index", (dr, b) => b.SetIndex(dr.AsLocationExpression(dr.Current)))
 				  .MultipleElements(ScxmlNs, name: "assign", (dr, b) => b.AddAction(dr.ReadAssign()))
 				  .MultipleElements(ScxmlNs, name: "foreach", (dr, b) => b.AddAction(dr.ReadForEach()))
 				  .MultipleElements(ScxmlNs, name: "if", (dr, b) => b.AddAction(dr.ReadIf()))
@@ -503,7 +623,7 @@ namespace TSSArt.StateMachine
 		private IIf ReadIf() => Populate(_factory.CreateIfBuilder(CreateAncestor()), IfPolicy).Build();
 
 		private static void IfBuildPolicy(IPolicyBuilder<IIfBuilder> pb) =>
-				pb.RequiredAttribute(name: "cond", (dr, b) => b.SetCondition(AsConditionalExpression(dr.Current)))
+				pb.RequiredAttribute(name: "cond", (dr, b) => b.SetCondition(dr.AsConditionalExpression(dr.Current)))
 				  .MultipleElements(ScxmlNs, name: "elseif", (dr, b) => b.AddAction(dr.ReadElseIf()))
 				  .MultipleElements(ScxmlNs, name: "else", (dr, b) => b.AddAction(dr.ReadElse()))
 				  .MultipleElements(ScxmlNs, name: "assign", (dr, b) => b.AddAction(dr.ReadAssign()))
@@ -522,7 +642,7 @@ namespace TSSArt.StateMachine
 
 		private IElseIf ReadElseIf() => Populate(_factory.CreateElseIfBuilder(CreateAncestor()), ElseIfPolicy).Build();
 
-		private static void ElseIfBuildPolicy(IPolicyBuilder<IElseIfBuilder> pb) => pb.RequiredAttribute(name: "cond", (dr, b) => b.SetCondition(AsConditionalExpression(dr.Current)));
+		private static void ElseIfBuildPolicy(IPolicyBuilder<IElseIfBuilder> pb) => pb.RequiredAttribute(name: "cond", (dr, b) => b.SetCondition(dr.AsConditionalExpression(dr.Current)));
 
 		private IRaise ReadRaise() => Populate(_factory.CreateRaiseBuilder(CreateAncestor()), RaisePolicy).Build();
 
@@ -531,30 +651,60 @@ namespace TSSArt.StateMachine
 		private IAssign ReadAssign() => Populate(_factory.CreateAssignBuilder(CreateAncestor()), AssignPolicy).Build();
 
 		private static void AssignBuildPolicy(IPolicyBuilder<IAssignBuilder> pb) =>
-				pb.RequiredAttribute(name: "location", (dr, b) => b.SetLocation(AsLocationExpression(dr.Current)))
-				  .OptionalAttribute(name: "expr", (dr, b) => b.SetExpression(AsValueExpression(dr.Current)))
-				  .RawContent((dr, b) => b.SetInlineContent(dr.Current));
+				pb.RequiredAttribute(name: "location", (dr, b) => b.SetLocation(dr.AsLocationExpression(dr.Current)))
+				  .OptionalAttribute(name: "expr", (dr, b) => b.SetExpression(dr.AsValueExpression(dr.Current)))
+				  .OptionalAttribute(name: "type", (dr, b) => b.SetType(dr.Current))
+				  .OptionalAttribute(name: "attr", (dr, b) => b.SetAttribute(dr.Current))
+				  .RawContent((dr, b) => b.SetInlineContent(dr.AsInlineContent(dr.Current)));
 
 		private ICancel ReadCancel() => Populate(_factory.CreateCancelBuilder(CreateAncestor()), CancelPolicy).Build();
 
 		private static void CancelBuildPolicy(IPolicyBuilder<ICancelBuilder> pb) =>
 				pb.OptionalAttribute(name: "sendid", (dr, b) => b.SetSendId(dr.Current))
-				  .OptionalAttribute(name: "sendidexpr", (dr, b) => b.SetSendIdExpression(AsValueExpression(dr.Current)));
+				  .OptionalAttribute(name: "sendidexpr", (dr, b) => b.SetSendIdExpression(dr.AsValueExpression(dr.Current)));
 
 		private ICustomAction ReadCustomAction()
 		{
-			var builder = _factory.CreateCustomActionBuilder(CreateAncestor());
+			var builder = _factory.CreateCustomActionBuilder(CreateAncestor(namespaces: true, nameTable: true));
 			builder.SetXml(ReadOuterXml());
 			return builder.Build();
 		}
 
-		private class XmlLineInfo : IXmlLineInfo
+		private class XmlNamespacesInfo : IXmlNamespacesInfo, IAncestorProvider
 		{
-			public XmlLineInfo(int lineNumber, int linePosition)
+			public XmlNamespacesInfo(ImmutableArray<PrefixNamespace> namespaces, object? ancestor)
+			{
+				Namespaces = namespaces;
+				Ancestor = ancestor;
+			}
+
+		#region Interface IAncestorProvider
+
+			public object? Ancestor { get; }
+
+		#endregion
+
+		#region Interface IXmlNamespacesInfo
+
+			public ImmutableArray<PrefixNamespace> Namespaces { get; }
+
+		#endregion
+		}
+
+		private class XmlLineInfo : IXmlLineInfo, IAncestorProvider
+		{
+			public XmlLineInfo(int lineNumber, int linePosition, object? ancestor)
 			{
 				LineNumber = lineNumber;
 				LinePosition = linePosition;
+				Ancestor = ancestor;
 			}
+
+		#region Interface IAncestorProvider
+
+			public object? Ancestor { get; }
+
+		#endregion
 
 		#region Interface IXmlLineInfo
 

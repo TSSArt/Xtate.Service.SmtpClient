@@ -1,4 +1,4 @@
-﻿namespace TSSArt.StateMachine
+﻿namespace Xtate
 {
 	public struct CancelEntity : ICancel, IVisitorEntity<CancelEntity, ICancel>, IAncestorProvider
 	{
@@ -26,7 +26,7 @@
 			SendIdExpression = source.SendIdExpression;
 		}
 
-		bool IVisitorEntity<CancelEntity, ICancel>.RefEquals(in CancelEntity other) =>
+		bool IVisitorEntity<CancelEntity, ICancel>.RefEquals(ref CancelEntity other) =>
 				ReferenceEquals(SendId, other.SendId) &&
 				ReferenceEquals(SendIdExpression, other.SendIdExpression);
 

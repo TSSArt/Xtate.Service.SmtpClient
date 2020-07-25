@@ -4,7 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Xml;
 
-namespace TSSArt.StateMachine
+namespace Xtate.CustomAction
 {
 	public abstract class CustomActionFactoryBase : ICustomActionFactory
 	{
@@ -19,7 +19,7 @@ namespace TSSArt.StateMachine
 
 			if (customActionProviderAttribute == null)
 			{
-				throw new StateMachineInfrastructureException(Res.Format(Resources.Exception_CustomActionProviderAttributeWasNotProvided, GetType()));
+				throw new InfrastructureException(Res.Format(Resources.Exception_CustomActionProviderAttributeWasNotProvided, GetType()));
 			}
 
 			_namespace = customActionProviderAttribute.Namespace;
@@ -36,7 +36,6 @@ namespace TSSArt.StateMachine
 			using var stringReader = new StringReader(customActionContext.Xml);
 
 			var nameTable = new NameTable();
-			FillXmlNameTable(nameTable);
 			var nsManager = new XmlNamespaceManager(nameTable);
 			var context = new XmlParserContext(nameTable, nsManager, xmlLang: null, xmlSpace: default);
 
@@ -47,21 +46,7 @@ namespace TSSArt.StateMachine
 			return _actions[xmlReader.LocalName](xmlReader, customActionContext);
 		}
 
-		void ICustomActionFactory.FillXmlNameTable(XmlNameTable xmlNameTable) => FillXmlNameTable(xmlNameTable);
-
 	#endregion
-
-		protected virtual void FillXmlNameTable(XmlNameTable xmlNameTable)
-		{
-			if (xmlNameTable == null) throw new ArgumentNullException(nameof(xmlNameTable));
-
-			xmlNameTable.Add(_namespace);
-
-			foreach (var name in _actions.Keys)
-			{
-				xmlNameTable.Add(name);
-			}
-		}
 
 		protected void Register(string name, Func<XmlReader, ICustomActionContext, ICustomActionExecutor> executorFactory)
 		{

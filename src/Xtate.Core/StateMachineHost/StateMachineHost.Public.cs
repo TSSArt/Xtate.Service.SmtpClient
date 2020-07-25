@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
+using Xtate.Persistence;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	[PublicAPI]
 	public sealed partial class StateMachineHost : IAsyncDisposable, IDisposable

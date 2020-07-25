@@ -1,4 +1,6 @@
-﻿namespace TSSArt.StateMachine
+﻿using Xtate.Persistence;
+
+namespace Xtate
 {
 	internal sealed class LocationExpressionNode : ILocationExpression, IStoreSupport, IAncestorProvider
 	{

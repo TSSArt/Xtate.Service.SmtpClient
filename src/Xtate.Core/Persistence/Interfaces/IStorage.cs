@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TSSArt.StateMachine
+namespace Xtate.Persistence
 {
 	public interface IStorage : IDisposable
 	{

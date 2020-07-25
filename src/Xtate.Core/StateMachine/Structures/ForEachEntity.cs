@@ -1,6 +1,6 @@
 ﻿using System.Collections.Immutable;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	public struct ForEachEntity : IForEach, IVisitorEntity<ForEachEntity, IForEach>, IAncestorProvider
 	{
@@ -32,7 +32,7 @@ namespace TSSArt.StateMachine
 			Item = source.Item;
 		}
 
-		bool IVisitorEntity<ForEachEntity, IForEach>.RefEquals(in ForEachEntity other) =>
+		bool IVisitorEntity<ForEachEntity, IForEach>.RefEquals(ref ForEachEntity other) =>
 				Action == other.Action &&
 				ReferenceEquals(Array, other.Array) &&
 				ReferenceEquals(Index, other.Index) &&

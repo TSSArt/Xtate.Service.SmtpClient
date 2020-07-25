@@ -1,12 +1,12 @@
 ﻿using System;
 
-namespace TSSArt.StateMachine
+namespace Xtate.Builder
 {
 	public class DataBuilder : BuilderBase, IDataBuilder
 	{
 		private IValueExpression?        _expression;
 		private string?                  _id;
-		private string?                  _inlineContent;
+		private IInlineContent?          _inlineContent;
 		private IExternalDataExpression? _source;
 
 		public DataBuilder(IErrorProcessor errorProcessor, object? ancestor) : base(errorProcessor, ancestor) { }
@@ -26,7 +26,7 @@ namespace TSSArt.StateMachine
 
 		public void SetExpression(IValueExpression expression) => _expression = expression ?? throw new ArgumentNullException(nameof(expression));
 
-		public void SetInlineContent(string inlineContent) => _inlineContent = inlineContent ?? throw new ArgumentNullException(nameof(inlineContent));
+		public void SetInlineContent(IInlineContent inlineContent) => _inlineContent = inlineContent ?? throw new ArgumentNullException(nameof(inlineContent));
 
 	#endregion
 	}

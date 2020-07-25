@@ -7,8 +7,9 @@ using System.IO.Pipes;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Threading.Tasks;
+using Xtate.Persistence;
 
-namespace TSSArt.StateMachine
+namespace Xtate.IoProcessor
 {
 	public sealed class NamedIoProcessor : IIoProcessor, IDisposable
 	{
@@ -41,7 +42,7 @@ namespace TSSArt.StateMachine
 
 			if (!InProcConsumers.TryAdd(name, eventConsumer))
 			{
-				throw new StateMachineProcessorException(Res.Format(Resources.Exception_NamedIoProcessor_with_name_already_has_been_registered, name));
+				throw new ProcessorException(Res.Format(Resources.Exception_NamedIoProcessor_with_name_already_has_been_registered, name));
 			}
 		}
 
@@ -76,7 +77,7 @@ namespace TSSArt.StateMachine
 		{
 			if (evt.Target == null)
 			{
-				throw new StateMachineProcessorException(Resources.Exception_Event_Target_did_not_specified);
+				throw new ProcessorException(Resources.Exception_Event_Target_did_not_specified);
 			}
 
 			var host = evt.Target.Host;
@@ -122,7 +123,7 @@ namespace TSSArt.StateMachine
 
 				if (responseMessage.Exception != null)
 				{
-					throw new StateMachineProcessorException(Resources.Exception_Error_on_event_consumer_side, responseMessage.Exception);
+					throw new ProcessorException(Resources.Exception_Error_on_event_consumer_side, responseMessage.Exception);
 				}
 			}
 		}
@@ -175,7 +176,7 @@ namespace TSSArt.StateMachine
 				return SessionId.FromString(fragment.Substring(prefix.Length));
 			}
 
-			throw new StateMachineProcessorException(Resources.Exception_Target_wrong_format);
+			throw new ProcessorException(Resources.Exception_Target_wrong_format);
 		}
 
 		private static ValueTask SendMessage(MemoryStream memoryStream, PipeStream pipeStream, CancellationToken token)
