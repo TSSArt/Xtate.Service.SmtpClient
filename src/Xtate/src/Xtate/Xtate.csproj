@@ -34,12 +34,12 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(UseProjectReference)'==''">
-    <PackageReference Include="Xtate.Core" Version="$(Version)" />
-    <PackageReference Include="Xtate.DataModel.EcmaScript" Version="$(Version)" />
-    <PackageReference Include="Xtate.Logger.Serilog" Version="$(Version)" />
-    <PackageReference Include="Xtate.IoProcessor.Http" Version="$(Version)" />
-    <PackageReference Include="Xtate.Service.HttpClient" Version="$(Version)" />
-    <PackageReference Include="Xtate.Service.SmtpClient" Version="$(Version)" />
+    <PackageReference Include="Xtate.Core" Version="0.*" />
+    <PackageReference Include="Xtate.DataModel.EcmaScript" Version="0.*" />
+    <PackageReference Include="Xtate.Logger.Serilog" Version="0.*" />
+    <PackageReference Include="Xtate.IoProcessor.Http" Version="0.*" />
+    <PackageReference Include="Xtate.Service.HttpClient" Version="0.*" />
+    <PackageReference Include="Xtate.Service.SmtpClient" Version="0.*" />
   </ItemGroup>
 
   <ItemGroup>
