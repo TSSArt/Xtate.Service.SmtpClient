@@ -121,10 +121,10 @@
     <value>Unknown type for serialization.</value>
   </data>
   <data name="Exception_Not_expected_token_type" xml:space="preserve">
-    <value>Not expected token type</value>
+    <value>Not expected token type.</value>
   </data>
   <data name="Exception_Undefined_value_not_allowed" xml:space="preserve">
-    <value>Undefined value not allowed</value>
+    <value>Undefined value not allowed.</value>
   </data>
   <data name="Exception_Cycle_reference_detected" xml:space="preserve">
     <value>Cycle reference detected.</value>

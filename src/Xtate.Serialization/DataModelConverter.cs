@@ -4,9 +4,9 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
 
-namespace TSSArt.StateMachine
+namespace Xtate
 {
 	[Flags]
 	[PublicAPI]
@@ -83,7 +83,8 @@ namespace TSSArt.StateMachine
 							JsonTokenType.True => true,
 							JsonTokenType.False => false,
 							JsonTokenType.Null => DataModelValue.Null,
-							JsonTokenType.String when reader.TryGetDateTimeOffset(out var datetime) => datetime,
+							JsonTokenType.String when reader.TryGetDateTime(out var datetime) && datetime.Kind != DateTimeKind.Local => datetime,
+							JsonTokenType.String when reader.TryGetDateTimeOffset(out var datetimeOffset) => datetimeOffset,
 							JsonTokenType.String => reader.GetString(),
 							JsonTokenType.Number => reader.GetDouble(),
 							JsonTokenType.StartObject => JsonSerializer.Deserialize<DataModelObject>(ref reader, options),
@@ -118,7 +119,22 @@ namespace TSSArt.StateMachine
 						break;
 
 					case DataModelValueType.DateTime:
-						writer.WriteStringValue(value.AsDateTimeOffset());
+						var dataModelDateTime = value.AsDateTime();
+						switch (dataModelDateTime.Type)
+						{
+							case DataModelDateTimeType.DateTime:
+								writer.WriteStringValue(dataModelDateTime.ToDateTime());
+								break;
+
+							case DataModelDateTimeType.DateTimeOffset:
+								writer.WriteStringValue(dataModelDateTime.ToDateTimeOffset());
+								break;
+
+							default:
+								Infrastructure.UnexpectedValue();
+								break;
+						}
+
 						break;
 
 					case DataModelValueType.Boolean:
@@ -159,7 +175,7 @@ namespace TSSArt.StateMachine
 					var name = reader.GetString();
 					var value = JsonSerializer.Deserialize<DataModelValue>(ref reader, options);
 
-					obj[name] = value;
+					obj.Add(name, value);
 
 					reader.Read();
 				}
@@ -178,18 +194,20 @@ namespace TSSArt.StateMachine
 
 				writer.WriteStartObject();
 
-				foreach (var name in obj.Properties)
+				foreach (var pair in obj)
 				{
-					var value = obj[name];
-					if (!value.IsUndefined())
+					if (!string.IsNullOrEmpty(pair.Key))
 					{
-						writer.WritePropertyName(name);
-						JsonSerializer.Serialize(writer, value, options);
-					}
-					else if ((_options & DataModelConverterOptions.UndefinedToSkipOrNull) == DataModelConverterOptions.UndefinedToNull)
-					{
-						writer.WritePropertyName(name);
-						writer.WriteNullValue();
+						if (!pair.Value.IsUndefined())
+						{
+							writer.WritePropertyName(pair.Key);
+							JsonSerializer.Serialize(writer, pair.Value, options);
+						}
+						else if ((_options & DataModelConverterOptions.UndefinedToSkipOrNull) == DataModelConverterOptions.UndefinedToNull)
+						{
+							writer.WritePropertyName(pair.Key);
+							writer.WriteNullValue();
+						}
 					}
 				}
 
@@ -229,7 +247,7 @@ namespace TSSArt.StateMachine
 			{
 				writer.WriteStartArray();
 
-				var arrayLength = array.Length;
+				var arrayLength = array.Count;
 				for (var i = 0; i < arrayLength; i ++)
 				{
 					var value = array[i];
