@@ -18,9 +18,12 @@
 #endregion
 
 using System;
+using System.Collections.Immutable;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Serilog;
+using Xtate.Builder;
 
 namespace Xtate.Core.Host
 {
@@ -35,13 +38,11 @@ namespace Xtate.Core.Host
 			var baseUri = new Uri(args.Length > 0 ? args[0] : "http://localhost:5000/");
 
 			await using var stateMachineHost = new StateMachineHostBuilder()
-											   .AddEcmaScript()
+											   .AddAll()
 											   .AddCefSharpWebBrowser()
 											   .AddUserInteraction()
 											   .AddHttpIoProcessor(baseUri)
-											   .DisableVerboseValidation()
-											   .AddResourceLoader(ResxResourceLoader.Instance)
-											   .SetSerilogLogger()
+											   .SetSerilogLogger(cfg => cfg.MinimumLevel.Verbose().WriteTo.Console())
 											   .Build();
 
 			await stateMachineHost.StartHostAsync().ConfigureAwait(false);
@@ -49,10 +50,27 @@ namespace Xtate.Core.Host
 			var name = Assembly.GetExecutingAssembly().GetName().Name;
 			var autorun = stateMachineHost.ExecuteStateMachineAsync(new Uri($"resx://{name}/{name}/Scxml/autorun.scxml"));
 
+			var sss = new StateMachineFluentBuilder(BuilderFactory.Instance).BeginState()
+																  .BeginTransition()
+																  .SetEvent(ImmutableArray.Create((IEventDescriptor) (EventDescriptor) "*"))
+																  .AddOnTransition(Action)
+																  .EndTransition()
+																  .EndState()
+																  .Build();
+
+			var system = stateMachineHost.ExecuteStateMachineAsync(sss, sessionId: "_system");
+
 			Application.Run();
 
 			await stateMachineHost.StopHostAsync().ConfigureAwait(false);
 			await autorun.ConfigureAwait(false);
+		}
+
+		private static void Action(IExecutionContext executionContext)
+		{
+			var host = (StateMachineHost) executionContext.RuntimeItems[typeof(IHost)];
+
+			//host.
 		}
 	}
 }

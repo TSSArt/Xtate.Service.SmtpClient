@@ -273,9 +273,7 @@ namespace Xtate.IoProcessor
 			}
 
 			var evt = await CreateEvent(request).ConfigureAwait(false);
-			await IncomingEvent(sessionId, evt, token: default).ConfigureAwait(false);
-
-			return true;
+			return await IncomingEvent(sessionId, evt, token: default).ConfigureAwait(false);
 		}
 
 		private static SessionId ExtractSessionId(PathString pathString)
@@ -301,7 +299,7 @@ namespace Xtate.IoProcessor
 				body = await streamReader.ReadToEndAsync().ConfigureAwait(false);
 			}
 
-			var origin = new Uri(request.Headers[@"Origin"].ToString());
+			Uri.TryCreate(request.Headers[@"Origin"].ToString(), UriKind.Absolute, out var origin);
 
 			var data = CreateData(contentType.MediaType, body, out var eventNameInContent);
 
@@ -319,7 +317,7 @@ namespace Xtate.IoProcessor
 
 			if (mediaType == MediaTypeTextPlain)
 			{
-				return new DataModelValue(body);
+				return body;
 			}
 
 			if (mediaType == MediaTypeApplicationFormUrlEncoded)
@@ -342,7 +340,7 @@ namespace Xtate.IoProcessor
 					}
 				}
 
-				return new DataModelValue(dataModelObject);
+				return dataModelObject;
 			}
 
 			if (mediaType == MediaTypeApplicationJson)

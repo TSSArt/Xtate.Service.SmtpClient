@@ -27,6 +27,7 @@ namespace Xtate
 						.AddEcmaScript()
 						.AddHttpClient()
 						.AddSmtpClient()
-						.SetSerilogLogger();
+						.AddResourceLoader(ResxResourceLoader.Instance)
+						.AddResourceLoader(WebResourceLoader.Instance);
 	}
 }
