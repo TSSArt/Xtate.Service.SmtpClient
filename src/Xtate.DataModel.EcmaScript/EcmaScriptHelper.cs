@@ -1,5 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
+﻿#region Copyright © 2019-2020 Sergii Artemenko
+// 
+// This file is part of the Xtate project. <https://xtate.net/>
+// 
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published
+// by the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+// 
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+// 
+#endregion
+
+using System;
 using System.Globalization;
 using System.Reflection;
 using Jint;
@@ -9,9 +27,9 @@ using Jint.Native.Object;
 using Jint.Runtime;
 using Jint.Runtime.Descriptors;
 using Jint.Runtime.Interop;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
 
-namespace TSSArt.StateMachine.EcmaScript
+namespace Xtate.DataModel.EcmaScript
 {
 	[PublicAPI]
 	internal static class EcmaScriptHelper
@@ -19,13 +37,14 @@ namespace TSSArt.StateMachine.EcmaScript
 		public const string JintVersionPropertyName = "JintVersion";
 		public const string InFunctionName          = "In";
 
-		public static readonly string JintVersionValue = typeof(Engine).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? @"(unknown)";
+		public static readonly string[] ParseFormats     = { "o", "u", "s", "r" };
+		public static readonly string   JintVersionValue = typeof(Engine).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? @"(unknown)";
 
 		private static readonly PropertyDescriptor ReadonlyUndefinedPropertyDescriptor = new PropertyDescriptor(JsValue.Undefined, writable: false, enumerable: false, configurable: false);
 
 		public static PropertyDescriptor CreatePropertyAccessor(Engine engine, DataModelObject obj, string property)
 		{
-			if (obj.Access != DataModelAccess.Writable && !obj.Contains(property))
+			if (obj.Access != DataModelAccess.Writable && !obj.ContainsKey(property, caseInsensitive: false))
 			{
 				return ReadonlyUndefinedPropertyDescriptor;
 			}
@@ -35,14 +54,14 @@ namespace TSSArt.StateMachine.EcmaScript
 
 			return new PropertyDescriptor(jsGet, jsSet, enumerable: true, configurable: false);
 
-			JsValue Getter() => ConvertToJsValue(engine, obj[property]);
+			JsValue Getter() => ConvertToJsValue(engine, obj[property, caseInsensitive: false]);
 
-			void Setter(JsValue value) => obj[property] = ConvertFromJsValue(value);
+			void Setter(JsValue value) => obj[property, caseInsensitive: false] = ConvertFromJsValue(value);
 		}
 
 		public static PropertyDescriptor CreateArrayIndexAccessor(Engine engine, DataModelArray array, int index)
 		{
-			if (array.Access != DataModelAccess.Writable && index >= array.Length)
+			if (array.Access != DataModelAccess.Writable && index >= array.Count)
 			{
 				return ReadonlyUndefinedPropertyDescriptor;
 			}
@@ -66,7 +85,7 @@ namespace TSSArt.StateMachine.EcmaScript
 					DataModelValueType.Boolean => new JsValue(value.AsBoolean()),
 					DataModelValueType.String => new JsValue(value.AsString()),
 					DataModelValueType.Number => new JsValue(value.AsNumber()),
-					DataModelValueType.DateTime => new JsValue(value.AsDateTimeOffset().ToString(format: @"o", DateTimeFormatInfo.InvariantInfo)),
+					DataModelValueType.DateTime => new JsValue(value.AsDateTime().ToString(format: @"o", DateTimeFormatInfo.InvariantInfo)),
 					DataModelValueType.Object => new JsValue(new DataModelObjectWrapper(engine, value.AsObject())),
 					DataModelValueType.Array => new JsValue(new DataModelArrayWrapper(engine, value.AsArray())),
 					_ => throw new ArgumentOutOfRangeException(nameof(value), value.Type, Resources.Exception_UnsupportedValueType)
@@ -82,14 +101,15 @@ namespace TSSArt.StateMachine.EcmaScript
 					Types.Boolean => new DataModelValue(value.AsBoolean()),
 					Types.String => CreateDateTimeOrStringValue(value.AsString()),
 					Types.Number => new DataModelValue(value.AsNumber()),
+					Types.Object when value.IsDate() => new DataModelValue(value.AsDate().ToDateTime()),
 					Types.Object => CreateDataModelValue(value.AsObject()),
 					_ => throw new ArgumentOutOfRangeException(nameof(value), value.Type, Resources.Exception_UnsupportedValueType)
 			};
 		}
 
 		private static DataModelValue CreateDateTimeOrStringValue(string val) =>
-				DateTimeOffset.TryParseExact(val, format: @"o", DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None, out var dttm)
-						? new DataModelValue(dttm)
+				DataModelDateTime.TryParseExact(val, ParseFormats, provider: null, DateTimeStyles.None, out var dateTime)
+						? new DataModelValue(dateTime)
 						: new DataModelValue(val);
 
 		private static DataModelValue CreateDataModelValue(ObjectInstance objectInstance)
@@ -97,7 +117,7 @@ namespace TSSArt.StateMachine.EcmaScript
 			switch (objectInstance)
 			{
 				case ArrayInstance array:
-					var dataModelArray = new DataModelArray((int) array.GetLength());
+					var dataModelArray = new DataModelArray();
 
 					foreach (var pair in array.GetOwnProperties())
 					{
@@ -111,14 +131,11 @@ namespace TSSArt.StateMachine.EcmaScript
 
 				default:
 				{
-					IEnumerable<KeyValuePair<string, PropertyDescriptor>> ownProperties = objectInstance.GetOwnProperties();
-					var capacity = ownProperties is ICollection<KeyValuePair<string, PropertyDescriptor>> collection ? collection.Count : 0;
+					var dataModelObject = new DataModelObject();
 
-					var dataModelObject = new DataModelObject(capacity);
-
-					foreach (var pair in ownProperties)
+					foreach (var pair in objectInstance.GetOwnProperties())
 					{
-						dataModelObject[pair.Key] = ConvertFromJsValue(objectInstance.Get(pair.Key));
+						dataModelObject.Add(pair.Key, ConvertFromJsValue(objectInstance.Get(pair.Key)));
 					}
 
 					return new DataModelValue(dataModelObject);

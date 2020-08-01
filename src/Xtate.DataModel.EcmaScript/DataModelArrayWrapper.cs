@@ -1,11 +1,30 @@
-﻿using System.Collections.Generic;
+﻿#region Copyright © 2019-2020 Sergii Artemenko
+// 
+// This file is part of the Xtate project. <https://xtate.net/>
+// 
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published
+// by the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+// 
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+// 
+#endregion
+
+using System.Collections.Generic;
 using System.Globalization;
 using Jint;
 using Jint.Native.Array;
 using Jint.Runtime.Descriptors;
 using Jint.Runtime.Interop;
 
-namespace TSSArt.StateMachine.EcmaScript
+namespace Xtate.DataModel.EcmaScript
 {
 	internal class DataModelArrayWrapper : ArrayInstance, IObjectWrapper
 	{
@@ -19,7 +38,7 @@ namespace TSSArt.StateMachine.EcmaScript
 
 			Extensible = writable;
 
-			base.SetOwnProperty(propertyName: @"length", new PropertyDescriptor((uint) _array.Length, writable, enumerable: false, configurable: false));
+			base.SetOwnProperty(propertyName: @"length", new PropertyDescriptor((uint) _array.Count, writable, enumerable: false, configurable: false));
 		}
 
 	#region Interface IObjectWrapper
@@ -63,7 +82,7 @@ namespace TSSArt.StateMachine.EcmaScript
 
 		public override IEnumerable<KeyValuePair<string, PropertyDescriptor>> GetOwnProperties()
 		{
-			for (var i = 0; i < _array.Length; i ++)
+			for (var i = 0; i < _array.Count; i ++)
 			{
 				var property = i.ToString(NumberFormatInfo.InvariantInfo);
 
@@ -78,7 +97,7 @@ namespace TSSArt.StateMachine.EcmaScript
 
 		public override bool HasOwnProperty(string property)
 		{
-			if (IsArrayIndex(property, out var index) && index < _array.Length)
+			if (IsArrayIndex(property, out var index) && index < _array.Count)
 			{
 				return true;
 			}

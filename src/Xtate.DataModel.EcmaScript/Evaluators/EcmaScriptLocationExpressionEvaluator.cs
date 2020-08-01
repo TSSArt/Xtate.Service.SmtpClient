@@ -1,11 +1,30 @@
-﻿using System;
+﻿#region Copyright © 2019-2020 Sergii Artemenko
+// 
+// This file is part of the Xtate project. <https://xtate.net/>
+// 
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published
+// by the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+// 
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+// 
+#endregion
+
+using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Jint.Parser.Ast;
 using JintIdentifier = Jint.Parser.Ast.Identifier;
 
-namespace TSSArt.StateMachine.EcmaScript
+namespace Xtate.DataModel.EcmaScript
 {
 	internal class EcmaScriptLocationExpressionEvaluator : ILocationEvaluator, ILocationExpression, IAncestorProvider
 	{
@@ -55,7 +74,7 @@ namespace TSSArt.StateMachine.EcmaScript
 			return new ValueTask<IObject>(obj);
 		}
 
-		public string GetName(IExecutionContext executionContext) => _name ?? throw new StateMachineExecutionException(Resources.Exception_Name_of_Location_Expression_can_t_be_evaluated);
+		public string GetName(IExecutionContext executionContext) => _name ?? throw new ExecutionException(Resources.Exception_Name_of_Location_Expression_can_t_be_evaluated);
 
 		public ValueTask SetValue(IObject value, IExecutionContext executionContext, CancellationToken token)
 		{
@@ -77,7 +96,7 @@ namespace TSSArt.StateMachine.EcmaScript
 		{
 			if (_declare == null)
 			{
-				throw new StateMachineExecutionException(Resources.Exception_InvalidLocalVariableName);
+				throw new ExecutionException(Resources.Exception_InvalidLocalVariableName);
 			}
 
 			executionContext.Engine().Exec(_declare, startNewScope: false);

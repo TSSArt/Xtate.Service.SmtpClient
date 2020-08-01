@@ -1,13 +1,32 @@
-﻿using System;
+﻿#region Copyright © 2019-2020 Sergii Artemenko
+// 
+// This file is part of the Xtate project. <https://xtate.net/>
+// 
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published
+// by the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+// 
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+// 
+#endregion
+
+using System;
 using System.Collections.Immutable;
 using Jint.Parser;
 using Jint.Parser.Ast;
 
-namespace TSSArt.StateMachine.EcmaScript
+namespace Xtate.DataModel.EcmaScript
 {
 	public class EcmaScriptDataModelHandler : DataModelHandlerBase
 	{
-		private const string DataModelType      = "http://tssart.com/scxml/datamodel/#ECMAScript";
+		private const string DataModelType      = "http://xtate.net/scxml/datamodel/#ECMAScript";
 		private const string DataModelTypeAlias = "ecmascript";
 
 		public static readonly  IDataModelHandlerFactory Factory       = new DataModelHandlerFactory();
@@ -39,7 +58,7 @@ namespace TSSArt.StateMachine.EcmaScript
 			forEach = new EcmaScriptForEachEvaluator(forEachProperties);
 		}
 
-		protected override void Build(ref ICustomAction customAction, ref CustomAction customActionProperties)
+		protected override void Build(ref ICustomAction customAction, ref CustomActionEntity customActionProperties)
 		{
 			base.Build(ref customAction, ref customActionProperties);
 
@@ -48,6 +67,8 @@ namespace TSSArt.StateMachine.EcmaScript
 
 		protected override void Build(ref IValueExpression valueExpression, ref ValueExpression valueExpressionProperties)
 		{
+			base.Build(ref valueExpression, ref valueExpressionProperties);
+
 			if (valueExpressionProperties.Expression != null)
 			{
 				var program = Parse(valueExpressionProperties.Expression);
@@ -63,12 +84,12 @@ namespace TSSArt.StateMachine.EcmaScript
 			{
 				AddErrorMessage(valueExpression, Resources.ErrorMessage_Value_Expression_must_be_present);
 			}
-
-			base.Build(ref valueExpression, ref valueExpressionProperties);
 		}
 
 		protected override void Build(ref IConditionExpression conditionExpression, ref ConditionExpression conditionExpressionProperties)
 		{
+			base.Build(ref conditionExpression, ref conditionExpressionProperties);
+
 			if (conditionExpressionProperties.Expression != null)
 			{
 				var program = Parse(conditionExpressionProperties.Expression);
@@ -84,12 +105,12 @@ namespace TSSArt.StateMachine.EcmaScript
 			{
 				AddErrorMessage(conditionExpression, Resources.ErrorMessage_Condition_Expression_must_be_present);
 			}
-
-			base.Build(ref conditionExpression, ref conditionExpressionProperties);
 		}
 
 		protected override void Build(ref ILocationExpression locationExpression, ref LocationExpression locationExpressionProperties)
 		{
+			base.Build(ref locationExpression, ref locationExpressionProperties);
+
 			if (locationExpressionProperties.Expression != null)
 			{
 				var program = Parse(locationExpressionProperties.Expression);
@@ -114,12 +135,12 @@ namespace TSSArt.StateMachine.EcmaScript
 			{
 				AddErrorMessage(locationExpression, Resources.ErrorMessage_Location_Expression_must_be_present);
 			}
-
-			base.Build(ref locationExpression, ref locationExpressionProperties);
 		}
 
 		protected override void Build(ref IScriptExpression scriptExpression, ref ScriptExpression scriptExpressionProperties)
 		{
+			base.Build(ref scriptExpression, ref scriptExpressionProperties);
+
 			if (scriptExpressionProperties.Expression != null)
 			{
 				var program = Parse(scriptExpressionProperties.Expression);
@@ -135,26 +156,27 @@ namespace TSSArt.StateMachine.EcmaScript
 			{
 				AddErrorMessage(scriptExpression, Resources.ErrorMessage_Script_Expression_must_be_present);
 			}
-
-			base.Build(ref scriptExpression, ref scriptExpressionProperties);
 		}
 
 		protected override void Build(ref IExternalScriptExpression externalScriptExpression, ref ExternalScriptExpression externalScriptExpressionProperties)
 		{
-			var _ = externalScriptExpression;
+			base.Build(ref externalScriptExpression, ref externalScriptExpressionProperties);
 
 			externalScriptExpression = new EcmaScriptExternalScriptExpressionEvaluator(externalScriptExpressionProperties);
+		}
 
-			base.Build(ref externalScriptExpression, ref externalScriptExpressionProperties);
+		protected override void Build(ref IInlineContent inlineContent, ref InlineContent inlineContentProperties)
+		{
+			base.Build(ref inlineContent, ref inlineContentProperties);
+
+			inlineContent = new EcmaScriptInlineContentEvaluator(inlineContentProperties);
 		}
 
 		protected override void Build(ref IContentBody contentBody, ref ContentBody contentBodyProperties)
 		{
-			var _ = contentBody;
+			base.Build(ref contentBody, ref contentBodyProperties);
 
 			contentBody = new EcmaScriptContentBodyEvaluator(contentBodyProperties);
-
-			base.Build(ref contentBody, ref contentBodyProperties);
 		}
 
 		private class DataModelHandlerFactory : IDataModelHandlerFactory

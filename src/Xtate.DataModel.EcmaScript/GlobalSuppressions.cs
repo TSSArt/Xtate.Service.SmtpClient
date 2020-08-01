@@ -17,6 +17,8 @@
 // 
 #endregion
 
-using System.Resources;
+// @formatter:off
 
-[assembly: NeutralResourcesLanguage("en-US")]
+using System.Diagnostics.CodeAnalysis;
+
+[assembly: SuppressMessage(category: "Globalization", checkId: "CA1305:Specify IFormatProvider", Justification = "<Pending>", Scope = "member", Target = "~M:Xtate.EcmaScript.EcmaScriptHelper.ConvertToJsValue(Jint.Engine,Xtate.DataModelValue)~Jint.Native.JsValue")]

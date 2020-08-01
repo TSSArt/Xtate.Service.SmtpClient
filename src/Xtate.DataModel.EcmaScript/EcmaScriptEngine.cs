@@ -1,14 +1,34 @@
-﻿using System;
+﻿#region Copyright © 2019-2020 Sergii Artemenko
+// 
+// This file is part of the Xtate project. <https://xtate.net/>
+// 
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published
+// by the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+// 
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+// 
+#endregion
+
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using Jint;
 using Jint.Native;
 using Jint.Parser.Ast;
+using Jint.Runtime.Descriptors;
 using Jint.Runtime.Environments;
 using Jint.Runtime.Interop;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
 
-namespace TSSArt.StateMachine.EcmaScript
+namespace Xtate.DataModel.EcmaScript
 {
 	[PublicAPI]
 	internal class EcmaScriptEngine
@@ -40,29 +60,35 @@ namespace TSSArt.StateMachine.EcmaScript
 
 		private void SyncRootVariables(DataModelObject dataModel)
 		{
-			if (_variableSet.SetEquals(dataModel.Properties))
-			{
-				return;
-			}
-
 			var global = _jintEngine.Global;
-
-			foreach (var name in dataModel.Properties)
+			List<string>? toRemove = null;
+			foreach (var name in _variableSet)
 			{
-				if (!_variableSet.Remove(name))
+				if (!dataModel.TryGet(name, caseInsensitive: false, out _))
 				{
-					var descriptor = EcmaScriptHelper.CreatePropertyAccessor(_jintEngine, dataModel, name);
-					global.FastSetProperty(name, descriptor);
+					toRemove ??= new List<string>();
+					toRemove.Add(name);
 				}
 			}
 
-			foreach (var name in _variableSet)
+			if (toRemove != null)
 			{
-				global.RemoveOwnProperty(name);
+				foreach (var property in toRemove)
+				{
+					_variableSet.Remove(property);
+					global.RemoveOwnProperty(property);
+				}
 			}
 
-			_variableSet.Clear();
-			_variableSet.UnionWith(dataModel.Properties);
+			foreach (var keyValue in dataModel.KeyValues)
+			{
+				if (!string.IsNullOrEmpty(keyValue.Key) && global.GetOwnProperty(keyValue.Key) == PropertyDescriptor.Undefined)
+				{
+					var descriptor = EcmaScriptHelper.CreatePropertyAccessor(_jintEngine, dataModel, keyValue.Key);
+					global.FastSetProperty(keyValue.Key, descriptor);
+					_variableSet.Add(keyValue.Key);
+				}
+			}
 		}
 
 		public void EnterExecutionContext()
