@@ -30,7 +30,7 @@ namespace Xtate
 		{
 			if (builder == null) throw new ArgumentNullException(nameof(builder));
 
-			var configuration = new LoggerConfiguration().MinimumLevel.Information().WriteTo.Console();
+			var configuration = new LoggerConfiguration().WriteTo.Console();
 
 			builder.SetLogger(new SerilogLogger(configuration));
 
