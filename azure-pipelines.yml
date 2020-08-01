@@ -23,23 +23,31 @@ steps:
   displayName: Build
   inputs:
     command: 'build'
-    arguments: '-p:Version=$(Version)'
+    arguments: '--no-restore -p:Version=$(Version)'
 
 - task: DotNetCoreCLI@2
   displayName: Test
   inputs:
     command: 'test'
-    arguments: '--collect "Code coverage"'
+    arguments: '--no-build --collect "Code coverage"'
     
 - task: DotNetCoreCLI@2
   displayName: Pack
   inputs:
     command: pack
     nobuild: true
+    includesymbols: true
+    buildProperties: 'SymbolPackageFormat=snupkg'
 
 - task: DotNetCoreCLI@2
-  displayName: Push
+  displayName: Push to Azure
   inputs:
     command: push
     publishVstsFeed: '$(AccountFeed)'
 
+- task: NuGetCommand@2
+  displayName: Push to NuGet.org
+  inputs:
+    command: 'push'
+    nuGetFeedType: 'external'
+    publishFeedCredentials: 'XtateFeed'
