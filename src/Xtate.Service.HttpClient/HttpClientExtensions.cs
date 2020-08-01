@@ -17,8 +17,20 @@
 // 
 #endregion
 
-using System.Diagnostics.CodeAnalysis;
+using System;
+using Xtate.Service;
 
-[assembly:
-		SuppressMessage(category: "Style", checkId: "IDE0057:Use range operator", Justification = "<Pending>", Scope = "member",
-						Target = "~M:Xtate.Service.HttpClientService.AppendCookies(System.Uri,System.Net.CookieContainer,System.Net.HttpWebResponse)")]
+namespace Xtate
+{
+	public static class HttpClientExtensions
+	{
+		public static StateMachineHostBuilder AddHttpClient(this StateMachineHostBuilder builder)
+		{
+			if (builder == null) throw new ArgumentNullException(nameof(builder));
+
+			builder.AddServiceFactory(HttpClientService.Factory);
+
+			return builder;
+		}
+	}
+}

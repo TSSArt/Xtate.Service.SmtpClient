@@ -1,4 +1,23 @@
-﻿using System;
+﻿#region Copyright © 2019-2020 Sergii Artemenko
+// 
+// This file is part of the Xtate project. <https://xtate.net/>
+// 
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published
+// by the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+// 
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+// 
+#endregion
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -12,12 +31,12 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
-using TSSArt.StateMachine.Annotations;
+using Xtate.Annotations;
 
-namespace TSSArt.StateMachine.Services
+namespace Xtate.Service
 {
 	[PublicAPI]
-	[SimpleService("http://tssart.com/scxml/service/#HTTPClient", Alias = "http")]
+	[SimpleService("http://xtate.net/scxml/service/#HTTPClient", Alias = "http")]
 	public class HttpClientService : SimpleServiceBase
 	{
 		private const string MediaTypeApplicationFormUrlEncoded = "application/x-www-form-urlencoded";
@@ -47,11 +66,11 @@ namespace TSSArt.StateMachine.Services
 			var cookies = parameters["cookies"].AsArrayOrEmpty().Select(CreateCookie);
 
 			var capturesObj = parameters["capture"].AsObjectOrEmpty();
-			var captures = from name in capturesObj.Properties
-						   let capture = capturesObj[name].AsObjectOrEmpty()
+			var captures = from pair in capturesObj
+						   let capture = pair.Value.AsObjectOrEmpty()
 						   select new Capture
 								  {
-										  Name = name,
+										  Name = pair.Key,
 										  XPaths = GetArray(capture["xpath"]),
 										  Attributes = GetArray(capture["attr"]),
 										  Regex = capture["regex"].AsStringOrDefault()
@@ -74,37 +93,37 @@ namespace TSSArt.StateMachine.Services
 			var responseHeaders = new DataModelArray();
 			foreach (var header in response.Headers)
 			{
-				responseHeaders.Add(new DataModelObject(capacity: 2)
+				responseHeaders.Add(new DataModelObject
 									{
-											["name"] = header.Key,
-											["value"] = header.Value
+											{ "name", header.Key },
+											{ "value", header.Value }
 									});
 			}
 
 			var responseCookies = new DataModelArray();
 			foreach (var cookie in response.Cookies)
 			{
-				responseCookies.Add(new DataModelObject(capacity: 8)
+				responseCookies.Add(new DataModelObject
 									{
-											["name"] = cookie.Name,
-											["value"] = cookie.Value,
-											["path"] = cookie.Path,
-											["domain"] = cookie.Domain,
-											["httpOnly"] = cookie.HttpOnly,
-											["port"] = cookie.Port,
-											["secure"] = cookie.Secure,
-											["expires"] = cookie.Expires != default ? cookie.Expires : default(DataModelValue)
+											{ "name", cookie.Name },
+											{ "value", cookie.Value },
+											{ "path", cookie.Path },
+											{ "domain", cookie.Domain },
+											{ "httpOnly", cookie.HttpOnly },
+											{ "port", cookie.Port },
+											{ "secure", cookie.Secure },
+											{ "expires", cookie.Expires != default ? cookie.Expires : default(DataModelValue) }
 									});
 			}
 
-			return new DataModelObject(capacity: 6)
+			return new DataModelObject
 				   {
-						   ["statusCode"] = response.StatusCode,
-						   ["statusDescription"] = response.StatusDescription,
-						   ["webExceptionStatus"] = response.WebExceptionStatus,
-						   ["headers"] = responseHeaders,
-						   ["cookies"] = responseCookies,
-						   ["content"] = response.Content
+						   { "statusCode", response.StatusCode },
+						   { "statusDescription", response.StatusDescription },
+						   { "webExceptionStatus", response.WebExceptionStatus },
+						   { "headers", responseHeaders },
+						   { "cookies", responseCookies },
+						   { "content", response.Content }
 				   };
 		}
 
@@ -117,7 +136,7 @@ namespace TSSArt.StateMachine.Services
 								 Value = cookieObj["value"].AsStringOrDefault(),
 								 Path = cookieObj["path"].AsStringOrDefault(),
 								 Domain = cookieObj["domain"].AsStringOrDefault(),
-								 Expires = cookieObj["expires"].AsDateTimeOrDefault() ?? default,
+								 Expires = cookieObj["expires"].AsDateTimeOrDefault()?.ToDateTime() ?? default,
 								 HttpOnly = cookieObj["httpOnly"].AsBooleanOrDefault() ?? false,
 								 Secure = cookieObj["secure"].AsBooleanOrDefault() ?? false
 						 };
@@ -308,7 +327,7 @@ namespace TSSArt.StateMachine.Services
 
 		private static DataModelValue CaptureData(HtmlDocument htmlDocument, Capture[] captures)
 		{
-			var obj = new DataModelObject(captures.Length);
+			var obj = new DataModelObject();
 
 			foreach (var capture in captures)
 			{
@@ -316,7 +335,7 @@ namespace TSSArt.StateMachine.Services
 
 				if (!result.IsUndefined())
 				{
-					obj[capture.Name] = result;
+					obj.Add(capture.Name, result);
 				}
 			}
 
@@ -362,7 +381,7 @@ namespace TSSArt.StateMachine.Services
 				return CaptureInText(node.InnerHtml, pattern);
 			}
 
-			var obj = new DataModelObject(attrs.Length);
+			var obj = new DataModelObject();
 
 			foreach (var attr in attrs)
 			{
@@ -373,7 +392,7 @@ namespace TSSArt.StateMachine.Services
 					return default;
 				}
 
-				obj[attr] = CaptureInText(value, pattern);
+				obj.Add(attr, CaptureInText(value, pattern));
 			}
 
 			return obj;
@@ -443,10 +462,10 @@ namespace TSSArt.StateMachine.Services
 
 			var groupNames = regex.GetGroupNames();
 
-			var obj = new DataModelObject(groupNames.Length);
+			var obj = new DataModelObject();
 			foreach (var name in groupNames)
 			{
-				obj[name] = match.Groups[name].Value;
+				obj.Add(name, match.Groups[name].Value);
 			}
 
 			return obj;
