@@ -1,4 +1,23 @@
-﻿using System;
+﻿#region Copyright © 2019-2020 Sergii Artemenko
+// 
+// This file is part of the Xtate project. <https://xtate.net/>
+// 
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published
+// by the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+// 
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+// 
+#endregion
+
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -18,7 +37,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Primitives;
 
-namespace TSSArt.StateMachine
+namespace Xtate.IoProcessor
 {
 	[IoProcessor("http://www.w3.org/TR/scxml/#BasicHTTPEventProcessor", Alias = "http")]
 	public sealed class HttpIoProcessor : IoProcessorBase, IAsyncDisposable
@@ -99,7 +118,7 @@ namespace TSSArt.StateMachine
 				{
 					if (listenAddress != null)
 					{
-						throw new StateMachineProcessorException(Resources.Exception_Found_more_then_one_interface_to_listen);
+						throw new ProcessorException(Resources.Exception_Found_more_then_one_interface_to_listen);
 					}
 
 					listenAddress = address;
@@ -108,7 +127,7 @@ namespace TSSArt.StateMachine
 
 			if (listenAddress == null)
 			{
-				throw new StateMachineProcessorException(Resources.Exception_Can_t_match_network_interface_to_listen);
+				throw new ProcessorException(Resources.Exception_Can_t_match_network_interface_to_listen);
 			}
 
 			return new IPEndPoint(listenAddress, uri.Port);
@@ -195,9 +214,9 @@ namespace TSSArt.StateMachine
 
 		private static bool IsStringDictionary(DataModelObject dataModelObject)
 		{
-			foreach (var name in dataModelObject.Properties)
+			foreach (var pair in dataModelObject)
 			{
-				switch (dataModelObject[name].Type)
+				switch (pair.Value.Type)
 				{
 					case DataModelValueType.Object:
 					case DataModelValueType.Array:
@@ -229,10 +248,9 @@ namespace TSSArt.StateMachine
 
 			if (dataModelObject != null)
 			{
-				foreach (var name in dataModelObject.Properties)
+				foreach (var pair in dataModelObject)
 				{
-					var value = dataModelObject[name].ToObject();
-					yield return new KeyValuePair<string, string>(name, Convert.ToString(value, CultureInfo.InvariantCulture));
+					yield return new KeyValuePair<string, string>(pair.Key, Convert.ToString(pair.Value, CultureInfo.InvariantCulture));
 				}
 			}
 		}
@@ -307,7 +325,7 @@ namespace TSSArt.StateMachine
 			if (mediaType == MediaTypeApplicationFormUrlEncoded)
 			{
 				var pairs = QueryHelpers.ParseQuery(body);
-				var dataModelObject = new DataModelObject(pairs.Count);
+				var dataModelObject = new DataModelObject();
 
 				foreach (var pair in pairs)
 				{
@@ -317,7 +335,10 @@ namespace TSSArt.StateMachine
 					}
 					else
 					{
-						dataModelObject[pair.Key] = new DataModelValue(pair.Value.ToString());
+						foreach (var stringValue in pair.Value)
+						{
+							dataModelObject.Add(pair.Key, stringValue);
+						}
 					}
 				}
 
