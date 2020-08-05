@@ -21,6 +21,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xtate.Builder;
@@ -268,7 +269,7 @@ namespace Xtate.Test
 		}
 
 		[TestMethod]
-		public void StoreWithStorageTest()
+		public async Task StoreWithStorageTest()
 		{
 			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Xtate.UnitTest.Resources.All.xml");
 
@@ -280,9 +281,9 @@ namespace Xtate.Test
 
 			var stateMachine = director.ConstructStateMachine(StateMachineValidator.Instance);
 
-			var dataModelHandler = EcmaScriptDataModelHandler.Factory.CreateHandler(DefaultErrorProcessor.Instance);
-			var imBuilder = new InterpreterModelBuilder(stateMachine, dataModelHandler, customActionProviders: default, DefaultErrorProcessor.Instance);
-			var model = imBuilder.Build();
+			var dataModelHandler = EcmaScriptDataModelHandler.Factory.TryCreateHandler(dataModelType: "ecmascript", DefaultErrorProcessor.Instance).Result;
+			var imBuilder = new InterpreterModelBuilder(stateMachine, dataModelHandler!, customActionProviders: default, DefaultErrorProcessor.Instance);
+			var model = await imBuilder.Build(default);
 			var storeSupport = model.Root.As<IStoreSupport>();
 
 			var storage = new InMemoryStorage();

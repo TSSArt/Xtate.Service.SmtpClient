@@ -88,7 +88,9 @@ namespace Xtate.BenchmarkTest
 		{
 			_stateMachine = new StateMachineFluentBuilder(BuilderFactory.Instance).BeginFinal().SetId("1").EndFinal().Build();
 			_channelReader = Channel.CreateUnbounded<IEvent>();
-			_dataModelHandler = XPathDataModelHandler.Factory.CreateHandler(DefaultErrorProcessor.Instance);
+			var dataModelHandler = XPathDataModelHandler.Factory.TryCreateHandler(dataModelType: "xpath", DefaultErrorProcessor.Instance).Result;
+			Infrastructure.Assert(dataModelHandler != null);
+			_dataModelHandler = dataModelHandler;
 			_host = new StateMachineHostBuilder().SetLogger(_logger).Build();
 			_host.StartHostAsync().Wait();
 		}
