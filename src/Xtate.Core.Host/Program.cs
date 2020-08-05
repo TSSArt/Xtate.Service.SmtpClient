@@ -1,5 +1,5 @@
 #region Copyright © 2019-2020 Sergii Artemenko
-// 
+
 // This file is part of the Xtate project. <https://xtate.net/>
 // 
 // This program is free software: you can redistribute it and/or modify
@@ -14,7 +14,7 @@
 // 
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-// 
+
 #endregion
 
 using System;
@@ -51,12 +51,12 @@ namespace Xtate.Core.Host
 			var autorun = stateMachineHost.ExecuteStateMachineAsync(new Uri($"resx://{name}/{name}/Scxml/autorun.scxml"));
 
 			var sss = new StateMachineFluentBuilder(BuilderFactory.Instance).BeginState()
-																  .BeginTransition()
-																  .SetEvent(ImmutableArray.Create((IEventDescriptor) (EventDescriptor) "*"))
-																  .AddOnTransition(Action)
-																  .EndTransition()
-																  .EndState()
-																  .Build();
+																			.BeginTransition()
+																			.SetEvent(ImmutableArray.Create((IEventDescriptor) (EventDescriptor) "*"))
+																			.AddOnTransition(Action)
+																			.EndTransition()
+																			.EndState()
+																			.Build();
 
 			var system = stateMachineHost.ExecuteStateMachineAsync(sss, sessionId: "_system");
 
