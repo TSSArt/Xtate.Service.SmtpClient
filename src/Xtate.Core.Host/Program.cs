@@ -68,7 +68,7 @@ namespace Xtate.Core.Host
 
 		private static void Action(IExecutionContext executionContext)
 		{
-			var host = (StateMachineHost) executionContext.RuntimeItems[typeof(IHost)];
+			//var host = (StateMachineHost) executionContext.RuntimeItems[typeof(IHost)];
 
 			//host.
 		}

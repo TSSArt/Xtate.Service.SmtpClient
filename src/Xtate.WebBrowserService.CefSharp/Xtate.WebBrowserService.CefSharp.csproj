@@ -38,9 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="BrowserForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Update="BrowserForm.cs" />
   </ItemGroup>
 
   <ItemGroup>

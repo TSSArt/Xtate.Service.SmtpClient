@@ -17,20 +17,13 @@
 
 #endregion
 
-using Xtate.Service;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace Xtate
+namespace Xtate.DataModel
 {
-	public static class XtateExtensions
+	public interface IDataModelHandlerFactoryActivator
 	{
-		public static StateMachineHostBuilder AddAll(this StateMachineHostBuilder builder) =>
-				builder
-						.AddXPath()
-						.AddEcmaScript()
-						.AddHttpClient()
-						.AddSmtpClient()
-						.AddResourceLoader(ResxResourceLoader.Instance)
-						.AddResourceLoader(FileResourceLoader.Instance)
-						.AddResourceLoader(WebResourceLoader.Instance);
+		ValueTask<IDataModelHandler> CreateHandler(IFactoryContext factoryContext, string dataModelType, IErrorProcessor errorProcessor, CancellationToken token);
 	}
 }

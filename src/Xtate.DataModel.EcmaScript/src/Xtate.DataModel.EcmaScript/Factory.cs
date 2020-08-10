@@ -17,20 +17,16 @@
 
 #endregion
 
-using Xtate.Service;
+using Xtate.Annotations;
 
-namespace Xtate
+namespace Xtate.DataModel.EcmaScript
 {
-	public static class XtateExtensions
+	[UsedImplicitly]
+	public class Factory : FactoryBase
 	{
-		public static StateMachineHostBuilder AddAll(this StateMachineHostBuilder builder) =>
-				builder
-						.AddXPath()
-						.AddEcmaScript()
-						.AddHttpClient()
-						.AddSmtpClient()
-						.AddResourceLoader(ResxResourceLoader.Instance)
-						.AddResourceLoader(FileResourceLoader.Instance)
-						.AddResourceLoader(WebResourceLoader.Instance);
+		public Factory()
+		{
+			Add(EcmaScriptDataModelHandler.Factory);
+		}
 	}
 }

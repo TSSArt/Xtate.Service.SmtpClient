@@ -88,7 +88,7 @@ namespace Xtate.BenchmarkTest
 		{
 			_stateMachine = new StateMachineFluentBuilder(BuilderFactory.Instance).BeginFinal().SetId("1").EndFinal().Build();
 			_channelReader = Channel.CreateUnbounded<IEvent>();
-			var dataModelHandler = XPathDataModelHandler.Factory.TryCreateHandler(dataModelType: "xpath", DefaultErrorProcessor.Instance).Result;
+			var dataModelHandler = new XPathDataModelHandler();
 			Infrastructure.Assert(dataModelHandler != null);
 			_dataModelHandler = dataModelHandler;
 			_host = new StateMachineHostBuilder().SetLogger(_logger).Build();
@@ -112,7 +112,7 @@ namespace Xtate.BenchmarkTest
 		[Benchmark]
 		public void ModelBuilderBuild()
 		{
-			var modelBuilder = new InterpreterModelBuilder(_stateMachine, _dataModelHandler, ImmutableArray<ICustomActionFactory>.Empty, DefaultErrorProcessor.Instance);
+			var modelBuilder = new InterpreterModelBuilder(_stateMachine, _dataModelHandler, ImmutableArray<ICustomActionFactory>.Empty, default!, DefaultErrorProcessor.Instance);
 			var valueTask = modelBuilder.Build(ImmutableArray<IResourceLoader>.Empty, token: default);
 			valueTask.AsTask().Wait();
 		}

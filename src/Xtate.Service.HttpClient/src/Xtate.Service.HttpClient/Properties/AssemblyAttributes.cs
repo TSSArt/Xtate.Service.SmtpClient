@@ -17,20 +17,7 @@
 
 #endregion
 
+using Xtate;
 using Xtate.Service;
 
-namespace Xtate
-{
-	public static class XtateExtensions
-	{
-		public static StateMachineHostBuilder AddAll(this StateMachineHostBuilder builder) =>
-				builder
-						.AddXPath()
-						.AddEcmaScript()
-						.AddHttpClient()
-						.AddSmtpClient()
-						.AddResourceLoader(ResxResourceLoader.Instance)
-						.AddResourceLoader(FileResourceLoader.Instance)
-						.AddResourceLoader(WebResourceLoader.Instance);
-	}
-}
+[assembly: Factory(typeof(Factory))]

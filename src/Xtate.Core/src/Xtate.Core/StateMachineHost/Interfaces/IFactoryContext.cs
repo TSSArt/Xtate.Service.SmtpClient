@@ -17,20 +17,14 @@
 
 #endregion
 
-using Xtate.Service;
+using System.Collections.Immutable;
 
 namespace Xtate
 {
-	public static class XtateExtensions
+	public interface IFactoryContext
 	{
-		public static StateMachineHostBuilder AddAll(this StateMachineHostBuilder builder) =>
-				builder
-						.AddXPath()
-						.AddEcmaScript()
-						.AddHttpClient()
-						.AddSmtpClient()
-						.AddResourceLoader(ResxResourceLoader.Instance)
-						.AddResourceLoader(FileResourceLoader.Instance)
-						.AddResourceLoader(WebResourceLoader.Instance);
+		ImmutableArray<IResourceLoader> ResourceLoaders { get; }
+
+		object? this[object key] { get; set; }
 	}
 }

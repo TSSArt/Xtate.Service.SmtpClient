@@ -17,20 +17,14 @@
 
 #endregion
 
-using Xtate.Service;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace Xtate
+namespace Xtate.Service
 {
-	public static class XtateExtensions
+	public interface IServiceFactoryActivator
 	{
-		public static StateMachineHostBuilder AddAll(this StateMachineHostBuilder builder) =>
-				builder
-						.AddXPath()
-						.AddEcmaScript()
-						.AddHttpClient()
-						.AddSmtpClient()
-						.AddResourceLoader(ResxResourceLoader.Instance)
-						.AddResourceLoader(FileResourceLoader.Instance)
-						.AddResourceLoader(WebResourceLoader.Instance);
+		ValueTask<IService> StartService(IFactoryContext factoryContext, Uri? baseUri, InvokeData invokeData, IServiceCommunication serviceCommunication, CancellationToken token);
 	}
 }

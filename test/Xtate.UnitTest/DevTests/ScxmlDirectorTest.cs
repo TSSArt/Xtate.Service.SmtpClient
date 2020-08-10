@@ -105,8 +105,8 @@ namespace Xtate.Test
 		[TestMethod]
 		public async Task ScxmlSerializerTest()
 		{
-			var dataModelHandler = EcmaScriptDataModelHandler.Factory.TryCreateHandler(dataModelType: "ecmascript", DefaultErrorProcessor.Instance).Result;
-			var interpreterModelBuilder = new InterpreterModelBuilder(_stateMachine, dataModelHandler!, customActionProviders: default, DefaultErrorProcessor.Instance);
+			var dataModelHandler = new EcmaScriptDataModelHandler();
+			var interpreterModelBuilder = new InterpreterModelBuilder(_stateMachine, dataModelHandler!, customActionProviders: default, default!, DefaultErrorProcessor.Instance);
 			var interpreterModel = await interpreterModelBuilder.Build(default);
 			var text = new StringWriter();
 			using (var xmlWriter = XmlWriter.Create(text, new XmlWriterSettings { Encoding = Encoding.UTF8, Indent = true }))

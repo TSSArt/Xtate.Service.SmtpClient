@@ -24,8 +24,6 @@ namespace Xtate.CustomAction
 {
 	public interface ICustomActionFactory
 	{
-		ValueTask<bool> CanHandle(string ns, string name, CancellationToken token);
-
-		ValueTask<ICustomActionExecutor> CreateExecutor(ICustomActionContext customActionContext, CancellationToken token);
+		ValueTask<ICustomActionFactoryActivator?> TryGetActivator(IFactoryContext factoryContext, string ns, string name, CancellationToken token);
 	}
 }

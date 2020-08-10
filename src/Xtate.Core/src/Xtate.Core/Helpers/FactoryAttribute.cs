@@ -17,20 +17,17 @@
 
 #endregion
 
-using Xtate.Service;
+using System;
+using Xtate.Annotations;
 
 namespace Xtate
 {
-	public static class XtateExtensions
+	[PublicAPI]
+	[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+	public sealed class FactoryAttribute : Attribute
 	{
-		public static StateMachineHostBuilder AddAll(this StateMachineHostBuilder builder) =>
-				builder
-						.AddXPath()
-						.AddEcmaScript()
-						.AddHttpClient()
-						.AddSmtpClient()
-						.AddResourceLoader(ResxResourceLoader.Instance)
-						.AddResourceLoader(FileResourceLoader.Instance)
-						.AddResourceLoader(WebResourceLoader.Instance);
+		public FactoryAttribute(Type factoryType) => FactoryType = factoryType;
+
+		public Type FactoryType { get; }
 	}
 }

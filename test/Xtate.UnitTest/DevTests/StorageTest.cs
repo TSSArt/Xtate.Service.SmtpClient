@@ -281,8 +281,8 @@ namespace Xtate.Test
 
 			var stateMachine = director.ConstructStateMachine(StateMachineValidator.Instance);
 
-			var dataModelHandler = EcmaScriptDataModelHandler.Factory.TryCreateHandler(dataModelType: "ecmascript", DefaultErrorProcessor.Instance).Result;
-			var imBuilder = new InterpreterModelBuilder(stateMachine, dataModelHandler!, customActionProviders: default, DefaultErrorProcessor.Instance);
+			var dataModelHandler = new EcmaScriptDataModelHandler();
+			var imBuilder = new InterpreterModelBuilder(stateMachine, dataModelHandler!, customActionProviders: default, default!, DefaultErrorProcessor.Instance);
 			var model = await imBuilder.Build(default);
 			var storeSupport = model.Root.As<IStoreSupport>();
 
