@@ -125,7 +125,7 @@ namespace Xtate.IoProcessor
 				}
 			}
 
-			if (listenAddress == null)
+			if (listenAddress is null)
 			{
 				throw new ProcessorException(Resources.Exception_Can_t_match_network_interface_to_listen);
 			}
@@ -135,18 +135,18 @@ namespace Xtate.IoProcessor
 
 		protected override Uri GetTarget(SessionId sessionId)
 		{
-			if (sessionId == null) throw new ArgumentNullException(nameof(sessionId));
+			if (sessionId is null) throw new ArgumentNullException(nameof(sessionId));
 
 			return new Uri(_baseUri, sessionId.Value);
 		}
 
 		protected override async ValueTask OutgoingEvent(SessionId sessionId, IOutgoingEvent evt, CancellationToken token)
 		{
-			if (evt == null) throw new ArgumentNullException(nameof(evt));
+			if (evt is null) throw new ArgumentNullException(nameof(evt));
 
 			using var client = new HttpClient();
 
-			if (evt.Target == null)
+			if (evt.Target is null)
 			{
 				throw new ArgumentException(Resources.Exception_Target_is_not_defined, nameof(evt));
 			}

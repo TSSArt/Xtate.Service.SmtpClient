@@ -35,7 +35,7 @@ namespace Xtate.CustomAction
 
 		public FormatAction(XmlReader xmlReader, ICustomActionContext access) : base(access)
 		{
-			if (xmlReader == null) throw new ArgumentNullException(nameof(xmlReader));
+			if (xmlReader is null) throw new ArgumentNullException(nameof(xmlReader));
 
 			RegisterArgument(Template, xmlReader.GetAttribute(TemplateExpr), xmlReader.GetAttribute(Template));
 			RegisterArgument(ArgsExpr, xmlReader.GetAttribute(ArgsExpr));
@@ -44,7 +44,7 @@ namespace Xtate.CustomAction
 
 		protected override DataModelValue Evaluate(IReadOnlyDictionary<string, DataModelValue> arguments)
 		{
-			if (arguments == null) throw new ArgumentNullException(nameof(arguments));
+			if (arguments is null) throw new ArgumentNullException(nameof(arguments));
 
 			var template = arguments[Template].AsString();
 			var args = arguments[ArgsExpr].AsObjectOrEmpty();

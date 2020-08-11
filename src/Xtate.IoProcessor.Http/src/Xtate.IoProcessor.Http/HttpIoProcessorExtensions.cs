@@ -29,7 +29,7 @@ namespace Xtate
 	{
 		public static StateMachineHostBuilder AddHttpIoProcessor(this StateMachineHostBuilder builder, Uri baseUri)
 		{
-			if (builder == null) throw new ArgumentNullException(nameof(builder));
+			if (builder is null) throw new ArgumentNullException(nameof(builder));
 
 			builder.AddIoProcessorFactory(new HttpIoProcessorFactory(baseUri, new IPEndPoint(IPAddress.None, port: 0)));
 
@@ -38,7 +38,7 @@ namespace Xtate
 
 		public static StateMachineHostBuilder AddHttpIoProcessor(this StateMachineHostBuilder builder, Uri baseUri, IPEndPoint ipEndPoint)
 		{
-			if (builder == null) throw new ArgumentNullException(nameof(builder));
+			if (builder is null) throw new ArgumentNullException(nameof(builder));
 
 			builder.AddIoProcessorFactory(new HttpIoProcessorFactory(baseUri, ipEndPoint));
 

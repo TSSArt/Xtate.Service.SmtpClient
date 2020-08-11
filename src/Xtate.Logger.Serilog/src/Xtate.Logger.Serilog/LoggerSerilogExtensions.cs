@@ -28,7 +28,7 @@ namespace Xtate
 	{
 		public static StateMachineHostBuilder SetSerilogLogger(this StateMachineHostBuilder builder)
 		{
-			if (builder == null) throw new ArgumentNullException(nameof(builder));
+			if (builder is null) throw new ArgumentNullException(nameof(builder));
 
 			var configuration = new LoggerConfiguration().WriteTo.Console();
 
@@ -39,8 +39,8 @@ namespace Xtate
 
 		public static StateMachineHostBuilder SetSerilogLogger(this StateMachineHostBuilder builder, Action<LoggerConfiguration> options)
 		{
-			if (builder == null) throw new ArgumentNullException(nameof(builder));
-			if (options == null) throw new ArgumentNullException(nameof(options));
+			if (builder is null) throw new ArgumentNullException(nameof(builder));
+			if (options is null) throw new ArgumentNullException(nameof(options));
 
 			var configuration = new LoggerConfiguration();
 

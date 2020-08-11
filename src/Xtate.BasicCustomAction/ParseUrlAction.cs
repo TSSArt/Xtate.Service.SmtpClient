@@ -34,7 +34,7 @@ namespace Xtate.CustomAction
 
 		public ParseUrlAction(XmlReader xmlReader, ICustomActionContext access) : base(access)
 		{
-			if (xmlReader == null) throw new ArgumentNullException(nameof(xmlReader));
+			if (xmlReader is null) throw new ArgumentNullException(nameof(xmlReader));
 
 			RegisterArgument(Url, xmlReader.GetAttribute(UrlExpr), xmlReader.GetAttribute(Url));
 			RegisterArgument(Parameter, xmlReader.GetAttribute(ParameterExpr), xmlReader.GetAttribute(Parameter));
@@ -43,13 +43,13 @@ namespace Xtate.CustomAction
 
 		protected override DataModelValue Evaluate(IReadOnlyDictionary<string, DataModelValue> arguments)
 		{
-			if (arguments == null) throw new ArgumentNullException(nameof(arguments));
+			if (arguments is null) throw new ArgumentNullException(nameof(arguments));
 
 			var uri = new Uri(arguments[Url].AsString(), UriKind.RelativeOrAbsolute);
 			var parameter = arguments[Parameter].AsStringOrDefault();
 			var parameters = QueryHelpers.ParseNullableQuery(uri.OriginalString);
 
-			if (parameter == null)
+			if (parameter is null)
 			{
 				var result = new DataModelObject();
 

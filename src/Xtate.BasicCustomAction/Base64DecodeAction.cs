@@ -37,7 +37,7 @@ namespace Xtate.CustomAction
 
 		public Base64DecodeAction(XmlReader xmlReader, ICustomActionContext access) : base(access)
 		{
-			if (xmlReader == null) throw new ArgumentNullException(nameof(xmlReader));
+			if (xmlReader is null) throw new ArgumentNullException(nameof(xmlReader));
 
 			RegisterArgument(Content, xmlReader.GetAttribute(ContentExpr), xmlReader.GetAttribute(Content));
 			RegisterResultLocation(xmlReader.GetAttribute(Result));
@@ -45,7 +45,7 @@ namespace Xtate.CustomAction
 
 		protected override DataModelValue Evaluate(IReadOnlyDictionary<string, DataModelValue> arguments)
 		{
-			if (arguments == null) throw new ArgumentNullException(nameof(arguments));
+			if (arguments is null) throw new ArgumentNullException(nameof(arguments));
 
 			var content = arguments[Content];
 			if (content.IsUndefinedOrNull())

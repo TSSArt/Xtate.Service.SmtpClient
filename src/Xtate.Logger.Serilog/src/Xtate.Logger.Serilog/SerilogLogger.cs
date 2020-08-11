@@ -46,7 +46,7 @@ namespace Xtate
 
 		public SerilogLogger(LoggerConfiguration configuration)
 		{
-			if (configuration == null) throw new ArgumentNullException(nameof(configuration));
+			if (configuration is null) throw new ArgumentNullException(nameof(configuration));
 
 			_logger = configuration.CreateLogger();
 		}
@@ -55,7 +55,7 @@ namespace Xtate
 
 		public ValueTask ExecuteLog(ILoggerContext loggerContext, string? label, DataModelValue data, CancellationToken token)
 		{
-			if (loggerContext == null) throw new ArgumentNullException(nameof(loggerContext));
+			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 
 			if (!_logger.IsEnabled(LogEventLevel.Information))
 			{
@@ -119,9 +119,9 @@ namespace Xtate
 
 		public ValueTask LogError(ILoggerContext loggerContext, ErrorType errorType, Exception exception, string? sourceEntityId, CancellationToken token)
 		{
-			if (loggerContext == null) throw new ArgumentNullException(nameof(loggerContext));
+			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 
-			if (exception == null) throw new ArgumentNullException(nameof(exception));
+			if (exception is null) throw new ArgumentNullException(nameof(exception));
 
 			if (!_logger.IsEnabled(LogEventLevel.Error))
 			{
@@ -143,7 +143,7 @@ namespace Xtate
 
 		public void TraceProcessingEvent(ILoggerContext loggerContext, IEvent evt)
 		{
-			if (loggerContext == null) throw new ArgumentNullException(nameof(loggerContext));
+			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 
 			if (!_logger.IsEnabled(LogEventLevel.Verbose))
 			{
@@ -157,8 +157,8 @@ namespace Xtate
 
 		public void TraceEnteringState(ILoggerContext loggerContext, IIdentifier stateId)
 		{
-			if (loggerContext == null) throw new ArgumentNullException(nameof(loggerContext));
-			if (stateId == null) throw new ArgumentNullException(nameof(stateId));
+			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
+			if (stateId is null) throw new ArgumentNullException(nameof(stateId));
 
 			if (!_logger.IsEnabled(LogEventLevel.Verbose))
 			{
@@ -172,8 +172,8 @@ namespace Xtate
 
 		public void TraceExitingState(ILoggerContext loggerContext, IIdentifier stateId)
 		{
-			if (loggerContext == null) throw new ArgumentNullException(nameof(loggerContext));
-			if (stateId == null) throw new ArgumentNullException(nameof(stateId));
+			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
+			if (stateId is null) throw new ArgumentNullException(nameof(stateId));
 
 			if (!_logger.IsEnabled(LogEventLevel.Verbose))
 			{
@@ -187,7 +187,7 @@ namespace Xtate
 
 		public void TracePerformingTransition(ILoggerContext loggerContext, TransitionType type, string? eventDescriptor, string? target)
 		{
-			if (loggerContext == null) throw new ArgumentNullException(nameof(loggerContext));
+			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 
 			if (!_logger.IsEnabled(LogEventLevel.Verbose))
 			{
@@ -196,7 +196,7 @@ namespace Xtate
 
 			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.PerformingTransition));
 
-			if (eventDescriptor == null)
+			if (eventDescriptor is null)
 			{
 				logger.Verbose(messageTemplate: @"Eventless {TransitionType} transition to '{Target}'", target);
 			}
@@ -208,7 +208,7 @@ namespace Xtate
 
 		public void TraceInterpreterState(ILoggerContext loggerContext, StateMachineInterpreterState state)
 		{
-			if (loggerContext == null) throw new ArgumentNullException(nameof(loggerContext));
+			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 
 			if (!_logger.IsEnabled(LogEventLevel.Verbose))
 			{

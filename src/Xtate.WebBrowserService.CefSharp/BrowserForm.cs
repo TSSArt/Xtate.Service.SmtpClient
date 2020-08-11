@@ -80,7 +80,7 @@ namespace Xtate.Service
 		protected override IResourceRequestHandler GetResourceRequestHandler(IWebBrowser chromiumWebBrowser, IBrowser browser, IFrame frame, IRequest request,
 																			 bool isNavigation, bool isDownload, string requestInitiator, ref bool disableDefaultHandling)
 		{
-			if (request == null) throw new ArgumentNullException(nameof(request));
+			if (request is null) throw new ArgumentNullException(nameof(request));
 
 			if (_url != null && _url.Equals(request.Url))
 			{

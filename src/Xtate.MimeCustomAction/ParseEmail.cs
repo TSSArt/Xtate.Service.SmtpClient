@@ -48,7 +48,7 @@ namespace Xtate.CustomAction
 
 		public ParseEmail(XmlReader xmlReader, ICustomActionContext access) : base(access)
 		{
-			if (xmlReader == null) throw new ArgumentNullException(nameof(xmlReader));
+			if (xmlReader is null) throw new ArgumentNullException(nameof(xmlReader));
 
 			RegisterArgument(Content, xmlReader.GetAttribute(ContentExpr), xmlReader.GetAttribute(Content));
 			RegisterArgument(Xpath, xmlReader.GetAttribute(XpathExpr), xmlReader.GetAttribute(Xpath));
@@ -59,7 +59,7 @@ namespace Xtate.CustomAction
 
 		protected override DataModelValue Evaluate(IReadOnlyDictionary<string, DataModelValue> args)
 		{
-			if (args == null) throw new ArgumentNullException(nameof(args));
+			if (args is null) throw new ArgumentNullException(nameof(args));
 
 			var source = args[Content].AsStringOrDefault();
 			var xpath = args[Xpath].AsStringOrDefault();
@@ -103,12 +103,12 @@ namespace Xtate.CustomAction
 				return CaptureEntry(htmlDocument, xpath, attr, pattern);
 			}
 
-			if (text == null)
+			if (text is null)
 			{
 				return default;
 			}
 
-			if (pattern == null)
+			if (pattern is null)
 			{
 				return text;
 			}
@@ -150,7 +150,7 @@ namespace Xtate.CustomAction
 					continue;
 				}
 
-				if (pattern == null)
+				if (pattern is null)
 				{
 					return text;
 				}

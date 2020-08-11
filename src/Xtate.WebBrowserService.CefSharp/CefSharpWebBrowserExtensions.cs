@@ -26,7 +26,7 @@ namespace Xtate
 	{
 		public static StateMachineHostBuilder AddCefSharpWebBrowser(this StateMachineHostBuilder builder)
 		{
-			if (builder == null) throw new ArgumentNullException(nameof(builder));
+			if (builder is null) throw new ArgumentNullException(nameof(builder));
 
 			builder.AddServiceFactory(WebBrowserService.GetFactory<CefSharpWebBrowserService>());
 
