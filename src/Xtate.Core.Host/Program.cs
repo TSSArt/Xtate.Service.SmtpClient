@@ -42,7 +42,7 @@ namespace Xtate.Core.Host
 											   .AddCefSharpWebBrowser()
 											   .AddUserInteraction()
 											   .AddHttpIoProcessor(baseUri)
-											   .SetSerilogLogger(cfg => cfg.MinimumLevel.Verbose().WriteTo.Console())
+											   .SetSerilogLogger(cfg => cfg.MinimumLevel.Debug().WriteTo.Console().WriteTo.Seq("http://beast:5341/"))
 											   .Build();
 
 			await stateMachineHost.StartHostAsync().ConfigureAwait(false);

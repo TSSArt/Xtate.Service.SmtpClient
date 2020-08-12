@@ -63,9 +63,15 @@ namespace Xtate.BenchmarkTest
 
 		public void TraceEnteringState(ILoggerContext loggerContext, IIdentifier stateId) { }
 
+		public void TraceEnteredState(ILoggerContext loggerContext, IIdentifier stateId) { }
+
 		public void TraceExitingState(ILoggerContext loggerContext, IIdentifier stateId) { }
 
+		public void TraceExitedState(ILoggerContext loggerContext, IIdentifier stateId) { }
+
 		public void TracePerformingTransition(ILoggerContext loggerContext, TransitionType type, string? eventDescriptor, string? target) { }
+
+		public void TracePerformedTransition(ILoggerContext loggerContext, TransitionType type, string? eventDescriptor, string? target) { }
 
 		public void TraceInterpreterState(ILoggerContext loggerContext, StateMachineInterpreterState state) { }
 

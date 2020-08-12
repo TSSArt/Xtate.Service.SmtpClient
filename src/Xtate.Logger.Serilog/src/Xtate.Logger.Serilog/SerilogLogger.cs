@@ -18,6 +18,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
@@ -30,6 +31,111 @@ namespace Xtate
 	[PublicAPI]
 	public class SerilogLogger : ILogger
 	{
+		private class DataModelListDestructuringPolicy : IDestructuringPolicy
+		{
+			public bool TryDestructure(object value, ILogEventPropertyValueFactory propertyValueFactory, out LogEventPropertyValue? result)
+			{
+				if (!(value is DataModelList list))
+				{
+					result = default;
+
+					return false;
+				}
+
+				result = GetLogEventPropertyValue(list);
+
+				return true;
+			}
+
+			private static LogEventPropertyValue GetLogEventPropertyValue(in DataModelValue value) =>
+					value.Type switch
+					{
+							DataModelValueType.Undefined => new ScalarValue(value.ToObject()),
+							DataModelValueType.Null => new ScalarValue(value.ToObject()),
+							DataModelValueType.String => new ScalarValue(value.ToObject()),
+							DataModelValueType.Number => new ScalarValue(value.ToObject()),
+							DataModelValueType.DateTime => new ScalarValue(value.ToObject()),
+							DataModelValueType.Boolean => new ScalarValue(value.ToObject()),
+							DataModelValueType.Array => GetLogEventPropertyValue(value.AsList()),
+							DataModelValueType.Object => GetLogEventPropertyValue(value.AsList()),
+							_ => Infrastructure.UnexpectedValue<LogEventPropertyValue>()
+					};
+
+			private static LogEventPropertyValue GetLogEventPropertyValue(DataModelList list)
+			{
+				var index = 0;
+				foreach (var entry in list.Entries)
+				{
+					if (index ++ != entry.Index)
+					{
+						return new StructureValue(EnumerateEntries(true));
+					}
+				}
+
+				if (list.GetMetadata() is { })
+				{
+					return new StructureValue(EnumerateEntries(false));
+				}
+
+				foreach (var entry in list.Entries)
+				{
+					if (entry.Key is { } || entry.Metadata is { })
+					{
+						return new StructureValue(EnumerateEntries(false));
+					}
+				}
+
+				return new SequenceValue(EnumerateValues());
+
+				IEnumerable<LogEventProperty> EnumerateEntries(bool showIndex)
+				{
+					foreach (var entry in list.Entries)
+					{
+						var name = GetName(entry.Key);
+						yield return new LogEventProperty(name, GetLogEventPropertyValue(entry.Value));
+						
+						if (showIndex)
+						{
+							yield return new LogEventProperty(name + @":(index)", new ScalarValue(entry.Index));
+						}
+
+						if (entry.Metadata is { } entryMetadata)
+						{
+							yield return new LogEventProperty(name + @":(meta)", GetLogEventPropertyValue(entryMetadata));
+						}
+					}
+
+					if (list.GetMetadata() is { } metadata)
+					{
+						yield return new LogEventProperty(name: @"(meta)", GetLogEventPropertyValue(metadata));
+					}
+				}
+
+				IEnumerable<LogEventPropertyValue> EnumerateValues()
+				{
+					foreach (var value in list.Values)
+					{
+						yield return GetLogEventPropertyValue(value);
+					}
+				}
+			}
+
+			private static string GetName(string? key)
+			{
+				if (key is null)
+				{
+					return "(null)";
+				}
+
+				if (string.IsNullOrWhiteSpace(key))
+				{
+					return "(" + key + ")";
+				}
+
+				return key;
+			}
+		}
+
 		public enum LogEventType
 		{
 			Undefined,
@@ -37,8 +143,11 @@ namespace Xtate
 			Error,
 			ProcessingEvent,
 			EnteringState,
+			EnteredState,
 			ExitingState,
+			ExitedState,
 			PerformingTransition,
+			PerformedTransition,
 			InterpreterState
 		}
 
@@ -48,7 +157,7 @@ namespace Xtate
 		{
 			if (configuration is null) throw new ArgumentNullException(nameof(configuration));
 
-			_logger = configuration.CreateLogger();
+			_logger = configuration.Destructure.With<DataModelListDestructuringPolicy>().CreateLogger();
 		}
 
 	#region Interface ILogger
@@ -62,7 +171,7 @@ namespace Xtate
 				return default;
 			}
 
-			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.ExecuteLog));
+			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.ExecuteLog, IsVerbose));
 
 			switch (data.Type)
 			{
@@ -128,7 +237,7 @@ namespace Xtate
 				return default;
 			}
 
-			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.Error))
+			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.Error, IsVerbose))
 								.ForContext(propertyName: @"ErrorType", errorType);
 
 			if (sourceEntityId != null)
@@ -145,14 +254,14 @@ namespace Xtate
 		{
 			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 
-			if (!_logger.IsEnabled(LogEventLevel.Verbose))
+			if (!IsTracingEnabled)
 			{
 				return;
 			}
 
-			var logger = _logger.ForContext(new ILogEventEnricher[] { new LoggerEnricher(loggerContext, LogEventType.ProcessingEvent), new EventEnricher(evt) });
+			var logger = _logger.ForContext(new ILogEventEnricher[] { new LoggerEnricher(loggerContext, LogEventType.ProcessingEvent, IsVerbose), new EventEnricher(evt) });
 
-			logger.Verbose(@"Processing {EventType} event '{EventName}'");
+			logger.Debug(@"Processing {EventType} event '{EventName}'");
 		}
 
 		public void TraceEnteringState(ILoggerContext loggerContext, IIdentifier stateId)
@@ -160,14 +269,29 @@ namespace Xtate
 			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 			if (stateId is null) throw new ArgumentNullException(nameof(stateId));
 
-			if (!_logger.IsEnabled(LogEventLevel.Verbose))
+			if (!IsTracingEnabled)
 			{
 				return;
 			}
 
-			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.EnteringState));
+			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.EnteringState, IsVerbose));
 
-			logger.Verbose(messageTemplate: @"Entering state '{StateId}'", stateId.Value);
+			logger.Debug(messageTemplate: @"Entering state '{StateId}'", stateId.Value);
+		}
+
+		public void TraceEnteredState(ILoggerContext loggerContext, IIdentifier stateId)
+		{
+			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
+			if (stateId is null) throw new ArgumentNullException(nameof(stateId));
+
+			if (!IsTracingEnabled)
+			{
+				return;
+			}
+
+			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.EnteredState, IsVerbose));
+
+			logger.Debug(messageTemplate: @"Entered state '{StateId}'", stateId.Value);
 		}
 
 		public void TraceExitingState(ILoggerContext loggerContext, IIdentifier stateId)
@@ -175,34 +299,70 @@ namespace Xtate
 			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 			if (stateId is null) throw new ArgumentNullException(nameof(stateId));
 
-			if (!_logger.IsEnabled(LogEventLevel.Verbose))
+			if (!IsTracingEnabled)
 			{
 				return;
 			}
 
-			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.ExitingState));
+			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.ExitingState, IsVerbose));
 
-			logger.Verbose(messageTemplate: @"Exiting state '{StateId}'", stateId.Value);
+			logger.Debug(messageTemplate: @"Exiting state '{StateId}'", stateId.Value);
+		}
+
+		public void TraceExitedState(ILoggerContext loggerContext, IIdentifier stateId)
+		{
+			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
+			if (stateId is null) throw new ArgumentNullException(nameof(stateId));
+
+			if (!IsTracingEnabled)
+			{
+				return;
+			}
+
+			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.ExitedState, IsVerbose));
+
+			logger.Debug(messageTemplate: @"Exited state '{StateId}'", stateId.Value);
 		}
 
 		public void TracePerformingTransition(ILoggerContext loggerContext, TransitionType type, string? eventDescriptor, string? target)
 		{
 			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 
-			if (!_logger.IsEnabled(LogEventLevel.Verbose))
+			if (!IsTracingEnabled)
 			{
 				return;
 			}
 
-			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.PerformingTransition));
+			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.PerformingTransition, IsVerbose));
 
 			if (eventDescriptor is null)
 			{
-				logger.Verbose(messageTemplate: @"Eventless {TransitionType} transition to '{Target}'", target);
+				logger.Debug(messageTemplate: @"Performing eventless {TransitionType} transition to '{Target}'", target);
 			}
 			else
 			{
-				logger.Verbose(messageTemplate: @"{TransitionType} transition to '{Target}'. Event descriptor '{EventDescriptor}'", target, eventDescriptor);
+				logger.Debug(messageTemplate: @"Performing {TransitionType} transition to '{Target}'. Event descriptor '{EventDescriptor}'", target, eventDescriptor);
+			}
+		}
+
+		public void TracePerformedTransition(ILoggerContext loggerContext, TransitionType type, string? eventDescriptor, string? target)
+		{
+			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
+
+			if (!IsTracingEnabled)
+			{
+				return;
+			}
+
+			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.PerformedTransition, IsVerbose));
+
+			if (eventDescriptor is null)
+			{
+				logger.Debug(messageTemplate: @"Performed eventless {TransitionType} transition to '{Target}'", target);
+			}
+			else
+			{
+				logger.Debug(messageTemplate: @"Performed {TransitionType} transition to '{Target}'. Event descriptor '{EventDescriptor}'", target, eventDescriptor);
 			}
 		}
 
@@ -210,29 +370,33 @@ namespace Xtate
 		{
 			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 
-			if (!_logger.IsEnabled(LogEventLevel.Verbose))
+			if (!IsTracingEnabled)
 			{
 				return;
 			}
 
-			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.InterpreterState));
+			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.InterpreterState, IsVerbose));
 
-			logger.Verbose(messageTemplate: @"Interpreter state has changed to '{InterpreterState}'", state);
+			logger.Debug(messageTemplate: @"Interpreter state has changed to '{InterpreterState}'", state);
 		}
 
-		public bool IsTracingEnabled => _logger.IsEnabled(LogEventLevel.Verbose);
+		public bool IsTracingEnabled => _logger.IsEnabled(LogEventLevel.Debug);
+		
+		private bool IsVerbose => _logger.IsEnabled(LogEventLevel.Verbose);
 
 	#endregion
 
 		private class LoggerEnricher : ILogEventEnricher
 		{
 			private readonly LogEventType   _logEventType;
+			private readonly bool           _verboseLogging;
 			private readonly ILoggerContext _loggerContext;
 
-			public LoggerEnricher(ILoggerContext loggerContext, LogEventType logEventType)
+			public LoggerEnricher(ILoggerContext loggerContext, LogEventType logEventType, bool verboseLogging)
 			{
 				_loggerContext = loggerContext;
 				_logEventType = logEventType;
+				_verboseLogging = verboseLogging;
 			}
 
 		#region Interface ILogEventEnricher
@@ -252,6 +416,11 @@ namespace Xtate
 				if (_logEventType != LogEventType.Undefined)
 				{
 					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"LogEventType", _logEventType));
+				}
+
+				if (_verboseLogging && _loggerContext.GetDataModel() is { } dataModel)
+				{
+					logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(name: @"DataModel", dataModel, destructureObjects: true));
 				}
 			}
 
