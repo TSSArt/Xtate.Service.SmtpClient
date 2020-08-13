@@ -85,6 +85,11 @@ namespace Xtate
 					}
 				}
 
+				if (list.Count == 0 && list is DataModelObject)
+				{
+					return new StructureValue(Array.Empty<LogEventProperty>());
+				}
+
 				return new SequenceValue(EnumerateValues());
 
 				IEnumerable<LogEventProperty> EnumerateEntries(bool showIndex)
