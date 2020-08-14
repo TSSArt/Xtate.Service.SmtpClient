@@ -245,7 +245,7 @@ namespace Xtate
 			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.Error, IsVerbose))
 								.ForContext(propertyName: @"ErrorType", errorType);
 
-			if (sourceEntityId != null)
+			if (sourceEntityId is { })
 			{
 				logger = logger.ForContext(propertyName: @"SourceEntityId", sourceEntityId);
 			}
@@ -408,14 +408,14 @@ namespace Xtate
 
 			public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
 			{
-				if (_loggerContext.SessionId != null)
+				if (_loggerContext.SessionId is { } sessionId)
 				{
-					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"SessionId", _loggerContext.SessionId.Value));
+					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"SessionId", sessionId.Value));
 				}
 
-				if (_loggerContext.StateMachineName != null)
+				if (_loggerContext.StateMachineName is { } stateMachineName)
 				{
-					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"StateMachineName", _loggerContext.StateMachineName));
+					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"StateMachineName", stateMachineName));
 				}
 
 				if (_logEventType != LogEventType.Undefined)
@@ -449,24 +449,24 @@ namespace Xtate
 
 				logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"EventType", _event.Type));
 
-				if (_event.Origin != null)
+				if (_event.Origin is { } origin)
 				{
-					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"Origin", _event.Origin));
+					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"Origin", origin));
 				}
 
-				if (_event.OriginType != null)
+				if (_event.OriginType is { } originType)
 				{
-					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"OriginType", _event.OriginType));
+					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"OriginType", originType));
 				}
 
-				if (_event.SendId != null)
+				if (_event.SendId is { } sendId)
 				{
-					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"SendId", _event.SendId.Value));
+					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"SendId", sendId.Value));
 				}
 
-				if (_event.InvokeId != null)
+				if (_event.InvokeId is { } invokeId)
 				{
-					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"InvokeId", _event.InvokeId.Value));
+					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"InvokeId", invokeId.Value));
 				}
 
 				if (!_event.Data.IsUndefined())

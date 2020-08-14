@@ -17,8 +17,6 @@
 
 #endregion
 
-using Xtate.Service;
-
 namespace Xtate
 {
 	public static class XtateExtensions

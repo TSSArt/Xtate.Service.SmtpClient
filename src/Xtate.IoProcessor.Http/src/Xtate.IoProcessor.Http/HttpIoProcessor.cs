@@ -116,7 +116,7 @@ namespace Xtate.IoProcessor
 			{
 				if (Interfaces.IndexOf(address) >= 0)
 				{
-					if (listenAddress != null)
+					if (listenAddress is { })
 					{
 						throw new ProcessorException(Resources.Exception_Found_more_then_one_interface_to_listen);
 					}
@@ -154,7 +154,7 @@ namespace Xtate.IoProcessor
 			var targetUri = evt.Target.ToString();
 
 			var content = GetContent(evt, out var eventNameInContent);
-			if (evt.NameParts != null && !eventNameInContent)
+			if (!evt.NameParts.IsDefaultOrEmpty && !eventNameInContent)
 			{
 				targetUri = QueryHelpers.AddQueryString(targetUri, EventNameParameterName, EventName.ToName(evt.NameParts));
 			}
@@ -178,7 +178,7 @@ namespace Xtate.IoProcessor
 			{
 				case DataModelValueType.Undefined:
 				case DataModelValueType.Null:
-					eventNameInContent = evt.NameParts != null;
+					eventNameInContent = !evt.NameParts.IsDefaultOrEmpty;
 
 					return eventNameInContent ? new FormUrlEncodedContent(GetParameters(evt.NameParts, dataModelObject: null)) : null;
 
@@ -241,12 +241,12 @@ namespace Xtate.IoProcessor
 
 		private static IEnumerable<KeyValuePair<string, string>> GetParameters(ImmutableArray<IIdentifier> eventNameParts, DataModelObject? dataModelObject)
 		{
-			if (eventNameParts != null)
+			if (!eventNameParts.IsDefaultOrEmpty)
 			{
 				yield return new KeyValuePair<string, string>(EventNameParameterName, EventName.ToName(eventNameParts));
 			}
 
-			if (dataModelObject != null)
+			if (dataModelObject is { })
 			{
 				foreach (var pair in dataModelObject)
 				{
@@ -290,8 +290,8 @@ namespace Xtate.IoProcessor
 
 		private async ValueTask<IEvent> CreateEvent(HttpRequest request)
 		{
-			var contentType = request.ContentType != null ? new ContentType(request.ContentType) : new ContentType();
-			var encoding = contentType.CharSet != null ? Encoding.GetEncoding(contentType.CharSet) : Encoding.ASCII;
+			var contentType = request.ContentType is { } ? new ContentType(request.ContentType) : new ContentType();
+			var encoding = contentType.CharSet is { } ? Encoding.GetEncoding(contentType.CharSet) : Encoding.ASCII;
 
 			string body;
 			using (var streamReader = new StreamReader(request.Body, encoding))

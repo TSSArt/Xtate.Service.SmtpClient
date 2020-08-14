@@ -64,7 +64,7 @@ namespace Xtate.Service
 			{
 				result.Add(key: "status", value: "ok");
 
-				if (form.Result != null)
+				if (form.Result is { })
 				{
 					var parameters = new DataModelObject();
 

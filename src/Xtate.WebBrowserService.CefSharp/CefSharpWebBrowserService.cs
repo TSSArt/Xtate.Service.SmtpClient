@@ -39,7 +39,7 @@ namespace Xtate.Service
 			var url = Source?.ToString();
 			var content = RawContent ?? Content.AsStringOrDefault();
 
-			using var form = new BrowserForm(url != null ? new Uri(url) : null, content);
+			using var form = new BrowserForm(url is { } ? new Uri(url) : null, content);
 
 			using var registration = StopToken.Register(() => form.Close(DialogResult.Abort, result: default));
 
@@ -53,7 +53,7 @@ namespace Xtate.Service
 			{
 				result.Add(key: "status", value: "ok");
 
-				if (form.Result != null)
+				if (form.Result is { })
 				{
 					var parameters = new DataModelObject();
 

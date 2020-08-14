@@ -82,7 +82,7 @@ namespace Xtate.Service
 		{
 			if (request is null) throw new ArgumentNullException(nameof(request));
 
-			if (_url != null && _url.Equals(request.Url))
+			if (_url is { } && _url.Equals(request.Url))
 			{
 				if (request.Method == "GET")
 				{

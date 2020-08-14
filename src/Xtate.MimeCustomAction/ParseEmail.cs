@@ -66,7 +66,7 @@ namespace Xtate.CustomAction
 			var attr = args[Attr].AsStringOrDefault();
 			var pattern = args[Regex].AsStringOrDefault();
 
-			return source != null ? Parse(source, xpath, attr, pattern) : DataModelValue.Null;
+			return source is { } ? Parse(source, xpath, attr, pattern) : DataModelValue.Null;
 		}
 
 		private static DataModelValue Parse(string content, string? xpath, string? attr, string? pattern)
@@ -94,7 +94,7 @@ namespace Xtate.CustomAction
 
 			var text = message.TextBody;
 			var html = message.HtmlBody;
-			if (html != null)
+			if (html is { })
 			{
 				var htmlDocument = new HtmlDocument();
 
@@ -139,11 +139,11 @@ namespace Xtate.CustomAction
 
 		private static DataModelValue CaptureEntry(HtmlDocument htmlDocument, string? xpath, string? attr, string? pattern)
 		{
-			var nodes = xpath != null ? htmlDocument.DocumentNode.SelectNodes(xpath) : Enumerable.Repeat(htmlDocument.DocumentNode, count: 1);
+			var nodes = xpath is { } ? htmlDocument.DocumentNode.SelectNodes(xpath) : Enumerable.Repeat(htmlDocument.DocumentNode, count: 1);
 
 			foreach (var node in nodes)
 			{
-				var text = attr != null ? node.GetAttributeValue(attr, def: null) : node.InnerHtml;
+				var text = attr is { } ? node.GetAttributeValue(attr, def: null) : node.InnerHtml;
 
 				if (string.IsNullOrWhiteSpace(text))
 				{

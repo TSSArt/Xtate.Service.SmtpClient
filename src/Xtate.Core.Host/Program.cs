@@ -58,7 +58,7 @@ namespace Xtate.Core.Host
 																			.EndState()
 																			.Build();
 
-			var system = stateMachineHost.ExecuteStateMachineAsync(sss, sessionId: "_system");
+			var _ = stateMachineHost.ExecuteStateMachineAsync(sss, sessionId: "_system");
 
 			Application.Run();
 
