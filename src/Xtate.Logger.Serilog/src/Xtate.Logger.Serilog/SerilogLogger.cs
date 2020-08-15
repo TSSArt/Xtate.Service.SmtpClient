@@ -54,6 +54,8 @@ namespace Xtate
 			_logger = configuration.Destructure.With<DataModelListDestructuringPolicy>().CreateLogger();
 		}
 
+		private bool IsVerbose => _logger.IsEnabled(LogEventLevel.Verbose);
+
 	#region Interface ILogger
 
 		public ValueTask ExecuteLog(ILoggerContext loggerContext, string? label, DataModelValue data, CancellationToken token)
@@ -275,16 +277,14 @@ namespace Xtate
 		}
 
 		public bool IsTracingEnabled => _logger.IsEnabled(LogEventLevel.Debug);
-		
-		private bool IsVerbose => _logger.IsEnabled(LogEventLevel.Verbose);
 
 	#endregion
 
 		private class LoggerEnricher : ILogEventEnricher
 		{
 			private readonly LogEventType   _logEventType;
-			private readonly bool           _verboseLogging;
 			private readonly ILoggerContext _loggerContext;
+			private readonly bool           _verboseLogging;
 
 			public LoggerEnricher(ILoggerContext loggerContext, LogEventType logEventType, bool verboseLogging)
 			{
