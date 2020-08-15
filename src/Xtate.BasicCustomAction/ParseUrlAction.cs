@@ -46,27 +46,26 @@ namespace Xtate.CustomAction
 			if (arguments is null) throw new ArgumentNullException(nameof(arguments));
 
 			var uri = new Uri(arguments[Url].AsString(), UriKind.RelativeOrAbsolute);
-			var parameter = arguments[Parameter].AsStringOrDefault();
 			var parameters = QueryHelpers.ParseNullableQuery(uri.OriginalString);
 
-			if (parameter is null)
+			if (arguments[Parameter].AsStringOrDefault() is {} parameter)
 			{
-				var result = new DataModelObject();
+				var values = parameters[parameter];
 
-				foreach (var pair in parameters)
-				{
-					foreach (var value in pair.Value)
-					{
-						result.Add(pair.Key, value);
-					}
-				}
-
-				return result;
+				return values.Count > 0 ? values[0] : DataModelValue.Null;
 			}
 
-			var values = parameters[parameter];
+			var result = new DataModelObject();
 
-			return values.Count > 0 ? values[0] : DataModelValue.Null;
+			foreach (var pair in parameters)
+			{
+				foreach (var value in pair.Value)
+				{
+					result.Add(pair.Key, value);
+				}
+			}
+
+			return result;
 		}
 	}
 }
