@@ -148,7 +148,7 @@ namespace Xtate.CustomAction
 				}
 			}
 
-			return Regex.IsMatch(result, _rule);
+			return _rule is { } && Regex.IsMatch(result, _rule);
 		}
 	}
 }

@@ -34,7 +34,7 @@ namespace Xtate.CustomAction
 		private const string Operation = "op";
 		private const string Result    = "result";
 
-		private readonly string _op;
+		private readonly string? _op;
 
 		public OperationAction(XmlReader xmlReader, ICustomActionContext access) : base(access)
 		{
@@ -65,9 +65,9 @@ namespace Xtate.CustomAction
 				return false;
 			}
 
-			pattern = Regex.Escape(pattern).Replace(oldValue: "\\*", newValue: ".*");
+			pattern = Regex.Escape(pattern!).Replace(oldValue: "\\*", newValue: ".*");
 
-			return Regex.Match(email, pattern, RegexOptions.IgnoreCase).Success;
+			return Regex.Match(email!, pattern, RegexOptions.IgnoreCase).Success;
 		}
 
 		private static bool EmailMatch(string? email, DataModelValue value)

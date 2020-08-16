@@ -275,7 +275,7 @@ namespace Xtate.Test
 
 			XmlNameTable nt = new NameTable();
 			var xmlNamespaceManager = new XmlNamespaceManager(nt);
-			using var xmlReader = XmlReader.Create(stream, settings: null, new XmlParserContext(nt, xmlNamespaceManager, xmlLang: default, xmlSpace: default));
+			using var xmlReader = XmlReader.Create(stream!, settings: null, new XmlParserContext(nt, xmlNamespaceManager, xmlLang: default, xmlSpace: default));
 
 			var director = new ScxmlDirector(xmlReader, BuilderFactory.Instance, DefaultErrorProcessor.Instance, xmlNamespaceManager);
 

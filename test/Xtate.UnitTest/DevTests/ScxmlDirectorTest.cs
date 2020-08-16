@@ -45,7 +45,7 @@ namespace Xtate.Test
 
 			XmlNameTable nt = new NameTable();
 			var xmlNamespaceManager = new XmlNamespaceManager(nt);
-			var xmlReader = XmlReader.Create(stream, settings: null, new XmlParserContext(nt, xmlNamespaceManager, xmlLang: default, xmlSpace: default));
+			var xmlReader = XmlReader.Create(stream!, settings: null, new XmlParserContext(nt, xmlNamespaceManager, xmlLang: default, xmlSpace: default));
 
 			var director = new ScxmlDirector(xmlReader, BuilderFactory.Instance, DefaultErrorProcessor.Instance, xmlNamespaceManager);
 
@@ -111,7 +111,7 @@ namespace Xtate.Test
 			var text = new StringWriter();
 			using (var xmlWriter = XmlWriter.Create(text, new XmlWriterSettings { Encoding = Encoding.UTF8, Indent = true }))
 			{
-				ScxmlSerializer.Serialize(interpreterModel.Root, xmlWriter);
+				ScxmlSerializer.Serialize(interpreterModel.Root, xmlWriter!);
 			}
 
 			Console.WriteLine(text);
