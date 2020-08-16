@@ -35,11 +35,11 @@ namespace Xtate.Service
 			var port = parameters["port"].AsNumberOrDefault();
 			using var client = new SmtpClient(host, port is { } p ? (int) p : 25);
 
-			var fromEmail = parameters["from"].AsStringOrDefault();
+			var fromEmail = parameters["from"].AsString();
 			var fromName = parameters["fromName"].AsStringOrDefault();
 			var from = fromName is { } ? new MailAddress(fromEmail, fromName, Encoding.UTF8) : new MailAddress(fromEmail);
 
-			var toEmail = parameters["to"].AsStringOrDefault();
+			var toEmail = parameters["to"].AsString();
 			var toName = parameters["toName"].AsStringOrDefault();
 			var to = toName is { } ? new MailAddress(toEmail, toName, Encoding.UTF8) : new MailAddress(toEmail);
 
