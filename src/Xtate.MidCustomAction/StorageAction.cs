@@ -39,7 +39,7 @@ namespace Xtate.CustomAction
 		{
 			if (xmlReader is null) throw new ArgumentNullException(nameof(xmlReader));
 
-			RegisterArgument(Location, xmlReader.GetAttribute(Location));
+			RegisterArgument(Location, ExpectedValueType.String, xmlReader.GetAttribute(Location));
 			RegisterResultLocation(xmlReader.GetAttribute(Location));
 
 			_operation = xmlReader.GetAttribute(Operation)?.ToUpperInvariant();

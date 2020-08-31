@@ -50,10 +50,10 @@ namespace Xtate.CustomAction
 		{
 			if (xmlReader is null) throw new ArgumentNullException(nameof(xmlReader));
 
-			RegisterArgument(Content, xmlReader.GetAttribute(ContentExpr), xmlReader.GetAttribute(Content));
-			RegisterArgument(Xpath, xmlReader.GetAttribute(XpathExpr), xmlReader.GetAttribute(Xpath));
-			RegisterArgument(Attr, xmlReader.GetAttribute(AttrExpr), xmlReader.GetAttribute(Attr));
-			RegisterArgument(Regex, xmlReader.GetAttribute(RegexExpr), xmlReader.GetAttribute(Regex));
+			RegisterArgument(Content, ExpectedValueType.String, xmlReader.GetAttribute(ContentExpr), xmlReader.GetAttribute(Content));
+			RegisterArgument(Xpath, ExpectedValueType.String, xmlReader.GetAttribute(XpathExpr), xmlReader.GetAttribute(Xpath));
+			RegisterArgument(Attr, ExpectedValueType.String, xmlReader.GetAttribute(AttrExpr), xmlReader.GetAttribute(Attr));
+			RegisterArgument(Regex, ExpectedValueType.String, xmlReader.GetAttribute(RegexExpr), xmlReader.GetAttribute(Regex));
 			RegisterResultLocation(xmlReader.GetAttribute(Result));
 		}
 

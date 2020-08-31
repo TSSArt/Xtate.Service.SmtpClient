@@ -17,19 +17,34 @@
 
 #endregion
 
-using System.Threading;
-using System.Threading.Tasks;
-using Xtate.Annotations;
+using System;
+using System.Text.Json;
 
-namespace Xtate
+namespace Xtate.DataModel.EcmaScript
 {
-	[PublicAPI]
-	public interface IHost
+	internal class EcmaScriptExternalDataExpressionEvaluator : DefaultExternalDataExpressionEvaluator
 	{
-		ValueTask StartStateMachineAsync(SessionId sessionId, StateMachineOrigin origin, DataModelValue parameters, CancellationToken token);
+		public EcmaScriptExternalDataExpressionEvaluator(in ExternalDataExpression externalDataExpression) : base(externalDataExpression) { }
 
-		ValueTask<DataModelValue> ExecuteStateMachineAsync(SessionId sessionId, StateMachineOrigin origin, DataModelValue parameters, CancellationToken token);
+		protected override DataModelValue ParseToDataModel(Resource resource, ref Exception? parseException)
+		{
+			var content = resource.Content;
 
-		ValueTask DestroyStateMachine(SessionId sessionId, CancellationToken token);
+			if (content is null)
+			{
+				return DataModelValue.Null;
+			}
+
+			try
+			{
+				return DataModelConverter.FromJson(content);
+			}
+			catch (JsonException ex)
+			{
+				parseException = ex;
+
+				return content.NormalizeSpaces();
+			}
+		}
 	}
 }

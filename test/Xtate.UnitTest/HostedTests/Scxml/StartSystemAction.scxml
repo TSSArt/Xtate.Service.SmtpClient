@@ -3,7 +3,7 @@
        version="1.0" name="StartSystemAction" initial="final">
   <final id="final">
     <onentry>
-      <sys:start src="StartSystemActionChild.scxml" />
+      <sys:start url="StartSystemActionChild.scxml" />
     </onentry>
   </final>
 </scxml>

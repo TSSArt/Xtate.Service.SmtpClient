@@ -50,31 +50,29 @@ namespace Xtate.Test
 																																		 Source = new Uri("proto://src"),
 																																		 Type = new Uri("proto://type"),
 																																		 Content = new ContentEntity
-																																				   {
-																																						   Body =
-																																								   new ContentBody
-																																								   { Value = "content" }
-																																				   },
+																																			 {
+																																					 Body =
+																																							 new ContentBody
+																																							 { Value = "content" }
+																																			 },
 																																		 Finalize = new FinalizeEntity
-																																					{
-																																							Action =
-																																									ImmutableArray
-																																											.Create<IExecutableEntity>(
-																																													new LogEntity
-																																													{
-																																															Label =
-																																																	"FinalizeExecuted"
-																																													})
-																																					}
+																																			 {
+																																					 Action =
+																																							 ImmutableArray
+																																									 .Create<IExecutableEntity>(
+																																											 new LogEntity
+																																											 {
+																																													 Label =
+																																															 "FinalizeExecuted"
+																																											 })
+																																			 }
 																																 }),
 																						 Transitions = ImmutableArray.Create<ITransition>(new TransitionEntity
-																																		  {
-																																				  EventDescriptors =
-																																						  ImmutableArray.Create<IEventDescriptor>(
-																																								  (EventDescriptor) "ToF"),
-																																				  Target = ImmutableArray.Create<IIdentifier>(
-																																						  (Identifier) "F")
-																																		  })
+																							 {
+																									 EventDescriptors =
+																											 ImmutableArray.Create<IEventDescriptor>((EventDescriptor) "ToF"),
+																									 Target = ImmutableArray.Create<IIdentifier>((Identifier) "F")
+																							 })
 																				 },
 																				 new FinalEntity
 																				 {

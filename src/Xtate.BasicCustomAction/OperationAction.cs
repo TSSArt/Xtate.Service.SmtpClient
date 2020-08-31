@@ -42,8 +42,8 @@ namespace Xtate.CustomAction
 
 			_op = xmlReader.GetAttribute(Operation);
 
-			RegisterArgument(Left, xmlReader.GetAttribute(LeftExpr), xmlReader.GetAttribute(Left));
-			RegisterArgument(Right, xmlReader.GetAttribute(RightExpr), xmlReader.GetAttribute(Right));
+			RegisterArgument(Left, ExpectedValueType.Any, xmlReader.GetAttribute(LeftExpr), xmlReader.GetAttribute(Left));
+			RegisterArgument(Right, ExpectedValueType.Any, xmlReader.GetAttribute(RightExpr), xmlReader.GetAttribute(Right));
 			RegisterResultLocation(xmlReader.GetAttribute(Result));
 		}
 

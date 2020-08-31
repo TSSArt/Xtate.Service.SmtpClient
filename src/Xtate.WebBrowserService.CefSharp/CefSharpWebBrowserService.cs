@@ -39,6 +39,11 @@ namespace Xtate.Service
 			var url = Source?.ToString();
 			var content = RawContent ?? Content.AsStringOrDefault();
 
+			if (string.IsNullOrEmpty(content))
+			{
+				Infrastructure.Fail("Content can't be empty");
+			}
+
 			using var form = new BrowserForm(url is { } ? new Uri(url) : null, content);
 
 			using var registration = StopToken.Register(() => form.Close(DialogResult.Abort, result: default));

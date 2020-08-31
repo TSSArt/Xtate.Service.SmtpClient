@@ -37,8 +37,8 @@ namespace Xtate.CustomAction
 		{
 			if (xmlReader is null) throw new ArgumentNullException(nameof(xmlReader));
 
-			RegisterArgument(Template, xmlReader.GetAttribute(TemplateExpr), xmlReader.GetAttribute(Template));
-			RegisterArgument(ArgsExpr, xmlReader.GetAttribute(ArgsExpr));
+			RegisterArgument(Template, ExpectedValueType.String, xmlReader.GetAttribute(TemplateExpr), xmlReader.GetAttribute(Template));
+			RegisterArgument(ArgsExpr, ExpectedValueType.Any, xmlReader.GetAttribute(ArgsExpr));
 			RegisterResultLocation(xmlReader.GetAttribute(Result));
 		}
 
