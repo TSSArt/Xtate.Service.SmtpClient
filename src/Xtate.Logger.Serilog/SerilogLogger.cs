@@ -1,5 +1,5 @@
 ﻿#region Copyright © 2019-2020 Sergii Artemenko
-// 
+
 // This file is part of the Xtate project. <https://xtate.net/>
 // 
 // This program is free software: you can redistribute it and/or modify
@@ -14,7 +14,7 @@
 // 
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-// 
+
 #endregion
 
 using System;
@@ -37,8 +37,11 @@ namespace Xtate
 			Error,
 			ProcessingEvent,
 			EnteringState,
+			EnteredState,
 			ExitingState,
+			ExitedState,
 			PerformingTransition,
+			PerformedTransition,
 			InterpreterState
 		}
 
@@ -46,23 +49,25 @@ namespace Xtate
 
 		public SerilogLogger(LoggerConfiguration configuration)
 		{
-			if (configuration == null) throw new ArgumentNullException(nameof(configuration));
+			if (configuration is null) throw new ArgumentNullException(nameof(configuration));
 
-			_logger = configuration.CreateLogger();
+			_logger = configuration.Destructure.With<DataModelListDestructuringPolicy>().CreateLogger();
 		}
+
+		private bool IsVerbose => _logger.IsEnabled(LogEventLevel.Verbose);
 
 	#region Interface ILogger
 
 		public ValueTask ExecuteLog(ILoggerContext loggerContext, string? label, DataModelValue data, CancellationToken token)
 		{
-			if (loggerContext == null) throw new ArgumentNullException(nameof(loggerContext));
+			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 
 			if (!_logger.IsEnabled(LogEventLevel.Information))
 			{
 				return default;
 			}
 
-			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.ExecuteLog));
+			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.ExecuteLog, IsVerbose));
 
 			switch (data.Type)
 			{
@@ -119,19 +124,19 @@ namespace Xtate
 
 		public ValueTask LogError(ILoggerContext loggerContext, ErrorType errorType, Exception exception, string? sourceEntityId, CancellationToken token)
 		{
-			if (loggerContext == null) throw new ArgumentNullException(nameof(loggerContext));
+			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 
-			if (exception == null) throw new ArgumentNullException(nameof(exception));
+			if (exception is null) throw new ArgumentNullException(nameof(exception));
 
 			if (!_logger.IsEnabled(LogEventLevel.Error))
 			{
 				return default;
 			}
 
-			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.Error))
+			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.Error, IsVerbose))
 								.ForContext(propertyName: @"ErrorType", errorType);
 
-			if (sourceEntityId != null)
+			if (sourceEntityId is { })
 			{
 				logger = logger.ForContext(propertyName: @"SourceEntityId", sourceEntityId);
 			}
@@ -143,84 +148,135 @@ namespace Xtate
 
 		public void TraceProcessingEvent(ILoggerContext loggerContext, IEvent evt)
 		{
-			if (loggerContext == null) throw new ArgumentNullException(nameof(loggerContext));
+			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 
-			if (!_logger.IsEnabled(LogEventLevel.Verbose))
+			if (!IsTracingEnabled)
 			{
 				return;
 			}
 
-			var logger = _logger.ForContext(new ILogEventEnricher[] { new LoggerEnricher(loggerContext, LogEventType.ProcessingEvent), new EventEnricher(evt) });
+			var logger = _logger.ForContext(new ILogEventEnricher[] { new LoggerEnricher(loggerContext, LogEventType.ProcessingEvent, IsVerbose), new EventEnricher(evt) });
 
-			logger.Verbose(@"Processing {EventType} event '{EventName}'");
+			logger.Debug(@"Processing {EventType} event '{EventName}'");
 		}
 
 		public void TraceEnteringState(ILoggerContext loggerContext, IIdentifier stateId)
 		{
-			if (loggerContext == null) throw new ArgumentNullException(nameof(loggerContext));
-			if (stateId == null) throw new ArgumentNullException(nameof(stateId));
+			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
+			if (stateId is null) throw new ArgumentNullException(nameof(stateId));
 
-			if (!_logger.IsEnabled(LogEventLevel.Verbose))
+			if (!IsTracingEnabled)
 			{
 				return;
 			}
 
-			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.EnteringState));
+			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.EnteringState, IsVerbose));
 
-			logger.Verbose(messageTemplate: @"Entering state '{StateId}'", stateId.Value);
+			logger.Debug(messageTemplate: @"Entering state '{StateId}'", stateId.Value);
+		}
+
+		public void TraceEnteredState(ILoggerContext loggerContext, IIdentifier stateId)
+		{
+			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
+			if (stateId is null) throw new ArgumentNullException(nameof(stateId));
+
+			if (!IsTracingEnabled)
+			{
+				return;
+			}
+
+			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.EnteredState, IsVerbose));
+
+			logger.Debug(messageTemplate: @"Entered state '{StateId}'", stateId.Value);
 		}
 
 		public void TraceExitingState(ILoggerContext loggerContext, IIdentifier stateId)
 		{
-			if (loggerContext == null) throw new ArgumentNullException(nameof(loggerContext));
-			if (stateId == null) throw new ArgumentNullException(nameof(stateId));
+			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
+			if (stateId is null) throw new ArgumentNullException(nameof(stateId));
 
-			if (!_logger.IsEnabled(LogEventLevel.Verbose))
+			if (!IsTracingEnabled)
 			{
 				return;
 			}
 
-			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.ExitingState));
+			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.ExitingState, IsVerbose));
 
-			logger.Verbose(messageTemplate: @"Exiting state '{StateId}'", stateId.Value);
+			logger.Debug(messageTemplate: @"Exiting state '{StateId}'", stateId.Value);
+		}
+
+		public void TraceExitedState(ILoggerContext loggerContext, IIdentifier stateId)
+		{
+			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
+			if (stateId is null) throw new ArgumentNullException(nameof(stateId));
+
+			if (!IsTracingEnabled)
+			{
+				return;
+			}
+
+			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.ExitedState, IsVerbose));
+
+			logger.Debug(messageTemplate: @"Exited state '{StateId}'", stateId.Value);
 		}
 
 		public void TracePerformingTransition(ILoggerContext loggerContext, TransitionType type, string? eventDescriptor, string? target)
 		{
-			if (loggerContext == null) throw new ArgumentNullException(nameof(loggerContext));
+			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 
-			if (!_logger.IsEnabled(LogEventLevel.Verbose))
+			if (!IsTracingEnabled)
 			{
 				return;
 			}
 
-			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.PerformingTransition));
+			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.PerformingTransition, IsVerbose));
 
-			if (eventDescriptor == null)
+			if (eventDescriptor is null)
 			{
-				logger.Verbose(messageTemplate: @"Eventless {TransitionType} transition to '{Target}'", target);
+				logger.Debug(messageTemplate: @"Performing eventless {TransitionType} transition to '{Target}'", target);
 			}
 			else
 			{
-				logger.Verbose(messageTemplate: @"{TransitionType} transition to '{Target}'. Event descriptor '{EventDescriptor}'", target, eventDescriptor);
+				logger.Debug(messageTemplate: @"Performing {TransitionType} transition to '{Target}'. Event descriptor '{EventDescriptor}'", target, eventDescriptor);
+			}
+		}
+
+		public void TracePerformedTransition(ILoggerContext loggerContext, TransitionType type, string? eventDescriptor, string? target)
+		{
+			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
+
+			if (!IsTracingEnabled)
+			{
+				return;
+			}
+
+			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.PerformedTransition, IsVerbose));
+
+			if (eventDescriptor is null)
+			{
+				logger.Debug(messageTemplate: @"Performed eventless {TransitionType} transition to '{Target}'", target);
+			}
+			else
+			{
+				logger.Debug(messageTemplate: @"Performed {TransitionType} transition to '{Target}'. Event descriptor '{EventDescriptor}'", target, eventDescriptor);
 			}
 		}
 
 		public void TraceInterpreterState(ILoggerContext loggerContext, StateMachineInterpreterState state)
 		{
-			if (loggerContext == null) throw new ArgumentNullException(nameof(loggerContext));
+			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 
-			if (!_logger.IsEnabled(LogEventLevel.Verbose))
+			if (!IsTracingEnabled)
 			{
 				return;
 			}
 
-			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.InterpreterState));
+			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.InterpreterState, IsVerbose));
 
-			logger.Verbose(messageTemplate: @"Interpreter state has changed to '{InterpreterState}'", state);
+			logger.Debug(messageTemplate: @"Interpreter state has changed to '{InterpreterState}'", state);
 		}
 
-		public bool IsTracingEnabled => _logger.IsEnabled(LogEventLevel.Verbose);
+		public bool IsTracingEnabled => _logger.IsEnabled(LogEventLevel.Debug);
 
 	#endregion
 
@@ -228,30 +284,42 @@ namespace Xtate
 		{
 			private readonly LogEventType   _logEventType;
 			private readonly ILoggerContext _loggerContext;
+			private readonly bool           _verboseLogging;
 
-			public LoggerEnricher(ILoggerContext loggerContext, LogEventType logEventType)
+			public LoggerEnricher(ILoggerContext loggerContext, LogEventType logEventType, bool verboseLogging)
 			{
 				_loggerContext = loggerContext;
 				_logEventType = logEventType;
+				_verboseLogging = verboseLogging;
 			}
 
 		#region Interface ILogEventEnricher
 
 			public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
 			{
-				if (_loggerContext.SessionId != null)
+				if (_loggerContext.SessionId is { } sessionId)
 				{
-					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"SessionId", _loggerContext.SessionId.Value));
+					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"SessionId", sessionId.Value));
 				}
 
-				if (_loggerContext.StateMachineName != null)
+				if (_loggerContext.StateMachineName is { } stateMachineName)
 				{
-					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"StateMachineName", _loggerContext.StateMachineName));
+					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"StateMachineName", stateMachineName));
 				}
 
 				if (_logEventType != LogEventType.Undefined)
 				{
 					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"LogEventType", _logEventType));
+				}
+
+				if (_verboseLogging && _loggerContext.GetDataModel() is { } dataModel)
+				{
+					logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(name: @"DataModel", dataModel, destructureObjects: true));
+				}
+
+				if (_verboseLogging && _loggerContext.GetActiveStates() is { } activeStates)
+				{
+					logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(name: @"ActiveStates", activeStates, destructureObjects: true));
 				}
 			}
 
@@ -275,24 +343,24 @@ namespace Xtate
 
 				logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"EventType", _event.Type));
 
-				if (_event.Origin != null)
+				if (_event.Origin is { } origin)
 				{
-					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"Origin", _event.Origin));
+					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"Origin", origin));
 				}
 
-				if (_event.OriginType != null)
+				if (_event.OriginType is { } originType)
 				{
-					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"OriginType", _event.OriginType));
+					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"OriginType", originType));
 				}
 
-				if (_event.SendId != null)
+				if (_event.SendId is { } sendId)
 				{
-					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"SendId", _event.SendId.Value));
+					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"SendId", sendId.Value));
 				}
 
-				if (_event.InvokeId != null)
+				if (_event.InvokeId is { } invokeId)
 				{
-					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"InvokeId", _event.InvokeId.Value));
+					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"InvokeId", invokeId.Value));
 				}
 
 				if (!_event.Data.IsUndefined())
