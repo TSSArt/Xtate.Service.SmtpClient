@@ -1,5 +1,5 @@
 ﻿#region Copyright © 2019-2020 Sergii Artemenko
-// 
+
 // This file is part of the Xtate project. <https://xtate.net/>
 // 
 // This program is free software: you can redistribute it and/or modify
@@ -14,7 +14,7 @@
 // 
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-// 
+
 #endregion
 
 using System;
@@ -60,7 +60,7 @@ namespace Xtate.Service
 			var headers = from obj in parameters["headers"].AsArrayOrEmpty()
 						  let name = obj.AsObjectOrEmpty()["name"].AsStringOrDefault()
 						  let value = obj.AsObjectOrEmpty()["value"].AsStringOrDefault()
-						  where !string.IsNullOrEmpty(name) && value != null
+						  where !string.IsNullOrEmpty(name) && value is { }
 						  select new KeyValuePair<string, string>(name, value);
 
 			var cookies = parameters["cookies"].AsArrayOrEmpty().Select(CreateCookie);
@@ -156,7 +156,7 @@ namespace Xtate.Service
 			var forms = from p in content.AsArrayOrEmpty()
 						let name = p.AsObjectOrEmpty()["name"].AsStringOrDefault()
 						let value = p.AsObjectOrEmpty()["value"].AsStringOrDefault()
-						where !string.IsNullOrEmpty(name) && value != null
+						where !string.IsNullOrEmpty(name) && value is { }
 						select new KeyValuePair<string, string>(name, value);
 
 			return new FormUrlEncodedContent(forms);
@@ -185,7 +185,7 @@ namespace Xtate.Service
 			request.Method = method;
 			request.AllowAutoRedirect = autoRedirect;
 
-			if (accept != null)
+			if (accept is { })
 			{
 				request.Accept = accept;
 			}
@@ -254,7 +254,7 @@ namespace Xtate.Service
 		{
 			var list = response.Headers.GetValues("Set-Cookie");
 
-			if (list == null)
+			if (list is null)
 			{
 				return;
 			}
@@ -291,7 +291,7 @@ namespace Xtate.Service
 
 		private static async ValueTask WriteContent(WebRequest request, string? contentType, DataModelValue content)
 		{
-			if (contentType == null)
+			if (contentType is null)
 			{
 				return;
 			}
@@ -344,7 +344,7 @@ namespace Xtate.Service
 
 		private static DataModelValue CaptureEntry(HtmlDocument htmlDocument, string[]? xpaths, string[]? attrs, string? pattern)
 		{
-			if (xpaths == null)
+			if (xpaths is null)
 			{
 				return CaptureInNode(htmlDocument.DocumentNode, attrs, pattern);
 			}
@@ -355,7 +355,7 @@ namespace Xtate.Service
 			{
 				var nodes = htmlDocument.DocumentNode.SelectNodes(xpath);
 
-				if (nodes == null)
+				if (nodes is null)
 				{
 					continue;
 				}
@@ -376,7 +376,7 @@ namespace Xtate.Service
 
 		private static DataModelValue CaptureInNode(HtmlNode node, string[]? attrs, string? pattern)
 		{
-			if (attrs == null)
+			if (attrs is null)
 			{
 				return CaptureInText(node.InnerHtml, pattern);
 			}
@@ -387,7 +387,7 @@ namespace Xtate.Service
 			{
 				var value = attr.StartsWith(value: "::", StringComparison.Ordinal) ? GetSpecialAttributeValue(node, attr) : node.GetAttributeValue(attr, def: null);
 
-				if (value == null)
+				if (value is null)
 				{
 					return default;
 				}
@@ -419,7 +419,7 @@ namespace Xtate.Service
 			var selected = node.ChildNodes.FirstOrDefault(n => n.Name == "option" && n.Attributes.Contains("selected"))
 						   ?? node.ChildNodes.FirstOrDefault(n => n.Name == "option");
 
-			return selected != null ? GetValue(selected, check: false) : null;
+			return selected is { } ? GetValue(selected, check: false) : null;
 		}
 
 		private static string? GetInputValue(HtmlNode node) =>
@@ -442,7 +442,7 @@ namespace Xtate.Service
 
 		private static DataModelValue CaptureInText(string text, string? pattern)
 		{
-			if (pattern == null)
+			if (pattern is null)
 			{
 				return text;
 			}
