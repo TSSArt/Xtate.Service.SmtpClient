@@ -1,5 +1,5 @@
 ﻿#region Copyright © 2019-2020 Sergii Artemenko
-// 
+
 // This file is part of the Xtate project. <https://xtate.net/>
 // 
 // This program is free software: you can redistribute it and/or modify
@@ -14,11 +14,13 @@
 // 
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-// 
+
 #endregion
 
 using System;
 using System.Collections.Immutable;
+using System.Threading;
+using System.Threading.Tasks;
 using Jint.Parser;
 using Jint.Parser.Ast;
 
@@ -26,19 +28,20 @@ namespace Xtate.DataModel.EcmaScript
 {
 	public class EcmaScriptDataModelHandler : DataModelHandlerBase
 	{
-		private const string DataModelType      = "http://xtate.net/scxml/datamodel/#ECMAScript";
-		private const string DataModelTypeAlias = "ecmascript";
+		private const string DataModelType = "ecmascript";
 
 		public static readonly  IDataModelHandlerFactory Factory       = new DataModelHandlerFactory();
 		private static readonly ParserOptions            ParserOptions = new ParserOptions { Tolerant = true };
 
 		private readonly JavaScriptParser _parser = new JavaScriptParser();
 
+		public EcmaScriptDataModelHandler() : base(DefaultErrorProcessor.Instance) { }
+
 		private EcmaScriptDataModelHandler(IErrorProcessor errorProcessor) : base(errorProcessor) { }
 
 		public override void ExecutionContextCreated(IExecutionContext executionContext, out ImmutableDictionary<string, string> dataModelVars)
 		{
-			if (executionContext == null) throw new ArgumentNullException(nameof(executionContext));
+			if (executionContext is null) throw new ArgumentNullException(nameof(executionContext));
 
 			base.ExecutionContextCreated(executionContext, out dataModelVars);
 
@@ -69,7 +72,7 @@ namespace Xtate.DataModel.EcmaScript
 		{
 			base.Build(ref valueExpression, ref valueExpressionProperties);
 
-			if (valueExpressionProperties.Expression != null)
+			if (valueExpressionProperties.Expression is { })
 			{
 				var program = Parse(valueExpressionProperties.Expression);
 
@@ -90,7 +93,7 @@ namespace Xtate.DataModel.EcmaScript
 		{
 			base.Build(ref conditionExpression, ref conditionExpressionProperties);
 
-			if (conditionExpressionProperties.Expression != null)
+			if (conditionExpressionProperties.Expression is { })
 			{
 				var program = Parse(conditionExpressionProperties.Expression);
 
@@ -111,7 +114,7 @@ namespace Xtate.DataModel.EcmaScript
 		{
 			base.Build(ref locationExpression, ref locationExpressionProperties);
 
-			if (locationExpressionProperties.Expression != null)
+			if (locationExpressionProperties.Expression is { })
 			{
 				var program = Parse(locationExpressionProperties.Expression);
 
@@ -122,7 +125,7 @@ namespace Xtate.DataModel.EcmaScript
 
 				var leftExpression = EcmaScriptLocationExpressionEvaluator.GetLeftExpression(program);
 
-				if (leftExpression != null)
+				if (leftExpression is { })
 				{
 					locationExpression = new EcmaScriptLocationExpressionEvaluator(locationExpressionProperties, program, leftExpression);
 				}
@@ -141,7 +144,7 @@ namespace Xtate.DataModel.EcmaScript
 		{
 			base.Build(ref scriptExpression, ref scriptExpressionProperties);
 
-			if (scriptExpressionProperties.Expression != null)
+			if (scriptExpressionProperties.Expression is { })
 			{
 				var program = Parse(scriptExpressionProperties.Expression);
 
@@ -179,13 +182,23 @@ namespace Xtate.DataModel.EcmaScript
 			contentBody = new EcmaScriptContentBodyEvaluator(contentBodyProperties);
 		}
 
-		private class DataModelHandlerFactory : IDataModelHandlerFactory
+		private class DataModelHandlerFactory : IDataModelHandlerFactory, IDataModelHandlerFactoryActivator
 		{
 		#region Interface IDataModelHandlerFactory
 
-			public bool CanHandle(string dataModelType) => dataModelType == DataModelType || dataModelType == DataModelTypeAlias;
+			public ValueTask<IDataModelHandlerFactoryActivator?> TryGetActivator(IFactoryContext factoryContext, string dataModelType, CancellationToken token) =>
+					new ValueTask<IDataModelHandlerFactoryActivator?>(dataModelType == DataModelType ? this : null);
 
-			public IDataModelHandler CreateHandler(IErrorProcessor errorProcessor) => new EcmaScriptDataModelHandler(errorProcessor);
+		#endregion
+
+		#region Interface IDataModelHandlerFactoryActivator
+
+			public ValueTask<IDataModelHandler> CreateHandler(IFactoryContext factoryContext, string dataModelType, IErrorProcessor errorProcessor, CancellationToken token)
+			{
+				Infrastructure.Assert(dataModelType == DataModelType);
+
+				return new ValueTask<IDataModelHandler>(new EcmaScriptDataModelHandler(errorProcessor));
+			}
 
 		#endregion
 		}

@@ -1,5 +1,5 @@
 ﻿#region Copyright © 2019-2020 Sergii Artemenko
-// 
+
 // This file is part of the Xtate project. <https://xtate.net/>
 // 
 // This program is free software: you can redistribute it and/or modify
@@ -14,7 +14,7 @@
 // 
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-// 
+
 #endregion
 
 using System;
@@ -35,12 +35,13 @@ namespace Xtate.DataModel.EcmaScript.Test
 	[TestClass]
 	public class ExecutableTest
 	{
-		private Mock<ICustomActionExecutor>  _customActionExecutor  = default!;
-		private Mock<ICustomActionFactory>   _customActionProvider  = default!;
-		private ChannelReader<IEvent>        _eventChannel          = default!;
-		private Mock<IExternalCommunication> _externalCommunication = default!;
-		private Mock<ILogger>                _logger                = default!;
-		private InterpreterOptions           _options;
+		private Mock<ICustomActionExecutor>         _customActionExecutor          = default!;
+		private Mock<ICustomActionFactory>          _customActionProvider          = default!;
+		private Mock<ICustomActionFactoryActivator> _customActionProviderActivator = default!;
+		private ChannelReader<IEvent>               _eventChannel                  = default!;
+		private Mock<IExternalCommunication>        _externalCommunication         = default!;
+		private Mock<ILogger>                       _logger                        = default!;
+		private InterpreterOptions                  _options;
 
 		private static IStateMachine GetStateMachine(string scxml)
 		{
@@ -80,9 +81,13 @@ namespace Xtate.DataModel.EcmaScript.Test
 			_customActionExecutor.Setup(e => e.Execute(It.IsAny<IExecutionContext>(), It.IsAny<CancellationToken>()))
 								 .Callback((IExecutionContext ctx, CancellationToken tk) => ctx.Log(label: "Custom", arguments: default, tk));
 
+			_customActionProviderActivator = new Mock<ICustomActionFactoryActivator>();
+			_customActionProviderActivator.Setup(x => x.CreateExecutor(It.IsAny<IFactoryContext>(), It.IsAny<ICustomActionContext>(), default))
+										  .Returns(new ValueTask<ICustomActionExecutor>(_customActionExecutor.Object));
+
 			_customActionProvider = new Mock<ICustomActionFactory>();
-			_customActionProvider.Setup(x => x.CreateExecutor(It.IsAny<ICustomActionContext>())).Returns(_customActionExecutor.Object);
-			_customActionProvider.Setup(x => x.CanHandle(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
+			_customActionProvider.Setup(x => x.TryGetActivator(It.IsAny<IFactoryContext>(), It.IsAny<string>(), It.IsAny<string>(), default))
+								 .Returns(new ValueTask<ICustomActionFactoryActivator?>(_customActionProviderActivator.Object));
 
 			_options = new InterpreterOptions
 					   {

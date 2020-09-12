@@ -1,5 +1,5 @@
 ﻿#region Copyright © 2019-2020 Sergii Artemenko
-// 
+
 // This file is part of the Xtate project. <https://xtate.net/>
 // 
 // This program is free software: you can redistribute it and/or modify
@@ -14,7 +14,7 @@
 // 
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-// 
+
 #endregion
 
 using System;
@@ -42,7 +42,7 @@ namespace Xtate.DataModel.EcmaScript
 
 		public ValueTask Execute(IExecutionContext executionContext, CancellationToken token)
 		{
-			Infrastructure.Assert(_program != null, Resources.Exception_ExternalScriptMissed);
+			Infrastructure.NotNull(_program, Resources.Exception_ExternalScriptMissed);
 
 			executionContext.Engine().Exec(_program, startNewScope: true);
 
@@ -55,7 +55,7 @@ namespace Xtate.DataModel.EcmaScript
 
 		public void SetContent(string content)
 		{
-			if (content == null) throw new ArgumentNullException(nameof(content));
+			if (content is null) throw new ArgumentNullException(nameof(content));
 
 			_program = new JavaScriptParser().Parse(content);
 		}

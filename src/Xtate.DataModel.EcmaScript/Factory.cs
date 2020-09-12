@@ -17,4 +17,16 @@
 
 #endregion
 
-// @formatter:off
+using Xtate.Annotations;
+
+namespace Xtate.DataModel.EcmaScript
+{
+	[UsedImplicitly]
+	public class Factory : FactoryBase
+	{
+		public Factory()
+		{
+			Add(EcmaScriptDataModelHandler.Factory);
+		}
+	}
+}
