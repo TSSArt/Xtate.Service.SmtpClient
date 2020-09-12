@@ -17,20 +17,16 @@
 
 #endregion
 
-using System;
-using Xtate.Service;
+using Xtate.Annotations;
 
-namespace Xtate
+namespace Xtate.Service
 {
-	public static class SmtpClientExtensions
+	[UsedImplicitly]
+	public class Factory : FactoryBase
 	{
-		public static StateMachineHostBuilder AddSmtpClient(this StateMachineHostBuilder builder)
+		public Factory()
 		{
-			if (builder is null) throw new ArgumentNullException(nameof(builder));
-
-			builder.AddServiceFactory(SmtpClientService.Factory);
-
-			return builder;
+			Add(SmtpClientService.Factory);
 		}
 	}
 }
