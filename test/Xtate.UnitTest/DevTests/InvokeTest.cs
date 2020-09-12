@@ -115,6 +115,8 @@ namespace Xtate.Test
 
 			_loggerMock.Verify(l => l.ExecuteLog(It.IsAny<ILoggerContext>(), "FinalizeExecuted", default, default));
 			_loggerMock.VerifyGet(l => l.IsTracingEnabled);
+			_loggerMock.Verify(l => l.TraceStartInvoke(It.IsAny<ILoggerContext>(), It.IsAny<InvokeData>(), default));
+			_loggerMock.Verify(l => l.TraceCancelInvoke(It.IsAny<ILoggerContext>(), It.IsAny<InvokeId>(), default));
 			_loggerMock.VerifyNoOtherCalls();
 		}
 	}
