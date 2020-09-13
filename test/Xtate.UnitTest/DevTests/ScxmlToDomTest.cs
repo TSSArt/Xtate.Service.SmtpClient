@@ -94,8 +94,8 @@ namespace Xtate.Test
 			var sm = GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0'/>");
 			Assert.IsNull(sm.DataModelType);
 
-			var sm1 = GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' datamodel='none'/>");
-			Assert.AreEqual(expected: "none", sm1.DataModelType);
+			var sm1 = GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' datamodel='null'/>");
+			Assert.AreEqual(expected: "null", sm1.DataModelType);
 
 			var sm2 = GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' datamodel='ecmascript'/>");
 			Assert.AreEqual(expected: "ecmascript", sm2.DataModelType);
