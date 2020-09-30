@@ -1,0 +1,77 @@
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" name="tssart.com" datamodel="xpath">
+  <parallel>
+    <!-- BEGIN of Procedures -->
+    <state id="procedures">
+      <onentry>
+        <raise event="procedures.signal.ProcedureA" />
+      </onentry>
+
+      <transition event="procedures.signal.ProcedureA" target="procedures.ProcedureA" type="internal" />
+
+      <state id="procedures.ProcedureA">
+        <state>
+          <invoke type="scxml" src="recaptcha_v2.scxml">
+            <param name="url" expr="'https://www.tssart.com/wp-login.php'" />
+            <param name="sitekey" expr="'6LdI3RYTAAAAAMkmqOQSdno04oej6pDHGFpU3TRG'" />
+            <finalize>
+              <log expr="$_event/data" />
+            </finalize>
+          </invoke>
+        </state>
+      </state>
+    </state>
+    <!-- END of Procedures -->
+
+    <!-- BEGIN of Background Tasks -->
+    <state id="tasks">
+      <transition event="tasks.signal.TaskA" target="tasks.queue.TaskA" type="internal" />
+      <transition event="tasks.signal.TaskB" target="tasks.queue.TaskB" type="internal" />
+    
+      <state id="tasks.idle" />
+      <parallel id="tasks.execution">
+        <state>
+          <final id="tasks.final.TaskA" />
+          <state id="tasks.queue.TaskA">
+            <transition cond="In(tasks.task.TaskA)" target="tasks.final.TaskA" />
+          </state>
+        </state>
+
+        <state>
+          <final id="tasks.final.TaskB" />
+          <state id="tasks.queue.TaskB">
+            <transition cond="In(tasks.task.TaskB)" target="tasks.final.TaskB" />
+          </state>
+        </state>
+
+        <state id="tasks.pipelines" initial="tasks.switch">
+          <state id="tasks.switch">
+            <transition cond="In(tasks.queue.TaskA)" target="tasks.task.TaskA" />
+            <transition cond="In(tasks.queue.TaskB)" target="tasks.task.TaskB" />
+            <transition target="tasks.pipelines.final" />
+          </state>
+
+          <state id="tasks.task.TaskA">
+            <state>
+
+            </state>
+            <state>
+              <transition target="tasks.switch" />
+            </state>
+          </state>
+
+          <state id="tasks.task.TaskB">
+            <state>
+              <transition target="tasks.switch" />
+            </state>
+          </state>
+
+          <final id="tasks.pipelines.final" />
+        </state>
+
+        <transition event="done.state.tasks.execution" target="tasks.idle" />
+      </parallel>
+    </state>
+    <!-- END of Background Tasks -->
+
+  </parallel>
+</scxml>

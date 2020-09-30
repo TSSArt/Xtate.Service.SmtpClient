@@ -1,0 +1,79 @@
+<scxml xmlns="http://www.w3.org/2005/07/scxml" xmlns:basic="http://xtate.net/scxml/customaction/basic" version="1.0"
+       datamodel="xpath" initial="init">
+  <datamodel>
+    <data id="url" />
+    <data id="sitekey" />
+    <data id="response" />
+  </datamodel>
+
+  <state id="init">
+    <datamodel>
+      <data id="args" />
+      <data id="captchaHtmlV2">
+        &lt;html xmlns=&quot;&quot;&gt;
+        &lt;head&gt;
+        &lt;script src=&quot;https://www.google.com/recaptcha/api.js&quot; async=&quot;&quot; defer=&quot;&quot;&gt;&lt;/script&gt;
+        &lt;script type=&quot;text/javascript&quot;&gt;
+        function ok(){document.getElementById(&quot;frm&quot;).submit();}
+        &lt;/script&gt;
+        &lt;/head&gt;
+        &lt;body&gt;
+        &lt;form id=&quot;frm&quot; action=&quot;&quot; method=&quot;POST&quot;&gt;
+        &lt;div class=&quot;g-recaptcha&quot; data-sitekey=&quot;{#sitekey#}&quot; data-callback=&quot;ok&quot;&gt;&lt;/div&gt;
+        &lt;/form&gt;
+        &lt;/body&gt;
+        &lt;/html&gt;
+      </data>
+    </datamodel>
+
+    <onentry>
+      <assign location="$args" expr="$sitekey" type="firstchild" />
+      <basic:format templateexpr="$captchaHtmlV2" argsexpr="$args/node()" result="$captchaHtmlV2" />
+    </onentry>
+
+    <transition target="recaptchaV2" />
+
+    <transition event="error" target="error" />
+  </state>
+
+  <state id="recaptchaV2">
+    <datamodel>
+      <data id="sendId" />
+    </datamodel>
+
+    <invoke id="inv" type="scxml" src="call-dialog.scxml">
+      <param name="type" expr="'browser'" />
+      <param name="source" expr="$url/text()" />
+      <param name="content" expr="$captchaHtmlV2/text()" />
+      <param name="retryMs" expr="60000" />
+    </invoke>
+
+    <transition event="done" cond="$_event/data/data/status = 'ok'" target="done">
+      <assign location="response" expr="$_event/data/data/parameters/g-recaptcha-response" />
+    </transition>
+
+    <transition event="done" target="cancel" />
+
+    <transition event="error" target="error" />
+  </state>
+
+  <final id="done">
+    <donedata>
+      <param name="status" expr="'ok'" />
+      <param name="response" expr="$response/node()" />
+    </donedata>
+  </final>
+
+  <final id="cancel">
+    <donedata>
+      <param name="status" expr="'cancel'" />
+    </donedata>
+  </final>
+
+  <final id="error">
+    <donedata>
+      <param name="status" expr="'error'" />
+      <param name="error" expr="$_event/data/node()" />
+    </donedata>
+  </final>
+</scxml>

@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="autorun.scxml" />
+    <None Remove="dialog.scxml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Xtate.BasicCustomAction\Xtate.BasicCustomAction.csproj" />
+    <ProjectReference Include="..\Xtate.Core\src\Xtate.Core\Xtate.Core.csproj" />
+    <ProjectReference Include="..\Xtate.DataModel.EcmaScript\src\Xtate.DataModel.EcmaScript\Xtate.DataModel.EcmaScript.csproj" />
+    <ProjectReference Include="..\Xtate.IoProcessor.Http\src\Xtate.IoProcessor.Http\Xtate.IoProcessor.Http.csproj" />
+    <ProjectReference Include="..\Xtate.MidCustomAction\Xtate.MidCustomAction.csproj" />
+    <ProjectReference Include="..\Xtate.MimeCustomAction\Xtate.MimeCustomAction.csproj" />
+    <ProjectReference Include="..\Xtate.Serialization\src\Xtate.Serialization\Xtate.Serialization.csproj" />
+    <ProjectReference Include="..\Xtate.Service.HttpClient\src\Xtate.Service.HttpClient\Xtate.Service.HttpClient.csproj" />
+    <ProjectReference Include="..\Xtate.Service.SmtpClient\src\Xtate.Service.SmtpClient\Xtate.Service.SmtpClient.csproj" />
+    <ProjectReference Include="..\Xtate.UserInteractionService\Xtate.UserInteractionService.csproj" />
+    <ProjectReference Include="..\Xtate.WebBrowserService.CefSharp\Xtate.WebBrowserService.CefSharp.csproj">
+      <Private>true</Private>
+    </ProjectReference>
+  </ItemGroup>
+
+</Project>

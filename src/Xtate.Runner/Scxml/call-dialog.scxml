@@ -1,0 +1,65 @@
+<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" datamodel="xpath" initial="active">
+  <datamodel>
+    <data id="type" />
+    <data id="source" />
+    <data id="content" />
+    <data id="retryMs" />
+    <data id="response" />
+  </datamodel>
+
+  <state id="active">
+
+    <datamodel>
+      <data id="sendId" />
+    </datamodel>
+
+    <onentry>
+      <send idlocation="$sendId" type="http" targetexpr="$_x/configuration/uiEndpoint" event="show">
+        <param name="id" expr="$sendId/text()" />
+        <param name="type" expr="$type/text()" />
+        <param name="event" expr="'done'" />
+        <param name="source" expr="$source/text()" />
+        <param name="content" expr="content/text()" />
+      </send>
+      <send id="timeout" event="timeout" type="scxml" targetexpr="concat('#_scxml_', $_sessionid)" delayexpr="number(retryMs)" />
+    </onentry>
+
+    <onexit>
+      <send type="http" targetexpr="$_x/configuration/uiEndpoint" event="cancel">
+        <param name="id" expr="$sendId/text()" />
+      </send>
+      <cancel sendid="timeout" />
+    </onexit>
+
+    <transition event="timeout" target="active" />
+
+    <transition event="done" cond="$_event/data/data/status = 'ok'" target="done">
+      <assign location="response" expr="$_event/data/data/node()" />
+    </transition>
+
+    <transition event="done" target="cancel" />
+
+    <transition event="error" target="error" />
+
+  </state>
+
+  <final id="done">
+    <donedata>
+      <param name="status" expr="'ok'" />
+      <param name="response" expr="$response/node()" />
+    </donedata>
+  </final>
+
+  <final id="cancel">
+    <donedata>
+      <param name="status" expr="'cancel'" />
+    </donedata>
+  </final>
+
+  <final id="error">
+    <donedata>
+      <param name="status" expr="'error'" />
+      <param name="error" expr="$_event/data/node()" />
+    </donedata>
+  </final>
+</scxml>
