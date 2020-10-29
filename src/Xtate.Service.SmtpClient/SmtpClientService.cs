@@ -30,18 +30,18 @@ namespace Xtate.Service
 
 		protected override async ValueTask<DataModelValue> Execute()
 		{
-			var parameters = Parameters.AsObjectOrEmpty();
+			var parameters = Parameters.AsListOrEmpty();
 			var host = parameters["server"].AsString();
 			var port = parameters["port"].AsNumberOrDefault();
 			using var client = new SmtpClient(host, port is { } p ? (int) p : 25);
 
 			var fromEmail = parameters["from"].AsString();
 			var fromName = parameters["fromName"].AsStringOrDefault();
-			var from = fromName is { } ? new MailAddress(fromEmail, fromName, Encoding.UTF8) : new MailAddress(fromEmail);
+			var from = fromName is not null ? new MailAddress(fromEmail, fromName, Encoding.UTF8) : new MailAddress(fromEmail);
 
 			var toEmail = parameters["to"].AsString();
 			var toName = parameters["toName"].AsStringOrDefault();
-			var to = toName is { } ? new MailAddress(toEmail, toName, Encoding.UTF8) : new MailAddress(toEmail);
+			var to = toName is not null ? new MailAddress(toEmail, toName, Encoding.UTF8) : new MailAddress(toEmail);
 
 			var textBody = parameters["body"].AsStringOrDefault();
 			var htmlBody = parameters["htmlBody"].AsStringOrDefault();
@@ -49,7 +49,7 @@ namespace Xtate.Service
 			using var message = new MailMessage(from, to)
 								{
 										Body = htmlBody ?? textBody,
-										IsBodyHtml = htmlBody is { },
+										IsBodyHtml = htmlBody is not null,
 										BodyEncoding = Encoding.UTF8,
 										Subject = parameters["subject"].AsStringOrDefault(),
 										SubjectEncoding = Encoding.UTF8
