@@ -47,9 +47,9 @@ namespace Xtate.CustomAction
 			if (arguments is null) throw new ArgumentNullException(nameof(arguments));
 
 			var template = arguments[Template].AsString();
-			var args = arguments[ArgsExpr].AsObjectOrEmpty();
+			var args = arguments[ArgsExpr].AsListOrEmpty();
 
-			return RegexReplacer.Replace(template, m => args[m.Groups[1].Value].AsStringOrDefault());
+			return RegexReplacer.Replace(template, m => args[m.Groups[1].Value].AsStringOrDefault() ?? string.Empty);
 		}
 	}
 }

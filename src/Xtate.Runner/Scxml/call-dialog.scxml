@@ -4,7 +4,6 @@
     <data id="source" />
     <data id="content" />
     <data id="retryMs" />
-    <data id="response" />
   </datamodel>
 
   <state id="active">
@@ -17,9 +16,9 @@
       <send idlocation="$sendId" type="http" targetexpr="$_x/configuration/uiEndpoint" event="show">
         <param name="id" expr="$sendId/text()" />
         <param name="type" expr="$type/text()" />
-        <param name="event" expr="'done'" />
         <param name="source" expr="$source/text()" />
-        <param name="content" expr="content/text()" />
+        <param name="content" expr="$content/node()" />
+        <param name="event" expr="'complete'" />
       </send>
       <send id="timeout" event="timeout" type="scxml" targetexpr="concat('#_scxml_', $_sessionid)" delayexpr="number(retryMs)" />
     </onentry>
@@ -32,27 +31,14 @@
     </onexit>
 
     <transition event="timeout" target="active" />
-
-    <transition event="done" cond="$_event/data/data/status = 'ok'" target="done">
-      <assign location="response" expr="$_event/data/data/node()" />
-    </transition>
-
-    <transition event="done" target="cancel" />
-
+    <transition event="complete" target="complete" />
     <transition event="error" target="error" />
 
   </state>
 
-  <final id="done">
+  <final id="complete">
     <donedata>
-      <param name="status" expr="'ok'" />
-      <param name="response" expr="$response/node()" />
-    </donedata>
-  </final>
-
-  <final id="cancel">
-    <donedata>
-      <param name="status" expr="'cancel'" />
+      <content expr="$_event/data/result/node()" />
     </donedata>
   </final>
 

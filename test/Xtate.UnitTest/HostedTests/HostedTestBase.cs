@@ -18,7 +18,6 @@
 #endregion
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -28,7 +27,6 @@ using Xtate.CustomAction;
 
 namespace Xtate.Test.HostedTests
 {
-	[SuppressMessage(category: "ReSharper", checkId: "RedundantCapturedContext")]
 	public abstract class HostedTestBase
 	{
 		protected StateMachineHost Host   { get; private set; } = default!;

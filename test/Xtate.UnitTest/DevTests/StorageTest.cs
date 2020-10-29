@@ -35,6 +35,7 @@ namespace Xtate.Test
 	[TestClass]
 	public class StorageTest
 	{
+		[SuppressMessage(category: "Style", checkId: "IDE0057:Use range operator", Justification = "")]
 		public static string Dump(IStorage storage, string delimiter = "", bool hex = false)
 		{
 			var inMemoryStorage = (InMemoryStorage) storage;
@@ -67,6 +68,7 @@ namespace Xtate.Test
 			return sb.ToString();
 		}
 
+		[SuppressMessage(category: "Style", checkId: "IDE0057:Use range operator", Justification = "")]
 		public static int GetEntriesCount(IStorage storage)
 		{
 			var inMemoryStorage = (InMemoryStorage) storage;
@@ -104,7 +106,6 @@ namespace Xtate.Test
 			throw new ArgumentException("Incorrect key encoding");
 		}
 
-		[SuppressMessage(category: "ReSharper", checkId: "CyclomaticComplexity", Justification = "OK")]
 		private static int DecodeLength(ReadOnlySpan<byte> key)
 		{
 			switch (key.Length)
@@ -160,7 +161,6 @@ namespace Xtate.Test
 			throw new ArgumentException("0xFF byte not detected");
 		}
 
-		[SuppressMessage(category: "ReSharper", checkId: "CyclomaticComplexity", Justification = "OK")]
 		private static ulong DecodeUInt64(Span<byte> key)
 		{
 			switch (key.Length)
@@ -226,7 +226,7 @@ namespace Xtate.Test
 			switch (key & 3)
 			{
 				case 1:
-					sb.Append("/").Append(Enum.ToObject(typeof(Key), unchecked((int) (key >> 2))));
+					sb.Append('/').Append(Enum.ToObject(typeof(Key), unchecked((int) (key >> 2))));
 					break;
 
 				case 2:
@@ -514,7 +514,6 @@ namespace Xtate.Test
 		}
 
 		[TestMethod]
-		[SuppressMessage(category: "ReSharper", checkId: "StringLiteralTypo")]
 		public void UnicodeReadWriteTest()
 		{
 			var storage = new InMemoryStorage(false);

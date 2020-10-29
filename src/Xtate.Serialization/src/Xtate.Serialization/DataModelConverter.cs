@@ -61,6 +61,10 @@ namespace Xtate
 	[PublicAPI]
 	public static class DataModelConverter
 	{
+		private const string TypeMetaKey     = @"type";
+		private const string ObjectMetaValue = @"object";
+		private const string ArrayMetaValue  = @"array";
+
 		private static readonly JsonSerializerOptions DefaultOptions = CreateOptions(DataModelConverterOptions.UndefinedNotAllowed);
 		private static JsonSerializerOptions GetOptions(DataModelConverterOptions options) => options == DataModelConverterOptions.UndefinedNotAllowed ? DefaultOptions : CreateOptions(options);
 
@@ -70,12 +74,45 @@ namespace Xtate
 						Converters =
 						{
 								new JsonValueConverter(options),
-								new JsonObjectConverter(options),
-								new JsonArrayConverter(options)
+								new JsonListConverter(options)
 						},
 						WriteIndented = (options & DataModelConverterOptions.WriteIndented) != 0,
 						MaxDepth = 64
 				};
+
+		public static bool IsArray(DataModelList list)
+		{
+			if (list is null) throw new ArgumentNullException(nameof(list));
+
+			if (list.GetMetadata() is { } metadata && metadata[TypeMetaKey, caseInsensitive: false] is { } val)
+			{
+				switch (val.AsStringOrDefault())
+				{
+					case ObjectMetaValue: return false;
+					case ArrayMetaValue: return true;
+				}
+			}
+
+			return !list.HasKeys;
+		}
+
+		public static DataModelList CreateAsObject()
+		{
+			var list = new DataModelList();
+
+			list.SetMetadata(new DataModelList { [TypeMetaKey] = ObjectMetaValue });
+
+			return list;
+		}
+
+		public static DataModelList CreateAsArray()
+		{
+			var list = new DataModelList();
+
+			list.SetMetadata(new DataModelList { [TypeMetaKey] = ArrayMetaValue });
+
+			return list;
+		}
 
 		public static string ToJson(DataModelValue value, DataModelConverterOptions options = default) => JsonSerializer.Serialize(value, GetOptions(options));
 
@@ -84,9 +121,9 @@ namespace Xtate
 		public static Task ToJsonAsync(Stream stream, DataModelValue value, DataModelConverterOptions options = default, CancellationToken token = default) =>
 				JsonSerializer.SerializeAsync(stream, value, GetOptions(options), token);
 
-		public static DataModelValue FromJson(string json) => JsonSerializer.Deserialize<DataModelValue>(json, DefaultOptions);
+		public static DataModelValue FromJson(string json) => JsonSerializer.Deserialize<DataModelValue>(json, DefaultOptions)!;
 
-		public static DataModelValue FromJson(ReadOnlySpan<byte> utf8Json) => JsonSerializer.Deserialize<DataModelValue>(utf8Json, DefaultOptions);
+		public static DataModelValue FromJson(ReadOnlySpan<byte> utf8Json) => JsonSerializer.Deserialize<DataModelValue>(utf8Json, DefaultOptions)!;
 
 		public static ValueTask<DataModelValue> FromJsonAsync(Stream stream, CancellationToken token = default) => JsonSerializer.DeserializeAsync<DataModelValue>(stream, DefaultOptions, token);
 
@@ -106,9 +143,9 @@ namespace Xtate
 							JsonTokenType.String when reader.TryGetDateTimeOffset(out var datetimeOffset) => datetimeOffset,
 							JsonTokenType.String => reader.GetString(),
 							JsonTokenType.Number => reader.GetDouble(),
-							JsonTokenType.StartObject => JsonSerializer.Deserialize<DataModelObject>(ref reader, options),
-							JsonTokenType.StartArray => JsonSerializer.Deserialize<DataModelArray>(ref reader, options),
-							_ => Infrastructure.UnexpectedValue<DataModelValue>(Resources.Exception_Not_expected_token_type)
+							JsonTokenType.StartObject => JsonSerializer.Deserialize<DataModelList>(ref reader, options),
+							JsonTokenType.StartArray => JsonSerializer.Deserialize<DataModelList>(ref reader, options),
+							_ => Infrastructure.UnexpectedValue<DataModelValue>(reader.TokenType, Resources.Exception_Not_expected_token_type)
 					};
 
 			public override void Write(Utf8JsonWriter writer, DataModelValue value, JsonSerializerOptions options)
@@ -150,7 +187,7 @@ namespace Xtate
 								break;
 
 							default:
-								Infrastructure.UnexpectedValue();
+								Infrastructure.UnexpectedValue(dataModelDateTime.Type);
 								break;
 						}
 
@@ -160,30 +197,46 @@ namespace Xtate
 						writer.WriteBooleanValue(value.AsBoolean());
 						break;
 
-					case DataModelValueType.Object:
-						JsonSerializer.Serialize(writer, value.AsObject(), options);
-						break;
-
-					case DataModelValueType.Array:
-						JsonSerializer.Serialize(writer, value.AsArray(), options);
+					case DataModelValueType.List:
+						JsonSerializer.Serialize(writer, value.AsList(), options);
 						break;
 
 					default:
-						Infrastructure.UnexpectedValue(Resources.Exception_Unknown_type_for_serialization);
+						Infrastructure.UnexpectedValue(value.Type, Resources.Exception_Unknown_type_for_serialization);
 						break;
 				}
 			}
 		}
 
-		private class JsonObjectConverter : JsonConverter<DataModelObject>
+		private class JsonListConverter : JsonConverter<DataModelList>
 		{
 			private readonly DataModelConverterOptions _options;
 
-			public JsonObjectConverter(DataModelConverterOptions options) => _options = options;
+			public JsonListConverter(DataModelConverterOptions options) => _options = options;
 
-			public override DataModelObject Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+			public override DataModelList Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
+					reader.TokenType switch
+					{
+							JsonTokenType.StartObject => ReadObject(ref reader, options),
+							JsonTokenType.StartArray => ReadArray(ref reader, options),
+							_ => Infrastructure.UnexpectedValue<DataModelList>(reader.TokenType)
+					};
+
+			public override void Write(Utf8JsonWriter writer, DataModelList list, JsonSerializerOptions options)
 			{
-				var obj = new DataModelObject();
+				if (IsArray(list))
+				{
+					WriteArray(writer, list, options);
+				}
+				else
+				{
+					WriteObject(writer, list, options);
+				}
+			}
+
+			private static DataModelList ReadObject(ref Utf8JsonReader reader, JsonSerializerOptions options)
+			{
+				var list = new DataModelList();
 
 				Infrastructure.Assert(reader.TokenType == JsonTokenType.StartObject);
 
@@ -192,19 +245,21 @@ namespace Xtate
 				while (reader.TokenType != JsonTokenType.EndObject)
 				{
 					var name = reader.GetString();
+					Infrastructure.NotNull(name);
+
 					var value = JsonSerializer.Deserialize<DataModelValue>(ref reader, options);
 
-					obj.Add(name, value);
+					list.Add(name, value);
 
 					reader.Read();
 				}
 
 				reader.Read();
 
-				return obj;
+				return list;
 			}
 
-			public override void Write(Utf8JsonWriter writer, DataModelObject obj, JsonSerializerOptions options)
+			private void WriteObject(Utf8JsonWriter writer, DataModelList list, JsonSerializerOptions options)
 			{
 				if (writer.CurrentDepth > options.MaxDepth)
 				{
@@ -213,7 +268,7 @@ namespace Xtate
 
 				writer.WriteStartObject();
 
-				foreach (var pair in obj)
+				foreach (var pair in list.KeyValuePairs)
 				{
 					if (!string.IsNullOrEmpty(pair.Key))
 					{
@@ -232,17 +287,10 @@ namespace Xtate
 
 				writer.WriteEndObject();
 			}
-		}
 
-		private class JsonArrayConverter : JsonConverter<DataModelArray>
-		{
-			private readonly DataModelConverterOptions _options;
-
-			public JsonArrayConverter(DataModelConverterOptions options) => _options = options;
-
-			public override DataModelArray Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+			private static DataModelList ReadArray(ref Utf8JsonReader reader, JsonSerializerOptions options)
 			{
-				var array = new DataModelArray();
+				var list = new DataModelList();
 
 				Infrastructure.Assert(reader.TokenType == JsonTokenType.StartArray);
 
@@ -252,24 +300,24 @@ namespace Xtate
 				{
 					var value = JsonSerializer.Deserialize<DataModelValue>(ref reader, options);
 
-					array.Add(value);
+					list.Add(value);
 
 					reader.Read();
 				}
 
 				reader.Read();
 
-				return array;
+				return list;
 			}
 
-			public override void Write(Utf8JsonWriter writer, DataModelArray array, JsonSerializerOptions options)
+			private void WriteArray(Utf8JsonWriter writer, DataModelList list, JsonSerializerOptions options)
 			{
 				writer.WriteStartArray();
 
-				var arrayLength = array.Count;
+				var arrayLength = list.Count;
 				for (var i = 0; i < arrayLength; i ++)
 				{
-					var value = array[i];
+					var value = list[i];
 					if (!value.IsUndefined())
 					{
 						JsonSerializer.Serialize(writer, value, options);

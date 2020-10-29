@@ -109,10 +109,9 @@ namespace Xtate.Test
 			var interpreterModelBuilder = new InterpreterModelBuilder(_stateMachine, dataModelHandler!, customActionProviders: default, default!, DefaultErrorProcessor.Instance);
 			var interpreterModel = await interpreterModelBuilder.Build(default);
 			var text = new StringWriter();
-			using (var xmlWriter = XmlWriter.Create(text, new XmlWriterSettings { Encoding = Encoding.UTF8, Indent = true }))
-			{
-				ScxmlSerializer.Serialize(interpreterModel.Root, xmlWriter!);
-			}
+			var xmlWriter = XmlWriter.Create(text, new XmlWriterSettings { Encoding = Encoding.UTF8, Indent = true });
+
+			ScxmlSerializer.Serialize(interpreterModel.Root, xmlWriter!);
 
 			Console.WriteLine(text);
 		}

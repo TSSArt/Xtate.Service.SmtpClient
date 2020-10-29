@@ -18,7 +18,6 @@
 #endregion
 
 using System;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -85,7 +84,7 @@ namespace Xtate.Test
 
 			if (-- FailWriteCountdown == 0)
 			{
-				throw new ArgumentException();
+				throw new ArgumentException("?");
 			}
 
 			_capture.WriteAsync(count);
@@ -100,7 +99,6 @@ namespace Xtate.Test
 	}
 
 	[TestClass]
-	[SuppressMessage(category: "ReSharper", checkId: "UncatchableException")]
 	public class StreamStorageTest
 	{
 		private ProxyMemoryStream    _stream             = default!;

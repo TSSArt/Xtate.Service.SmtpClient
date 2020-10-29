@@ -116,7 +116,7 @@ namespace Xtate.IoProcessor
 			{
 				if (Interfaces.IndexOf(address) >= 0)
 				{
-					if (listenAddress is { })
+					if (listenAddress is not null)
 					{
 						throw new ProcessorException(Resources.Exception_Found_more_then_one_interface_to_listen);
 					}
@@ -180,21 +180,21 @@ namespace Xtate.IoProcessor
 				case DataModelValueType.Null:
 					eventNameInContent = !evt.NameParts.IsDefaultOrEmpty;
 
-					return eventNameInContent ? new FormUrlEncodedContent(GetParameters(evt.NameParts, dataModelObject: null)) : null;
+					return eventNameInContent ? new FormUrlEncodedContent(GetParameters(evt.NameParts, dataModelList: null)) : null;
 
 				case DataModelValueType.String:
 					eventNameInContent = false;
 
 					return new StringContent(data.AsString(), Encoding.UTF8, MediaTypeTextPlain);
 
-				case DataModelValueType.Object:
+				case DataModelValueType.List:
 				{
-					var dataModelObject = data.AsObject();
+					var dataModelList = data.AsList();
 
-					if (IsStringDictionary(dataModelObject))
+					if (IsStringDictionary(dataModelList))
 					{
 						eventNameInContent = true;
-						return new FormUrlEncodedContent(GetParameters(evt.NameParts, dataModelObject));
+						return new FormUrlEncodedContent(GetParameters(evt.NameParts, dataModelList));
 					}
 
 					eventNameInContent = false;
@@ -202,24 +202,23 @@ namespace Xtate.IoProcessor
 					return new StringContent(DataModelConverter.ToJson(data), Encoding.UTF8, MediaTypeApplicationJson);
 				}
 
-				case DataModelValueType.Array:
-					eventNameInContent = false;
-
-					return new StringContent(DataModelConverter.ToJson(data), Encoding.UTF8, MediaTypeApplicationJson);
-
 				default:
 					throw new NotSupportedException(Resources.Exception_Data_format_not_supported);
 			}
 		}
 
-		private static bool IsStringDictionary(DataModelObject dataModelObject)
+		private static bool IsStringDictionary(DataModelList dataModelList)
 		{
-			foreach (var pair in dataModelObject)
+			foreach (var pair in dataModelList.KeyValues)
 			{
+				if (pair.Key is null)
+				{
+					return false;
+				}
+
 				switch (pair.Value.Type)
 				{
-					case DataModelValueType.Object:
-					case DataModelValueType.Array:
+					case DataModelValueType.List:
 					case DataModelValueType.Number:
 					case DataModelValueType.DateTime:
 					case DataModelValueType.Boolean:
@@ -231,7 +230,7 @@ namespace Xtate.IoProcessor
 						break;
 
 					default:
-						Infrastructure.UnexpectedValue();
+						Infrastructure.UnexpectedValue(pair.Value.Type);
 						break;
 				}
 			}
@@ -239,18 +238,18 @@ namespace Xtate.IoProcessor
 			return true;
 		}
 
-		private static IEnumerable<KeyValuePair<string, string>> GetParameters(ImmutableArray<IIdentifier> eventNameParts, DataModelObject? dataModelObject)
+		private static IEnumerable<KeyValuePair<string?, string?>> GetParameters(ImmutableArray<IIdentifier> eventNameParts, DataModelList? dataModelList)
 		{
 			if (!eventNameParts.IsDefaultOrEmpty)
 			{
-				yield return new KeyValuePair<string, string>(EventNameParameterName, EventName.ToName(eventNameParts));
+				yield return new KeyValuePair<string?, string?>(EventNameParameterName, EventName.ToName(eventNameParts));
 			}
 
-			if (dataModelObject is { })
+			if (dataModelList is not null)
 			{
-				foreach (var pair in dataModelObject)
+				foreach (var pair in dataModelList.KeyValues)
 				{
-					yield return new KeyValuePair<string, string>(pair.Key, Convert.ToString(pair.Value, CultureInfo.InvariantCulture));
+					yield return new KeyValuePair<string?, string?>(pair.Key, Convert.ToString(pair.Value, CultureInfo.InvariantCulture));
 				}
 			}
 		}
@@ -282,7 +281,7 @@ namespace Xtate.IoProcessor
 
 			if (unescapedString.Length > 0 && unescapedString[0] == '/')
 			{
-				return SessionId.FromString(unescapedString.Substring(1));
+				return SessionId.FromString(unescapedString[1..]);
 			}
 
 			return SessionId.FromString(unescapedString);
@@ -290,8 +289,8 @@ namespace Xtate.IoProcessor
 
 		private async ValueTask<IEvent> CreateEvent(HttpRequest request)
 		{
-			var contentType = request.ContentType is { } ? new ContentType(request.ContentType) : new ContentType();
-			var encoding = contentType.CharSet is { } ? Encoding.GetEncoding(contentType.CharSet) : Encoding.ASCII;
+			var contentType = request.ContentType is not null ? new ContentType(request.ContentType) : new ContentType();
+			var encoding = contentType.CharSet is not null ? Encoding.GetEncoding(contentType.CharSet) : Encoding.ASCII;
 
 			string body;
 			using (var streamReader = new StreamReader(request.Body, encoding))
@@ -323,7 +322,7 @@ namespace Xtate.IoProcessor
 			if (mediaType == MediaTypeApplicationFormUrlEncoded)
 			{
 				var pairs = QueryHelpers.ParseQuery(body);
-				var dataModelObject = new DataModelObject();
+				var list = new DataModelList();
 
 				foreach (var pair in pairs)
 				{
@@ -335,12 +334,12 @@ namespace Xtate.IoProcessor
 					{
 						foreach (var stringValue in pair.Value)
 						{
-							dataModelObject.Add(pair.Key, stringValue);
+							list.Add(pair.Key, stringValue);
 						}
 					}
 				}
 
-				return dataModelObject;
+				return list;
 			}
 
 			if (mediaType == MediaTypeApplicationJson)

@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net.Mime;
 using System.Reflection;
@@ -35,7 +34,6 @@ using Xtate.Service;
 namespace Xtate.Test
 {
 	[TestClass]
-	[SuppressMessage(category: "ReSharper", checkId: "StringLiteralTypo")]
 	public class StateMachineHostTest
 	{
 		private static XmlReader GetStateMachineBase(string scxml)

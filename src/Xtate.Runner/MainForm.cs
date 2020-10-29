@@ -60,7 +60,7 @@ namespace Xtate.Runner
 										IOutgoingEvent evt,
 										CancellationToken token)
 		{
-			DataModelObject dataModelObject1 = new DataModelObject();
+			DataModelList dataModelObject1 = new DataModelList();
 			var name = (DataModelValue) EventName.ToName(evt.NameParts);
 			dataModelObject1.Add(key: "Name", in name);
 			var sendId = (DataModelValue) evt.SendId;
@@ -68,14 +68,14 @@ namespace Xtate.Runner
 			DataModelValue delayMs = evt.DelayMs;
 			dataModelObject1.Add(key: "DelayMs", in delayMs);
 			var type = evt.Type;
-			var dataModelValue1 = (DataModelValue) ((object?) type != null ? type.ToString() : null);
+			var dataModelValue1 = (DataModelValue) type?.ToString();
 			dataModelObject1.Add(key: "Type", in dataModelValue1);
 			var target = evt.Target;
-			var dataModelValue2 = (DataModelValue) ((object?) target != null ? target.ToString() : null);
+			var dataModelValue2 = (DataModelValue) target?.ToString();
 			dataModelObject1.Add(key: "Target", in dataModelValue2);
 			var data = evt.Data;
 			dataModelObject1.Add(key: "Data", in data);
-			DataModelObject dataModelObject2 = dataModelObject1;
+			DataModelList dataModelObject2 = dataModelObject1;
 			return new ValueTask(WriteLog(loggerContext, "[SEND] Name: " + EventName.ToName(evt.NameParts), data: dataModelObject2));
 		}
 
@@ -88,13 +88,13 @@ namespace Xtate.Runner
 										  InvokeData invokeData,
 										  CancellationToken token)
 		{
-			DataModelObject dataModelObject1 = new DataModelObject();
+			DataModelList dataModelObject1 = new DataModelList();
 			var invokeId = (DataModelValue) invokeData.InvokeId;
 			dataModelObject1.Add(key: "InvokeId", in invokeId);
 			var dataModelValue1 = (DataModelValue) invokeData.Type.ToString();
 			dataModelObject1.Add(key: "Type", in dataModelValue1);
 			var source = invokeData.Source;
-			var dataModelValue2 = (DataModelValue) ((object?) source != null ? source.ToString() : null);
+			var dataModelValue2 = (DataModelValue) source?.ToString();
 			dataModelObject1.Add(key: "Source", in dataModelValue2);
 			var rawContent = (DataModelValue) invokeData.RawContent;
 			dataModelObject1.Add(key: "RawContent", in rawContent);
@@ -102,7 +102,7 @@ namespace Xtate.Runner
 			dataModelObject1.Add(key: "Content", in content);
 			var parameters = invokeData.Parameters;
 			dataModelObject1.Add(key: "Parameters", in parameters);
-			DataModelObject dataModelObject2 = dataModelObject1;
+			DataModelList dataModelObject2 = dataModelObject1;
 			return new ValueTask(WriteLog(loggerContext, message: "[INVOKE]", data: dataModelObject2));
 		}
 
@@ -180,7 +180,7 @@ namespace Xtate.Runner
 			base.OnLoad(e);
 			await _stateMachineHost.StartHostAsync();
 			var path = Path.Combine(Environment.CurrentDirectory, path2: "../../../Scxml");
-			var scxmlList = Directory.EnumerateFiles(path: path, searchPattern: "*.scxml");
+			var scxmlList = Directory.EnumerateFiles(path, searchPattern: "*.scxml");
 			foreach (var str in scxmlList)
 			{
 				AddSessionControlTab(new Uri(str, UriKind.RelativeOrAbsolute), sessionId: null);
@@ -227,11 +227,11 @@ namespace Xtate.Runner
 								  bool stop,
 								  Exception? exception,
 								  string message,
-								  DataModelObject? dataModel,
+								  DataModelList? dataModel,
 								  string? dataModelAsText,
 								  string? dataAsText)
 		{
-			if (sessionId == null)
+			if (sessionId is null)
 			{
 				return;
 			}
@@ -252,20 +252,20 @@ namespace Xtate.Runner
 			}
 
 			string? str;
-			if (dataModel == null)
+			if (dataModel is null)
 			{
 				str = null;
 			}
 			else
 			{
 				var dataModelValue = dataModel["_x"];
-				dataModelValue = dataModelValue.AsObject()["host"];
-				dataModelValue = dataModelValue.AsObject()["location"];
+				dataModelValue = dataModelValue.AsList()["host"];
+				dataModelValue = dataModelValue.AsList()["location"];
 				str = dataModelValue.AsString();
 			}
 
 			var uriString = str;
-			if (uriString == null)
+			if (uriString is null)
 			{
 				return;
 			}
@@ -273,7 +273,7 @@ namespace Xtate.Runner
 			Uri uri = new Uri(uriString, UriKind.RelativeOrAbsolute);
 			foreach (var control1 in tabControl.TabPages.OfType<TabPage>())
 			{
-				if (control1?.Controls["sessionControl"] is SessionControl control && control.Source == uri && control.SessionId == null)
+				if (control1?.Controls["sessionControl"] is SessionControl control && control.Source == uri && control.SessionId is null)
 				{
 					control.AssignToSession(sessionId.Value);
 					control.AddLog(message, dataModel, dataModelAsText, dataAsText, exception);

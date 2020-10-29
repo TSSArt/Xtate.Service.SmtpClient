@@ -8,21 +8,22 @@
       <assign location="$evt" expr="$_event/node()" />
     </onentry>
 
-    <transition event="cancel" condition="$evt/id = $_event/data/id" target="idle" />
     <transition event="show" target="dialog" />
+    <transition event="cancel" cond="$_event/data/id=$evt/id" target="idle" />
 
     <state id="idle" />
 
     <state id="dialog">
 
-      <invoke id="inv" typeexpr="$_event/data/type" srcexpr="$_event/data/source">
-        <content expr="$_event/data/content/node()" />
+      <invoke typeexpr="$evt/data/type" srcexpr="$evt/data/source">
+        <content expr="$evt/data/content/node()" />
       </invoke>
 
-      <transition event="done.invoke.inv" target="idle">
+      <transition event="done.invoke.dialog" target="idle">
         <send typeexpr="$evt/origintype" targetexpr="$evt/origin" eventexpr="$evt/data/event">
-          <param name="data" expr="$_event/data/node()" />
+          <param name="result" expr="$_event/data/node()" />
         </send>
+        <assign location="$evt" type="delete" expr="/" />
       </transition>
 
       <transition event="error" target="idle" />

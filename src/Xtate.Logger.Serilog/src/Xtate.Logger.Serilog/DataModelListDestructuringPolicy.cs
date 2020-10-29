@@ -30,7 +30,7 @@ namespace Xtate
 
 		public bool TryDestructure(object value, ILogEventPropertyValueFactory propertyValueFactory, out LogEventPropertyValue? result)
 		{
-			if (!(value is DataModelList list))
+			if (value is not DataModelList list)
 			{
 				result = default;
 
@@ -53,9 +53,8 @@ namespace Xtate
 						DataModelValueType.Number => new ScalarValue(value.ToObject()),
 						DataModelValueType.DateTime => new ScalarValue(value.ToObject()),
 						DataModelValueType.Boolean => new ScalarValue(value.ToObject()),
-						DataModelValueType.Array => GetLogEventPropertyValue(value.AsList()),
-						DataModelValueType.Object => GetLogEventPropertyValue(value.AsList()),
-						_ => Infrastructure.UnexpectedValue<LogEventPropertyValue>()
+						DataModelValueType.List => GetLogEventPropertyValue(value.AsList()),
+						_ => Infrastructure.UnexpectedValue<LogEventPropertyValue>(value.Type)
 				};
 
 		private static LogEventPropertyValue GetLogEventPropertyValue(DataModelList list)
@@ -69,20 +68,20 @@ namespace Xtate
 				}
 			}
 
-			if (list.GetMetadata() is { })
+			if (list.GetMetadata() is not null)
 			{
 				return new StructureValue(EnumerateEntries(false));
 			}
 
 			foreach (var entry in list.Entries)
 			{
-				if (entry.Key is { } || entry.Metadata is { })
+				if (entry.Key is not null || entry.Metadata is not null)
 				{
 					return new StructureValue(EnumerateEntries(false));
 				}
 			}
 
-			if (list.Count == 0 && list is DataModelObject)
+			if (list.Count == 0)
 			{
 				return new StructureValue(Array.Empty<LogEventProperty>());
 			}

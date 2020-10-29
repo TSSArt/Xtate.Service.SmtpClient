@@ -22,7 +22,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Xml;
 
-#if NETSTANDARD2_1
+#if NET5_0
 using System.Buffers;
 
 #endif
@@ -53,7 +53,7 @@ namespace Xtate.CustomAction
 				return content;
 			}
 
-#if NETSTANDARD2_1
+#if NET5_0
 			return OptimizedDecode(content.AsString());
 
 			static string OptimizedDecode(string str)

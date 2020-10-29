@@ -16,7 +16,7 @@
       </if>
     </onentry>
 
-    <transition event="cancel" condition="id == _event.data.id" target="idle" />
+    <transition event="cancel" cond="id == _event.data.id" target="idle" />
     <transition event="show" target="dialog" />
 
     <state id="idle" />

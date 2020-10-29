@@ -19,7 +19,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics;
+using System.Net;
 using System.Text;
 using System.Windows.Forms;
 using CefSharp;
@@ -27,27 +28,58 @@ using CefSharp.Handler;
 using CefSharp.Internals;
 using CefSharp.WinForms;
 using Microsoft.AspNetCore.WebUtilities;
+using Cookie = CefSharp.Cookie;
+using NetCookie = System.Net.Cookie;
 
 namespace Xtate.Service
 {
 	public partial class BrowserForm : Form
 	{
-		public BrowserForm(Uri? url, string? content)
+		public BrowserForm(Uri? url, string? document, CookieCollection? cookieCollection)
 		{
 			InitializeComponent();
 
 			Controls.Add(new ChromiumWebBrowser(url?.ToString())
 						 {
 								 Dock = DockStyle.Fill,
-								 RequestHandler = new CustomRequestHandler(this, url, content)
+								 RequestHandler = new CustomRequestHandler(this, url, document)
 						 });
+
+			if (cookieCollection is not null)
+			{
+				var cookieManager = Cef.GetGlobalCookieManager();
+
+				Debug.Assert(cookieCollection != null);
+
+				foreach (NetCookie cookie in cookieCollection)
+				{
+					var cefCookie = GetCefCookie(cookie);
+
+					cookieManager.SetCookieAsync(url: null, cefCookie).Wait();
+				}
+			}
 		}
 
 		public IDictionary<string, string>? Result { get; private set; }
 
-		public void Close(DialogResult dialogResult, IDictionary<string, string>? result)
+		public CookieCollection? Cookies { get; private set; }
+
+		private static Cookie GetCefCookie(NetCookie cookie) =>
+				new Cookie
+				{
+						Domain = cookie.Domain,
+						Path = cookie.Path,
+						Name = cookie.Name,
+						Value = cookie.Value,
+						HttpOnly = cookie.HttpOnly,
+						Expires = cookie.Expires,
+						Secure = cookie.Secure
+				};
+
+		public void Close(DialogResult dialogResult, IDictionary<string, string>? result, CookieCollection? cookies)
 		{
 			Result = result;
+			Cookies = cookies;
 			DialogResult = dialogResult;
 
 			if (InvokeRequired)
@@ -65,28 +97,27 @@ namespace Xtate.Service
 	{
 		private static readonly IResourceRequestHandler EmptyHtmlHandler = new InMemoryResourceRequestHandler(Encoding.ASCII.GetBytes("<html/>"), mimeType: null);
 
-		private readonly string?     _content;
+		private readonly string?     _document;
 		private readonly BrowserForm _form;
 		private readonly Uri?        _url;
 
-		public CustomRequestHandler(BrowserForm form, Uri? url, string? content)
+		public CustomRequestHandler(BrowserForm form, Uri? url, string? document)
 		{
 			_form = form;
 			_url = url;
-			_content = content;
+			_document = document;
 		}
 
-		[SuppressMessage(category: "ReSharper", checkId: "SuspiciousTypeConversion.Global", Justification = "Uri can be compared with string")]
 		protected override IResourceRequestHandler GetResourceRequestHandler(IWebBrowser chromiumWebBrowser, IBrowser browser, IFrame frame, IRequest request,
 																			 bool isNavigation, bool isDownload, string requestInitiator, ref bool disableDefaultHandling)
 		{
 			if (request is null) throw new ArgumentNullException(nameof(request));
 
-			if (_url is { } && _url.Equals(request.Url))
+			if (_url is not null && _url.Equals(request.Url))
 			{
 				if (request.Method == "GET")
 				{
-					return new InMemoryResourceRequestHandler(Encoding.ASCII.GetBytes(_content ?? string.Empty), mimeType: null);
+					return new InMemoryResourceRequestHandler(Encoding.ASCII.GetBytes(_document ?? string.Empty), mimeType: null);
 				}
 
 				if (request.Method == "POST")
@@ -100,13 +131,48 @@ namespace Xtate.Service
 						result[pair.Key] = pair.Value[0];
 					}
 
-					_form.Close(DialogResult.OK, result);
+					var cookieManager = Cef.GetGlobalCookieManager();
+					using var cookieVisitor = new CookieVisitor();
+					cookieManager.VisitAllCookies(cookieVisitor);
+
+					_form.Close(DialogResult.OK, result, cookieVisitor.CookieCollection);
 
 					return EmptyHtmlHandler;
 				}
 			}
 
 			return base.GetResourceRequestHandler(chromiumWebBrowser, browser, frame, request, isNavigation, isDownload, requestInitiator, ref disableDefaultHandling);
+		}
+
+		private class CookieVisitor : ICookieVisitor
+		{
+			public CookieCollection CookieCollection { get; } = new CookieCollection();
+
+		#region Interface ICookieVisitor
+
+			public bool Visit(Cookie cookie, int count, int total, ref bool deleteCookie)
+			{
+				CookieCollection.Add(new NetCookie
+									 {
+											 Domain = cookie.Domain,
+											 Path = cookie.Path,
+											 Name = cookie.Name,
+											 Value = cookie.Value,
+											 HttpOnly = cookie.HttpOnly,
+											 Expires = cookie.Expires ?? DateTime.MinValue,
+											 Secure = cookie.Secure
+									 });
+
+				return true;
+			}
+
+		#endregion
+
+		#region Interface IDisposable
+
+			public void Dispose() { }
+
+		#endregion
 		}
 	}
 }

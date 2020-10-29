@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net.Mime;
 using System.Reflection;
@@ -38,7 +37,6 @@ using Xtate.Scxml;
 namespace Xtate.Test
 {
 	[TestClass]
-	[SuppressMessage(category: "ReSharper", checkId: "RedundantCapturedContext")]
 	public class StateMachinePersistenceTest
 	{
 		private IStateMachine                _allStateMachine       = default!;

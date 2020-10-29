@@ -17,7 +17,6 @@
 
 #endregion
 
-using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -35,19 +34,18 @@ namespace Xtate.Service
 			return new ValueTask<DataModelValue>(task);
 		}
 
-		[SuppressMessage(category: "ReSharper", checkId: "AccessToDisposedClosure", Justification = "Form closed by external event")]
 		private DataModelValue Show()
 		{
-			var controls = Content.AsObjectOrEmpty()["controls"].AsArrayOrEmpty();
+			var controls = Content.AsListOrEmpty()["controls"].AsListOrEmpty();
 
 			using var form = new InputForm();
 
 			foreach (var control in controls)
 			{
-				var fieldObj = control.AsObjectOrEmpty();
-				var name = fieldObj["name"].AsStringOrDefault();
-				var location = fieldObj["location"].AsStringOrDefault();
-				var type = fieldObj["type"].AsStringOrDefault();
+				var fieldList = control.AsListOrEmpty();
+				var name = fieldList["name"].AsStringOrDefault();
+				var location = fieldList["location"].AsStringOrDefault();
+				var type = fieldList["type"].AsStringOrDefault();
 
 				form.AddInput(name, location, type);
 			}
@@ -58,15 +56,15 @@ namespace Xtate.Service
 
 			Application.Run(form);
 
-			var result = new DataModelObject();
+			var result = new DataModelList();
 
 			if (form.DialogResult == DialogResult.OK)
 			{
 				result.Add(key: "status", value: "ok");
 
-				if (form.Result is { })
+				if (form.Result is not null)
 				{
-					var parameters = new DataModelObject();
+					var parameters = new DataModelList();
 
 					foreach (var pair in form.Result)
 					{
@@ -77,7 +75,7 @@ namespace Xtate.Service
 				}
 				else
 				{
-					result.Add(key: "parameters", DataModelObject.Empty);
+					result.Add(key: "parameters", DataModelList.Empty);
 				}
 			}
 			else

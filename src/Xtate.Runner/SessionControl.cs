@@ -44,8 +44,8 @@ namespace Xtate.Runner
 			private set
 			{
 				_sessionId = value;
-				startButton.Enabled = value == null;
-				stopButton.Enabled = value != null;
+				startButton.Enabled = value is null;
+				stopButton.Enabled = value is not null;
 			}
 		}
 
@@ -58,12 +58,12 @@ namespace Xtate.Runner
 		}
 
 		public void AddLog(string message,
-						   DataModelObject? dataModelObject,
+						   DataModelList? list,
 						   string? dataModelAsText,
 						   string? dataAsText,
 						   Exception? exception)
 		{
-			log.Items.Add(new LogItem(message, dataModelObject, dataModelAsText, dataAsText, exception));
+			log.Items.Add(new LogItem(message, list, dataModelAsText, dataAsText, exception));
 		}
 
 		public void AssignToSession(string sessionId)
@@ -75,7 +75,7 @@ namespace Xtate.Runner
 
 		private async void Start_Click(object sender, EventArgs e)
 		{
-			if (SessionId != null)
+			if (SessionId is not null)
 			{
 				return;
 			}
@@ -84,8 +84,10 @@ namespace Xtate.Runner
 			await _host.StartStateMachineAsync(scxml.Text, Source, SessionId);
 		}
 
-		private void Stop_Click(object sender, EventArgs e)
+		private async void Stop_Click(object sender, EventArgs e)
 		{
+			await _host.DestroyStateMachineAsync(SessionId!);
+
 			Stop();
 		}
 
@@ -93,59 +95,57 @@ namespace Xtate.Runner
 
 		private void Log_SelectedIndexChanged(object sender, EventArgs e)
 		{
-			if (!(log.SelectedItem is LogItem selectedItem))
+			if (log.SelectedItem is LogItem selectedItem)
 			{
-				return;
-			}
-
-            if (IfErrorPresent(selectedItem, out var error))
-			{
-				dataModel.Text = selectedItem.DataModelAsText + @"
+				if (IfErrorPresent(selectedItem, out var error))
+				{
+					dataModel.Text = selectedItem.DataModelAsText + @"
 
 EXCEPTION:
 
 " + error;
-			}
-			else if (selectedItem.DataAsText != null)
-			{
-				dataModel.Text = selectedItem.DataModelAsText + @"
+				}
+				else if (selectedItem.DataAsText is not null)
+				{
+					dataModel.Text = selectedItem.DataModelAsText + @"
 
 DATA:
 
 " + selectedItem.DataAsText;
-			}
-			else
-			{
-				dataModel.Text = selectedItem.DataModelAsText;
+				}
+				else
+				{
+					dataModel.Text = selectedItem.DataModelAsText;
+				}
 			}
 		}
 
-		private bool IfErrorPresent(LogItem logItem, out string? error)
+		private static bool IfErrorPresent(LogItem logItem, out string? error)
 		{
-			if (logItem.Exception != null)
+			if (logItem.Exception is not null)
 			{
 				error = logItem.Exception.ToString();
 				return true;
 			}
 
 			error = null;
-			if (logItem.DataModel == null)
+			if (logItem.DataModel is null)
 			{
 				return false;
 			}
 
 			var dataModelValue = logItem.DataModel["_event"];
-			DataModelObject dataModelObject = dataModelValue.AsObjectOrEmpty();
-			dataModelValue = dataModelObject["name"];
-			string? str1 = dataModelValue.AsStringOrDefault();
-			if (str1 == null || !str1.StartsWith("error."))
+			DataModelList list = dataModelValue.AsListOrEmpty();
+			dataModelValue = list["name"];
+			var str1 = dataModelValue.AsStringOrDefault();
+			if (str1 is null || !str1.StartsWith("error."))
 			{
 				return false;
 			}
 
-			dataModelValue = dataModelObject["data"];
-			dataModelValue = dataModelValue.AsObjectOrEmpty()["text"];
-			string? str2 = dataModelValue.AsStringOrDefault();
+			dataModelValue = list["data"];
+			dataModelValue = dataModelValue.AsListOrEmpty()["text"];
+			var str2 = dataModelValue.AsStringOrDefault();
 			error = str2;
 			return true;
 		}

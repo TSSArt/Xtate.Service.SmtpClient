@@ -5,7 +5,8 @@
 
   <PropertyGroup>
     <UseProjectReference>true</UseProjectReference>
-    <LangVersion Condition="$(LangVersion)==''">latest</LangVersion>
+    <LangVersion Condition="$(LangVersion)==''">preview</LangVersion>
+    <AnalysisLevel Condition="$(AnalysisLevel)==''">preview</AnalysisLevel>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0' or '$(TargetFramework)'=='net461'">

@@ -54,7 +54,7 @@ namespace Xtate.CustomAction
 			return _op switch
 			{
 					"emailMatch" => new DataModelValue(EmailMatch(arguments[Left].AsStringOrDefault(), arguments[Right])),
-					_ => Infrastructure.UnexpectedValue<DataModelValue>()
+					_ => Infrastructure.UnexpectedValue<DataModelValue>(_op)
 			};
 		}
 
@@ -82,9 +82,9 @@ namespace Xtate.CustomAction
 				return EmailMatch(email, value.AsString());
 			}
 
-			if (value.Type == DataModelValueType.Array)
+			if (value.Type == DataModelValueType.List)
 			{
-				return value.AsArrayOrEmpty().Any(i => EmailMatch(email, i.AsStringOrDefault()));
+				return value.AsListOrEmpty().Any(i => EmailMatch(email, i.AsStringOrDefault()));
 			}
 
 			return false;

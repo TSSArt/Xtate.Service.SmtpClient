@@ -61,7 +61,7 @@ namespace Xtate.Test
 		public void CycleReferenceTest()
 		{
 			// arrange
-			var dict = new DataModelObject();
+			var dict = new DataModelList();
 			dict["self"] = dict;
 
 			// act => assert
@@ -83,10 +83,10 @@ namespace Xtate.Test
 		{
 			// arrange
 			var undefined = default(DataModelValue);
-			var obj = new DataModelObject { ["undef"] = undefined };
+			var list = new DataModelList { ["undef"] = undefined };
 
 			// act
-			var json = DataModelConverter.ToJson(obj);
+			var json = DataModelConverter.ToJson(list);
 
 			// assert
 			Assert.AreEqual(expected: "{}", json);
@@ -97,7 +97,7 @@ namespace Xtate.Test
 		{
 			// arrange
 			var undefined = default(DataModelValue);
-			var arr = new DataModelArray { undefined };
+			var arr = new DataModelList { undefined };
 
 			// act => assert
 			Assert.ThrowsException<JsonException>(() => DataModelConverter.ToJson(arr));
@@ -121,10 +121,10 @@ namespace Xtate.Test
 		{
 			// arrange
 			var undefined = default(DataModelValue);
-			var obj = new DataModelObject { ["undef"] = undefined };
+			var list = new DataModelList { ["undef"] = undefined };
 
 			// act
-			var json = DataModelConverter.ToJson(obj, DataModelConverterOptions.UndefinedToNull);
+			var json = DataModelConverter.ToJson(list, DataModelConverterOptions.UndefinedToNull);
 
 			// assert
 			Assert.AreEqual(expected: "{\"undef\":null}", json);
@@ -135,7 +135,7 @@ namespace Xtate.Test
 		{
 			// arrange
 			var undefined = default(DataModelValue);
-			var arr = new DataModelArray { undefined };
+			var arr = new DataModelList { undefined };
 
 			// act
 			var json = DataModelConverter.ToJson(arr, DataModelConverterOptions.UndefinedToNull);
@@ -162,10 +162,10 @@ namespace Xtate.Test
 		{
 			// arrange
 			var undefined = default(DataModelValue);
-			var obj = new DataModelObject { ["undef"] = undefined };
+			var list = new DataModelList { ["undef"] = undefined };
 
 			// act
-			var json = DataModelConverter.ToJson(obj, DataModelConverterOptions.UndefinedToSkip);
+			var json = DataModelConverter.ToJson(list, DataModelConverterOptions.UndefinedToSkip);
 
 			// assert
 			Assert.AreEqual(expected: "{}", json);
@@ -176,7 +176,7 @@ namespace Xtate.Test
 		{
 			// arrange
 			var undefined = default(DataModelValue);
-			var arr = new DataModelArray { undefined };
+			var arr = new DataModelList { undefined };
 
 			// act
 			var json = DataModelConverter.ToJson(arr, DataModelConverterOptions.UndefinedToSkip);
@@ -203,10 +203,10 @@ namespace Xtate.Test
 		{
 			// arrange
 			var undefined = default(DataModelValue);
-			var obj = new DataModelObject { ["undef"] = undefined };
+			var list = new DataModelList { ["undef"] = undefined };
 
 			// act
-			var json = DataModelConverter.ToJson(obj, DataModelConverterOptions.UndefinedToSkipOrNull);
+			var json = DataModelConverter.ToJson(list, DataModelConverterOptions.UndefinedToSkipOrNull);
 
 			// assert
 			Assert.AreEqual(expected: "{}", json);
@@ -217,7 +217,7 @@ namespace Xtate.Test
 		{
 			// arrange
 			var undefined = default(DataModelValue);
-			var arr = new DataModelArray { undefined };
+			var arr = new DataModelList { undefined };
 
 			// act
 			var json = DataModelConverter.ToJson(arr, DataModelConverterOptions.UndefinedToSkipOrNull);
@@ -357,8 +357,8 @@ namespace Xtate.Test
 			var val = DataModelConverter.FromJson("{\"key\":\"val\"}");
 
 			// assert
-			Assert.AreEqual(DataModelValueType.Object, val.Type);
-			Assert.AreEqual(expected: "val", val.AsObject()["key"]);
+			Assert.AreEqual(DataModelValueType.List, val.Type);
+			Assert.AreEqual(expected: "val", val.AsList()["key"]);
 		}
 
 		[TestMethod]
@@ -368,9 +368,9 @@ namespace Xtate.Test
 			var val = DataModelConverter.FromJson("[1]");
 
 			// assert
-			Assert.AreEqual(DataModelValueType.Array, val.Type);
-			Assert.AreEqual(expected: 1, val.AsArray().Count);
-			Assert.AreEqual(expected: 1, val.AsArray()[0]);
+			Assert.AreEqual(DataModelValueType.List, val.Type);
+			Assert.AreEqual(expected: 1, val.AsList().Count);
+			Assert.AreEqual(expected: 1, val.AsList()[0]);
 		}
 
 		[TestMethod]
@@ -457,7 +457,7 @@ namespace Xtate.Test
 		public void WriteArrayTest()
 		{
 			// arrange
-			var arr = new DataModelArray { 1 };
+			var arr = new DataModelList { 1 };
 
 			// act
 			var json = DataModelConverter.ToJson(arr);
@@ -470,10 +470,10 @@ namespace Xtate.Test
 		public void WriteObjectTest()
 		{
 			// arrange
-			var obj = new DataModelObject { ["undef"] = default, ["num"] = 1 };
+			var list = new DataModelList { ["undef"] = default, ["num"] = 1 };
 
 			// act
-			var json = DataModelConverter.ToJson(obj);
+			var json = DataModelConverter.ToJson(list);
 
 			// assert
 			Assert.AreEqual(expected: "{\"num\":1}", json);

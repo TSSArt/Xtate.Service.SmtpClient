@@ -102,8 +102,7 @@ namespace Xtate
 
 					break;
 
-				case DataModelValueType.Object:
-				case DataModelValueType.Array:
+				case DataModelValueType.List:
 					logger = logger.ForContext(propertyName: @"Data", data.ToObject(), destructureObjects: true)
 								   .ForContext(propertyName: @"DataText", loggerContext.ConvertToText(data));
 
@@ -119,7 +118,7 @@ namespace Xtate
 					break;
 
 				default:
-					Infrastructure.UnexpectedValue();
+					Infrastructure.UnexpectedValue(data.Type);
 					break;
 			}
 
@@ -140,7 +139,7 @@ namespace Xtate
 			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.Error, IsVerbose))
 								.ForContext(propertyName: @"ErrorType", errorType);
 
-			if (sourceEntityId is { })
+			if (sourceEntityId is not null)
 			{
 				logger = logger.ForContext(propertyName: @"SourceEntityId", sourceEntityId);
 			}

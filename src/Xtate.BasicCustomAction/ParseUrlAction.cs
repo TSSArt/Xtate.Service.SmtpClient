@@ -55,7 +55,7 @@ namespace Xtate.CustomAction
 				return values.Count > 0 ? values[0] : DataModelValue.Null;
 			}
 
-			var result = new DataModelObject();
+			var result = new DataModelList();
 
 			foreach (var pair in parameters)
 			{

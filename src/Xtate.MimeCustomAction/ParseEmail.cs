@@ -27,7 +27,7 @@ using System.Xml;
 using HtmlAgilityPack;
 using MimeKit;
 
-#if NETSTANDARD2_1
+#if NET5_0
 using System.Buffers;
 
 #endif
@@ -66,14 +66,14 @@ namespace Xtate.CustomAction
 			var attr = args[Attr].AsStringOrDefault();
 			var pattern = args[Regex].AsStringOrDefault();
 
-			return source is { } ? Parse(source, xpath, attr, pattern) : DataModelValue.Null;
+			return source is not null ? Parse(source, xpath, attr, pattern) : DataModelValue.Null;
 		}
 
 		private static DataModelValue Parse(string content, string? xpath, string? attr, string? pattern)
 		{
 			MimeMessage message;
 
-#if NETSTANDARD2_1
+#if NET5_0
 			var bytes = ArrayPool<byte>.Shared.Rent(Encoding.ASCII.GetMaxByteCount(content.Length));
 			try
 			{
@@ -94,7 +94,7 @@ namespace Xtate.CustomAction
 
 			var text = message.TextBody;
 			var html = message.HtmlBody;
-			if (html is { })
+			if (html is not null)
 			{
 				var htmlDocument = new HtmlDocument();
 
@@ -128,22 +128,22 @@ namespace Xtate.CustomAction
 
 			var groupNames = regex.GetGroupNames();
 
-			var obj = new DataModelObject();
+			var list = new DataModelList();
 			foreach (var name in groupNames)
 			{
-				obj.Add(name, match.Groups[name].Value);
+				list.Add(name, match.Groups[name].Value);
 			}
 
-			return obj;
+			return list;
 		}
 
 		private static DataModelValue CaptureEntry(HtmlDocument htmlDocument, string? xpath, string? attr, string? pattern)
 		{
-			var nodes = xpath is { } ? htmlDocument.DocumentNode.SelectNodes(xpath) : Enumerable.Repeat(htmlDocument.DocumentNode, count: 1);
+			var nodes = xpath is not null ? htmlDocument.DocumentNode.SelectNodes(xpath) : Enumerable.Repeat(htmlDocument.DocumentNode, count: 1);
 
 			foreach (var node in nodes)
 			{
-				var text = attr is { } ? node.GetAttributeValue(attr, def: null) : node.InnerHtml;
+				var text = attr is not null ? node.GetAttributeValue(attr, def: null) : node.InnerHtml;
 
 				if (string.IsNullOrWhiteSpace(text))
 				{
@@ -170,13 +170,13 @@ namespace Xtate.CustomAction
 
 				var groupNames = regex.GetGroupNames();
 
-				var obj = new DataModelObject();
+				var list = new DataModelList();
 				foreach (var name in groupNames)
 				{
-					obj.Add(name, match.Groups[name].Value);
+					list.Add(name, match.Groups[name].Value);
 				}
 
-				return obj;
+				return list;
 			}
 
 			return default;
