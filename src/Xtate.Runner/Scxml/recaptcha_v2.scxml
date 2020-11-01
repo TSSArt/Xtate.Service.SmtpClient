@@ -8,10 +8,12 @@
   <state id="init">
 
     <datamodel>
-      <data id="args" />
+      <data id="args">
+        <sitekey xmlns=""/>
+      </data>
       <data id="content">
         <document xmlns="">
-          &lt;html xmlns=&quot;&quot;&gt;
+          &lt;html&gt;
           &lt;head&gt;
           &lt;script src=&quot;https://www.google.com/recaptcha/api.js&quot; async=&quot;&quot; defer=&quot;&quot;&gt;&lt;/script&gt;
           &lt;script type=&quot;text/javascript&quot;&gt;
@@ -30,8 +32,8 @@
     </datamodel>
 
     <onentry>
-      <assign location="$args" expr="$sitekey" type="firstchild" />
-      <basic:format templateexpr="$content/document" argsexpr="$args/node()" result="$content/document" />
+      <assign location="$args/sitekey" expr="$sitekey" />
+      <basic:format templateexpr="$content/document" argsexpr="$args" result="$content/document" />
     </onentry>
 
     <transition target="recaptchaV2" />
@@ -51,14 +53,14 @@
 
     <invoke type="scxml" src="call-dialog.scxml">
       <param name="type" expr="'browser'" />
-      <param name="source" expr="$url/text()" />
-      <param name="content" expr="$content/node()" />
+      <param name="source" expr="$url" />
+      <param name="content" expr="$content" />
       <param name="retryMs" expr="60000" />
     </invoke>
 
     <transition event="done.invoke.recaptchaV2" cond="$_event/data/status = 'ok'" target="done">
       <assign location="response" expr="string($_event/data/parameters/g-recaptcha-response)" />
-      <mid:storage location="$_event/data/cookies/node()" operation="set" variable="cookies" />
+      <mid:storage location="$_event/data/cookies" operation="set" variable="cookies" />
     </transition>
     <transition event="done.invoke.recaptchaV2" target="cancel" />
     <transition event="error" target="error" />
@@ -68,7 +70,7 @@
   <final id="done">
     <donedata>
       <param name="status" expr="'ok'" />
-      <param name="response" expr="$response/node()" />
+      <param name="response" expr="$response" />
     </donedata>
   </final>
 
@@ -81,7 +83,7 @@
   <final id="error">
     <donedata>
       <param name="status" expr="'error'" />
-      <param name="error" expr="$_event/data/node()" />
+      <param name="error" expr="$_event/data" />
     </donedata>
   </final>
 </scxml>

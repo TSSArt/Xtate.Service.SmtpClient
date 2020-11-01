@@ -14,10 +14,10 @@
 
     <onentry>
       <send idlocation="$sendId" type="http" targetexpr="$_x/configuration/uiEndpoint" event="show">
-        <param name="id" expr="$sendId/text()" />
-        <param name="type" expr="$type/text()" />
-        <param name="source" expr="$source/text()" />
-        <param name="content" expr="$content/node()" />
+        <param name="id" expr="$sendId" />
+        <param name="type" expr="$type" />
+        <param name="source" expr="$source" />
+        <param name="content" expr="$content" />
         <param name="event" expr="'complete'" />
       </send>
       <send id="timeout" event="timeout" type="scxml" targetexpr="concat('#_scxml_', $_sessionid)" delayexpr="number(retryMs)" />
@@ -25,7 +25,7 @@
 
     <onexit>
       <send type="http" targetexpr="$_x/configuration/uiEndpoint" event="cancel">
-        <param name="id" expr="$sendId/text()" />
+        <param name="id" expr="$sendId" />
       </send>
       <cancel sendid="timeout" />
     </onexit>
@@ -38,14 +38,14 @@
 
   <final id="complete">
     <donedata>
-      <content expr="$_event/data/result/node()" />
+      <content expr="$_event/data/result" />
     </donedata>
   </final>
 
   <final id="error">
     <donedata>
       <param name="status" expr="'error'" />
-      <param name="error" expr="$_event/data/node()" />
+      <param name="error" expr="$_event/data" />
     </donedata>
   </final>
 </scxml>

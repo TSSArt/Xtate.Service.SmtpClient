@@ -1,4 +1,4 @@
-<scxml xmlns="http://www.w3.org/2005/07/scxml" version="1.0" name="tssart.com" datamodel="xpath">
+<scxml xmlns="http://www.w3.org/2005/07/scxml" xmlns:x="http://xtate.net/xpath" version="1.0" name="tssart.com" datamodel="xpath">
   <parallel>
     <!-- BEGIN of Procedures -->
     <state id="procedures">
@@ -9,10 +9,33 @@
       <transition event="procedures.signal.ProcedureA" target="procedures.ProcedureA" type="internal" />
 
       <state id="procedures.ProcedureA">
-        <state>
+        <datamodel>
+          <data id="const.capture">
+            <sitekey>
+              <xpath>.//script[@type='text/javascript']</xpath>
+              <regex>[\'\"]sitekey[\'\"]\s*:\s*[\'\"](?&lt;value&gt;[^\'\"]+)\'</regex>
+            </sitekey>
+          </data>
+          <data id="var.sitekey" />
+        </datamodel>
+        <state id="procedures.ProcedureA.0">
+          <invoke type="http" src="https://www.tssart.com/wp-login.php">
+            <param name="capture" location="const.capture" />
+            <finalize>
+              <assign location="cookies" expr="$_event/data/cookies" />
+              <log expr="$_event/data" />
+            </finalize>
+          </invoke>
+          <transition event="done.invoke.procedures.ProcedureA.0" cond="boolean($_event/data/content/sitekey/x:item/value)"
+                      target="procedures.ProcedureA.1">
+            <assign location="var.sitekey" expr="$_event/data/content/sitekey/x:item/value" />
+          </transition>
+          <transition event="done.invoke.procedures.ProcedureA.0" target="procedures.ProcedureA.0" />
+        </state>
+        <state id="procedures.ProcedureA.1">
           <invoke type="scxml" src="recaptcha_v2.scxml">
             <param name="url" expr="'https://www.tssart.com/wp-login.php'" />
-            <param name="sitekey" expr="'6LdI3RYTAAAAAMkmqOQSdno04oej6pDHGFpU3TRG'" />
+            <param name="sitekey" location="var.sitekey" />
             <finalize>
               <log expr="$_event/data" />
             </finalize>
@@ -26,7 +49,7 @@
     <state id="tasks">
       <transition event="tasks.signal.TaskA" target="tasks.queue.TaskA" type="internal" />
       <transition event="tasks.signal.TaskB" target="tasks.queue.TaskB" type="internal" />
-    
+
       <state id="tasks.idle" />
       <parallel id="tasks.execution">
         <state>

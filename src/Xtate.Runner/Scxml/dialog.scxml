@@ -5,7 +5,7 @@
     </datamodel>
 
     <onentry>
-      <assign location="$evt" expr="$_event/node()" />
+      <assign location="$evt" expr="$_event" />
     </onentry>
 
     <transition event="show" target="dialog" />
@@ -16,12 +16,12 @@
     <state id="dialog">
 
       <invoke typeexpr="$evt/data/type" srcexpr="$evt/data/source">
-        <content expr="$evt/data/content/node()" />
+        <content expr="$evt/data/content" />
       </invoke>
 
       <transition event="done.invoke.dialog" target="idle">
         <send typeexpr="$evt/origintype" targetexpr="$evt/origin" eventexpr="$evt/data/event">
-          <param name="result" expr="$_event/data/node()" />
+          <param name="result" expr="$_event/data" />
         </send>
         <assign location="$evt" type="delete" expr="/" />
       </transition>
