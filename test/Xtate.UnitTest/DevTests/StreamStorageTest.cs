@@ -404,5 +404,41 @@ namespace Xtate.Test
 			var bucket2 = new Bucket(streamStorage2);
 			Assert.AreEqual(expected: "v2", bucket2.TryGet(key: "k", out string? value) ? value : null);
 		}
+
+		[TestMethod]
+		public async Task CookiesTest()
+		{
+			var cookie = new DataModelList
+						 {
+								 ["domain"] = "some.domain",
+								 ["path"] = "/",
+								 ["name"] = "ID",
+								 ["value"] = "TEST",
+								 ["httpOnly"] = true,
+								 ["secure"] = true,
+								 ["expires"] = new DateTime(year: 2020, month: 1, day: 1)
+						 };
+
+			var data = new DataModelList { cookie };
+
+			var memoryStream = new MemoryStream();
+			var streamStorage = await StreamStorage.CreateAsync(memoryStream, disposeStream: false);
+			var bucket = new Bucket(streamStorage).Nested("cookies");
+
+			var tracker = new DataModelReferenceTracker(bucket.Nested(Key.DataReferences));
+			bucket.SetDataModelValue(tracker, data);
+			await streamStorage.CheckPoint(level: 0, token: default);
+
+			await streamStorage.Shrink(default);
+
+			await streamStorage.DisposeAsync();
+
+			memoryStream.Position = 0;
+
+			var streamStorage2 = await StreamStorage.CreateAsync(memoryStream, disposeStream: false);
+			var bucket2 = new Bucket(streamStorage2).Nested("cookies");
+			var tracker2 = new DataModelReferenceTracker(bucket2.Nested(Key.DataReferences));
+			var _ = bucket2.GetDataModelValue(tracker2, baseValue: default);
+		}
 	}
 }

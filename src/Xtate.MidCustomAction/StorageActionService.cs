@@ -40,8 +40,13 @@ namespace Xtate.CustomAction
 
 	#endregion
 
-		private static async Task<ITransactionalStorage> GetStorage() =>
-				await new FileStorageProvider(path: "dir").GetTransactionalStorage(partition: null, key: "default", token: default).ConfigureAwait(false);
+		private static async Task<ITransactionalStorage> GetStorage()
+		{
+			var storage = await new FileStorageProvider(path: "dir").GetTransactionalStorage(partition: null, key: "default", token: default).ConfigureAwait(false);
+			await storage.Shrink(default).ConfigureAwait(false);
+
+			return storage;
+		}
 
 		public async ValueTask<DataModelValue> GetValue(string variable, CancellationToken token)
 		{

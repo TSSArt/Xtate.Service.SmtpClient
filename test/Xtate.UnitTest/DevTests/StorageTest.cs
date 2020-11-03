@@ -68,7 +68,6 @@ namespace Xtate.Test
 			return sb.ToString();
 		}
 
-		[SuppressMessage(category: "Style", checkId: "IDE0057:Use range operator", Justification = "")]
 		public static int GetEntriesCount(IStorage storage)
 		{
 			var inMemoryStorage = (InMemoryStorage) storage;
