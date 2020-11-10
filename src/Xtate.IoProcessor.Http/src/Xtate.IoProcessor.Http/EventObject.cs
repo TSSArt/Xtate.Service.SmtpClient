@@ -24,6 +24,14 @@ namespace Xtate
 {
 	internal class EventObject : IEvent
 	{
+		public EventObject(ImmutableArray<IIdentifier> nameParts, Uri? origin, Uri originType, DataModelValue data)
+		{
+			NameParts = nameParts;
+			Origin = origin;
+			OriginType = originType;
+			Data = data.AsConstant();
+		}
+
 		public EventObject(string eventName, Uri? origin, Uri originType, DataModelValue data)
 		{
 			NameParts = EventName.ToParts(eventName);

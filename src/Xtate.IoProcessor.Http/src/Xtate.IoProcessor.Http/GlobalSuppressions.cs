@@ -17,14 +17,8 @@
 
 #endregion
 
-using System.Threading;
-using System.Threading.Tasks;
+// @formatter:off
 
-namespace Xtate.Service
-{
-	public interface IService : IEventDispatcher
-	{
-		Task<DataModelValue> Result { get; }
-		ValueTask            Destroy(CancellationToken token);
-	}
-}
+using System.Diagnostics.CodeAnalysis;
+
+[assembly: SuppressMessage(category: "Design", checkId: "CA1031:Do not catch general exception types", Justification = "<Pending>", Scope = "member", Target = "~M:Xtate.IoProcessor.HttpIoProcessor.Handle(Microsoft.AspNetCore.Http.HttpRequest,System.Threading.CancellationToken)~System.Threading.Tasks.ValueTask{System.Boolean}")]

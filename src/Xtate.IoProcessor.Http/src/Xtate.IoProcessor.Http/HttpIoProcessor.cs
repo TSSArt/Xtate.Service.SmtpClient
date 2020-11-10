@@ -22,7 +22,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
-using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Mime;
@@ -42,10 +41,11 @@ namespace Xtate.IoProcessor
 	[IoProcessor("http://www.w3.org/TR/scxml/#BasicHTTPEventProcessor", Alias = "http")]
 	public sealed class HttpIoProcessor : IoProcessorBase, IAsyncDisposable
 	{
-		private const string MediaTypeTextPlain                 = "text/plain";
-		private const string MediaTypeApplicationJson           = "application/json";
-		private const string MediaTypeApplicationFormUrlEncoded = "application/x-www-form-urlencoded";
-		private const string EventNameParameterName             = "_scxmleventname";
+		private const string ErrorSuffix                        = @"HttpIoProcessor";
+		private const string MediaTypeTextPlain                 = @"text/plain";
+		private const string MediaTypeApplicationJson           = @"application/json";
+		private const string MediaTypeApplicationFormUrlEncoded = @"application/x-www-form-urlencoded";
+		private const string EventNameParameterName             = @"_scxmleventname";
 
 		private static readonly ConcurrentDictionary<IPEndPoint, Host> Hosts      = new ConcurrentDictionary<IPEndPoint, Host>();
 		private static readonly ImmutableArray<IPAddress>              Interfaces = GetInterfaces();
@@ -254,7 +254,7 @@ namespace Xtate.IoProcessor
 			}
 		}
 
-		private async ValueTask<bool> Handle(HttpRequest request)
+		private async ValueTask<bool> Handle(HttpRequest request, CancellationToken token)
 		{
 			SessionId sessionId;
 
@@ -271,8 +271,24 @@ namespace Xtate.IoProcessor
 				return false;
 			}
 
-			var evt = await CreateEvent(request).ConfigureAwait(false);
-			return await IncomingEvent(sessionId, evt, token: default).ConfigureAwait(false);
+			if (!TryGetEventDispatcher(sessionId, out var eventDispatcher))
+			{
+				return false;
+			}
+
+			IEvent? evt;
+			try
+			{
+				evt = await CreateEvent(request).ConfigureAwait(false);
+			}
+			catch (Exception ex)
+			{
+				evt = CreateErrorEvent(request, ex);
+			}
+
+			await eventDispatcher.Send(evt, token).ConfigureAwait(false);
+
+			return true;
 		}
 
 		private static SessionId ExtractSessionId(PathString pathString)
@@ -287,13 +303,46 @@ namespace Xtate.IoProcessor
 			return SessionId.FromString(unescapedString);
 		}
 
+		private IEvent CreateErrorEvent(HttpRequest request, Exception exception)
+		{
+			var requestData = new DataModelList
+							  {
+									  { @"remoteIp", request.HttpContext.Connection.RemoteIpAddress.ToString() },
+									  { @"method", request.Method },
+									  { @"contentType", request.ContentType },
+									  { @"contentLength", (int?)request.ContentLength ?? -1},
+									  { @"path", request.Path.ToString() },
+									  { @"query", request.QueryString.ToString() }
+							  };
+
+			var exceptionData = new DataModelList
+								{
+										{ @"message", exception.Message },
+										{ @"typeName", exception.GetType().Name },
+										{ @"source", exception.Source },
+										{ @"typeFullName", exception.GetType().FullName },
+										{ @"stackTrace", exception.StackTrace },
+										{ @"text", exception.ToString() }
+								};
+
+			var data = new DataModelList
+					   {
+							   { @"request", requestData },
+							   { @"exception", exceptionData },
+					   };
+
+			exceptionData.MakeDeepConstant();
+
+			return new EventObject(EventName.GetErrorPlatform(ErrorSuffix), origin: default, IoProcessorId, data);
+		}
+
 		private async ValueTask<IEvent> CreateEvent(HttpRequest request)
 		{
 			var contentType = request.ContentType is not null ? new ContentType(request.ContentType) : new ContentType();
 			var encoding = contentType.CharSet is not null ? Encoding.GetEncoding(contentType.CharSet) : Encoding.ASCII;
 
 			string body;
-			using (var streamReader = new StreamReader(request.Body, encoding))
+			using (var streamReader = new HttpRequestStreamReader(request.Body, encoding))
 			{
 				body = await streamReader.ReadToEndAsync().ConfigureAwait(false);
 			}
@@ -352,8 +401,9 @@ namespace Xtate.IoProcessor
 
 		private class Host
 		{
-			private readonly IWebHost                       _webHost;
-			private          ImmutableList<HttpIoProcessor> _processors = ImmutableList<HttpIoProcessor>.Empty;
+			private readonly IWebHost _webHost;
+
+			private ImmutableList<HttpIoProcessor> _processors = ImmutableList<HttpIoProcessor>.Empty;
 
 			private Host(IPEndPoint ipEndPoint)
 			{
@@ -364,6 +414,8 @@ namespace Xtate.IoProcessor
 
 				void ConfigureOptions(KestrelServerOptions options)
 				{
+					options.AllowSynchronousIO = false;
+
 					if (ipEndPoint.Address.Equals(IPAddress.Any) || ipEndPoint.Address.Equals(IPAddress.IPv6Any))
 					{
 						options.ListenAnyIP(ipEndPoint.Port);
@@ -385,11 +437,15 @@ namespace Xtate.IoProcessor
 			{
 				foreach (var httpIoProcessor in _processors)
 				{
-					if (await httpIoProcessor.Handle(context.Request).ConfigureAwait(false))
+					if (await httpIoProcessor.Handle(context.Request, context.RequestAborted).ConfigureAwait(false))
 					{
+						context.Response.StatusCode = (int) HttpStatusCode.NoContent;
+
 						return;
 					}
 				}
+
+				context.Response.StatusCode = (int) HttpStatusCode.NotFound;
 			}
 
 			public async ValueTask AddProcessor(HttpIoProcessor httpIoProcessor, CancellationToken token)

@@ -60,7 +60,10 @@ namespace Xtate.Test
 			var _ = srcPrc.ExecuteStateMachineAsync(string.Format(SrcScxml, $"iop:///{U("src")}#_scxml_dstID"), sessionId: "srcID");
 			var dst = srcPrc.ExecuteStateMachineAsync(DstScxml, sessionId: "dstID");
 
-			await srcPrc.Dispatch(SessionId.FromString("srcID"), CreateEventObject("trigger"));
+			if (srcPrc.TryGetEventDispatcher(SessionId.FromString("srcID"), out var eventDispatcher))
+			{
+				await eventDispatcher.Send(CreateEventObject("trigger"));
+			}
 
 			var result = await dst;
 
@@ -82,8 +85,10 @@ namespace Xtate.Test
 			await dstPrc.StartHostAsync();
 			var dst = dstPrc.ExecuteStateMachineAsync(DstScxml, sessionId: "dstID");
 
-
-			await srcPrc.Dispatch(SessionId.FromString("srcID"), CreateEventObject("trigger"));
+			if (srcPrc.TryGetEventDispatcher(SessionId.FromString("srcID"), out var eventDispatcher))
+			{
+				await eventDispatcher.Send(CreateEventObject("trigger"));
+			}
 
 			var result = await dst;
 
@@ -106,8 +111,10 @@ namespace Xtate.Test
 			await dstPrc.StartHostAsync();
 			var dst = dstPrc.ExecuteStateMachineAsync(DstScxml, sessionId: "dstID");
 
-
-			await srcPrc.Dispatch(SessionId.FromString("srcID"), CreateEventObject("trigger"));
+			if (srcPrc.TryGetEventDispatcher(SessionId.FromString("srcID"), out var eventDispatcher))
+			{
+				await eventDispatcher.Send(CreateEventObject("trigger"));
+			}
 
 			var result = await dst;
 
