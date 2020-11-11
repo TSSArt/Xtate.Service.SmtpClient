@@ -17,6 +17,7 @@
 
 #endregion
 
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -34,6 +35,7 @@ namespace Xtate.Service
 			return new ValueTask<DataModelValue>(task);
 		}
 
+		[SuppressMessage(category: "ReSharper", checkId: "AccessToDisposedClosure")]
 		private DataModelValue Show()
 		{
 			var controls = Content.AsListOrEmpty()["controls"].AsListOrEmpty();

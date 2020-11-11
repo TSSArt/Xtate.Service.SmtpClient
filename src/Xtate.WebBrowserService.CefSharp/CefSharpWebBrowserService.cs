@@ -18,6 +18,7 @@
 #endregion
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -33,6 +34,7 @@ namespace Xtate.Service
 			return new ValueTask<DataModelValue>(task);
 		}
 
+		[SuppressMessage(category: "ReSharper", checkId: "AccessToDisposedClosure")]
 		private DataModelValue Show()
 		{
 			var url = Source?.ToString();
