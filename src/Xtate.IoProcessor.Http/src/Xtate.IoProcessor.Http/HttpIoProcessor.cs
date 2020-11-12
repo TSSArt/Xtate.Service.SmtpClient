@@ -22,6 +22,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Mime;
@@ -342,7 +343,7 @@ namespace Xtate.IoProcessor
 			var encoding = contentType.CharSet is not null ? Encoding.GetEncoding(contentType.CharSet) : Encoding.ASCII;
 
 			string body;
-			using (var streamReader = new HttpRequestStreamReader(request.Body, encoding))
+			using (var streamReader = new StreamReader(request.Body, encoding))
 			{
 				body = await streamReader.ReadToEndAsync().ConfigureAwait(false);
 			}
