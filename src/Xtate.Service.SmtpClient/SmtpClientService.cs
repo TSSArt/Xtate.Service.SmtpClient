@@ -26,7 +26,7 @@ namespace Xtate.Service
 	[SimpleService("http://xtate.net/scxml/service/#SMTPClient", Alias = "smtp")]
 	public class SmtpClientService : SimpleServiceBase
 	{
-		public static readonly IServiceFactory Factory = SimpleServiceFactory<SmtpClientService>.Instance;
+		public static IServiceFactory Factory => SimpleServiceFactory<SmtpClientService>.Instance;
 
 		protected override async ValueTask<DataModelValue> Execute()
 		{
