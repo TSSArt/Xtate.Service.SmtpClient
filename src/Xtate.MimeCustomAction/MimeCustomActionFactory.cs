@@ -22,7 +22,7 @@ namespace Xtate.CustomAction
 	[CustomActionProvider("http://xtate.net/scxml/customaction/mime")]
 	public class MimeCustomActionFactory : CustomActionFactoryBase
 	{
-		public static readonly ICustomActionFactory Instance = new MimeCustomActionFactory();
+		public static ICustomActionFactory Instance { get; } = new MimeCustomActionFactory();
 
 		private MimeCustomActionFactory()
 		{

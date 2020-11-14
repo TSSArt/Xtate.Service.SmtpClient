@@ -26,7 +26,7 @@ namespace Xtate.Service
 	[SimpleService("http://xtate.net/scxml/service/#Input", Alias = "input")]
 	public class InputService : SimpleServiceBase
 	{
-		public static readonly IServiceFactory Factory = SimpleServiceFactory<InputService>.Instance;
+		public static IServiceFactory Factory => SimpleServiceFactory<InputService>.Instance;
 
 		protected override ValueTask<DataModelValue> Execute()
 		{

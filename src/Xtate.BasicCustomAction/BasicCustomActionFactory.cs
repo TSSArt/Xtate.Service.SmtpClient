@@ -22,7 +22,7 @@ namespace Xtate.CustomAction
 	[CustomActionProvider("http://xtate.net/scxml/customaction/basic")]
 	public class BasicCustomActionFactory : CustomActionFactoryBase
 	{
-		public static readonly ICustomActionFactory Instance = new BasicCustomActionFactory();
+		public static ICustomActionFactory Instance { get; } = new BasicCustomActionFactory();
 
 		private BasicCustomActionFactory()
 		{
