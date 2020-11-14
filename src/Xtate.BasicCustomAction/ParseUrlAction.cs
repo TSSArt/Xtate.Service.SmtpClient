@@ -48,7 +48,7 @@ namespace Xtate.CustomAction
 			var uri = new Uri(arguments[Url].AsString(), UriKind.RelativeOrAbsolute);
 			var parameters = QueryHelpers.ParseNullableQuery(uri.OriginalString);
 
-			if (arguments[Parameter].AsStringOrDefault() is {} parameter)
+			if (arguments[Parameter].AsStringOrDefault() is { } parameter)
 			{
 				var values = parameters[parameter];
 

@@ -113,7 +113,7 @@ namespace Xtate.Test
 			builder
 					.BeginState((Identifier) "S1")
 					.BeginTransition()
-					.SetCondition(context => throw new InvalidOperationException("some exception"))
+					.SetCondition(_ => throw new InvalidOperationException("some exception"))
 					.EndTransition()
 					.EndState();
 

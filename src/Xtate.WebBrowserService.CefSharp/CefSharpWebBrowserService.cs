@@ -49,7 +49,7 @@ namespace Xtate.Service
 
 			using var registration = StopToken.Register(() => form.Close(DialogResult.Abort, result: default, cookies: default));
 
-			form.Closed += (sender, args) => Application.ExitThread();
+			form.Closed += (_, _) => Application.ExitThread();
 
 			Application.Run(form);
 

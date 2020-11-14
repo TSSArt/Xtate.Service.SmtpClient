@@ -31,7 +31,7 @@ namespace Xtate.CustomAction
 		private const string Result       = "result";
 		private const string ArgsExpr     = "argsexpr";
 
-		private static readonly Regex RegexReplacer = new Regex(pattern: @"\{\#(\w+)\#\}", RegexOptions.Compiled);
+		private static readonly Regex RegexReplacer = new(pattern: @"\{\#(\w+)\#\}", RegexOptions.Compiled);
 
 		public FormatAction(XmlReader xmlReader, ICustomActionContext access) : base(access)
 		{

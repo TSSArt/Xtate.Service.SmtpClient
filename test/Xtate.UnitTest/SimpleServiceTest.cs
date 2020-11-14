@@ -28,7 +28,7 @@ namespace Xtate.Test
 	[SimpleService("passthrough")]
 	public class PassthroughService : SimpleServiceBase
 	{
-		protected override ValueTask<DataModelValue> Execute() => new ValueTask<DataModelValue>(Parameters);
+		protected override ValueTask<DataModelValue> Execute() => new(Parameters);
 	}
 
 	[TestClass]

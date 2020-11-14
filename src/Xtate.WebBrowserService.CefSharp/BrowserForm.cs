@@ -19,7 +19,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using System.Text;
@@ -46,11 +45,9 @@ namespace Xtate.Service
 								 RequestHandler = new CustomRequestHandler(this, url, document)
 						 });
 
-			if (cookieCollection is not null)
+			if (cookieCollection != null)
 			{
 				var cookieManager = Cef.GetGlobalCookieManager();
-
-				Debug.Assert(cookieCollection != null);
 
 				foreach (NetCookie cookie in cookieCollection)
 				{
@@ -66,7 +63,7 @@ namespace Xtate.Service
 		public CookieCollection? Cookies { get; private set; }
 
 		private static Cookie GetCefCookie(NetCookie cookie) =>
-				new Cookie
+				new()
 				{
 						Domain = cookie.Domain,
 						Path = cookie.Path,
@@ -148,7 +145,7 @@ namespace Xtate.Service
 
 		private class CookieVisitor : ICookieVisitor
 		{
-			public CookieCollection CookieCollection { get; } = new CookieCollection();
+			public CookieCollection CookieCollection { get; } = new();
 
 		#region Interface ICookieVisitor
 

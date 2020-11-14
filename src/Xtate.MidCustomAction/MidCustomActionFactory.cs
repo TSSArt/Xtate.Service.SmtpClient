@@ -25,13 +25,13 @@ namespace Xtate.CustomAction
 	[CustomActionProvider("http://xtate.net/scxml/customaction/mid")]
 	public class MidCustomActionFactory : CustomActionFactoryBase
 	{
-		public static ICustomActionFactory Instance { get; } = new MidCustomActionFactory();
-
-		private static readonly StorageActionService StorageActionService = new StorageActionService();
+		private static readonly StorageActionService StorageActionService = new();
 
 		private MidCustomActionFactory()
 		{
 			Register(name: "storage", (xmlReader, context) => new StorageAction(StorageActionService, xmlReader, context));
 		}
+
+		public static ICustomActionFactory Instance { get; } = new MidCustomActionFactory();
 	}
 }

@@ -30,9 +30,9 @@ namespace Xtate.CustomAction
 {
 	internal sealed class StorageActionService : IDisposable
 	{
-		private readonly AsyncReaderWriterLock _asyncReaderWriterLock = new AsyncReaderWriterLock();
+		private static readonly Lazy<Task<ITransactionalStorage>> StorageTask = new(GetStorage, LazyThreadSafetyMode.ExecutionAndPublication);
 
-		private static readonly Lazy<Task<ITransactionalStorage>> StorageTask = new Lazy<Task<ITransactionalStorage>>(GetStorage, LazyThreadSafetyMode.ExecutionAndPublication);
+		private readonly AsyncReaderWriterLock _asyncReaderWriterLock = new();
 
 	#region Interface IDisposable
 
@@ -81,6 +81,7 @@ namespace Xtate.CustomAction
 		}
 
 		[SuppressMessage(category: "Performance", checkId: "CA1822:Mark members as static", Justification = "<Pending>")]
+		[SuppressMessage(category: "ReSharper", checkId: "MemberCanBeMadeStatic.Global")]
 		public string CreateValue(string lastValue, string? rule, string? template)
 		{
 			var query = EnumeratePredefinedValues(template, rule);

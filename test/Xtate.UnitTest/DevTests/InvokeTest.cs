@@ -92,15 +92,14 @@ namespace Xtate.Test
 					   };
 		}
 
-		private static EventObject CreateEventObject(string name, InvokeId? invokeId = default) =>
-				new EventObject(EventType.External, EventName.ToParts(name), data: default, sendId: default, invokeId);
+		private static EventObject CreateEventObject(string name, InvokeId? invokeId = default) => new(EventType.External, EventName.ToParts(name), data: default, sendId: default, invokeId);
 
 		[TestMethod]
 		public async Task SimpleTest()
 		{
 			var invokeUniqueId = "";
 			_externalCommunicationMock.Setup(l => l.StartInvoke(It.IsAny<InvokeData>(), default))
-									  .Callback((InvokeData data, CancellationToken token) => invokeUniqueId = data.InvokeId.InvokeUniqueIdValue);
+									  .Callback((InvokeData data, CancellationToken _) => invokeUniqueId = data.InvokeId.InvokeUniqueIdValue);
 
 			var channel = Channel.CreateUnbounded<IEvent>();
 			var task = StateMachineInterpreter.RunAsync(SessionId.FromString("session1"), _stateMachine, channel, _options);

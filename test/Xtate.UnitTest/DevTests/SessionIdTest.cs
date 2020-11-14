@@ -17,6 +17,7 @@
 
 #endregion
 
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Xtate.Test.DevTests
@@ -80,6 +81,7 @@ namespace Xtate.Test.DevTests
 			AssertInequality(s1, s2);
 		}
 
+		[SuppressMessage(category: "ReSharper", checkId: "ParameterOnlyUsedForPreconditionCheck.Local")]
 		private static void AssertEquality(SessionId s1, SessionId s2)
 		{
 			Assert.IsTrue(s1.GetHashCode() == s2.GetHashCode());
@@ -94,6 +96,7 @@ namespace Xtate.Test.DevTests
 			Assert.IsFalse(s2 != s1);
 		}
 
+		[SuppressMessage(category: "ReSharper", checkId: "ParameterOnlyUsedForPreconditionCheck.Local")]
 		private static void AssertInequality(SessionId s1, SessionId s2)
 		{
 			Assert.IsFalse(ReferenceEquals(s1, s2));

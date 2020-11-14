@@ -22,11 +22,11 @@ namespace Xtate.CustomAction
 	[CustomActionProvider("http://xtate.net/scxml/customaction/mime")]
 	public class MimeCustomActionFactory : CustomActionFactoryBase
 	{
-		public static ICustomActionFactory Instance { get; } = new MimeCustomActionFactory();
-
 		private MimeCustomActionFactory()
 		{
 			Register(name: "parseEmail", (xmlReader, context) => new ParseEmail(xmlReader, context));
 		}
+
+		public static ICustomActionFactory Instance { get; } = new MimeCustomActionFactory();
 	}
 }

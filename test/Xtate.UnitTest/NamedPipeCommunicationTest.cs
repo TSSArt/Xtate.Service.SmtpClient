@@ -50,7 +50,7 @@ namespace Xtate.Test
 
 		private static string U(string v, [CallerMemberName] string? member = default) => v + "_" + member;
 
-		private static EventObject CreateEventObject(string name) => new EventObject(EventType.External, EventName.ToParts(name));
+		private static EventObject CreateEventObject(string name) => new(EventType.External, EventName.ToParts(name));
 
 		[TestMethod]
 		public async Task SameStateMachineHostTest()

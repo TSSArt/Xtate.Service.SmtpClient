@@ -69,7 +69,7 @@ namespace Xtate
 		private static JsonSerializerOptions GetOptions(DataModelConverterOptions options) => options == DataModelConverterOptions.UndefinedNotAllowed ? DefaultOptions : CreateOptions(options);
 
 		private static JsonSerializerOptions CreateOptions(DataModelConverterOptions options) =>
-				new JsonSerializerOptions
+				new()
 				{
 						Converters =
 						{

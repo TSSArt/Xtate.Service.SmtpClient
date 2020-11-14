@@ -105,7 +105,7 @@ namespace Xtate.Test
 
 		private class TestStorage : IStorageProvider
 		{
-			private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, MemoryStream>> _storage = new ConcurrentDictionary<string, ConcurrentDictionary<string, MemoryStream>>();
+			private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, MemoryStream>> _storage = new();
 
 		#region Interface IStorageProvider
 
@@ -113,8 +113,8 @@ namespace Xtate.Test
 			{
 				if (string.IsNullOrEmpty(key)) throw new ArgumentException(message: @"Value cannot be null or empty.", nameof(key));
 
-				var partitionStorage = _storage.GetOrAdd(partition ?? "", p => new ConcurrentDictionary<string, MemoryStream>());
-				var memStream = partitionStorage.GetOrAdd(key, k => new MemoryStream());
+				var partitionStorage = _storage.GetOrAdd(partition ?? "", _ => new ConcurrentDictionary<string, MemoryStream>());
+				var memStream = partitionStorage.GetOrAdd(key, _ => new MemoryStream());
 
 				return await StreamStorage.CreateAsync(memStream, disposeStream: false, token);
 			}
@@ -123,7 +123,7 @@ namespace Xtate.Test
 			{
 				if (string.IsNullOrEmpty(key)) throw new ArgumentException(message: @"Value cannot be null or empty.", nameof(key));
 
-				var partitionStorage = _storage.GetOrAdd(partition ?? "", p => new ConcurrentDictionary<string, MemoryStream>());
+				var partitionStorage = _storage.GetOrAdd(partition ?? "", _ => new ConcurrentDictionary<string, MemoryStream>());
 				partitionStorage.TryRemove(key, out _);
 
 				return default;

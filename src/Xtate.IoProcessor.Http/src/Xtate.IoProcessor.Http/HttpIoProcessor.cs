@@ -48,7 +48,7 @@ namespace Xtate.IoProcessor
 		private const string MediaTypeApplicationFormUrlEncoded = @"application/x-www-form-urlencoded";
 		private const string EventNameParameterName             = @"_scxmleventname";
 
-		private static readonly ConcurrentDictionary<IPEndPoint, Host> Hosts      = new ConcurrentDictionary<IPEndPoint, Host>();
+		private static readonly ConcurrentDictionary<IPEndPoint, Host> Hosts      = new();
 		private static readonly ImmutableArray<IPAddress>              Interfaces = GetInterfaces();
 
 		private readonly Uri        _baseUri;
@@ -311,7 +311,7 @@ namespace Xtate.IoProcessor
 									  { @"remoteIp", request.HttpContext.Connection.RemoteIpAddress.ToString() },
 									  { @"method", request.Method },
 									  { @"contentType", request.ContentType },
-									  { @"contentLength", (int?)request.ContentLength ?? -1},
+									  { @"contentLength", (int?) request.ContentLength ?? -1 },
 									  { @"path", request.Path.ToString() },
 									  { @"query", request.QueryString.ToString() }
 							  };
@@ -329,7 +329,7 @@ namespace Xtate.IoProcessor
 			var data = new DataModelList
 					   {
 							   { @"request", requestData },
-							   { @"exception", exceptionData },
+							   { @"exception", exceptionData }
 					   };
 
 			exceptionData.MakeDeepConstant();
@@ -432,7 +432,7 @@ namespace Xtate.IoProcessor
 				}
 			}
 
-			public static Host Create(IPEndPoint ipEndPoint) => new Host(ipEndPoint);
+			public static Host Create(IPEndPoint ipEndPoint) => new(ipEndPoint);
 
 			private async Task HandleRequest(HttpContext context)
 			{

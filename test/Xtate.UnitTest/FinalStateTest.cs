@@ -32,7 +32,7 @@ namespace Xtate.Test
 			// Arrange
 			var stateMachine = new StateMachineFluentBuilder(BuilderFactory.Instance)
 							   .BeginFinal()
-							   .SetDoneData(ctx => new DataModelValue(22))
+							   .SetDoneData(_ => new DataModelValue(22))
 							   .EndFinal()
 							   .Build();
 

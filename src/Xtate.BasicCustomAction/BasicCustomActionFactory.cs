@@ -22,8 +22,6 @@ namespace Xtate.CustomAction
 	[CustomActionProvider("http://xtate.net/scxml/customaction/basic")]
 	public class BasicCustomActionFactory : CustomActionFactoryBase
 	{
-		public static ICustomActionFactory Instance { get; } = new BasicCustomActionFactory();
-
 		private BasicCustomActionFactory()
 		{
 			Register(name: "base64decode", (xmlReader, context) => new Base64DecodeAction(xmlReader, context));
@@ -31,5 +29,7 @@ namespace Xtate.CustomAction
 			Register(name: "format", (xmlReader, context) => new FormatAction(xmlReader, context));
 			Register(name: "operation", (xmlReader, context) => new OperationAction(xmlReader, context));
 		}
+
+		public static ICustomActionFactory Instance { get; } = new BasicCustomActionFactory();
 	}
 }

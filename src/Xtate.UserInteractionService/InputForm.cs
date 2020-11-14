@@ -41,7 +41,7 @@ namespace Xtate.Service
 								   Text = @"OK"
 						   };
 
-			okButton.Click += (sender, args) => { Close(DialogResult.OK, GetInputResult()); };
+			okButton.Click += (_, _) => { Close(DialogResult.OK, GetInputResult()); };
 
 			var cancelButton = new Button
 							   {
@@ -52,7 +52,7 @@ namespace Xtate.Service
 									   Text = @"Cancel"
 							   };
 
-			cancelButton.Click += (sender, args) => { Close(DialogResult.Cancel, result: default); };
+			cancelButton.Click += (_, _) => { Close(DialogResult.Cancel, result: default); };
 
 			Controls.Add(okButton);
 			Controls.Add(cancelButton);

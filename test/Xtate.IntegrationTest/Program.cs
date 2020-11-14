@@ -27,7 +27,7 @@ namespace Xtate.IntegrationTest
 {
 	internal static class Program
 	{
-		private static readonly Uri ScxmlBase = new Uri("res://Xtate.IntegrationTest/Xtate.IntegrationTest/Scxml/");
+		private static readonly Uri ScxmlBase = new("res://Xtate.IntegrationTest/Xtate.IntegrationTest/Scxml/");
 
 		private static async Task Main(string[] args)
 		{

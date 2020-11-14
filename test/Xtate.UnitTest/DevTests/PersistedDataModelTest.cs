@@ -120,7 +120,7 @@ namespace Xtate.Test
 		[TestMethod]
 		public void SubObjectTest()
 		{
-			var list = new DataModelList { ["t"] = new DataModelValue("test") };
+			var list = new DataModelList { ["t"] = new("test") };
 			_dataModelList["a"] = new DataModelValue(list);
 
 			using var controller = new DataModelListPersistingController(_bucket, _restoredTracker, _restoredDataModelList);
@@ -226,7 +226,7 @@ namespace Xtate.Test
 		{
 			var list = new DataModelList
 					   {
-							   ["prop"] = new DataModelValue("value")
+							   ["prop"] = new("value")
 					   };
 
 			_dataModelList[0] = new DataModelValue(list);
@@ -242,7 +242,7 @@ namespace Xtate.Test
 		{
 			var list = new DataModelList
 					   {
-							   [0] = new DataModelValue("value")
+							   [0] = new("value")
 					   };
 
 			_dataModelList[0] = new DataModelValue(list);
@@ -313,7 +313,7 @@ namespace Xtate.Test
 		{
 			var list = new DataModelList
 					   {
-							   ["t"] = new DataModelValue("test")
+							   ["t"] = new("test")
 					   };
 			list.MakeReadOnly();
 			_dataModelList["a"] = new DataModelValue(list);
@@ -332,7 +332,7 @@ namespace Xtate.Test
 		{
 			var list = new DataModelList
 					   {
-							   [0] = new DataModelValue("test")
+							   [0] = new("test")
 					   };
 			list.MakeReadOnly();
 			_dataModelList["a"] = new DataModelValue(list);
@@ -351,7 +351,7 @@ namespace Xtate.Test
 		{
 			var list = new DataModelList
 					   {
-							   ["t"] = new DataModelValue("test")
+							   ["t"] = new("test")
 					   };
 			_dataModelList.SetInternal(key: "a", caseInsensitive: false, new DataModelValue(list), DataModelAccess.ReadOnly);
 
@@ -367,8 +367,8 @@ namespace Xtate.Test
 		[TestMethod]
 		public void ReferencesNewObjectTest()
 		{
-			var obj1 = new DataModelList { ["prop1-rw"] = new DataModelValue("val1") };
-			var root = new DataModelList { ["obj1"] = new DataModelValue(obj1) };
+			var obj1 = new DataModelList { ["prop1-rw"] = new("val1") };
+			var root = new DataModelList { ["obj1"] = new(obj1) };
 			var _ = new DataModelListPersistingController(_bucket, _restoredTracker, root);
 		}
 
@@ -377,13 +377,13 @@ namespace Xtate.Test
 		{
 			var obj1 = new DataModelList
 					   {
-							   ["prop1-rw"] = new DataModelValue("val1")
+							   ["prop1-rw"] = new("val1")
 					   };
 			obj1.SetInternal(key: "prop1-ro", caseInsensitive: false, new DataModelValue("val1"), DataModelAccess.ReadOnly);
 
 			var obj2 = new DataModelList
 					   {
-							   ["prop2-rw"] = new DataModelValue("val1")
+							   ["prop2-rw"] = new("val1")
 					   };
 			obj1.SetInternal(key: "prop2-ro", caseInsensitive: false, new DataModelValue("val1"), DataModelAccess.ReadOnly);
 
@@ -425,13 +425,13 @@ namespace Xtate.Test
 		{
 			var obj1 = new DataModelList
 					   {
-							   [1] = new DataModelValue("val1")
+							   [1] = new("val1")
 					   };
 			obj1.SetInternal(index: 0, key: null, new DataModelValue("val1"), DataModelAccess.ReadOnly);
 
 			var obj2 = new DataModelList
 					   {
-							   [1] = new DataModelValue("val1")
+							   [1] = new("val1")
 					   };
 			obj1.SetInternal(index: 0, key: null, new DataModelValue("val1"), DataModelAccess.ReadOnly);
 
@@ -470,7 +470,7 @@ namespace Xtate.Test
 		[TestMethod]
 		public void ReferencesRemovedTest()
 		{
-			var obj1 = new DataModelList { ["prop1-rw"] = new DataModelValue("val1") };
+			var obj1 = new DataModelList { ["prop1-rw"] = new("val1") };
 
 			_dataModelList["obj1a"] = new DataModelValue(obj1);
 
