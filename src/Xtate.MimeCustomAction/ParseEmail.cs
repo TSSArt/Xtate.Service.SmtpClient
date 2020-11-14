@@ -27,7 +27,7 @@ using System.Xml;
 using HtmlAgilityPack;
 using MimeKit;
 
-#if NET5_0
+#if !NET461 && !NETSTANDARD2_0
 using System.Buffers;
 
 #endif
@@ -73,7 +73,12 @@ namespace Xtate.CustomAction
 		{
 			MimeMessage message;
 
-#if NET5_0
+#if NET461 || NETSTANDARD2_0
+			using (var stream = new MemoryStream(Encoding.ASCII.GetBytes(content)))
+			{
+				message = MimeMessage.Load(stream);
+			}
+#else
 			var bytes = ArrayPool<byte>.Shared.Rent(Encoding.ASCII.GetMaxByteCount(content.Length));
 			try
 			{
@@ -84,11 +89,6 @@ namespace Xtate.CustomAction
 			finally
 			{
 				ArrayPool<byte>.Shared.Return(bytes);
-			}
-#else
-			using (var stream = new MemoryStream(Encoding.ASCII.GetBytes(content)))
-			{
-				message = MimeMessage.Load(stream);
 			}
 #endif
 

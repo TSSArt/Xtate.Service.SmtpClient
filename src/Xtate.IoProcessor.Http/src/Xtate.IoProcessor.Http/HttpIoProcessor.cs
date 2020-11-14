@@ -280,7 +280,7 @@ namespace Xtate.IoProcessor
 			IEvent? evt;
 			try
 			{
-				evt = await CreateEvent(request).ConfigureAwait(false);
+				evt = await CreateEvent(request, token).ConfigureAwait(false);
 			}
 			catch (Exception ex)
 			{
@@ -337,13 +337,13 @@ namespace Xtate.IoProcessor
 			return new EventObject(EventName.GetErrorPlatform(ErrorSuffix), origin: default, IoProcessorId, data);
 		}
 
-		private async ValueTask<IEvent> CreateEvent(HttpRequest request)
+		private async ValueTask<IEvent> CreateEvent(HttpRequest request, CancellationToken token)
 		{
 			var contentType = request.ContentType is not null ? new ContentType(request.ContentType) : new ContentType();
 			var encoding = contentType.CharSet is not null ? Encoding.GetEncoding(contentType.CharSet) : Encoding.ASCII;
 
 			string body;
-			using (var streamReader = new StreamReader(request.Body, encoding))
+			using (var streamReader = new StreamReader(request.Body.InjectCancellationToken(token), encoding))
 			{
 				body = await streamReader.ReadToEndAsync().ConfigureAwait(false);
 			}

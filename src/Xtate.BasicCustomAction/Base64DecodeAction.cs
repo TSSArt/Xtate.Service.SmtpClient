@@ -22,7 +22,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Xml;
 
-#if NET5_0
+#if !NET461 && !NETSTANDARD2_0
 using System.Buffers;
 
 #endif
@@ -53,7 +53,9 @@ namespace Xtate.CustomAction
 				return content;
 			}
 
-#if NET5_0
+#if NET461 || NETSTANDARD2_0
+			return Encoding.UTF8.GetString(Convert.FromBase64String(content.AsString()));
+#else
 			return OptimizedDecode(content.AsString());
 
 			static string OptimizedDecode(string str)
@@ -73,8 +75,6 @@ namespace Xtate.CustomAction
 					ArrayPool<byte>.Shared.Return(bytes);
 				}
 			}
-#else
-			return Encoding.UTF8.GetString(Convert.FromBase64String(content.AsString()));
 #endif
 		}
 	}

@@ -59,7 +59,7 @@
     </invoke>
 
     <transition event="done.invoke.recaptchaV2" cond="$_event/data/status = 'ok'" target="done">
-      <assign location="response" expr="string($_event/data/parameters/g-recaptcha-response)" />
+      <assign location="response" expr="$_event/data/parameters/g-recaptcha-response" />
       <mid:storage location="$_event/data/cookies" operation="set" variable="cookies" />
     </transition>
     <transition event="done.invoke.recaptchaV2" target="cancel" />

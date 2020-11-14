@@ -32,7 +32,7 @@ namespace Xtate.CustomAction
 	{
 		private readonly AsyncReaderWriterLock _asyncReaderWriterLock = new AsyncReaderWriterLock();
 
-		private readonly Lazy<Task<ITransactionalStorage>> StorageTask = new Lazy<Task<ITransactionalStorage>>(GetStorage, LazyThreadSafetyMode.ExecutionAndPublication);
+		private static readonly Lazy<Task<ITransactionalStorage>> StorageTask = new Lazy<Task<ITransactionalStorage>>(GetStorage, LazyThreadSafetyMode.ExecutionAndPublication);
 
 	#region Interface IDisposable
 
