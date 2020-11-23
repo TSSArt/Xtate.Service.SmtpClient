@@ -34,9 +34,9 @@ namespace Xtate.CustomAction
 		private const string Operation = "op";
 		private const string Result    = "result";
 
-		private readonly string? _op;
+		private string? _op;
 
-		public OperationAction(XmlReader xmlReader, ICustomActionContext access) : base(access)
+		protected override void Initialize(XmlReader xmlReader)
 		{
 			if (xmlReader is null) throw new ArgumentNullException(nameof(xmlReader));
 

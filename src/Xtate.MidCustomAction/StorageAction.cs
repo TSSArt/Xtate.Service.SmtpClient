@@ -33,16 +33,18 @@ namespace Xtate.CustomAction
 		private const string Rule      = "rule";
 		private const string Variable  = "variable";
 
-		private readonly string?              _operation;
-		private readonly string?              _rule;
 		private readonly StorageActionService _storageActionService;
-		private readonly string?              _template;
-		private readonly string?              _variable;
 
-		internal StorageAction(StorageActionService storageActionService, XmlReader xmlReader, ICustomActionContext access) : base(access)
+		private string? _operation;
+		private string? _rule;
+		private string? _template;
+		private string? _variable;
+
+		internal StorageAction(StorageActionService storageActionService) => _storageActionService = storageActionService;
+
+		protected override void Initialize(XmlReader xmlReader)
 		{
 			if (xmlReader is null) throw new ArgumentNullException(nameof(xmlReader));
-			_storageActionService = storageActionService;
 
 			_operation = xmlReader.GetAttribute(Operation);
 			_template = xmlReader.GetAttribute(Template);
@@ -56,8 +58,7 @@ namespace Xtate.CustomAction
 				RegisterResultLocation(xmlReader.GetAttribute(Location));
 			}
 
-			//<storage xmlns="http://xtate.net/scxml/customaction/mid" location="username"
-			//         operation="create" template="userid" rule="[a-z]{1,20}" />
+			//<storage xmlns="http://xtate.net/scxml/customaction/mid" location="username" operation="create" template="userid" rule="[a-z]{1,20}" />
 			//<mid:storage location="username" operation="get" variable="username" />
 			//<mid:storage location="password" operation="set" variable="password" />
 		}

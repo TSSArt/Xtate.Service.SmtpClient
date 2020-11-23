@@ -1,4 +1,4 @@
-﻿#region Copyright © 2019-2020 Sergii Artemenko
+#region Copyright � 2019-2020 Sergii Artemenko
 
 // This file is part of the Xtate project. <https://xtate.net/>
 // 
@@ -17,16 +17,12 @@
 
 #endregion
 
-using Xtate.Annotations;
-
 namespace Xtate.Service
 {
-	[UsedImplicitly]
-	public class Factory : FactoryBase
+	public class CefSharpWebBrowserServiceFactory : WebBrowserServiceFactory
 	{
-		public Factory()
-		{
-			Add(SmtpClientServiceFactory.Instance);
-		}
+		private CefSharpWebBrowserServiceFactory() : base(() => new CefSharpWebBrowserService()) { }
+
+		public static IServiceFactory Instance { get; } = new CefSharpWebBrowserServiceFactory();
 	}
 }

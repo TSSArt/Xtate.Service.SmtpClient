@@ -17,21 +17,23 @@
 
 #endregion
 
-using Xtate.Annotations;
+using System;
 
 namespace Xtate.CustomAction
 {
-	[PublicAPI]
-	[CustomActionProvider("http://xtate.net/scxml/customaction/mid")]
 	public class MidCustomActionFactory : CustomActionFactoryBase
 	{
+		private const string Namespace = "http://xtate.net/scxml/customaction/mid";
+
 		private static readonly StorageActionService StorageActionService = new();
 
-		private MidCustomActionFactory()
-		{
-			Register(name: "storage", (xmlReader, context) => new StorageAction(StorageActionService, xmlReader, context));
-		}
-
 		public static ICustomActionFactory Instance { get; } = new MidCustomActionFactory();
+
+		protected override void Register(ICustomActionCatalog catalog)
+		{
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+
+			catalog.Register(Namespace, name: "storage", () => new StorageAction(StorageActionService));
+		}
 	}
 }

@@ -19,20 +19,18 @@
 
 using System;
 
-namespace Xtate.IoProcessor
+namespace Xtate.Service
 {
-	[AttributeUsage(AttributeTargets.Class, Inherited = false)]
-	public sealed class IoProcessorAttribute : Attribute
+	public class InputServiceFactory : ServiceFactoryBase
 	{
-		public IoProcessorAttribute(string type)
+		public static IServiceFactory Instance { get; } = new InputServiceFactory();
+
+		protected override void Register(IServiceCatalog catalog)
 		{
-			if (string.IsNullOrEmpty(type)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(type));
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 
-			Type = type;
+			catalog.Register(type: "http://xtate.net/scxml/service/#Input", () => new InputService());
+			catalog.Register(type: "input", () => new InputService());
 		}
-
-		public string Type { get; }
-
-		public string? Alias { get; set; }
 	}
 }

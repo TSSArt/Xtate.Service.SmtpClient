@@ -17,16 +17,26 @@
 
 #endregion
 
+using System.Threading;
+using System.Threading.Tasks;
+using System.Xml;
 using Xtate.Annotations;
 
-namespace Xtate.Service
+namespace Xtate.CustomAction
 {
-	[UsedImplicitly]
-	public class Factory : FactoryBase
+	[PublicAPI]
+	public interface ICustomActionCatalog
 	{
-		public Factory()
-		{
-			Add(SmtpClientServiceFactory.Instance);
-		}
+		public delegate CustomActionBase Creator();
+
+		public delegate ICustomActionExecutor ExecutorCreator(ICustomActionContext context, XmlReader reader);
+
+		public delegate ValueTask<ICustomActionExecutor> ExecutorCreatorAsync(IFactoryContext factoryContext, ICustomActionContext customActionContext, XmlReader reader, CancellationToken token);
+
+		void Register(string ns, string name, Creator creator);
+
+		void Register(string ns, string name, ExecutorCreator creator);
+
+		void Register(string ns, string name, ExecutorCreatorAsync creator);
 	}
 }

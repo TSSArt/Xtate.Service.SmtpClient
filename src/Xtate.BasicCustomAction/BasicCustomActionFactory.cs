@@ -17,19 +17,24 @@
 
 #endregion
 
+using System;
+
 namespace Xtate.CustomAction
 {
-	[CustomActionProvider("http://xtate.net/scxml/customaction/basic")]
 	public class BasicCustomActionFactory : CustomActionFactoryBase
 	{
-		private BasicCustomActionFactory()
-		{
-			Register(name: "base64decode", (xmlReader, context) => new Base64DecodeAction(xmlReader, context));
-			Register(name: "parseUrl", (xmlReader, context) => new ParseUrlAction(xmlReader, context));
-			Register(name: "format", (xmlReader, context) => new FormatAction(xmlReader, context));
-			Register(name: "operation", (xmlReader, context) => new OperationAction(xmlReader, context));
-		}
-
 		public static ICustomActionFactory Instance { get; } = new BasicCustomActionFactory();
+
+		protected override void Register(ICustomActionCatalog catalog)
+		{
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+
+			const string ns = "http://xtate.net/scxml/customaction/basic";
+
+			catalog.Register(ns, name: "base64decode", () => new Base64DecodeAction());
+			catalog.Register(ns, name: "parseUrl", () => new ParseUrlAction());
+			catalog.Register(ns, name: "format", () => new FormatAction());
+			catalog.Register(ns, name: "operation", () => new OperationAction());
+		}
 	}
 }

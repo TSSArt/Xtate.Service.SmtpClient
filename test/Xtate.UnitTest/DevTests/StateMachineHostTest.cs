@@ -124,7 +124,7 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 			var options = new StateMachineHostOptions
 						  {
 								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
-								  ServiceFactories = ImmutableArray.Create(HttpClientService.Factory),
+								  ServiceFactories = ImmutableArray.Create(HttpClientServiceFactory.Instance),
 								  ResourceLoaders = ImmutableArray.Create(stateMachineProviderMock.Object)
 						  };
 
@@ -196,7 +196,8 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 			var options = new StateMachineHostOptions
 						  {
 								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
-								  ServiceFactories = ImmutableArray.Create(HttpClientService.Factory, SmtpClientService.Factory /*WebBrowserService.GetFactory<CefSharpWebBrowserService>()*/),
+								  ServiceFactories = ImmutableArray.Create(HttpClientServiceFactory.Instance,
+																		   SmtpClientServiceFactory.Instance /*WebBrowserService.GetFactory<CefSharpWebBrowserService>()*/),
 								  CustomActionFactories = ImmutableArray.Create(BasicCustomActionFactory.Instance, MimeCustomActionFactory.Instance)
 						  };
 

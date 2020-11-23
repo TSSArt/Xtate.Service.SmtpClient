@@ -32,7 +32,7 @@ namespace Xtate.CustomAction
 		private const string ParameterExpr = "parameterexpr";
 		private const string Result        = "result";
 
-		public ParseUrlAction(XmlReader xmlReader, ICustomActionContext access) : base(access)
+		protected override void Initialize(XmlReader xmlReader)
 		{
 			if (xmlReader is null) throw new ArgumentNullException(nameof(xmlReader));
 

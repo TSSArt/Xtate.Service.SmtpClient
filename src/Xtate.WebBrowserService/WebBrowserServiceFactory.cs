@@ -17,16 +17,24 @@
 
 #endregion
 
+using System;
 using Xtate.Annotations;
 
 namespace Xtate.Service
 {
-	[UsedImplicitly]
-	public class Factory : FactoryBase
+	[PublicAPI]
+	public abstract class WebBrowserServiceFactory : ServiceFactoryBase
 	{
-		public Factory()
+		private readonly Func<WebBrowserService> _creator;
+
+		protected WebBrowserServiceFactory(Func<WebBrowserService> creator) => _creator = creator;
+
+		protected override void Register(IServiceCatalog catalog)
 		{
-			Add(SmtpClientServiceFactory.Instance);
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+
+			catalog.Register(type: "http://xtate.net/scxml/service/#WebBrowser", () => _creator());
+			catalog.Register(type: "browser", () => _creator());
 		}
 	}
 }

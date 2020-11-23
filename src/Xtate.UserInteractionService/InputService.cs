@@ -23,11 +23,8 @@ using System.Windows.Forms;
 
 namespace Xtate.Service
 {
-	[SimpleService("http://xtate.net/scxml/service/#Input", Alias = "input")]
-	public class InputService : SimpleServiceBase
+	public class InputService : ServiceBase
 	{
-		public static IServiceFactory Factory => SimpleServiceFactory<InputService>.Instance;
-
 		protected override ValueTask<DataModelValue> Execute()
 		{
 			var task = Task.Factory.StartNew(Show, StopToken, TaskCreationOptions.LongRunning, TaskScheduler.Current);

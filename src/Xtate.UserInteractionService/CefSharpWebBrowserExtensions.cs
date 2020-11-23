@@ -28,7 +28,7 @@ namespace Xtate
 		{
 			if (builder is null) throw new ArgumentNullException(nameof(builder));
 
-			builder.AddServiceFactory(InputService.Factory);
+			builder.AddServiceFactory(InputServiceFactory.Instance);
 
 			return builder;
 		}

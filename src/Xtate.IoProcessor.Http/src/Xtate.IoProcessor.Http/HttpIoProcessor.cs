@@ -39,9 +39,10 @@ using Microsoft.Extensions.Primitives;
 
 namespace Xtate.IoProcessor
 {
-	[IoProcessor("http://www.w3.org/TR/scxml/#BasicHTTPEventProcessor", Alias = "http")]
 	public sealed class HttpIoProcessor : IoProcessorBase, IAsyncDisposable
 	{
+		private const string Id                                 = @"http://www.w3.org/TR/scxml/#BasicHTTPEventProcessor";
+		private const string Alias                              = @"http";
 		private const string ErrorSuffix                        = @"HttpIoProcessor";
 		private const string MediaTypeTextPlain                 = @"text/plain";
 		private const string MediaTypeApplicationJson           = @"application/json";
@@ -55,7 +56,7 @@ namespace Xtate.IoProcessor
 		private readonly PathString _path;
 		private          IPEndPoint _ipEndPoint;
 
-		public HttpIoProcessor(IEventConsumer eventConsumer, Uri baseUri, IPEndPoint ipEndPoint) : base(eventConsumer)
+		public HttpIoProcessor(IEventConsumer eventConsumer, Uri baseUri, IPEndPoint ipEndPoint) : base(eventConsumer, Id, Alias)
 		{
 			_baseUri = baseUri ?? throw new ArgumentNullException(nameof(baseUri));
 			_path = PathString.FromUriComponent(baseUri);

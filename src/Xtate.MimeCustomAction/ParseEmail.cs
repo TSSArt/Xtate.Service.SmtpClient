@@ -46,7 +46,7 @@ namespace Xtate.CustomAction
 		private const string RegexExpr   = "regexexpr";
 		private const string Result      = "result";
 
-		public ParseEmail(XmlReader xmlReader, ICustomActionContext access) : base(access)
+		protected override void Initialize(XmlReader xmlReader)
 		{
 			if (xmlReader is null) throw new ArgumentNullException(nameof(xmlReader));
 

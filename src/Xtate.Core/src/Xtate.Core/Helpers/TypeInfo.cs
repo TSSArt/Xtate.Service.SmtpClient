@@ -17,16 +17,40 @@
 
 #endregion
 
+using System.Reflection;
 using Xtate.Annotations;
 
-namespace Xtate.Service
+namespace Xtate
 {
-	[UsedImplicitly]
-	public class Factory : FactoryBase
+	[PublicAPI]
+	public interface ITypeInfo
 	{
-		public Factory()
+		public string FullTypeName    { get; }
+		public string AssemblyName    { get; }
+		public string AssemblyVersion { get; }
+	}
+
+	[PublicAPI]
+	public class TypeInfo<T> : ITypeInfo
+	{
+		private TypeInfo()
 		{
-			Add(SmtpClientServiceFactory.Instance);
+			var type = typeof(T);
+			var assembly = type.Assembly;
+
+			FullTypeName = type.FullName ?? string.Empty;
+			AssemblyName = assembly.GetName().Name ?? string.Empty;
+			AssemblyVersion = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? string.Empty;
 		}
+
+		public static ITypeInfo Instance { get; } = new TypeInfo<T>();
+
+	#region Interface ITypeInfo
+
+		public string FullTypeName    { get; }
+		public string AssemblyName    { get; }
+		public string AssemblyVersion { get; }
+
+	#endregion
 	}
 }

@@ -28,7 +28,7 @@ namespace Xtate
 		{
 			if (builder is null) throw new ArgumentNullException(nameof(builder));
 
-			builder.AddServiceFactory(WebBrowserService.GetFactory<CefSharpWebBrowserService>());
+			builder.AddServiceFactory(CefSharpWebBrowserServiceFactory.Instance);
 
 			return builder;
 		}

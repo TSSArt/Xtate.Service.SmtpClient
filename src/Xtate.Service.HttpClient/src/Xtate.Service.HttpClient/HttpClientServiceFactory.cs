@@ -21,18 +21,16 @@ using System;
 
 namespace Xtate.Service
 {
-	[AttributeUsage(AttributeTargets.Class, Inherited = false)]
-	public sealed class SimpleServiceAttribute : Attribute
+	public class HttpClientServiceFactory : ServiceFactoryBase
 	{
-		public SimpleServiceAttribute(string type)
+		public static IServiceFactory Instance { get; } = new HttpClientServiceFactory();
+
+		protected override void Register(IServiceCatalog catalog)
 		{
-			if (string.IsNullOrEmpty(type)) throw new ArgumentException(Resources.Exception_Value_cannot_be_null_or_empty_, nameof(type));
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 
-			Type = type;
+			catalog.Register(type: "http://xtate.net/scxml/service/#HTTPClient", () => new HttpClientService());
+			catalog.Register(type: "http", () => new HttpClientService());
 		}
-
-		public string Type { get; }
-
-		public string? Alias { get; set; }
 	}
 }

@@ -25,8 +25,14 @@ using Xtate.Service;
 
 namespace Xtate.Test
 {
-	[SimpleService("passthrough")]
-	public class PassthroughService : SimpleServiceBase
+	public class PassthroughFactoryService : ServiceFactoryBase
+	{
+		public static IServiceFactory Instance { get; } = new PassthroughFactoryService();
+
+		protected override void Register(IServiceCatalog catalog) => catalog.Register(type: "passthrough", () => new PassthroughService());
+	}
+
+	public class PassthroughService : ServiceBase
 	{
 		protected override ValueTask<DataModelValue> Execute() => new(Parameters);
 	}
@@ -58,7 +64,7 @@ namespace Xtate.Test
 			var options = StateMachineHostOptionsTestBuilder.Create(o =>
 																	{
 																		o.DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory);
-																		o.ServiceFactories = ImmutableArray.Create(SimpleServiceFactory<PassthroughService>.Instance);
+																		o.ServiceFactories = ImmutableArray.Create(PassthroughFactoryService.Instance);
 																	});
 
 			await using var stateMachineHost = new StateMachineHost(options);

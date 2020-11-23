@@ -19,18 +19,18 @@
 
 using System;
 
-namespace Xtate.CustomAction
+namespace Xtate.Service
 {
-	[AttributeUsage(AttributeTargets.Class, Inherited = false)]
-	public sealed class CustomActionProviderAttribute : Attribute
+	public class SmtpClientServiceFactory : ServiceFactoryBase
 	{
-		public CustomActionProviderAttribute(string @namespace)
+		public static IServiceFactory Instance { get; } = new SmtpClientServiceFactory();
+
+		protected override void Register(IServiceCatalog catalog)
 		{
-			if (string.IsNullOrEmpty(@namespace)) throw new ArgumentException(Resources.Exception_ValueCannotBeNullOrEmpty, nameof(@namespace));
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 
-			Namespace = @namespace;
+			catalog.Register(type: "http://xtate.net/scxml/service/#SMTPClient", () => new SmtpClientService());
+			catalog.Register(type: "smtp", () => new SmtpClientService());
 		}
-
-		public string Namespace { get; }
 	}
 }

@@ -33,7 +33,7 @@ namespace Xtate.CustomAction
 
 		private static readonly Regex RegexReplacer = new(pattern: @"\{\#(\w+)\#\}", RegexOptions.Compiled);
 
-		public FormatAction(XmlReader xmlReader, ICustomActionContext access) : base(access)
+		protected override void Initialize(XmlReader xmlReader)
 		{
 			if (xmlReader is null) throw new ArgumentNullException(nameof(xmlReader));
 

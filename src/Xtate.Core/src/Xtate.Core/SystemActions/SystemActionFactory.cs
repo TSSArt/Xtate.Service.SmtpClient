@@ -17,20 +17,24 @@
 
 #endregion
 
+using System;
 using Xtate.Annotations;
 
 namespace Xtate.CustomAction
 {
 	[PublicAPI]
-	[CustomActionProvider("http://xtate.net/scxml/system")]
 	public class SystemActionFactory : CustomActionFactoryBase
 	{
-		private SystemActionFactory()
-		{
-			Register(name: "start", (xmlReader, context) => new StartAction(xmlReader, context));
-			Register(name: "destroy", (xmlReader, context) => new DestroyAction(xmlReader, context));
-		}
+		private const string Namespace = "http://xtate.net/scxml/system";
 
 		public static ICustomActionFactory Instance { get; } = new SystemActionFactory();
+
+		protected override void Register(ICustomActionCatalog catalog)
+		{
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+
+			catalog.Register(Namespace, name: "start", (context, reader) => new StartAction(context, reader));
+			catalog.Register(Namespace, name: "destroy", (context, reader) => new DestroyAction(context, reader));
+		}
 	}
 }

@@ -17,16 +17,27 @@
 
 #endregion
 
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Xtate.Annotations;
 
 namespace Xtate.Service
 {
-	[UsedImplicitly]
-	public class Factory : FactoryBase
+	[PublicAPI]
+	public interface IServiceCatalog
 	{
-		public Factory()
-		{
-			Add(SmtpClientServiceFactory.Instance);
-		}
+		public delegate ServiceBase Creator();
+
+		public delegate IService ServiceCreator(Uri? baseUri, InvokeData invokeData, IServiceCommunication serviceCommunication);
+
+		public delegate ValueTask<IService> ServiceCreatorAsync(IFactoryContext factoryContext, Uri? baseUri, InvokeData invokeData, IServiceCommunication serviceCommunication,
+																CancellationToken token);
+
+		void Register(string type, Creator creator);
+
+		void Register(string type, ServiceCreator creator);
+
+		void Register(string type, ServiceCreatorAsync creator);
 	}
 }

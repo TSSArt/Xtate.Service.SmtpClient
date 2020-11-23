@@ -17,16 +17,21 @@
 
 #endregion
 
+using System;
+
 namespace Xtate.CustomAction
 {
-	[CustomActionProvider("http://xtate.net/scxml/customaction/mime")]
 	public class MimeCustomActionFactory : CustomActionFactoryBase
 	{
-		private MimeCustomActionFactory()
-		{
-			Register(name: "parseEmail", (xmlReader, context) => new ParseEmail(xmlReader, context));
-		}
+		private const string Namespace = "http://xtate.net/scxml/customaction/mime";
 
 		public static ICustomActionFactory Instance { get; } = new MimeCustomActionFactory();
+
+		protected override void Register(ICustomActionCatalog catalog)
+		{
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+
+			catalog.Register(Namespace, name: "parseEmail", () => new ParseEmail());
+		}
 	}
 }

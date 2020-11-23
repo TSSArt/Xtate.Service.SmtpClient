@@ -23,11 +23,8 @@ using System.Threading.Tasks;
 
 namespace Xtate.Service
 {
-	[SimpleService("http://xtate.net/scxml/service/#SMTPClient", Alias = "smtp")]
-	public class SmtpClientService : SimpleServiceBase
+	public class SmtpClientService : ServiceBase
 	{
-		public static IServiceFactory Factory => SimpleServiceFactory<SmtpClientService>.Instance;
-
 		protected override async ValueTask<DataModelValue> Execute()
 		{
 			var parameters = Parameters.AsListOrEmpty();
