@@ -17,16 +17,20 @@
 
 #endregion
 
-using Xtate.Annotations;
+using System;
 
 namespace Xtate.Service
 {
-	[UsedImplicitly]
-	public class Factory : FactoryBase
+	public class SmtpClientServiceFactory : ServiceFactoryBase
 	{
-		public Factory()
+		public static IServiceFactory Instance { get; } = new SmtpClientServiceFactory();
+
+		protected override void Register(IServiceCatalog catalog)
 		{
-			Add(SmtpClientServiceFactory.Instance);
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+
+			catalog.Register(type: "http://xtate.net/scxml/service/#SMTPClient", () => new SmtpClientService());
+			catalog.Register(type: "smtp", () => new SmtpClientService());
 		}
 	}
 }

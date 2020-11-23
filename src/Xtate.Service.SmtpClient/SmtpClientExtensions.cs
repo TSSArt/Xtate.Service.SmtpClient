@@ -28,7 +28,7 @@ namespace Xtate
 		{
 			if (builder is null) throw new ArgumentNullException(nameof(builder));
 
-			builder.AddServiceFactory(SmtpClientService.Factory);
+			builder.AddServiceFactory(SmtpClientServiceFactory.Instance);
 
 			return builder;
 		}
