@@ -20,12 +20,10 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Xtate.Annotations;
 
-namespace Xtate
+namespace Xtate.CustomAction
 {
-	[PublicAPI]
-	public sealed class AsyncReaderWriterLock : IDisposable
+	internal sealed class AsyncReaderWriterLock : IDisposable
 	{
 		private readonly SemaphoreSlim _readSemaphore  = new(initialCount: 1, maxCount: 1);
 		private readonly SemaphoreSlim _writeSemaphore = new(initialCount: 1, maxCount: 1);

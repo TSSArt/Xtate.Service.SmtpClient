@@ -95,14 +95,5 @@ namespace Xtate {
                 return ResourceManager.GetString("Exception_Target_is_not_defined", resourceCulture);
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Value cannot be null or empty..
-        /// </summary>
-        internal static string Exception_ValueCannotBeNullOrEmpty {
-            get {
-                return ResourceManager.GetString("Exception_ValueCannotBeNullOrEmpty", resourceCulture);
-            }
-        }
     }
 }
