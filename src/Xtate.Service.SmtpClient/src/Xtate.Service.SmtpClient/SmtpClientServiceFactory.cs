@@ -29,8 +29,8 @@ namespace Xtate.Service
 		{
 			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 
-			catalog.Register(type: "http://xtate.net/scxml/service/#SMTPClient", () => new SmtpClientService());
-			catalog.Register(type: "smtp", () => new SmtpClientService());
+			catalog.Register(type: @"http://xtate.net/scxml/service/#SMTPClient", () => new SmtpClientService());
+			catalog.Register(type: @"smtp", () => new SmtpClientService());
 		}
 	}
 }

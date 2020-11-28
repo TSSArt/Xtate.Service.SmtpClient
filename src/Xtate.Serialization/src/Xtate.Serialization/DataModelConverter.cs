@@ -100,7 +100,7 @@ namespace Xtate
 		{
 			var list = new DataModelList();
 
-			list.SetMetadata(new DataModelList { [TypeMetaKey] = ObjectMetaValue });
+			list.SetMetadata(new DataModelList { { TypeMetaKey, ObjectMetaValue } });
 
 			return list;
 		}
@@ -109,7 +109,7 @@ namespace Xtate
 		{
 			var list = new DataModelList();
 
-			list.SetMetadata(new DataModelList { [TypeMetaKey] = ArrayMetaValue });
+			list.SetMetadata(new DataModelList { { TypeMetaKey, ArrayMetaValue } });
 
 			return list;
 		}

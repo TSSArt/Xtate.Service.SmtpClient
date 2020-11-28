@@ -125,12 +125,12 @@ namespace Xtate
 		{
 			if (key is null)
 			{
-				return "(null)";
+				return @"(null)";
 			}
 
 			if (string.IsNullOrWhiteSpace(key))
 			{
-				return "(" + key + ")";
+				return @"(" + key + @")";
 			}
 
 			return key;
