@@ -20,9 +20,11 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
+using System.Collections.Specialized;
 using System.IO;
 using System.Net.Mime;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -53,14 +55,14 @@ namespace Xtate.Test
 			var xmlNamespaceManager = new XmlNamespaceManager(nt);
 			using var xmlReader = XmlReader.Create(stream!, settings: null, new XmlParserContext(nt, xmlNamespaceManager, xmlLang: default, xmlSpace: default));
 
-			var director = new ScxmlDirector(xmlReader, BuilderFactory.Instance, DefaultErrorProcessor.Instance, xmlNamespaceManager);
+			var director = new ScxmlDirector(xmlReader, BuilderFactory.Instance, new ScxmlDirectorOptions { StateMachineValidator = StateMachineValidator.Instance, NamespaceResolver = xmlNamespaceManager });
 
 
-			_allStateMachine = director.ConstructStateMachine(StateMachineValidator.Instance);
+			_allStateMachine = director.ConstructStateMachine().SynchronousGetResult();
 
 			_resourceLoaderMock = new Mock<IResourceLoader>();
-			var task = new ValueTask<Resource>(new Resource(new Uri("http://none"), new ContentType(), content: "'content'"));
-			_resourceLoaderMock.Setup(e => e.Request(It.IsAny<Uri>(), It.IsAny<CancellationToken>())).Returns(task);
+			var task = new ValueTask<Resource>(new Resource(new MemoryStream(Encoding.ASCII.GetBytes("'content'")), new ContentType()));
+			_resourceLoaderMock.Setup(e => e.Request(It.IsAny<Uri>(), It.IsAny<NameValueCollection>(), It.IsAny<CancellationToken>())).Returns(task);
 			_resourceLoaderMock.Setup(e => e.CanHandle(It.IsAny<Uri>())).Returns(true);
 			_externalCommunication = new Mock<IExternalCommunication>();
 		}

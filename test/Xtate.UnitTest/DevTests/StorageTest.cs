@@ -276,12 +276,12 @@ namespace Xtate.Test
 			var xmlNamespaceManager = new XmlNamespaceManager(nt);
 			using var xmlReader = XmlReader.Create(stream!, settings: null, new XmlParserContext(nt, xmlNamespaceManager, xmlLang: default, xmlSpace: default));
 
-			var director = new ScxmlDirector(xmlReader, BuilderFactory.Instance, DefaultErrorProcessor.Instance, xmlNamespaceManager);
+			var director = new ScxmlDirector(xmlReader, BuilderFactory.Instance, new ScxmlDirectorOptions { StateMachineValidator = StateMachineValidator.Instance, NamespaceResolver = xmlNamespaceManager });
 
-			var stateMachine = director.ConstructStateMachine(StateMachineValidator.Instance);
+			var stateMachine = director.ConstructStateMachine().SynchronousGetResult();
 
 			var dataModelHandler = new EcmaScriptDataModelHandler();
-			var imBuilder = new InterpreterModelBuilder(stateMachine, dataModelHandler!, customActionProviders: default, default!, DefaultErrorProcessor.Instance);
+			var imBuilder = new InterpreterModelBuilder(stateMachine, dataModelHandler!, customActionProviders: default, default!, DefaultErrorProcessor.Instance, baseUri: default);
 			var model = await imBuilder.Build(default);
 			var storeSupport = model.Root.As<IStoreSupport>();
 

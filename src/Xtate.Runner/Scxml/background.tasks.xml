@@ -1,0 +1,80 @@
+﻿<!-- BEGIN of Background Tasks -->
+<!-- datamodel="xpath" -->
+<state id="tasks" xmlns="http://www.w3.org/2005/07/scxml">
+  <transition event="tasks.signal.Task0" target="tasks.queue.Task0" type="internal" />
+  <transition event="tasks.signal.Task1" target="tasks.queue.Task1" type="internal" />
+  <transition event="tasks.signal.Task2" target="tasks.queue.Task2" type="internal" />
+  <transition event="tasks.signal.Task3" target="tasks.queue.Task3" type="internal" />
+  
+  <state id="tasks.idle" />
+
+  <parallel id="tasks.execution">
+    <state>
+      <final id="tasks.final.Task0" />
+      <state id="tasks.queue.Task0">
+        <transition cond="In(tasks.task.Task0)" target="tasks.final.Task0" />
+      </state>
+    </state>
+
+    <state>
+      <final id="tasks.final.Task1" />
+      <state id="tasks.queue.Task1">
+        <transition cond="In(tasks.task.Task1)" target="tasks.final.Task1" />
+      </state>
+    </state>
+
+    <state>
+      <final id="tasks.final.Task2" />
+      <state id="tasks.queue.Task2">
+        <transition cond="In(tasks.task.Task2)" target="tasks.final.Task2" />
+      </state>
+    </state>
+
+    <state>
+      <final id="tasks.final.Task3" />
+      <state id="tasks.queue.Task3">
+        <transition cond="In(tasks.task.Task3)" target="tasks.final.Task3" />
+      </state>
+    </state>
+
+    <state id="tasks.pipelines" initial="tasks.switch">
+      <state id="tasks.switch">
+        <transition cond="In(tasks.queue.Task0)" target="tasks.task.Task0" />
+        <transition cond="In(tasks.queue.Task1)" target="tasks.task.Task1" />
+        <transition cond="In(tasks.queue.Task2)" target="tasks.task.Task2" />
+        <transition cond="In(tasks.queue.Task3)" target="tasks.task.Task3" />
+        <transition target="tasks.pipelines.final" />
+      </state>
+
+      <state id="tasks.task.Task0">
+        <onentry>
+          <raise event="tasks.state.Task0" />
+        </onentry>
+      </state>
+
+      <state id="tasks.task.Task1">
+        <onentry>
+          <raise event="tasks.state.Task1" />
+        </onentry>
+      </state>
+
+      <state id="tasks.task.Task2">
+        <onentry>
+          <raise event="tasks.state.Task2" />
+        </onentry>
+      </state>
+
+      <state id="tasks.task.Task3">
+        <onentry>
+          <raise event="tasks.state.Task3" />
+        </onentry>
+      </state>
+
+      <transition event="done.state.tasks.state.*" target="tasks.switch" type="internal" />
+      <final id="tasks.pipelines.final" />
+    </state>
+
+    <transition event="done.state.tasks.execution" target="tasks.idle" />
+  </parallel>
+</state>
+<!-- END of Background Tasks -->

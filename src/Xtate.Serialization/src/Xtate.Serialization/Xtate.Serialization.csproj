@@ -6,7 +6,6 @@
     <TargetFrameworks>net5.0;netstandard2.0;net461</TargetFrameworks>
     <RootNamespace>Xtate</RootNamespace>
     <Nullable>enable</Nullable>
-    <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <PackageId>Xtate.Serialization</PackageId>
     <RepositoryUrl>https://github.com/TSSArt/Xtate.Serialization</RepositoryUrl>
   </PropertyGroup>
@@ -16,15 +15,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.0">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="3.3.0">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="ConfigureAwaitChecker.Analyzer" Version="4.0.0">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.1" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="3.3.0" PrivateAssets="all" />
+    <PackageReference Include="ConfigureAwaitChecker.Analyzer" Version="4.0.0" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(UseProjectReference)'=='true'">

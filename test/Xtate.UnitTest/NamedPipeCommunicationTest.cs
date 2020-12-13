@@ -57,7 +57,7 @@ namespace Xtate.Test
 		{
 			var srcPrc = new StateMachineHostBuilder().AddNamedIoProcessor(U("src")).AddEcmaScript().Build();
 			await srcPrc.StartHostAsync();
-			var _ = srcPrc.ExecuteStateMachineAsync(string.Format(SrcScxml, $"iop:///{U("src")}#_scxml_dstID"), sessionId: "srcID");
+			await srcPrc.StartStateMachineAsync(string.Format(SrcScxml, $"iop:///{U("src")}#_scxml_dstID"), sessionId: "srcID");
 			var dst = srcPrc.ExecuteStateMachineAsync(DstScxml, sessionId: "dstID");
 
 			if (srcPrc.TryGetEventDispatcher(SessionId.FromString("srcID"), out var eventDispatcher))
@@ -78,11 +78,12 @@ namespace Xtate.Test
 		public async Task SameAppDomainNoPipesTest()
 		{
 			var srcPrc = new StateMachineHostBuilder().AddNamedIoProcessor(U("src")).Build();
-			await srcPrc.StartHostAsync();
-			var _ = srcPrc.ExecuteStateMachineAsync(string.Format(SrcScxml, $"iop:///{U("dst")}#_scxml_dstID"), sessionId: "srcID");
-
 			var dstPrc = new StateMachineHostBuilder().AddNamedIoProcessor(U("dst")).AddEcmaScript().Build();
+
+			await srcPrc.StartHostAsync();
 			await dstPrc.StartHostAsync();
+
+			await srcPrc.StartStateMachineAsync(string.Format(SrcScxml, $"iop:///{U("dst")}#_scxml_dstID"), sessionId: "srcID");
 			var dst = dstPrc.ExecuteStateMachineAsync(DstScxml, sessionId: "dstID");
 
 			if (srcPrc.TryGetEventDispatcher(SessionId.FromString("srcID"), out var eventDispatcher))
@@ -104,11 +105,12 @@ namespace Xtate.Test
 		public async Task SameAppDomainPipesTest()
 		{
 			var srcPrc = new StateMachineHostBuilder().AddNamedIoProcessor(host: "MyHost1", U("src")).Build();
-			await srcPrc.StartHostAsync();
-			var _ = srcPrc.ExecuteStateMachineAsync(string.Format(SrcScxml, $"iop://./{U("dst")}#_scxml_dstID"), sessionId: "srcID");
-
 			var dstPrc = new StateMachineHostBuilder().AddNamedIoProcessor(host: ".", U("dst")).AddEcmaScript().Build();
+
+			await srcPrc.StartHostAsync();
 			await dstPrc.StartHostAsync();
+
+			await srcPrc.StartStateMachineAsync(string.Format(SrcScxml, $"iop://./{U("dst")}#_scxml_dstID"), sessionId: "srcID");
 			var dst = dstPrc.ExecuteStateMachineAsync(DstScxml, sessionId: "dstID");
 
 			if (srcPrc.TryGetEventDispatcher(SessionId.FromString("srcID"), out var eventDispatcher))

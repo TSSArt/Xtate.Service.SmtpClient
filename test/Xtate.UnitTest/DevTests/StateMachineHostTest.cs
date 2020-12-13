@@ -19,12 +19,13 @@
 
 using System;
 using System.Collections.Immutable;
+using System.Collections.Specialized;
 using System.IO;
 using System.Net.Mime;
 using System.Reflection;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Xtate.CustomAction;
@@ -36,21 +37,17 @@ namespace Xtate.Test
 	[TestClass]
 	public class StateMachineHostTest
 	{
-		private static XmlReader GetStateMachineBase(string scxml)
-		{
-			var textReader = new StringReader(scxml);
-			return XmlReader.Create(textReader, new XmlReaderSettings { CloseInput = true });
-		}
+		private static Stream GetStateMachineBase(string scxml) => new MemoryStream(Encoding.ASCII.GetBytes(scxml));
 
-		private static XmlReader GetStateMachine(string xml) => GetStateMachineBase("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' datamodel='ecmascript'>" + xml + "</scxml>");
+		private static Stream GetStateMachine(string xml) => GetStateMachineBase("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' datamodel='ecmascript'>" + xml + "</scxml>");
 
 		[TestMethod]
 		public async Task SimpleTest()
 		{
 			var resourceLoaderMock = new Mock<IResourceLoader>();
 
-			var task = new ValueTask<Resource>(new Resource(new Uri("http://none"), new ContentType(), content: "content"));
-			resourceLoaderMock.Setup(e => e.Request(It.IsAny<Uri>(), It.IsAny<CancellationToken>())).Returns(task);
+			var task = new ValueTask<Resource>(new Resource(new MemoryStream(Encoding.ASCII.GetBytes("content")), new ContentType()));
+			resourceLoaderMock.Setup(e => e.Request(It.IsAny<Uri>(), It.IsAny<NameValueCollection>(), It.IsAny<CancellationToken>())).Returns(task);
 
 			var options = new StateMachineHostOptions
 						  {
@@ -71,8 +68,8 @@ namespace Xtate.Test
 			var stateMachine = GetStateMachine("<datamodel><data id='dmValue' expr='111'/></datamodel><final id='fin'><donedata><content expr='dmValue'/></donedata></final>");
 
 			var stateMachineProviderMock = new Mock<IResourceLoader>();
-			stateMachineProviderMock.Setup(x => x.RequestXmlReader(new Uri("scxml://a"), It.IsAny<XmlReaderSettings>(), It.IsAny<XmlParserContext>(), It.IsAny<CancellationToken>()))
-									.Returns(new ValueTask<XmlReader>(stateMachine));
+			stateMachineProviderMock.Setup(x => x.Request(new Uri("scxml://a"), It.IsAny<NameValueCollection>(), It.IsAny<CancellationToken>()))
+									.Returns(new ValueTask<Resource>(new Resource(stateMachine)));
 
 			stateMachineProviderMock.Setup(x => x.CanHandle(It.IsAny<Uri>())).Returns(true);
 
@@ -118,8 +115,8 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 </final>");
 
 			var stateMachineProviderMock = new Mock<IResourceLoader>();
-			stateMachineProviderMock.Setup(x => x.RequestXmlReader(new Uri("scxml://a"), It.IsAny<XmlReaderSettings>(), It.IsAny<XmlParserContext>(), It.IsAny<CancellationToken>()))
-									.Returns(new ValueTask<XmlReader>(stateMachine));
+			stateMachineProviderMock.Setup(x => x.Request(new Uri("scxml://a"), It.IsAny<NameValueCollection>(), It.IsAny<CancellationToken>()))
+									.Returns(new ValueTask<Resource>(new Resource(stateMachine)));
 
 			var options = new StateMachineHostOptions
 						  {

@@ -45,11 +45,11 @@ namespace Xtate.Service
 								 RequestHandler = new CustomRequestHandler(this, url, document)
 						 });
 
-			if (cookieCollection != null)
+			if (cookieCollection is { } cookies)
 			{
 				var cookieManager = Cef.GetGlobalCookieManager();
 
-				foreach (NetCookie cookie in cookieCollection)
+				foreach (NetCookie cookie in cookies)
 				{
 					var cefCookie = GetCefCookie(cookie);
 

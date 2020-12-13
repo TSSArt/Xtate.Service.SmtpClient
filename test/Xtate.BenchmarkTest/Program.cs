@@ -112,7 +112,7 @@ namespace Xtate.BenchmarkTest
 		[Benchmark]
 		public void HostExecuteStateMachine()
 		{
-			var _ = _host.ExecuteStateMachineAsync(_stateMachine).AsTask().Result;
+			var _ = _host.ExecuteStateMachineAsync(_stateMachine).AsTask().GetAwaiter().GetResult();
 		}
 
 		[Benchmark]
@@ -120,13 +120,13 @@ namespace Xtate.BenchmarkTest
 		{
 			var options = new InterpreterOptions { Logger = _logger };
 			var valueTask = StateMachineInterpreter.RunAsync(SessionId.New(), _stateMachine, _channelReader, options);
-			var _ = valueTask.AsTask().Result;
+			var _ = valueTask.AsTask().GetAwaiter().GetResult();
 		}
 
 		[Benchmark]
 		public void ModelBuilderBuild()
 		{
-			var modelBuilder = new InterpreterModelBuilder(_stateMachine, _dataModelHandler, ImmutableArray<ICustomActionFactory>.Empty, default!, DefaultErrorProcessor.Instance);
+			var modelBuilder = new InterpreterModelBuilder(_stateMachine, _dataModelHandler, ImmutableArray<ICustomActionFactory>.Empty, default!, DefaultErrorProcessor.Instance, baseUri: default);
 			var valueTask = modelBuilder.Build(ImmutableArray<IResourceLoader>.Empty, token: default);
 			valueTask.AsTask().Wait();
 		}
