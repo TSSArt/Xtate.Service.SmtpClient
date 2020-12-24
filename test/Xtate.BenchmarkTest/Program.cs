@@ -55,7 +55,7 @@ namespace Xtate.BenchmarkTest
 	{
 	#region Interface ILogger
 
-		public ValueTask ExecuteLog(ILoggerContext loggerContext, string? label, DataModelValue data, CancellationToken token) => default;
+		public ValueTask ExecuteLog(ILoggerContext loggerContext, LogLevel logLevel, string? message, DataModelValue arguments, Exception? exception, CancellationToken token) => default;
 
 		public ValueTask LogError(ILoggerContext loggerContext, ErrorType errorType, Exception exception, string? sourceEntityId, CancellationToken token) => default;
 

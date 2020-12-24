@@ -112,10 +112,12 @@ namespace Xtate.Runner
 				new();
 
 		ValueTask ILogger.ExecuteLog(ILoggerContext loggerContext,
-									 string? label,
+									 LogLevel logLevel,
+									 string? message,
 									 DataModelValue data,
+									 Exception? exception,
 									 CancellationToken token) =>
-				new(WriteLog(loggerContext, "[LOG] Label: " + label, data: data));
+				new(WriteLog(loggerContext, "[" + logLevel + "] Label: " + message, data: data, exception: exception));
 
 		ValueTask ILogger.LogError(ILoggerContext loggerContext,
 								   ErrorType errorType,

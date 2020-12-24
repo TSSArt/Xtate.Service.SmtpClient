@@ -58,11 +58,19 @@ namespace Xtate
 
 	#region Interface ILogger
 
-		public ValueTask ExecuteLog(ILoggerContext loggerContext, string? label, DataModelValue data, CancellationToken token)
+		public ValueTask ExecuteLog(ILoggerContext loggerContext, LogLevel logLevel, string? message, DataModelValue data, Exception? exception, CancellationToken token)
 		{
 			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 
-			if (!_logger.IsEnabled(LogEventLevel.Information))
+			var logEventLevel = logLevel switch
+			{
+					LogLevel.Info => LogEventLevel.Information,
+					LogLevel.Warning => LogEventLevel.Warning,
+					LogLevel.Error => LogEventLevel.Error,
+					_ => Infrastructure.UnexpectedValue<LogEventLevel>(logLevel)
+			};
+
+			if (!_logger.IsEnabled(logEventLevel))
 			{
 				return default;
 			}
@@ -74,13 +82,13 @@ namespace Xtate
 				case DataModelValueType.Undefined:
 				case DataModelValueType.Null:
 				case DataModelValueType.String when string.IsNullOrWhiteSpace(data.AsString()):
-					if (string.IsNullOrWhiteSpace(label))
+					if (string.IsNullOrWhiteSpace(message))
 					{
-						logger.Information(messageTemplate: @"(empty)");
+						logger.Write(logEventLevel, messageTemplate: @"(empty)", exception);
 					}
 					else
 					{
-						logger.Information(messageTemplate: @"{Label}", label);
+						logger.Write(logEventLevel, messageTemplate: @"{Label}", message, exception);
 					}
 
 					break;
@@ -91,13 +99,13 @@ namespace Xtate
 				case DataModelValueType.String:
 					logger = logger.ForContext(propertyName: @"DataText", loggerContext.ConvertToText(data));
 
-					if (string.IsNullOrWhiteSpace(label))
+					if (string.IsNullOrWhiteSpace(message))
 					{
-						logger.Information(messageTemplate: @"(Data)", data.ToObject());
+						logger.Write(logEventLevel, messageTemplate: @"(Data)", data.ToObject(), exception);
 					}
 					else
 					{
-						logger.Information(messageTemplate: @"{Label}: {Data}", label, data.ToObject());
+						logger.Write(logEventLevel, messageTemplate: @"{Label}: {Data}", message, data.ToObject(), exception);
 					}
 
 					break;
@@ -106,13 +114,13 @@ namespace Xtate
 					logger = logger.ForContext(propertyName: @"Data", data.ToObject(), destructureObjects: true)
 								   .ForContext(propertyName: @"DataText", loggerContext.ConvertToText(data));
 
-					if (string.IsNullOrWhiteSpace(label))
+					if (string.IsNullOrWhiteSpace(message))
 					{
-						logger.Information(messageTemplate: @"(data)");
+						logger.Write(logEventLevel, messageTemplate: @"(data)", exception);
 					}
 					else
 					{
-						logger.Information(messageTemplate: @"{Label}: (data)", label);
+						logger.Write(logEventLevel, messageTemplate: @"{Label}: (data)", message, exception);
 					}
 
 					break;

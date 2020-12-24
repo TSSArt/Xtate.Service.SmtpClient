@@ -1,6 +1,17 @@
-<scxml xmlns="http://www.w3.org/2005/07/scxml" 
-       xmlns:xi="http://www.w3.org/2001/XInclude" 
-       xmlns:x="http://xtate.net/xpath" 
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE scxml [
+<!ENTITY bgtask SYSTEM "bgtask.v1.xml" >
+<!ENTITY bgtask.prefix "bgtask" >
+<!ENTITY bgtask.name1 "1" >
+<!ENTITY bgtask.name2 "2" >
+<!ENTITY bgtask.name3 "3" >
+<!ENTITY bgtask.name4 "4" >
+]>
+
+<scxml xmlns="http://www.w3.org/2005/07/scxml"
+       xmlns:xi="http://www.w3.org/2001/XInclude"
+       xmlns:x="http://xtate.net/xpath"
        version="1.0" name="tssart.com" datamodel="xpath">
   <parallel>
     <!-- BEGIN of Procedures -->
@@ -17,7 +28,7 @@
           <param name="method" expr="'post'" />
           <param name="accept" expr="'application/json'" />
           <finalize>
-            <log expr="$_event"/>
+            <log expr="$_event" />
             <assign location="email" expr="_event.data.content.Email" />
             <assign location="mailKey" expr="_event.data.content.MailKey" />
           </finalize>
@@ -51,7 +62,7 @@
           </transition>
           <transition event="done.invoke.procedures.ProcedureA.0" target="procedures.ProcedureA.0" />
         </state>
-        
+
         <state id="procedures.ProcedureA.1">
           <invoke type="scxml" src="recaptcha_v2.scxml">
             <param name="url" expr="'https://www.tssart.com/wp-login.php'" />
@@ -66,7 +77,7 @@
     </state>
     <!-- END of Procedures -->
 
-    <xi:include href="background.tasks.xml" />
+    &bgtask;
 
   </parallel>
 </scxml>

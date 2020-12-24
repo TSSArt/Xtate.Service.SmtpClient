@@ -35,7 +35,7 @@ namespace Xtate.Test.HostedTests
 			await Host.WaitAllStateMachinesAsync();
 
 			// assert
-			Logger.Verify(l => l.ExecuteLog(It.IsAny<ILoggerContext>(), "StartSystemActionChild", default, It.IsAny<CancellationToken>()));
+			Logger.Verify(l => l.ExecuteLog(It.IsAny<ILoggerContext>(), LogLevel.Info, "StartSystemActionChild", default, default, It.IsAny<CancellationToken>()));
 		}
 	}
 }
