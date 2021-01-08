@@ -20,6 +20,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xtate.Core;
 using Xtate.Persistence;
 
 namespace Xtate.Test

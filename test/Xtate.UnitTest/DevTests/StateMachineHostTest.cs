@@ -28,6 +28,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using Xtate.Core;
 using Xtate.CustomAction;
 using Xtate.DataModel.EcmaScript;
 using Xtate.Service;

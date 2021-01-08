@@ -21,6 +21,7 @@ using System.IO;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xtate.Builder;
+using Xtate.Core;
 using Xtate.Scxml;
 
 namespace Xtate.Test

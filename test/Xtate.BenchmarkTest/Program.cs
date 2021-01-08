@@ -26,6 +26,7 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Engines;
 using BenchmarkDotNet.Running;
 using Xtate.Builder;
+using Xtate.Core;
 using Xtate.CustomAction;
 using Xtate.DataModel;
 using Xtate.DataModel.XPath;

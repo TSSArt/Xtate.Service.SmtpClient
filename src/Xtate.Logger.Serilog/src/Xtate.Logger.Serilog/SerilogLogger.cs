@@ -24,6 +24,7 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Events;
 using Xtate.Annotations;
+using Xtate.Core;
 
 namespace Xtate
 {

@@ -22,6 +22,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xtate.Builder;
+using Xtate.Core;
 
 namespace Xtate.Test
 {
