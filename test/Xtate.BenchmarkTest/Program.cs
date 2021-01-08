@@ -126,8 +126,9 @@ namespace Xtate.BenchmarkTest
 		[Benchmark]
 		public void ModelBuilderBuild()
 		{
-			var modelBuilder = new InterpreterModelBuilder(_stateMachine, _dataModelHandler, ImmutableArray<ICustomActionFactory>.Empty, default!, DefaultErrorProcessor.Instance, baseUri: default);
-			var valueTask = modelBuilder.Build(ImmutableArray<IResourceLoader>.Empty, token: default);
+			var modelBuilder = new InterpreterModelBuilder(_stateMachine, _dataModelHandler, ImmutableArray<ICustomActionFactory>.Empty, default!, default!,
+														   DefaultErrorProcessor.Instance, baseUri: default);
+			var valueTask = modelBuilder.Build(token: default);
 			valueTask.AsTask().Wait();
 		}
 	}

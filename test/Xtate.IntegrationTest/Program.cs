@@ -41,7 +41,7 @@ namespace Xtate.IntegrationTest
 											   .AddCustomActionFactory(BasicCustomActionFactory.Instance)
 											   .AddCustomActionFactory(MimeCustomActionFactory.Instance)
 											   .AddCustomActionFactory(MidCustomActionFactory.Instance)
-											   .AddResourceLoader(ResxResourceLoader.Instance)
+											   .AddResourceLoaderFactory(ResxResourceLoaderFactory.Instance)
 											   .SetConfigurationValue(key: "uiEndpoint", value: "http://localhost:5000/dialog")
 											   .SetConfigurationValue(key: "mailEndpoint", value: "http://mid.dev.tssart.com/MailServer/Web2/api/Mail/")
 											   .Build();

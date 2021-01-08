@@ -39,7 +39,7 @@ namespace Xtate.Test.HostedTests
 
 			Host = new StateMachineHostBuilder()
 				   .AddCustomActionFactory(SystemActionFactory.Instance)
-				   .AddResourceLoader(ResxResourceLoader.Instance)
+				   .AddResourceLoaderFactory(ResxResourceLoaderFactory.Instance)
 				   .SetLogger(Logger.Object)
 				   .Build();
 			return Host.StartHostAsync();

@@ -41,9 +41,9 @@ namespace Xtate.Test
 	[TestClass]
 	public class StateMachinePersistenceTest
 	{
-		private IStateMachine                _allStateMachine       = default!;
-		private Mock<IExternalCommunication> _externalCommunication = default!;
-		private Mock<IResourceLoader>        _resourceLoaderMock    = default!;
+		private IStateMachine                _allStateMachine           = default!;
+		private Mock<IExternalCommunication> _externalCommunication     = default!;
+		private Mock<IResourceLoaderFactory> _resourceLoaderFactoryMock = default!;
 
 		[TestInitialize]
 		public void Initialize()
@@ -55,15 +55,22 @@ namespace Xtate.Test
 			var xmlNamespaceManager = new XmlNamespaceManager(nt);
 			using var xmlReader = XmlReader.Create(stream!, settings: null, new XmlParserContext(nt, xmlNamespaceManager, xmlLang: default, xmlSpace: default));
 
-			var director = new ScxmlDirector(xmlReader, BuilderFactory.Instance, new ScxmlDirectorOptions { StateMachineValidator = StateMachineValidator.Instance, NamespaceResolver = xmlNamespaceManager });
+			var director = new ScxmlDirector(xmlReader, BuilderFactory.Instance,
+											 new ScxmlDirectorOptions { StateMachineValidator = StateMachineValidator.Instance, NamespaceResolver = xmlNamespaceManager });
 
 
 			_allStateMachine = director.ConstructStateMachine().SynchronousGetResult();
 
-			_resourceLoaderMock = new Mock<IResourceLoader>();
 			var task = new ValueTask<Resource>(new Resource(new MemoryStream(Encoding.ASCII.GetBytes("'content'")), new ContentType()));
-			_resourceLoaderMock.Setup(e => e.Request(It.IsAny<Uri>(), It.IsAny<NameValueCollection>(), It.IsAny<CancellationToken>())).Returns(task);
-			_resourceLoaderMock.Setup(e => e.CanHandle(It.IsAny<Uri>())).Returns(true);
+			var loaderMock = new Mock<IResourceLoader>();
+			loaderMock.Setup(e => e.Request(It.IsAny<Uri>(), It.IsAny<NameValueCollection>(), It.IsAny<CancellationToken>()))
+					  .Returns(task);
+			var activatorMock = new Mock<IResourceLoaderFactoryActivator>();
+			activatorMock.Setup(e => e.CreateResourceLoader(It.IsAny<IFactoryContext>(), It.IsAny<CancellationToken>()))
+						 .Returns(new ValueTask<IResourceLoader>(loaderMock.Object));
+			_resourceLoaderFactoryMock = new Mock<IResourceLoaderFactory>();
+			_resourceLoaderFactoryMock.Setup(e => e.TryGetActivator(It.IsAny<IFactoryContext>(), It.IsAny<Uri>(), It.IsAny<CancellationToken>()))
+									  .Returns(new ValueTask<IResourceLoaderFactoryActivator?>(activatorMock.Object));
 			_externalCommunication = new Mock<IExternalCommunication>();
 		}
 
@@ -79,7 +86,7 @@ namespace Xtate.Test
 			var options = new InterpreterOptions
 						  {
 								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
-								  ResourceLoaders = ImmutableArray.Create(_resourceLoaderMock.Object),
+								  ResourceLoaderFactories = ImmutableArray.Create(_resourceLoaderFactoryMock.Object),
 								  PersistenceLevel = PersistenceLevel.ExecutableAction,
 								  StorageProvider = new TestStorage(),
 								  ExternalCommunication = _externalCommunication.Object

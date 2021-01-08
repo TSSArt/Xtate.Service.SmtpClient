@@ -18,9 +18,13 @@
 #endregion
 
 using System;
+using System.Collections.Immutable;
+using System.Collections.Specialized;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -267,6 +271,17 @@ namespace Xtate.Test
 			}
 		}
 
+		private class DummyResourceLoader : IResourceLoaderFactory, IResourceLoaderFactoryActivator, IResourceLoader
+		{
+			public static readonly IResourceLoaderFactory Instance = new DummyResourceLoader();
+
+			public ValueTask<IResourceLoaderFactoryActivator?> TryGetActivator(IFactoryContext factoryContext, Uri uri, CancellationToken token) => new(this);
+
+			public ValueTask<IResourceLoader> CreateResourceLoader(IFactoryContext factoryContext, CancellationToken token) => new(this);
+
+			public ValueTask<Resource> Request(Uri uri, NameValueCollection? headers, CancellationToken token) => new(new Resource(new MemoryStream()));
+		}
+
 		[TestMethod]
 		public async Task StoreWithStorageTest()
 		{
@@ -276,12 +291,15 @@ namespace Xtate.Test
 			var xmlNamespaceManager = new XmlNamespaceManager(nt);
 			using var xmlReader = XmlReader.Create(stream!, settings: null, new XmlParserContext(nt, xmlNamespaceManager, xmlLang: default, xmlSpace: default));
 
-			var director = new ScxmlDirector(xmlReader, BuilderFactory.Instance, new ScxmlDirectorOptions { StateMachineValidator = StateMachineValidator.Instance, NamespaceResolver = xmlNamespaceManager });
+			var director = new ScxmlDirector(xmlReader, BuilderFactory.Instance,
+											 new ScxmlDirectorOptions { StateMachineValidator = StateMachineValidator.Instance, NamespaceResolver = xmlNamespaceManager });
 
 			var stateMachine = director.ConstructStateMachine().SynchronousGetResult();
 
 			var dataModelHandler = new EcmaScriptDataModelHandler();
-			var imBuilder = new InterpreterModelBuilder(stateMachine, dataModelHandler!, customActionProviders: default, default!, DefaultErrorProcessor.Instance, baseUri: default);
+			var securityContext = SecurityContext.Create(SecurityContextType.NewStateMachine, new DeferredFinalizer());
+			var imBuilder = new InterpreterModelBuilder(stateMachine, dataModelHandler, customActionProviders: default, ImmutableArray.Create(DummyResourceLoader.Instance), 
+														securityContext, DefaultErrorProcessor.Instance, baseUri: default);
 			var model = await imBuilder.Build(default);
 			var storeSupport = model.Root.As<IStoreSupport>();
 

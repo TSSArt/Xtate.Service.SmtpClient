@@ -47,7 +47,8 @@ namespace Xtate.Test
 			var xmlNamespaceManager = new XmlNamespaceManager(nt);
 			var xmlReader = XmlReader.Create(stream!, settings: null, new XmlParserContext(nt, xmlNamespaceManager, xmlLang: default, xmlSpace: default));
 
-			var director = new ScxmlDirector(xmlReader, BuilderFactory.Instance, new ScxmlDirectorOptions { StateMachineValidator = StateMachineValidator.Instance, NamespaceResolver = xmlNamespaceManager});
+			var director = new ScxmlDirector(xmlReader, BuilderFactory.Instance,
+											 new ScxmlDirectorOptions { StateMachineValidator = StateMachineValidator.Instance, NamespaceResolver = xmlNamespaceManager });
 
 			_stateMachine = director.ConstructStateMachine().SynchronousGetResult();
 		}
@@ -106,7 +107,8 @@ namespace Xtate.Test
 		public async Task ScxmlSerializerTest()
 		{
 			var dataModelHandler = new EcmaScriptDataModelHandler();
-			var interpreterModelBuilder = new InterpreterModelBuilder(_stateMachine, dataModelHandler!, customActionProviders: default, default!, DefaultErrorProcessor.Instance, baseUri: default);
+			var interpreterModelBuilder = new InterpreterModelBuilder(_stateMachine, dataModelHandler!, customActionProviders: default, default!, default!,
+																	  DefaultErrorProcessor.Instance, baseUri: default);
 			var interpreterModel = await interpreterModelBuilder.Build(default);
 			var text = new StringWriter();
 			var xmlWriter = XmlWriter.Create(text, new XmlWriterSettings { Encoding = Encoding.UTF8, Indent = true });

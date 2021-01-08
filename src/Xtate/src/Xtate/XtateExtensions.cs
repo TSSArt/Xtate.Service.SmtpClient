@@ -27,8 +27,8 @@ namespace Xtate
 						.AddEcmaScript()
 						.AddHttpClient()
 						.AddSmtpClient()
-						.AddResourceLoader(ResxResourceLoader.Instance)
-						.AddResourceLoader(FileResourceLoader.Instance)
-						.AddResourceLoader(WebResourceLoader.Instance);
+						.AddResourceLoaderFactory(ResxResourceLoaderFactory.Instance)
+						.AddResourceLoaderFactory(FileResourceLoaderFactory.Instance)
+						.AddResourceLoaderFactory(WebResourceLoaderFactory.Instance);
 	}
 }

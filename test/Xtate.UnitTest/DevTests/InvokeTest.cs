@@ -33,7 +33,7 @@ namespace Xtate.Test
 	{
 		private Mock<IExternalCommunication> _externalCommunicationMock = default!;
 		private Mock<ILogger>                _loggerMock                = default!;
-		private InterpreterOptions           _options;
+		private InterpreterOptions           _options                   = default!;
 		private StateMachineEntity           _stateMachine;
 
 		[TestInitialize]

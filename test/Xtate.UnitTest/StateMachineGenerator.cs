@@ -33,7 +33,8 @@ namespace Xtate.Test
 			var xmlNamespaceManager = new XmlNamespaceManager(nt);
 			using var xmlReader = XmlReader.Create(stringReader, settings: null, new XmlParserContext(nt, xmlNamespaceManager, xmlLang: default, xmlSpace: default));
 
-			var scxmlDirector = new ScxmlDirector(xmlReader, BuilderFactory.Instance, new ScxmlDirectorOptions { StateMachineValidator = StateMachineValidator.Instance, NamespaceResolver = xmlNamespaceManager });
+			var scxmlDirector = new ScxmlDirector(xmlReader, BuilderFactory.Instance,
+												  new ScxmlDirectorOptions { StateMachineValidator = StateMachineValidator.Instance, NamespaceResolver = xmlNamespaceManager });
 			return scxmlDirector.ConstructStateMachine().SynchronousGetResult();
 		}
 
