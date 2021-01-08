@@ -1,4 +1,4 @@
-﻿#region Copyright © 2019-2020 Sergii Artemenko
+﻿#region Copyright © 2019-2021 Sergii Artemenko
 
 // This file is part of the Xtate project. <https://xtate.net/>
 // 
@@ -272,17 +272,6 @@ namespace Xtate.Test
 			}
 		}
 
-		private class DummyResourceLoader : IResourceLoaderFactory, IResourceLoaderFactoryActivator, IResourceLoader
-		{
-			public static readonly IResourceLoaderFactory Instance = new DummyResourceLoader();
-
-			public ValueTask<IResourceLoaderFactoryActivator?> TryGetActivator(IFactoryContext factoryContext, Uri uri, CancellationToken token) => new(this);
-
-			public ValueTask<IResourceLoader> CreateResourceLoader(IFactoryContext factoryContext, CancellationToken token) => new(this);
-
-			public ValueTask<Resource> Request(Uri uri, NameValueCollection? headers, CancellationToken token) => new(new Resource(new MemoryStream()));
-		}
-
 		[TestMethod]
 		public async Task StoreWithStorageTest()
 		{
@@ -299,7 +288,7 @@ namespace Xtate.Test
 
 			var dataModelHandler = new EcmaScriptDataModelHandler();
 			var securityContext = SecurityContext.Create(SecurityContextType.NewStateMachine, new DeferredFinalizer());
-			var imBuilder = new InterpreterModelBuilder(stateMachine, dataModelHandler, customActionProviders: default, ImmutableArray.Create(DummyResourceLoader.Instance), 
+			var imBuilder = new InterpreterModelBuilder(stateMachine, dataModelHandler, customActionProviders: default, ImmutableArray.Create(DummyResourceLoader.Instance),
 														securityContext, DefaultErrorProcessor.Instance, baseUri: default);
 			var model = await imBuilder.Build(default);
 			var storeSupport = model.Root.As<IStoreSupport>();
@@ -704,6 +693,29 @@ namespace Xtate.Test
 			Assert.IsFalse(bucket.Nested("f").TryGet(key: "a", out string _));
 			Assert.IsFalse(bucket.Nested("f").TryGet(key: "b", out string _));
 			Assert.IsTrue(bucket.TryGet(key: "z", out string _));
+		}
+
+		private class DummyResourceLoader : IResourceLoaderFactory, IResourceLoaderFactoryActivator, IResourceLoader
+		{
+			public static readonly IResourceLoaderFactory Instance = new DummyResourceLoader();
+
+		#region Interface IResourceLoader
+
+			public ValueTask<Resource> Request(Uri uri, NameValueCollection? headers, CancellationToken token) => new(new Resource(new MemoryStream()));
+
+		#endregion
+
+		#region Interface IResourceLoaderFactory
+
+			public ValueTask<IResourceLoaderFactoryActivator?> TryGetActivator(IFactoryContext factoryContext, Uri uri, CancellationToken token) => new(this);
+
+		#endregion
+
+		#region Interface IResourceLoaderFactoryActivator
+
+			public ValueTask<IResourceLoader> CreateResourceLoader(IFactoryContext factoryContext, CancellationToken token) => new(this);
+
+		#endregion
 		}
 	}
 }
