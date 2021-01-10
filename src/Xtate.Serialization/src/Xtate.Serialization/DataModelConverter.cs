@@ -145,7 +145,7 @@ namespace Xtate
 							JsonTokenType.Number => reader.GetDouble(),
 							JsonTokenType.StartObject => JsonSerializer.Deserialize<DataModelList>(ref reader, options),
 							JsonTokenType.StartArray => JsonSerializer.Deserialize<DataModelList>(ref reader, options),
-							_ => Infrastructure.UnexpectedValue<DataModelValue>(reader.TokenType, Resources.Exception_Not_expected_token_type)
+							_ => Infrastructure.UnexpectedValue<DataModelValue>(reader.TokenType, Resources.Exception_NotExpectedTokenType)
 					};
 
 			public override void Write(Utf8JsonWriter writer, DataModelValue value, JsonSerializerOptions options)
@@ -157,7 +157,7 @@ namespace Xtate
 						break;
 
 					case DataModelValueType.Undefined when (_options & DataModelConverterOptions.UndefinedToSkip) == 0:
-						throw new JsonException(Resources.Exception_Undefined_value_not_allowed);
+						throw new JsonException(Resources.Exception_UndefinedValueNotAllowed);
 
 					case DataModelValueType.Undefined:
 						break;
@@ -202,7 +202,7 @@ namespace Xtate
 						break;
 
 					default:
-						Infrastructure.UnexpectedValue(value.Type, Resources.Exception_Unknown_type_for_serialization);
+						Infrastructure.UnexpectedValue(value.Type, Resources.Exception_UnknownTypeForSerialization);
 						break;
 				}
 			}
@@ -263,7 +263,7 @@ namespace Xtate
 			{
 				if (writer.CurrentDepth > options.MaxDepth)
 				{
-					throw new JsonException(Resources.Exception_Cycle_reference_detected);
+					throw new JsonException(Resources.Exception_CycleReferenceDetected);
 				}
 
 				writer.WriteStartObject();
@@ -328,7 +328,7 @@ namespace Xtate
 					}
 					else if ((_options & DataModelConverterOptions.UndefinedToSkip) == 0)
 					{
-						throw new JsonException(Resources.Exception_Undefined_value_not_allowed);
+						throw new JsonException(Resources.Exception_UndefinedValueNotAllowed);
 					}
 				}
 

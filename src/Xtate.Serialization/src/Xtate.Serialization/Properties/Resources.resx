@@ -117,16 +117,16 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Exception_Unknown_type_for_serialization" xml:space="preserve">
+  <data name="Exception_UnknownTypeForSerialization" xml:space="preserve">
     <value>Unknown type for serialization.</value>
   </data>
-  <data name="Exception_Not_expected_token_type" xml:space="preserve">
+  <data name="Exception_NotExpectedTokenType" xml:space="preserve">
     <value>Not expected token type.</value>
   </data>
-  <data name="Exception_Undefined_value_not_allowed" xml:space="preserve">
+  <data name="Exception_UndefinedValueNotAllowed" xml:space="preserve">
     <value>Undefined value not allowed.</value>
   </data>
-  <data name="Exception_Cycle_reference_detected" xml:space="preserve">
+  <data name="Exception_CycleReferenceDetected" xml:space="preserve">
     <value>Cycle reference detected.</value>
   </data>
 </root>

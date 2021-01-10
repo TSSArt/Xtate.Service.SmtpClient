@@ -121,7 +121,7 @@ namespace Xtate.IoProcessor
 				{
 					if (listenAddress is not null)
 					{
-						throw new ProcessorException(Resources.Exception_Found_more_then_one_interface_to_listen);
+						throw new ProcessorException(Resources.Exception_FoundMoreThenOneInterfaceToListen);
 					}
 
 					listenAddress = address;
@@ -130,7 +130,7 @@ namespace Xtate.IoProcessor
 
 			if (listenAddress is null)
 			{
-				throw new ProcessorException(Resources.Exception_Can_t_match_network_interface_to_listen);
+				throw new ProcessorException(Resources.Exception_CantMatchNetworkInterfaceToListen);
 			}
 
 			return new IPEndPoint(listenAddress, uri.Port);
@@ -151,7 +151,7 @@ namespace Xtate.IoProcessor
 
 			if (evt.Target is null)
 			{
-				throw new ArgumentException(Resources.Exception_Target_is_not_defined, nameof(evt));
+				throw new ArgumentException(Resources.Exception_TargetIsNotDefined, nameof(evt));
 			}
 
 			var targetUri = evt.Target.ToString();
@@ -206,7 +206,7 @@ namespace Xtate.IoProcessor
 				}
 
 				default:
-					throw new NotSupportedException(Resources.Exception_Data_format_not_supported);
+					throw new NotSupportedException(Resources.Exception_DataFormatNotSupported);
 			}
 		}
 

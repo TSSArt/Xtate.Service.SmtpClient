@@ -117,16 +117,16 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Exception_Data_format_not_supported" xml:space="preserve">
+  <data name="Exception_DataFormatNotSupported" xml:space="preserve">
     <value>Data format not supported.</value>
   </data>
-  <data name="Exception_Target_is_not_defined" xml:space="preserve">
+  <data name="Exception_TargetIsNotDefined" xml:space="preserve">
     <value>Target is not defined</value>
   </data>
-  <data name="Exception_Found_more_then_one_interface_to_listen" xml:space="preserve">
+  <data name="Exception_FoundMoreThenOneInterfaceToListen" xml:space="preserve">
     <value>Found more then one interface to listen.</value>
   </data>
-  <data name="Exception_Can_t_match_network_interface_to_listen" xml:space="preserve">
+  <data name="Exception_CantMatchNetworkInterfaceToListen" xml:space="preserve">
     <value>Can't match network interface to listen.</value>
   </data>
 </root>

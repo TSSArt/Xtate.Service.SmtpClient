@@ -63,36 +63,36 @@ namespace Xtate {
         /// <summary>
         ///   Looks up a localized string similar to Can&apos;t match network interface to listen..
         /// </summary>
-        internal static string Exception_Can_t_match_network_interface_to_listen {
+        internal static string Exception_CantMatchNetworkInterfaceToListen {
             get {
-                return ResourceManager.GetString("Exception_Can_t_match_network_interface_to_listen", resourceCulture);
+                return ResourceManager.GetString("Exception_CantMatchNetworkInterfaceToListen", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Data format not supported..
         /// </summary>
-        internal static string Exception_Data_format_not_supported {
+        internal static string Exception_DataFormatNotSupported {
             get {
-                return ResourceManager.GetString("Exception_Data_format_not_supported", resourceCulture);
+                return ResourceManager.GetString("Exception_DataFormatNotSupported", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Found more then one interface to listen..
         /// </summary>
-        internal static string Exception_Found_more_then_one_interface_to_listen {
+        internal static string Exception_FoundMoreThenOneInterfaceToListen {
             get {
-                return ResourceManager.GetString("Exception_Found_more_then_one_interface_to_listen", resourceCulture);
+                return ResourceManager.GetString("Exception_FoundMoreThenOneInterfaceToListen", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Target is not defined.
         /// </summary>
-        internal static string Exception_Target_is_not_defined {
+        internal static string Exception_TargetIsNotDefined {
             get {
-                return ResourceManager.GetString("Exception_Target_is_not_defined", resourceCulture);
+                return ResourceManager.GetString("Exception_TargetIsNotDefined", resourceCulture);
             }
         }
     }

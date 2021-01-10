@@ -63,36 +63,36 @@ namespace Xtate {
         /// <summary>
         ///   Looks up a localized string similar to Cycle reference detected..
         /// </summary>
-        internal static string Exception_Cycle_reference_detected {
+        internal static string Exception_CycleReferenceDetected {
             get {
-                return ResourceManager.GetString("Exception_Cycle_reference_detected", resourceCulture);
+                return ResourceManager.GetString("Exception_CycleReferenceDetected", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Not expected token type..
         /// </summary>
-        internal static string Exception_Not_expected_token_type {
+        internal static string Exception_NotExpectedTokenType {
             get {
-                return ResourceManager.GetString("Exception_Not_expected_token_type", resourceCulture);
+                return ResourceManager.GetString("Exception_NotExpectedTokenType", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Undefined value not allowed..
         /// </summary>
-        internal static string Exception_Undefined_value_not_allowed {
+        internal static string Exception_UndefinedValueNotAllowed {
             get {
-                return ResourceManager.GetString("Exception_Undefined_value_not_allowed", resourceCulture);
+                return ResourceManager.GetString("Exception_UndefinedValueNotAllowed", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Unknown type for serialization..
         /// </summary>
-        internal static string Exception_Unknown_type_for_serialization {
+        internal static string Exception_UnknownTypeForSerialization {
             get {
-                return ResourceManager.GetString("Exception_Unknown_type_for_serialization", resourceCulture);
+                return ResourceManager.GetString("Exception_UnknownTypeForSerialization", resourceCulture);
             }
         }
     }
