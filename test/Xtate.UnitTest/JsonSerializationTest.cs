@@ -110,7 +110,7 @@ namespace Xtate.Test
 			var undefined = default(DataModelValue);
 
 			// act
-			var json = DataModelConverter.ToJson(undefined, DataModelConverterOptions.UndefinedToNull);
+			var json = DataModelConverter.ToJson(undefined, DataModelConverterJsonOptions.UndefinedToNull);
 
 			// assert
 			Assert.AreEqual(expected: "null", json);
@@ -124,7 +124,7 @@ namespace Xtate.Test
 			var list = new DataModelList { ["undef"] = undefined };
 
 			// act
-			var json = DataModelConverter.ToJson(list, DataModelConverterOptions.UndefinedToNull);
+			var json = DataModelConverter.ToJson(list, DataModelConverterJsonOptions.UndefinedToNull);
 
 			// assert
 			Assert.AreEqual(expected: "{\"undef\":null}", json);
@@ -138,7 +138,7 @@ namespace Xtate.Test
 			var arr = new DataModelList { undefined };
 
 			// act
-			var json = DataModelConverter.ToJson(arr, DataModelConverterOptions.UndefinedToNull);
+			var json = DataModelConverter.ToJson(arr, DataModelConverterJsonOptions.UndefinedToNull);
 
 			// assert
 			Assert.AreEqual(expected: "[null]", json);
@@ -151,7 +151,7 @@ namespace Xtate.Test
 			var undefined = default(DataModelValue);
 
 			// act
-			var json = DataModelConverter.ToJson(undefined, DataModelConverterOptions.UndefinedToSkip);
+			var json = DataModelConverter.ToJson(undefined, DataModelConverterJsonOptions.UndefinedToSkip);
 
 			// assert
 			Assert.AreEqual(expected: "", json);
@@ -165,7 +165,7 @@ namespace Xtate.Test
 			var list = new DataModelList { ["undef"] = undefined };
 
 			// act
-			var json = DataModelConverter.ToJson(list, DataModelConverterOptions.UndefinedToSkip);
+			var json = DataModelConverter.ToJson(list, DataModelConverterJsonOptions.UndefinedToSkip);
 
 			// assert
 			Assert.AreEqual(expected: "{}", json);
@@ -179,7 +179,7 @@ namespace Xtate.Test
 			var arr = new DataModelList { undefined };
 
 			// act
-			var json = DataModelConverter.ToJson(arr, DataModelConverterOptions.UndefinedToSkip);
+			var json = DataModelConverter.ToJson(arr, DataModelConverterJsonOptions.UndefinedToSkip);
 
 			// assert
 			Assert.AreEqual(expected: "[]", json);
@@ -192,7 +192,7 @@ namespace Xtate.Test
 			var undefined = default(DataModelValue);
 
 			// act
-			var json = DataModelConverter.ToJson(undefined, DataModelConverterOptions.UndefinedToSkipOrNull);
+			var json = DataModelConverter.ToJson(undefined, DataModelConverterJsonOptions.UndefinedToSkipOrNull);
 
 			// assert
 			Assert.AreEqual(expected: "null", json);
@@ -206,7 +206,7 @@ namespace Xtate.Test
 			var list = new DataModelList { ["undef"] = undefined };
 
 			// act
-			var json = DataModelConverter.ToJson(list, DataModelConverterOptions.UndefinedToSkipOrNull);
+			var json = DataModelConverter.ToJson(list, DataModelConverterJsonOptions.UndefinedToSkipOrNull);
 
 			// assert
 			Assert.AreEqual(expected: "{}", json);
@@ -220,7 +220,7 @@ namespace Xtate.Test
 			var arr = new DataModelList { undefined };
 
 			// act
-			var json = DataModelConverter.ToJson(arr, DataModelConverterOptions.UndefinedToSkipOrNull);
+			var json = DataModelConverter.ToJson(arr, DataModelConverterJsonOptions.UndefinedToSkipOrNull);
 
 			// assert
 			Assert.AreEqual(expected: "[null]", json);

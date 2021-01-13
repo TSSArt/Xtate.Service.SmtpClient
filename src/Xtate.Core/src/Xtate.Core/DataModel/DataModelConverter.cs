@@ -18,18 +18,21 @@
 #endregion
 
 using System;
+using System.Buffers;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Xtate.Annotations;
+using Xtate.Core;
+using Xtate.DataModel.XPath;
 
 namespace Xtate
 {
 	[Flags]
 	[PublicAPI]
-	public enum DataModelConverterOptions
+	public enum DataModelConverterJsonOptions
 	{
 		/// <summary>
 		///     Serialization of undefined value will cause an exception. Array with undefined element will cause an exception.
@@ -58,6 +61,13 @@ namespace Xtate
 		WriteIndented = 4
 	}
 
+	[Flags]
+	[PublicAPI]
+	public enum DataModelConverterXmlOptions
+	{
+		WriteIndented = 1
+	}
+
 	[PublicAPI]
 	public static class DataModelConverter
 	{
@@ -65,10 +75,12 @@ namespace Xtate
 		private const string ObjectMetaValue = @"object";
 		private const string ArrayMetaValue  = @"array";
 
-		private static readonly JsonSerializerOptions DefaultOptions = CreateOptions(DataModelConverterOptions.UndefinedNotAllowed);
-		private static JsonSerializerOptions GetOptions(DataModelConverterOptions options) => options == DataModelConverterOptions.UndefinedNotAllowed ? DefaultOptions : CreateOptions(options);
+		private static readonly JsonSerializerOptions DefaultOptions = CreateOptions(DataModelConverterJsonOptions.UndefinedNotAllowed);
 
-		private static JsonSerializerOptions CreateOptions(DataModelConverterOptions options) =>
+		private static JsonSerializerOptions GetOptions(DataModelConverterJsonOptions options) =>
+				options == DataModelConverterJsonOptions.UndefinedNotAllowed ? DefaultOptions : CreateOptions(options);
+
+		private static JsonSerializerOptions CreateOptions(DataModelConverterJsonOptions options) =>
 				new()
 				{
 						Converters =
@@ -76,7 +88,7 @@ namespace Xtate
 								new JsonValueConverter(options),
 								new JsonListConverter(options)
 						},
-						WriteIndented = (options & DataModelConverterOptions.WriteIndented) != 0,
+						WriteIndented = (options & DataModelConverterJsonOptions.WriteIndented) != 0,
 						MaxDepth = 64
 				};
 
@@ -114,11 +126,11 @@ namespace Xtate
 			return list;
 		}
 
-		public static string ToJson(DataModelValue value, DataModelConverterOptions options = default) => JsonSerializer.Serialize(value, GetOptions(options));
+		public static string ToJson(DataModelValue value, DataModelConverterJsonOptions options = default) => JsonSerializer.Serialize(value, GetOptions(options));
 
-		public static byte[] ToJsonUtf8Bytes(DataModelValue value, DataModelConverterOptions options = default) => JsonSerializer.SerializeToUtf8Bytes(value, GetOptions(options));
+		public static byte[] ToJsonUtf8Bytes(DataModelValue value, DataModelConverterJsonOptions options = default) => JsonSerializer.SerializeToUtf8Bytes(value, GetOptions(options));
 
-		public static Task ToJsonAsync(Stream stream, DataModelValue value, DataModelConverterOptions options = default, CancellationToken token = default) =>
+		public static Task ToJsonAsync(Stream stream, DataModelValue value, DataModelConverterJsonOptions options = default, CancellationToken token = default) =>
 				JsonSerializer.SerializeAsync(stream, value, GetOptions(options), token);
 
 		public static DataModelValue FromJson(string json) => JsonSerializer.Deserialize<DataModelValue>(json, DefaultOptions)!;
@@ -127,11 +139,44 @@ namespace Xtate
 
 		public static ValueTask<DataModelValue> FromJsonAsync(Stream stream, CancellationToken token = default) => JsonSerializer.DeserializeAsync<DataModelValue>(stream, DefaultOptions, token);
 
+		public static string ToXml(DataModelValue value, DataModelConverterXmlOptions options = default) => XmlConverter.ToXml(value, (options & DataModelConverterXmlOptions.WriteIndented) != 0);
+
+		public static byte[] ToXmlUtf8Bytes(DataModelValue value, DataModelConverterXmlOptions options = default)
+		{
+			using var memoryStream = new MemoryStream();
+			XmlConverter.AsXmlToStream(value, (options & DataModelConverterXmlOptions.WriteIndented) != 0, memoryStream);
+
+			return memoryStream.ToArray();
+		}
+
+		public static Task ToXmlAsync(Stream stream, DataModelValue value, DataModelConverterXmlOptions options = default, CancellationToken token = default) =>
+				XmlConverter.AsXmlToStreamAsync(value, (options & DataModelConverterXmlOptions.WriteIndented) != 0, stream.InjectCancellationToken(token));
+
+		public static DataModelValue FromXml(string xml) => XmlConverter.FromXml(xml);
+
+		public static DataModelValue FromXml(ReadOnlySpan<byte> xml)
+		{
+			var bytes = ArrayPool<byte>.Shared.Rent(xml.Length);
+			try
+			{
+				xml.CopyTo(bytes);
+				var memoryStream = new MemoryStream(bytes, index: 0, xml.Length);
+
+				return XmlConverter.FromXmlStream(memoryStream);
+			}
+			finally
+			{
+				ArrayPool<byte>.Shared.Return(bytes);
+			}
+		}
+
+		public static ValueTask<DataModelValue> FromXmlAsync(Stream stream, CancellationToken token = default) => XmlConverter.FromXmlStreamAsync(stream.InjectCancellationToken(token));
+
 		private class JsonValueConverter : JsonConverter<DataModelValue>
 		{
-			private readonly DataModelConverterOptions _options;
+			private readonly DataModelConverterJsonOptions _options;
 
-			public JsonValueConverter(DataModelConverterOptions options) => _options = options;
+			public JsonValueConverter(DataModelConverterJsonOptions options) => _options = options;
 
 			public override DataModelValue Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
 					reader.TokenType switch
@@ -152,11 +197,11 @@ namespace Xtate
 			{
 				switch (value.Type)
 				{
-					case DataModelValueType.Undefined when (_options & DataModelConverterOptions.UndefinedToNull) != 0:
+					case DataModelValueType.Undefined when (_options & DataModelConverterJsonOptions.UndefinedToNull) != 0:
 						writer.WriteNullValue();
 						break;
 
-					case DataModelValueType.Undefined when (_options & DataModelConverterOptions.UndefinedToSkip) == 0:
+					case DataModelValueType.Undefined when (_options & DataModelConverterJsonOptions.UndefinedToSkip) == 0:
 						throw new JsonException(Resources.Exception_UndefinedValueNotAllowed);
 
 					case DataModelValueType.Undefined:
@@ -210,9 +255,9 @@ namespace Xtate
 
 		private class JsonListConverter : JsonConverter<DataModelList>
 		{
-			private readonly DataModelConverterOptions _options;
+			private readonly DataModelConverterJsonOptions _options;
 
-			public JsonListConverter(DataModelConverterOptions options) => _options = options;
+			public JsonListConverter(DataModelConverterJsonOptions options) => _options = options;
 
 			public override DataModelList Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) =>
 					reader.TokenType switch
@@ -277,7 +322,7 @@ namespace Xtate
 							writer.WritePropertyName(pair.Key);
 							JsonSerializer.Serialize(writer, pair.Value, options);
 						}
-						else if ((_options & DataModelConverterOptions.UndefinedToSkipOrNull) == DataModelConverterOptions.UndefinedToNull)
+						else if ((_options & DataModelConverterJsonOptions.UndefinedToSkipOrNull) == DataModelConverterJsonOptions.UndefinedToNull)
 						{
 							writer.WritePropertyName(pair.Key);
 							writer.WriteNullValue();
@@ -322,11 +367,11 @@ namespace Xtate
 					{
 						JsonSerializer.Serialize(writer, value, options);
 					}
-					else if ((_options & DataModelConverterOptions.UndefinedToNull) != 0)
+					else if ((_options & DataModelConverterJsonOptions.UndefinedToNull) != 0)
 					{
 						writer.WriteNullValue();
 					}
-					else if ((_options & DataModelConverterOptions.UndefinedToSkip) == 0)
+					else if ((_options & DataModelConverterJsonOptions.UndefinedToSkip) == 0)
 					{
 						throw new JsonException(Resources.Exception_UndefinedValueNotAllowed);
 					}

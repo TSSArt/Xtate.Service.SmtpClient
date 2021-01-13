@@ -7,7 +7,6 @@
     <XtateLoggerSerilogRepoPath>$(MSBuildThisFileDirectory)src\Xtate.Logger.Serilog\</XtateLoggerSerilogRepoPath>
     <XtateServiceHttpClientRepoPath>$(MSBuildThisFileDirectory)src\Xtate.Service.HttpClient\</XtateServiceHttpClientRepoPath>
     <XtateServiceSmtpClientRepoPath>$(MSBuildThisFileDirectory)src\Xtate.Service.SmtpClient\</XtateServiceSmtpClientRepoPath>
-    <XtateSerializationRepoPath>$(MSBuildThisFileDirectory)src\Xtate.Serialization\</XtateSerializationRepoPath>
   </PropertyGroup>
 
 </Project>
