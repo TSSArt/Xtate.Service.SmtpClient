@@ -19,7 +19,6 @@
 
 using System;
 using Serilog;
-using Xtate.Annotations;
 
 namespace Xtate
 {

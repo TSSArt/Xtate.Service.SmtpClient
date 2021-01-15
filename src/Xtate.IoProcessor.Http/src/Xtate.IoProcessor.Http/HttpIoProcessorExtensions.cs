@@ -19,7 +19,6 @@
 
 using System;
 using System.Net;
-using Xtate.Annotations;
 using Xtate.IoProcessor;
 
 namespace Xtate
