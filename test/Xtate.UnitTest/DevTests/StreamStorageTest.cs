@@ -416,7 +416,7 @@ namespace Xtate.Test
 								 ["value"] = "TEST",
 								 ["httpOnly"] = true,
 								 ["secure"] = true,
-								 ["expires"] = new DateTime(year: 2020, month: 1, day: 1)
+								 ["expires"] = new DateTime(year: 2021, month: 1, day: 1)
 						 };
 
 			var data = new DataModelList { cookie };

@@ -20,11 +20,8 @@
     <ProjectReference Include="..\Xtate.BasicCustomAction\Xtate.BasicCustomAction.csproj" />
     <ProjectReference Include="..\Xtate.Core\src\Xtate.Core\Xtate.Core.csproj" />
     <ProjectReference Include="..\Xtate.DataModel.EcmaScript\src\Xtate.DataModel.EcmaScript\Xtate.DataModel.EcmaScript.csproj" />
-    <ProjectReference Include="..\Xtate.IoProcessor.Http\src\Xtate.IoProcessor.Http\Xtate.IoProcessor.Http.csproj" />
     <ProjectReference Include="..\Xtate.MidCustomAction\Xtate.MidCustomAction.csproj" />
     <ProjectReference Include="..\Xtate.MimeCustomAction\Xtate.MimeCustomAction.csproj" />
-    <ProjectReference Include="..\Xtate.Service.HttpClient\src\Xtate.Service.HttpClient\Xtate.Service.HttpClient.csproj" />
-    <ProjectReference Include="..\Xtate.Service.SmtpClient\src\Xtate.Service.SmtpClient\Xtate.Service.SmtpClient.csproj" />
     <ProjectReference Include="..\Xtate.UserInteractionService\Xtate.UserInteractionService.csproj" />
     <ProjectReference Include="..\Xtate.WebBrowserService.CefSharp\Xtate.WebBrowserService.CefSharp.csproj">
       <Private>true</Private>

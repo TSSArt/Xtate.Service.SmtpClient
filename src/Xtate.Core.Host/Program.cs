@@ -38,7 +38,13 @@ namespace Xtate.Core.Host
 			var baseUri = new Uri(args.Length > 0 ? args[0] : "http://localhost:5000/");
 
 			await using var stateMachineHost = new StateMachineHostBuilder()
-											   .AddAll()
+											   .AddXPath()
+											   .AddEcmaScript()
+											   .AddHttpClient()
+											   .AddSmtpClient()
+											   .AddResourceLoaderFactory(ResxResourceLoaderFactory.Instance)
+											   .AddResourceLoaderFactory(FileResourceLoaderFactory.Instance)
+											   .AddResourceLoaderFactory(WebResourceLoaderFactory.Instance)
 											   .AddCefSharpWebBrowser()
 											   .AddUserInteraction()
 											   .AddHttpIoProcessor(baseUri)

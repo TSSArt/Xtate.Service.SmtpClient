@@ -17,10 +17,12 @@
     <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="3.3.0" PrivateAssets="all" />
     <PackageReference Include="ConfigureAwaitChecker.Analyzer" Version="4.0.0" PrivateAssets="all" />
 
+    <ProjectReference Include="..\Xtate.Core\src\Xtate.Core\Xtate.Core.csproj" />
+    <ProjectReference Include="..\Xtate.DataModel.EcmaScript\src\Xtate.DataModel.EcmaScript\Xtate.DataModel.EcmaScript.csproj" />
+    <ProjectReference Include="..\Xtate.Logger.Serilog\src\Xtate.Logger.Serilog\Xtate.Logger.Serilog.csproj" />
     <ProjectReference Include="..\Xtate.UserInteractionService\Xtate.UserInteractionService.csproj" />
     <ProjectReference Include="..\Xtate.WebBrowserService.CefSharp\Xtate.WebBrowserService.CefSharp.csproj" />
     <ProjectReference Include="..\Xtate.WebBrowserService\Xtate.WebBrowserService.csproj" />
-    <ProjectReference Include="..\Xtate\src\Xtate\Xtate.csproj" />
   </ItemGroup>
 
   <ItemGroup>

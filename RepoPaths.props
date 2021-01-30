@@ -3,10 +3,9 @@
   <PropertyGroup>
     <XtateCoreRepoPath>$(MSBuildThisFileDirectory)src\Xtate.Core\</XtateCoreRepoPath>
     <XtateDataModelEcmaScriptRepoPath>$(MSBuildThisFileDirectory)src\Xtate.DataModel.EcmaScript\</XtateDataModelEcmaScriptRepoPath>
-    <XtateIoProcessorHttpRepoPath>$(MSBuildThisFileDirectory)src\Xtate.IoProcessor.Http\</XtateIoProcessorHttpRepoPath>
+    <XtateIoProcessorHttpKestrelRepoPath>$(MSBuildThisFileDirectory)src\Xtate.IoProcessor.Http.Kestrel\</XtateIoProcessorHttpKestrelRepoPath>
     <XtateLoggerSerilogRepoPath>$(MSBuildThisFileDirectory)src\Xtate.Logger.Serilog\</XtateLoggerSerilogRepoPath>
-    <XtateServiceHttpClientRepoPath>$(MSBuildThisFileDirectory)src\Xtate.Service.HttpClient\</XtateServiceHttpClientRepoPath>
-    <XtateServiceSmtpClientRepoPath>$(MSBuildThisFileDirectory)src\Xtate.Service.SmtpClient\</XtateServiceSmtpClientRepoPath>
+    <XtateWebToolsRepoPath>$(MSBuildThisFileDirectory)src\Xtate.Web.Tools\</XtateWebToolsRepoPath>
   </PropertyGroup>
 
 </Project>
