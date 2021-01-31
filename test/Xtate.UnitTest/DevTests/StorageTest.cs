@@ -595,7 +595,7 @@ namespace Xtate.Test
 			var bucket = new Bucket(storage);
 			bucket.Add(key: "f", value: "f");
 
-			storage.Write(ReadOnlySpan<byte>.Empty, ReadOnlySpan<byte>.Empty);
+			storage.RemoveAll(ReadOnlySpan<byte>.Empty);
 
 			Assert.IsFalse(bucket.TryGet(key: "f", out string _));
 		}
@@ -605,17 +605,17 @@ namespace Xtate.Test
 		{
 			var storage = new InMemoryStorage(false);
 
-			storage.Write(new byte[] { 1 }, new byte[] { 55 });
-			storage.Write(new byte[] { 10 }, new byte[] { 55 });
-			storage.Write(new byte[] { 10, 11 }, new byte[] { 55 });
-			storage.Write(new byte[] { 20 }, new byte[] { 55 });
+			storage.Set(new byte[] { 1 }, new byte[] { 55 });
+			storage.Set(new byte[] { 10 }, new byte[] { 55 });
+			storage.Set(new byte[] { 10, 11 }, new byte[] { 55 });
+			storage.Set(new byte[] { 20 }, new byte[] { 55 });
 
-			storage.Write(Array.Empty<byte>(), new byte[] { 10 });
+			storage.RemoveAll(new byte[] { 10 });
 
-			Assert.IsFalse(storage.Read(new byte[] { 1 }).IsEmpty);
-			Assert.IsTrue(storage.Read(new byte[] { 10 }).IsEmpty);
-			Assert.IsTrue(storage.Read(new byte[] { 10, 11 }).IsEmpty);
-			Assert.IsFalse(storage.Read(new byte[] { 20 }).IsEmpty);
+			Assert.IsFalse(storage.Get(new byte[] { 1 }).IsEmpty);
+			Assert.IsTrue(storage.Get(new byte[] { 10 }).IsEmpty);
+			Assert.IsTrue(storage.Get(new byte[] { 10, 11 }).IsEmpty);
+			Assert.IsFalse(storage.Get(new byte[] { 20 }).IsEmpty);
 		}
 
 		[TestMethod]
@@ -623,19 +623,19 @@ namespace Xtate.Test
 		{
 			var storage = new InMemoryStorage(false);
 
-			storage.Write(new byte[] { 1 }, new byte[] { 55 });
-			storage.Write(new byte[] { 10 }, new byte[] { 55 });
-			storage.Write(new byte[] { 10, 11 }, new byte[] { 55 });
-			storage.Write(new byte[] { 11 }, new byte[] { 55 });
-			storage.Write(new byte[] { 20 }, new byte[] { 55 });
+			storage.Set(new byte[] { 1 }, new byte[] { 55 });
+			storage.Set(new byte[] { 10 }, new byte[] { 55 });
+			storage.Set(new byte[] { 10, 11 }, new byte[] { 55 });
+			storage.Set(new byte[] { 11 }, new byte[] { 55 });
+			storage.Set(new byte[] { 20 }, new byte[] { 55 });
 
-			storage.Write(Array.Empty<byte>(), new byte[] { 10 });
+			storage.RemoveAll(new byte[] { 10 });
 
-			Assert.IsFalse(storage.Read(new byte[] { 1 }).IsEmpty);
-			Assert.IsTrue(storage.Read(new byte[] { 10 }).IsEmpty);
-			Assert.IsTrue(storage.Read(new byte[] { 10, 11 }).IsEmpty);
-			Assert.IsFalse(storage.Read(new byte[] { 11 }).IsEmpty);
-			Assert.IsFalse(storage.Read(new byte[] { 20 }).IsEmpty);
+			Assert.IsFalse(storage.Get(new byte[] { 1 }).IsEmpty);
+			Assert.IsTrue(storage.Get(new byte[] { 10 }).IsEmpty);
+			Assert.IsTrue(storage.Get(new byte[] { 10, 11 }).IsEmpty);
+			Assert.IsFalse(storage.Get(new byte[] { 11 }).IsEmpty);
+			Assert.IsFalse(storage.Get(new byte[] { 20 }).IsEmpty);
 		}
 
 		[TestMethod]
@@ -643,19 +643,19 @@ namespace Xtate.Test
 		{
 			var storage = new InMemoryStorage(false);
 
-			storage.Write(new byte[] { 1 }, new byte[] { 55 });
-			storage.Write(new byte[] { 10, 255 }, new byte[] { 55 });
-			storage.Write(new byte[] { 10, 255, 11 }, new byte[] { 55 });
-			storage.Write(new byte[] { 11 }, new byte[] { 55 });
-			storage.Write(new byte[] { 20 }, new byte[] { 55 });
+			storage.Set(new byte[] { 1 }, new byte[] { 55 });
+			storage.Set(new byte[] { 10, 255 }, new byte[] { 55 });
+			storage.Set(new byte[] { 10, 255, 11 }, new byte[] { 55 });
+			storage.Set(new byte[] { 11 }, new byte[] { 55 });
+			storage.Set(new byte[] { 20 }, new byte[] { 55 });
 
-			storage.Write(Array.Empty<byte>(), new byte[] { 10, 255 });
+			storage.RemoveAll(new byte[] { 10, 255 });
 
-			Assert.IsFalse(storage.Read(new byte[] { 1 }).IsEmpty);
-			Assert.IsTrue(storage.Read(new byte[] { 10, 255 }).IsEmpty);
-			Assert.IsTrue(storage.Read(new byte[] { 10, 255, 11 }).IsEmpty);
-			Assert.IsFalse(storage.Read(new byte[] { 11 }).IsEmpty);
-			Assert.IsFalse(storage.Read(new byte[] { 20 }).IsEmpty);
+			Assert.IsFalse(storage.Get(new byte[] { 1 }).IsEmpty);
+			Assert.IsTrue(storage.Get(new byte[] { 10, 255 }).IsEmpty);
+			Assert.IsTrue(storage.Get(new byte[] { 10, 255, 11 }).IsEmpty);
+			Assert.IsFalse(storage.Get(new byte[] { 11 }).IsEmpty);
+			Assert.IsFalse(storage.Get(new byte[] { 20 }).IsEmpty);
 		}
 
 		[TestMethod]
@@ -663,15 +663,15 @@ namespace Xtate.Test
 		{
 			var storage = new InMemoryStorage(false);
 
-			storage.Write(new byte[] { 1 }, new byte[] { 55 });
-			storage.Write(new byte[] { 255 }, new byte[] { 55 });
-			storage.Write(new byte[] { 255, 11 }, new byte[] { 55 });
+			storage.Set(new byte[] { 1 }, new byte[] { 55 });
+			storage.Set(new byte[] { 255 }, new byte[] { 55 });
+			storage.Set(new byte[] { 255, 11 }, new byte[] { 55 });
 
-			storage.Write(Array.Empty<byte>(), new byte[] { 255 });
+			storage.RemoveAll(new byte[] { 255 });
 
-			Assert.IsFalse(storage.Read(new byte[] { 1 }).IsEmpty);
-			Assert.IsTrue(storage.Read(new byte[] { 255 }).IsEmpty);
-			Assert.IsTrue(storage.Read(new byte[] { 255, 11 }).IsEmpty);
+			Assert.IsFalse(storage.Get(new byte[] { 1 }).IsEmpty);
+			Assert.IsTrue(storage.Get(new byte[] { 255 }).IsEmpty);
+			Assert.IsTrue(storage.Get(new byte[] { 255, 11 }).IsEmpty);
 		}
 
 		[TestMethod]
