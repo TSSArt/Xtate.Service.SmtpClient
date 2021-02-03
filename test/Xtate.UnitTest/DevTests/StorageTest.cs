@@ -54,7 +54,7 @@ namespace Xtate.Test
 			while (!log.IsEmpty)
 			{
 				var keyLengthLength = GetLength(log[0]);
-				var keyLength = DecodeLength(log.Slice(start: 0, keyLengthLength));
+				var keyLength = DecodeLength(log[..keyLengthLength]);
 				var key = log.Slice(keyLengthLength, keyLength);
 
 				var valueLengthLength = GetLength(log[keyLengthLength + keyLength]);
@@ -67,7 +67,7 @@ namespace Xtate.Test
 				sb.Append(delimiter);
 
 				var rowSize = keyLengthLength + keyLength + valueLengthLength + valueLength;
-				log = log.Slice(rowSize);
+				log = log[rowSize..];
 			}
 
 			return sb.ToString();
@@ -85,13 +85,13 @@ namespace Xtate.Test
 			while (!log.IsEmpty)
 			{
 				var keyLengthLength = GetLength(log[0]);
-				var keyLength = DecodeLength(log.Slice(start: 0, keyLengthLength));
+				var keyLength = DecodeLength(log[..keyLengthLength]);
 
 				var valueLengthLength = GetLength(log[keyLengthLength + keyLength]);
 				var valueLength = DecodeLength(log.Slice(keyLengthLength + keyLength, valueLengthLength));
 
 				var rowSize = keyLengthLength + keyLength + valueLengthLength + valueLength;
-				log = log.Slice(rowSize);
+				log = log[rowSize..];
 				count ++;
 			}
 
@@ -220,7 +220,7 @@ namespace Xtate.Test
 		{
 			if (bytes[0] == 7)
 			{
-				sb.Append("/'").Append(DecodeUtf8String(bytes.Slice(start: 1, bytes.Length - 2))).Append('\'');
+				sb.Append("/'").Append(DecodeUtf8String(bytes[1..^1])).Append('\'');
 
 				return;
 			}

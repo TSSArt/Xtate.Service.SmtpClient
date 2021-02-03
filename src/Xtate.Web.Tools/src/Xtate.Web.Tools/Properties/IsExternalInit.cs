@@ -17,16 +17,15 @@
 
 #endregion
 
-using System.Diagnostics;
+#if NET461 || NETSTANDARD2_0
+using Xtate;
+using System.ComponentModel;
 
-namespace Xtate.Core
+namespace System.Runtime.CompilerServices
 {
-	internal static class XtateCore
-	{
-		/// <summary>
-		///     Used for code static analysis tool (e.g. ReSharper) to prevent removing 'using Xtate.Core;' statement from header
-		/// </summary>
-		[Conditional("NotExistedIdentifier")]
-		public static void Use() { }
-	}
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	[UsedImplicitly]
+	internal static class IsExternalInit { }
 }
+
+#endif
