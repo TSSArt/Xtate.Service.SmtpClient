@@ -83,7 +83,6 @@ namespace Xtate.Test
 
 			_externalCommunicationMock = new Mock<IExternalCommunication>();
 			_externalCommunicationMock.Setup(e => e.GetIoProcessors()).Returns(ImmutableArray<IIoProcessor>.Empty);
-			_externalCommunicationMock.Setup(e => e.IsInvokeActive(It.IsAny<InvokeId>())).Returns(true);
 			_loggerMock = new Mock<ILogger>();
 
 			_options = new InterpreterOptions
@@ -93,7 +92,13 @@ namespace Xtate.Test
 					   };
 		}
 
-		private static EventObject CreateEventObject(string name, InvokeId? invokeId = default) => new(EventType.External, EventName.ToParts(name), data: default, sendId: default, invokeId);
+		private static EventObject CreateEventObject(string name, InvokeId? invokeId = default) =>
+				new()
+				{
+						Type = EventType.External,
+						NameParts = EventName.ToParts(name),
+						InvokeId = invokeId
+				};
 
 		[TestMethod]
 		public async Task SimpleTest()
@@ -110,7 +115,6 @@ namespace Xtate.Test
 
 			_externalCommunicationMock.Verify(l => l.StartInvoke(It.IsAny<InvokeData>(), default));
 			_externalCommunicationMock.Verify(l => l.CancelInvoke(InvokeId.FromString("invoke_id", invokeUniqueId), default));
-			_externalCommunicationMock.Verify(l => l.IsInvokeActive(InvokeId.FromString("invoke_id", invokeUniqueId)));
 			_externalCommunicationMock.VerifyNoOtherCalls();
 
 			_loggerMock.Verify(l => l.ExecuteLog(It.IsAny<ILoggerContext>(), LogLevel.Info, "FinalizeExecuted", default, default, default));

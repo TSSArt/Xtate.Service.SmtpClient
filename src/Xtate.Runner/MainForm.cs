@@ -60,26 +60,26 @@ namespace Xtate.Runner
 	#region Interface ILogger
 
 		public ValueTask TraceSendEvent(ILoggerContext loggerContext,
-										IOutgoingEvent evt,
+										IOutgoingEvent outgoingEvent,
 										CancellationToken token)
 		{
 			DataModelList dataModelObject1 = new();
-			var name = (DataModelValue) EventName.ToName(evt.NameParts);
+			var name = (DataModelValue) EventName.ToName(outgoingEvent.NameParts);
 			dataModelObject1.Add(key: "Name", in name);
-			var sendId = (DataModelValue) evt.SendId;
+			var sendId = (DataModelValue) outgoingEvent.SendId;
 			dataModelObject1.Add(key: "SendId", in sendId);
-			DataModelValue delayMs = evt.DelayMs;
+			DataModelValue delayMs = outgoingEvent.DelayMs;
 			dataModelObject1.Add(key: "DelayMs", in delayMs);
-			var type = evt.Type;
+			var type = outgoingEvent.Type;
 			var dataModelValue1 = (DataModelValue) type?.ToString();
 			dataModelObject1.Add(key: "Type", in dataModelValue1);
-			var target = evt.Target;
+			var target = outgoingEvent.Target;
 			var dataModelValue2 = (DataModelValue) target?.ToString();
 			dataModelObject1.Add(key: "Target", in dataModelValue2);
-			var data = evt.Data;
+			var data = outgoingEvent.Data;
 			dataModelObject1.Add(key: "Data", in data);
 			DataModelList dataModelObject2 = dataModelObject1;
-			return new ValueTask(WriteLog(loggerContext, "[SEND] Name: " + EventName.ToName(evt.NameParts), data: dataModelObject2));
+			return new ValueTask(WriteLog(loggerContext, "[SEND] Name: " + EventName.ToName(outgoingEvent.NameParts), data: dataModelObject2));
 		}
 
 		public ValueTask TraceCancelEvent(ILoggerContext loggerContext,
@@ -210,7 +210,7 @@ namespace Xtate.Runner
 		private Task WriteLog(ILoggerContext loggerContext,
 							  string message,
 							  bool stop = false,
-							  Exception? exception = null,
+							  Exception? exception = default,
 							  DataModelValue data = default)
 		{
 			var dataModel = loggerContext.GetDataModel();
@@ -259,7 +259,7 @@ namespace Xtate.Runner
 			string? str;
 			if (dataModel is null)
 			{
-				str = null;
+				str = default;
 			}
 			else
 			{

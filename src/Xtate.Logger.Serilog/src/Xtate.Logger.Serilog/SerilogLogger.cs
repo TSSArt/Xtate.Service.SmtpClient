@@ -288,17 +288,17 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask TraceSendEvent(ILoggerContext loggerContext, IOutgoingEvent evt, CancellationToken token)
+		public ValueTask TraceSendEvent(ILoggerContext loggerContext, IOutgoingEvent outgoingEvent, CancellationToken token)
 		{
 			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
-			if (evt is null) throw new ArgumentNullException(nameof(evt));
+			if (outgoingEvent is null) throw new ArgumentNullException(nameof(outgoingEvent));
 
 			if (IsTracingEnabled)
 			{
 				var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.InterpreterState, IsVerbose))
-									.ForContext(new OutgoingEventEnricher(loggerContext, evt, IsVerbose));
+									.ForContext(new OutgoingEventEnricher(loggerContext, outgoingEvent, IsVerbose));
 
-				logger.Debug(messageTemplate: @"Send event '{EventName}'", EventName.ToName(evt.NameParts));
+				logger.Debug(messageTemplate: @"Send event '{EventName}'", EventName.ToName(outgoingEvent.NameParts));
 			}
 
 			return default;
@@ -461,14 +461,14 @@ namespace Xtate
 
 		private class OutgoingEventEnricher : ILogEventEnricher
 		{
-			private readonly IOutgoingEvent _event;
 			private readonly bool           _isVerbose;
 			private readonly ILoggerContext _loggerContext;
+			private readonly IOutgoingEvent _outgoingEvent;
 
-			public OutgoingEventEnricher(ILoggerContext loggerContext, IOutgoingEvent evt, bool isVerbose)
+			public OutgoingEventEnricher(ILoggerContext loggerContext, IOutgoingEvent outgoingEvent, bool isVerbose)
 			{
 				_loggerContext = loggerContext;
-				_event = evt;
+				_outgoingEvent = outgoingEvent;
 				_isVerbose = isVerbose;
 			}
 
@@ -476,32 +476,32 @@ namespace Xtate
 
 			public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
 			{
-				if (!_event.NameParts.IsDefaultOrEmpty)
+				if (!_outgoingEvent.NameParts.IsDefaultOrEmpty)
 				{
-					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"EventName", EventName.ToName(_event.NameParts)));
+					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"EventName", EventName.ToName(_outgoingEvent.NameParts)));
 				}
 
-				logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"EventType", _event.Type));
+				logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"EventType", _outgoingEvent.Type));
 
-				if (_event.Target is { } target)
+				if (_outgoingEvent.Target is { } target)
 				{
 					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"EventTarget", target.ToString()));
 				}
 
-				if (_event.SendId is { } sendId)
+				if (_outgoingEvent.SendId is { } sendId)
 				{
 					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"SendId", sendId.Value));
 				}
 
-				if (_event.DelayMs > 0)
+				if (_outgoingEvent.DelayMs > 0)
 				{
-					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"Delay", _event.DelayMs));
+					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"Delay", _outgoingEvent.DelayMs));
 				}
 
-				if (_isVerbose && !_event.Data.IsUndefined())
+				if (_isVerbose && !_outgoingEvent.Data.IsUndefined())
 				{
-					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"Data", _event.Data.ToObject(), destructureObjects: true));
-					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"DataText", _loggerContext.ConvertToText(_event.Data)));
+					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"Data", _outgoingEvent.Data.ToObject(), destructureObjects: true));
+					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"DataText", _loggerContext.ConvertToText(_outgoingEvent.Data)));
 				}
 			}
 

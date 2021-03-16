@@ -20,7 +20,6 @@
 using System;
 using System.Collections.Immutable;
 using System.Collections.Specialized;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -40,7 +39,6 @@ namespace Xtate.Test
 	[TestClass]
 	public class StorageTest
 	{
-		[SuppressMessage(category: "Style", checkId: "IDE0057:Use range operator", Justification = "")]
 		public static string Dump(IStorage storage, string delimiter = "", bool hex = false)
 		{
 			var inMemoryStorage = (InMemoryStorage) storage;

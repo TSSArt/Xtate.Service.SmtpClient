@@ -54,7 +54,7 @@ namespace Xtate.Test
 			_stateMachine = director.ConstructStateMachine().SynchronousGetResult();
 		}
 
-		private static EventObject CreateEventObject(string name) => new(EventType.External, EventName.ToParts(name));
+		private static EventObject CreateEventObject(string name) => new() { Type = EventType.External, NameParts = EventName.ToParts(name) };
 
 		[TestMethod]
 		public async Task ReadScxmlTest()

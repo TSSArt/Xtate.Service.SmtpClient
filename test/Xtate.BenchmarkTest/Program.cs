@@ -76,7 +76,7 @@ namespace Xtate.BenchmarkTest
 
 		public ValueTask TraceInterpreterState(ILoggerContext loggerContext, StateMachineInterpreterState state, CancellationToken token) => default;
 
-		public ValueTask TraceSendEvent(ILoggerContext loggerContext, IOutgoingEvent evt, CancellationToken token) => default;
+		public ValueTask TraceSendEvent(ILoggerContext loggerContext, IOutgoingEvent outgoingEvent, CancellationToken token) => default;
 
 		public ValueTask TraceCancelEvent(ILoggerContext loggerContext, SendId sendId, CancellationToken token) => default;
 

@@ -91,7 +91,7 @@ namespace Xtate.Runner
 			Stop();
 		}
 
-		public void Stop() => SessionId = null;
+		public void Stop() => SessionId = default;
 
 		private void Log_SelectedIndexChanged(object sender, EventArgs e)
 		{
@@ -128,7 +128,7 @@ DATA:
 				return true;
 			}
 
-			error = null;
+			error = default;
 			if (logItem.DataModel is null)
 			{
 				return false;

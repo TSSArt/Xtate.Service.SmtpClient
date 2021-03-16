@@ -34,7 +34,7 @@ namespace Xtate.Test
 </state>
 <final id='final'>
 	<onentry>
-		<send target='{0}' type='scxml' event='trigger2'/>
+		<send target='{0}' type='named.pipe' event='trigger2'/>
     </onentry>
 </final>
 </scxml>";
@@ -51,17 +51,17 @@ namespace Xtate.Test
 
 		private static string U(string v, [CallerMemberName] string? member = default) => v + "_" + member;
 
-		private static EventObject CreateEventObject(string name) => new(EventType.External, EventName.ToParts(name));
+		private static EventObject CreateEventObject(string name) => new() { Type = EventType.External, NameParts = EventName.ToParts(name) };
 
 		[TestMethod]
 		public async Task SameStateMachineHostTest()
 		{
-			var srcPrc = new StateMachineHostBuilder().AddNamedIoProcessor(U("src")).AddEcmaScript().Build();
+			var srcPrc = new StateMachineHostBuilder().AddNamedPipeIoProcessor(host: "me", U("src")).AddEcmaScript().Build();
 			await srcPrc.StartHostAsync();
-			await srcPrc.StartStateMachineAsync(string.Format(SrcScxml, $"iop:///{U("src")}#_scxml_dstID"), sessionId: "srcID");
-			var dst = srcPrc.ExecuteStateMachineAsync(DstScxml, sessionId: "dstID");
+			await srcPrc.StartStateMachineAsync(string.Format(SrcScxml, $"named.pipe:///{U("src")}#_session_dstID"), sessionId: "srcID");
+			var dst = srcPrc.ExecuteStateMachineAsync(DstScxml, sessionId: "dstID").Preserve();
 
-			if (srcPrc.TryGetEventDispatcher(SessionId.FromString("srcID"), out var eventDispatcher))
+			if (await srcPrc.TryGetEventDispatcher(SessionId.FromString("srcID"), token: default) is { } eventDispatcher)
 			{
 				await eventDispatcher.Send(CreateEventObject("trigger"));
 			}
@@ -72,22 +72,22 @@ namespace Xtate.Test
 
 			await srcPrc.StopHostAsync();
 
-			Assert.AreEqual($"http://www.w3.org/TR/scxml/#SCXMLEventProcessor+pipe:///{U("src")}#_scxml_srcID", result.AsString());
+			Assert.AreEqual($"http://www.w3.org/TR/scxml/#NamedPipeEventProcessor+named.pipe://me/{U("src")}#_session_srcID", result.AsString());
 		}
 
 		[TestMethod]
 		public async Task SameAppDomainNoPipesTest()
 		{
-			var srcPrc = new StateMachineHostBuilder().AddNamedIoProcessor(U("src")).Build();
-			var dstPrc = new StateMachineHostBuilder().AddNamedIoProcessor(U("dst")).AddEcmaScript().Build();
+			var srcPrc = new StateMachineHostBuilder().AddNamedPipeIoProcessor(host: "me", U("src")).Build();
+			var dstPrc = new StateMachineHostBuilder().AddNamedPipeIoProcessor(host: "me", U("dst")).AddEcmaScript().Build();
 
 			await srcPrc.StartHostAsync();
 			await dstPrc.StartHostAsync();
 
-			await srcPrc.StartStateMachineAsync(string.Format(SrcScxml, $"iop:///{U("dst")}#_scxml_dstID"), sessionId: "srcID");
-			var dst = dstPrc.ExecuteStateMachineAsync(DstScxml, sessionId: "dstID");
+			await srcPrc.StartStateMachineAsync(string.Format(SrcScxml, $"iop:///{U("dst")}#_session_dstID"), sessionId: "srcID");
+			var dst = dstPrc.ExecuteStateMachineAsync(DstScxml, sessionId: "dstID").Preserve();
 
-			if (srcPrc.TryGetEventDispatcher(SessionId.FromString("srcID"), out var eventDispatcher))
+			if (await srcPrc.TryGetEventDispatcher(SessionId.FromString("srcID"), token: default) is { } eventDispatcher)
 			{
 				await eventDispatcher.Send(CreateEventObject("trigger"));
 			}
@@ -99,22 +99,22 @@ namespace Xtate.Test
 			await srcPrc.StopHostAsync();
 			await dstPrc.StopHostAsync();
 
-			Assert.AreEqual($"http://www.w3.org/TR/scxml/#SCXMLEventProcessor+pipe:///{U("src")}#_scxml_srcID", result.AsString());
+			Assert.AreEqual($"http://www.w3.org/TR/scxml/#NamedPipeEventProcessor+named.pipe://me/{U("src")}#_session_srcID", result.AsString());
 		}
 
 		[TestMethod]
 		public async Task SameAppDomainPipesTest()
 		{
-			var srcPrc = new StateMachineHostBuilder().AddNamedIoProcessor(host: "MyHost1", U("src")).Build();
-			var dstPrc = new StateMachineHostBuilder().AddNamedIoProcessor(host: ".", U("dst")).AddEcmaScript().Build();
+			var srcPrc = new StateMachineHostBuilder().AddNamedPipeIoProcessor(host: "MyHost1", U("src")).Build();
+			var dstPrc = new StateMachineHostBuilder().AddNamedPipeIoProcessor(host: ".", U("dst")).AddEcmaScript().Build();
 
 			await srcPrc.StartHostAsync();
 			await dstPrc.StartHostAsync();
 
-			await srcPrc.StartStateMachineAsync(string.Format(SrcScxml, $"iop://./{U("dst")}#_scxml_dstID"), sessionId: "srcID");
-			var dst = dstPrc.ExecuteStateMachineAsync(DstScxml, sessionId: "dstID");
+			await srcPrc.StartStateMachineAsync(string.Format(SrcScxml, $"iop://./{U("dst")}#_session_dstID"), sessionId: "srcID");
+			var dst = dstPrc.ExecuteStateMachineAsync(DstScxml, sessionId: "dstID").Preserve();
 
-			if (srcPrc.TryGetEventDispatcher(SessionId.FromString("srcID"), out var eventDispatcher))
+			if (await srcPrc.TryGetEventDispatcher(SessionId.FromString("srcID"), token: default) is { } eventDispatcher)
 			{
 				await eventDispatcher.Send(CreateEventObject("trigger"));
 			}
@@ -126,7 +126,7 @@ namespace Xtate.Test
 			await srcPrc.StopHostAsync();
 			await dstPrc.StopHostAsync();
 
-			Assert.AreEqual($"http://www.w3.org/TR/scxml/#SCXMLEventProcessor+pipe://myhost1/{U("src")}#_scxml_srcID", result.AsString());
+			Assert.AreEqual($"http://www.w3.org/TR/scxml/#NamedPipeEventProcessor+named.pipe://myhost1/{U("src")}#_session_srcID", result.AsString());
 		}
 	}
 }
