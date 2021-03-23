@@ -70,7 +70,7 @@ namespace Xtate.CustomAction
 			return Regex.Match(email!, pattern, RegexOptions.IgnoreCase).Success;
 		}
 
-		private static bool EmailMatch(string? email, DataModelValue value)
+		private static bool EmailMatch(string? email, in DataModelValue value)
 		{
 			if (string.IsNullOrWhiteSpace(email))
 			{

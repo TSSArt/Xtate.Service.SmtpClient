@@ -65,20 +65,20 @@ namespace Xtate.Runner
 		{
 			DataModelList dataModelObject1 = new();
 			var name = (DataModelValue) EventName.ToName(outgoingEvent.NameParts);
-			dataModelObject1.Add(key: "Name", in name);
+			dataModelObject1.Add(key: "Name", name);
 			var sendId = (DataModelValue) outgoingEvent.SendId;
-			dataModelObject1.Add(key: "SendId", in sendId);
+			dataModelObject1.Add(key: "SendId", sendId);
 			DataModelValue delayMs = outgoingEvent.DelayMs;
-			dataModelObject1.Add(key: "DelayMs", in delayMs);
+			dataModelObject1.Add(key: "DelayMs", delayMs);
 			var type = outgoingEvent.Type;
 			var dataModelValue1 = (DataModelValue) type?.ToString();
-			dataModelObject1.Add(key: "Type", in dataModelValue1);
+			dataModelObject1.Add(key: "Type", dataModelValue1);
 			var target = outgoingEvent.Target;
 			var dataModelValue2 = (DataModelValue) target?.ToString();
-			dataModelObject1.Add(key: "Target", in dataModelValue2);
+			dataModelObject1.Add(key: "Target", dataModelValue2);
 			var data = outgoingEvent.Data;
-			dataModelObject1.Add(key: "Data", in data);
-			DataModelList dataModelObject2 = dataModelObject1;
+			dataModelObject1.Add(key: "Data", data);
+			var dataModelObject2 = dataModelObject1;
 			return new ValueTask(WriteLog(loggerContext, "[SEND] Name: " + EventName.ToName(outgoingEvent.NameParts), data: dataModelObject2));
 		}
 
@@ -93,19 +93,19 @@ namespace Xtate.Runner
 		{
 			DataModelList dataModelObject1 = new();
 			var invokeId = (DataModelValue) invokeData.InvokeId;
-			dataModelObject1.Add(key: "InvokeId", in invokeId);
+			dataModelObject1.Add(key: "InvokeId", invokeId);
 			var dataModelValue1 = (DataModelValue) invokeData.Type.ToString();
-			dataModelObject1.Add(key: "Type", in dataModelValue1);
+			dataModelObject1.Add(key: "Type", dataModelValue1);
 			var source = invokeData.Source;
 			var dataModelValue2 = (DataModelValue) source?.ToString();
-			dataModelObject1.Add(key: "Source", in dataModelValue2);
+			dataModelObject1.Add(key: "Source", dataModelValue2);
 			var rawContent = (DataModelValue) invokeData.RawContent;
-			dataModelObject1.Add(key: "RawContent", in rawContent);
+			dataModelObject1.Add(key: "RawContent", rawContent);
 			var content = invokeData.Content;
-			dataModelObject1.Add(key: "Content", in content);
+			dataModelObject1.Add(key: "Content", content);
 			var parameters = invokeData.Parameters;
-			dataModelObject1.Add(key: "Parameters", in parameters);
-			DataModelList dataModelObject2 = dataModelObject1;
+			dataModelObject1.Add(key: "Parameters", parameters);
+			var dataModelObject2 = dataModelObject1;
 			return new ValueTask(WriteLog(loggerContext, message: "[INVOKE]", data: dataModelObject2));
 		}
 
@@ -215,7 +215,7 @@ namespace Xtate.Runner
 		{
 			var dataModel = loggerContext.GetDataModel();
 			var dataModelAsText = loggerContext.GetDataModelAsText();
-			var dataAsText = !data.IsUndefined() ? loggerContext.ConvertToText(in data) : null;
+			var dataAsText = !data.IsUndefined() ? loggerContext.ConvertToText(data) : null;
 			if (InvokeRequired)
 			{
 				return Task.Factory.FromAsync(BeginInvoke((Action) (
@@ -263,10 +263,10 @@ namespace Xtate.Runner
 			}
 			else
 			{
-				var dataModelValue = dataModel["_x"];
-				dataModelValue = dataModelValue.AsList()["host"];
-				dataModelValue = dataModelValue.AsList()["location"];
-				str = dataModelValue.AsString();
+				var value = dataModel["_x"];
+				value = value.AsList()["host"];
+				value = value.AsList()["location"];
+				str = value.AsString();
 			}
 
 			var uriString = str;
@@ -292,7 +292,7 @@ namespace Xtate.Runner
 				}
 			}
 
-			SessionControl sessionControl = AddSessionControlTab(uri, sessionId.Value);
+			var sessionControl = AddSessionControlTab(uri, sessionId.Value);
 			sessionControl.AddLog(message, dataModel, dataModelAsText, dataAsText, exception);
 			if (stop)
 			{

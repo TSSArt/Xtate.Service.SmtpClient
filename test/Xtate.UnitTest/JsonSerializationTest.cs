@@ -34,38 +34,38 @@ namespace Xtate.Test
 		public void DeserializationJsonTest()
 		{
 			// arrange
-			const string json = @"{""name"":""val"",""data"":{""status"":""ok"",""status1"":""ok1"",""parameters"":{""response"":""0378658708""}}}";
+			const string json = @"{""name"":""value"",""data"":{""status"":""ok"",""status1"":""ok1"",""parameters"":{""response"":""0378658708""}}}";
 
 			// act
-			dynamic dataModelValue = DataModelConverter.FromJson(json);
+			dynamic value = DataModelConverter.FromJson(json);
 
 			// assert
-			Assert.AreEqual("ok", dataModelValue.data.status);
-			Assert.IsInstanceOfType(dataModelValue.data.parameters.response, typeof(string));
+			Assert.AreEqual("ok", value.data.status);
+			Assert.IsInstanceOfType(value.data.parameters.response, typeof(string));
 		}
 
 		[TestMethod]
 		public void StringSerializationTest()
 		{
 			// arrange
-			var val = (DataModelValue) "val";
+			var value = (DataModelValue) "value";
 
 			// act
-			var json = DataModelConverter.ToJson(val);
+			var json = DataModelConverter.ToJson(value);
 
 			// assert
-			Assert.AreEqual(expected: "\"val\"", json);
+			Assert.AreEqual(expected: "\"value\"", json);
 		}
 
 		[TestMethod]
 		public void CycleReferenceTest()
 		{
 			// arrange
-			var dict = new DataModelList();
-			dict["self"] = dict;
+			var list = new DataModelList();
+			list["self"] = list;
 
 			// act => assert
-			Assert.ThrowsException<JsonException>(() => DataModelConverter.ToJson(dict));
+			Assert.ThrowsException<JsonException>(() => DataModelConverter.ToJson(list));
 		}
 
 		[TestMethod]
@@ -230,10 +230,10 @@ namespace Xtate.Test
 		public void ToJsonUtf8BytesTest()
 		{
 			// arrange
-			const string val = "test";
+			const string value = "test";
 
 			// act
-			var bytes = DataModelConverter.ToJsonUtf8Bytes(val);
+			var bytes = DataModelConverter.ToJsonUtf8Bytes(value);
 
 			// assert
 			Assert.AreEqual(expected: "\"test\"", Encoding.UTF8.GetString(bytes));
@@ -243,11 +243,11 @@ namespace Xtate.Test
 		public async Task ToJsonAsync()
 		{
 			// arrange
-			const string val = "test";
+			const string value = "test";
 			var stream = new MemoryStream();
 
 			// act
-			await DataModelConverter.ToJsonAsync(stream, val);
+			await DataModelConverter.ToJsonAsync(stream, value);
 
 			// assert
 			Assert.AreEqual(expected: "\"test\"", Encoding.UTF8.GetString(stream.ToArray()));
@@ -260,10 +260,10 @@ namespace Xtate.Test
 			var bytes = Encoding.UTF8.GetBytes("\"test\"");
 
 			// act
-			var val = DataModelConverter.FromJson(bytes).AsString();
+			var value = DataModelConverter.FromJson(bytes).AsString();
 
 			// assert
-			Assert.AreEqual(expected: "test", val);
+			Assert.AreEqual(expected: "test", value);
 		}
 
 		[TestMethod]
@@ -274,10 +274,10 @@ namespace Xtate.Test
 			var stream = new MemoryStream(bytes);
 
 			// act
-			var val = (await DataModelConverter.FromJsonAsync(stream)).AsString();
+			var value = (await DataModelConverter.FromJsonAsync(stream)).AsString();
 
 			// assert
-			Assert.AreEqual(expected: "test", val);
+			Assert.AreEqual(expected: "test", value);
 		}
 
 		[TestMethod]
@@ -300,10 +300,10 @@ namespace Xtate.Test
 			// arrange
 
 			// act
-			var val = DataModelConverter.FromJson("null");
+			var value = DataModelConverter.FromJson("null");
 
 			// assert
-			Assert.AreEqual(DataModelValueType.Null, val.Type);
+			Assert.AreEqual(DataModelValueType.Null, value.Type);
 		}
 
 		[TestMethod]
@@ -312,11 +312,11 @@ namespace Xtate.Test
 			// arrange
 
 			// act
-			var val = DataModelConverter.FromJson("\"2012-04-23T18:25:43.511Z\"");
+			var value = DataModelConverter.FromJson("\"2012-04-23T18:25:43.511Z\"");
 
 			// assert
-			Assert.AreEqual(DataModelValueType.DateTime, val.Type);
-			Assert.AreEqual(new DateTime(year: 2012, month: 04, day: 23, hour: 18, minute: 25, second: 43, millisecond: 511, DateTimeKind.Utc), val.AsDateTime().ToDateTime());
+			Assert.AreEqual(DataModelValueType.DateTime, value.Type);
+			Assert.AreEqual(new DateTime(year: 2012, month: 04, day: 23, hour: 18, minute: 25, second: 43, millisecond: 511, DateTimeKind.Utc), value.AsDateTime().ToDateTime());
 		}
 
 		[TestMethod]
@@ -325,11 +325,11 @@ namespace Xtate.Test
 			// arrange
 
 			// act
-			var val = DataModelConverter.FromJson("\"2012-04-23T18:25:43.511+05:00\"");
+			var value = DataModelConverter.FromJson("\"2012-04-23T18:25:43.511+05:00\"");
 
 			// assert
-			Assert.AreEqual(DataModelValueType.DateTime, val.Type);
-			Assert.AreEqual(new DateTimeOffset(year: 2012, month: 04, day: 23, hour: 18, minute: 25, second: 43, millisecond: 511, TimeSpan.FromHours(5)), val.AsDateTime().ToDateTimeOffset());
+			Assert.AreEqual(DataModelValueType.DateTime, value.Type);
+			Assert.AreEqual(new DateTimeOffset(year: 2012, month: 04, day: 23, hour: 18, minute: 25, second: 43, millisecond: 511, TimeSpan.FromHours(5)), value.AsDateTime().ToDateTimeOffset());
 		}
 
 		[TestMethod]
@@ -339,13 +339,13 @@ namespace Xtate.Test
 			const long maxSafeInt = 9007199254740991;
 
 			// act
-			var val = DataModelConverter.FromJson("1").AsNumber();
+			var value = DataModelConverter.FromJson("1").AsNumber();
 			var valMax = DataModelConverter.FromJson(maxSafeInt.ToString(CultureInfo.InvariantCulture)).AsNumber();
 			var valMax1 = DataModelConverter.FromJson((maxSafeInt + 1).ToString(CultureInfo.InvariantCulture)).AsNumber();
 			var valMax2 = DataModelConverter.FromJson((maxSafeInt + 2).ToString(CultureInfo.InvariantCulture)).AsNumber();
 
 			// assert
-			Assert.AreEqual(expected: 1, val);
+			Assert.AreEqual(expected: 1, value);
 			Assert.AreEqual(maxSafeInt, valMax);
 			Assert.AreEqual(valMax1, valMax2); //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Number/MAX_SAFE_INTEGER
 		}
@@ -354,23 +354,23 @@ namespace Xtate.Test
 		public void ReadObjectTest()
 		{
 			// act
-			var val = DataModelConverter.FromJson("{\"key\":\"val\"}");
+			var value = DataModelConverter.FromJson("{\"key\":\"value\"}");
 
 			// assert
-			Assert.AreEqual(DataModelValueType.List, val.Type);
-			Assert.AreEqual(expected: "val", val.AsList()["key"]);
+			Assert.AreEqual(DataModelValueType.List, value.Type);
+			Assert.AreEqual(expected: "value", value.AsList()["key"]);
 		}
 
 		[TestMethod]
 		public void ReadArrayTest()
 		{
 			// act
-			var val = DataModelConverter.FromJson("[1]");
+			var value = DataModelConverter.FromJson("[1]");
 
 			// assert
-			Assert.AreEqual(DataModelValueType.List, val.Type);
-			Assert.AreEqual(expected: 1, val.AsList().Count);
-			Assert.AreEqual(expected: 1, val.AsList()[0]);
+			Assert.AreEqual(DataModelValueType.List, value.Type);
+			Assert.AreEqual(expected: 1, value.AsList().Count);
+			Assert.AreEqual(expected: 1, value.AsList()[0]);
 		}
 
 		[TestMethod]

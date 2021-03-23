@@ -56,8 +56,8 @@ namespace Xtate.Test
 							   .SetDoneData(ctx =>
 											{
 												dynamic data = ctx.DataModel;
-												var val = (int) data._x.args;
-												return new DataModelValue(val);
+												var value = (int) data._x.args;
+												return new DataModelValue(value);
 											})
 							   .EndFinal()
 							   .Build();

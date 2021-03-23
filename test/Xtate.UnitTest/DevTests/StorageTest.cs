@@ -96,14 +96,14 @@ namespace Xtate.Test
 			return count;
 		}
 
-		private static int GetLength(byte val)
+		private static int GetLength(byte value)
 		{
-			if ((val & 0x80) == 0x00) return 1;
-			if ((val & 0xE0) == 0xC0) return 2;
-			if ((val & 0xF0) == 0xE0) return 3;
-			if ((val & 0xF8) == 0xF0) return 4;
-			if ((val & 0xFC) == 0xF8) return 5;
-			if ((val & 0xFE) == 0xFC) return 6;
+			if ((value & 0x80) == 0x00) return 1;
+			if ((value & 0xE0) == 0xC0) return 2;
+			if ((value & 0xF0) == 0xE0) return 3;
+			if ((value & 0xF8) == 0xF0) return 4;
+			if ((value & 0xFC) == 0xF8) return 5;
+			if ((value & 0xFE) == 0xFC) return 6;
 
 			throw new ArgumentException("Incorrect key encoding");
 		}
@@ -197,19 +197,19 @@ namespace Xtate.Test
 
 		private static int GetLength(byte[] key, int start)
 		{
-			var val = key[start];
+			var value = key[start];
 
-			if (val == 0) return 0;
+			if (value == 0) return 0;
 
-			if (val == 7) return GetBytesLength(key, start + 1) + 1;
+			if (value == 7) return GetBytesLength(key, start + 1) + 1;
 
-			if ((val & 0x80) == 0x00) return 1;
-			if ((val & 0xE0) == 0xC0) return 2;
-			if ((val & 0xF0) == 0xE0) return 3;
-			if ((val & 0xF8) == 0xF0) return 4;
-			if ((val & 0xFC) == 0xF8) return 5;
-			if ((val & 0xFE) == 0xFC) return 6;
-			if ((val & 0xFF) == 0xFE) return 7;
+			if ((value & 0x80) == 0x00) return 1;
+			if ((value & 0xE0) == 0xC0) return 2;
+			if ((value & 0xF0) == 0xE0) return 3;
+			if ((value & 0xF8) == 0xF0) return 4;
+			if ((value & 0xFC) == 0xF8) return 5;
+			if ((value & 0xFE) == 0xFC) return 6;
+			if ((value & 0xFF) == 0xFE) return 7;
 
 			throw new ArgumentException("Incorrect key encoding");
 		}
@@ -333,14 +333,14 @@ namespace Xtate.Test
 			Assert.AreEqual(expected: "/[5]=2", Dump(storage));
 		}
 
-		private static string ConvertInt(int val)
+		private static string ConvertInt(int value)
 		{
-			if (val == 0)
+			if (value == 0)
 			{
 				return "\0";
 			}
 
-			var uval = unchecked((uint) val);
+			var uval = unchecked((uint) value);
 
 			var str = "";
 			if (uval > 0) str += ((char) (uval & 0xFF)).ToString();
@@ -526,9 +526,9 @@ namespace Xtate.Test
 
 			const string s = "aeiouçéüß";
 			bucket.Add(s, s);
-			var flag = bucket.TryGet(s, out string? val);
+			var flag = bucket.TryGet(s, out string? value);
 			Assert.IsTrue(flag);
-			Assert.AreEqual(s, val);
+			Assert.AreEqual(s, value);
 		}
 
 		[TestMethod]
@@ -546,10 +546,10 @@ namespace Xtate.Test
 			var storage = new InMemoryStorage(false);
 			var bucket = new Bucket(storage);
 			bucket.Add(key: "a", value: "");
-			var flag = bucket.TryGet(key: "a", out string? val);
+			var flag = bucket.TryGet(key: "a", out string? value);
 
 			Assert.IsTrue(flag);
-			Assert.AreEqual(expected: "", val);
+			Assert.AreEqual(expected: "", value);
 			Assert.AreEqual(expected: "/'a'=\xFF", Dump(storage));
 		}
 
@@ -559,10 +559,10 @@ namespace Xtate.Test
 			var storage = new InMemoryStorage(false);
 			var bucket = new Bucket(storage);
 			bucket.Add(key: "a", (string) null!);
-			var flag = bucket.TryGet(key: "a", out string? val);
+			var flag = bucket.TryGet(key: "a", out string? value);
 
 			Assert.IsFalse(flag);
-			Assert.IsNull(val);
+			Assert.IsNull(value);
 			Assert.AreEqual(expected: "/'a'=", Dump(storage));
 		}
 

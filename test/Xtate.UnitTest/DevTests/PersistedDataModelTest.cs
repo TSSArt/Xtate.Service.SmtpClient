@@ -399,26 +399,26 @@ namespace Xtate.Test
 			_dataModelList["obj1c"] = new DataModelValue(obj1);
 			_dataModelList["obj1c"] = DataModelValue.Null;
 
-			obj1["extra1"] = new DataModelValue("val-extra1");
-			obj2["extra2"] = new DataModelValue("val-extra2");
+			obj1["extra1"] = new DataModelValue("value-extra1");
+			obj2["extra2"] = new DataModelValue("value-extra2");
 
 			Assert.AreSame(obj1, _dataModelList["obj1a"].AsList());
 			Assert.AreSame(obj1, _dataModelList["obj1b"].AsList());
 			Assert.AreSame(obj2, _dataModelList["obj2a"].AsList());
 			Assert.AreSame(obj2, _dataModelList["obj2b"].AsList());
-			Assert.AreEqual(expected: "val-extra1", _dataModelList["obj1a"].AsList()["extra1"].AsString());
-			Assert.AreEqual(expected: "val-extra1", _dataModelList["obj1b"].AsList()["extra1"].AsString());
-			Assert.AreEqual(expected: "val-extra2", _dataModelList["obj2a"].AsList()["extra2"].AsString());
-			Assert.AreEqual(expected: "val-extra2", _dataModelList["obj2b"].AsList()["extra2"].AsString());
+			Assert.AreEqual(expected: "value-extra1", _dataModelList["obj1a"].AsList()["extra1"].AsString());
+			Assert.AreEqual(expected: "value-extra1", _dataModelList["obj1b"].AsList()["extra1"].AsString());
+			Assert.AreEqual(expected: "value-extra2", _dataModelList["obj2a"].AsList()["extra2"].AsString());
+			Assert.AreEqual(expected: "value-extra2", _dataModelList["obj2b"].AsList()["extra2"].AsString());
 
 			var _ = new DataModelListPersistingController(_bucket, _restoredTracker, _restoredDataModelList);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
 			Assert.AreSame(_restoredDataModelList["obj1a"].AsList(), _restoredDataModelList["obj1b"].AsList());
 			Assert.AreSame(_restoredDataModelList["obj2a"].AsList(), _restoredDataModelList["obj2b"].AsList());
-			Assert.AreEqual(expected: "val-extra1", _restoredDataModelList["obj1a"].AsList()["extra1"].AsString());
-			Assert.AreEqual(expected: "val-extra1", _restoredDataModelList["obj1b"].AsList()["extra1"].AsString());
-			Assert.AreEqual(expected: "val-extra2", _restoredDataModelList["obj2a"].AsList()["extra2"].AsString());
-			Assert.AreEqual(expected: "val-extra2", _restoredDataModelList["obj2b"].AsList()["extra2"].AsString());
+			Assert.AreEqual(expected: "value-extra1", _restoredDataModelList["obj1a"].AsList()["extra1"].AsString());
+			Assert.AreEqual(expected: "value-extra1", _restoredDataModelList["obj1b"].AsList()["extra1"].AsString());
+			Assert.AreEqual(expected: "value-extra2", _restoredDataModelList["obj2a"].AsList()["extra2"].AsString());
+			Assert.AreEqual(expected: "value-extra2", _restoredDataModelList["obj2b"].AsList()["extra2"].AsString());
 		}
 
 		[TestMethod]
@@ -443,8 +443,8 @@ namespace Xtate.Test
 			_dataModelList[4] = new DataModelValue(obj2);
 			_dataModelList[5] = new DataModelValue(obj2);
 
-			obj1[2] = new DataModelValue("val-extra1");
-			obj2[3] = new DataModelValue("val-extra2");
+			obj1[2] = new DataModelValue("value-extra1");
+			obj2[3] = new DataModelValue("value-extra2");
 
 			_dataModelList[6] = new DataModelValue(obj1);
 			_dataModelList[6] = DataModelValue.Null;
@@ -453,19 +453,19 @@ namespace Xtate.Test
 			Assert.AreSame(obj1, _dataModelList[3].AsList());
 			Assert.AreSame(obj2, _dataModelList[4].AsList());
 			Assert.AreSame(obj2, _dataModelList[5].AsList());
-			Assert.AreEqual(expected: "val-extra1", _dataModelList[2].AsList()[2].AsString());
-			Assert.AreEqual(expected: "val-extra1", _dataModelList[3].AsList()[2].AsString());
-			Assert.AreEqual(expected: "val-extra2", _dataModelList[4].AsList()[3].AsString());
-			Assert.AreEqual(expected: "val-extra2", _dataModelList[5].AsList()[3].AsString());
+			Assert.AreEqual(expected: "value-extra1", _dataModelList[2].AsList()[2].AsString());
+			Assert.AreEqual(expected: "value-extra1", _dataModelList[3].AsList()[2].AsString());
+			Assert.AreEqual(expected: "value-extra2", _dataModelList[4].AsList()[3].AsString());
+			Assert.AreEqual(expected: "value-extra2", _dataModelList[5].AsList()[3].AsString());
 
 			var _ = new DataModelListPersistingController(_bucket, _restoredTracker, _restoredDataModelList);
 			Console.WriteLine(StorageTest.Dump(_storage, Environment.NewLine, hex: true));
 			Assert.AreSame(_restoredDataModelList[2].AsList(), _restoredDataModelList[3].AsList());
 			Assert.AreSame(_restoredDataModelList[4].AsList(), _restoredDataModelList[5].AsList());
-			Assert.AreEqual(expected: "val-extra1", _restoredDataModelList[2].AsList()[2].AsString());
-			Assert.AreEqual(expected: "val-extra1", _restoredDataModelList[3].AsList()[2].AsString());
-			Assert.AreEqual(expected: "val-extra2", _restoredDataModelList[4].AsList()[3].AsString());
-			Assert.AreEqual(expected: "val-extra2", _restoredDataModelList[5].AsList()[3].AsString());
+			Assert.AreEqual(expected: "value-extra1", _restoredDataModelList[2].AsList()[2].AsString());
+			Assert.AreEqual(expected: "value-extra1", _restoredDataModelList[3].AsList()[2].AsString());
+			Assert.AreEqual(expected: "value-extra2", _restoredDataModelList[4].AsList()[3].AsString());
+			Assert.AreEqual(expected: "value-extra2", _restoredDataModelList[5].AsList()[3].AsString());
 		}
 
 		[TestMethod]

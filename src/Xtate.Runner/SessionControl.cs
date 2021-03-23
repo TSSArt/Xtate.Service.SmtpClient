@@ -134,18 +134,18 @@ DATA:
 				return false;
 			}
 
-			var dataModelValue = logItem.DataModel["_event"];
-			DataModelList list = dataModelValue.AsListOrEmpty();
-			dataModelValue = list["name"];
-			var str1 = dataModelValue.AsStringOrDefault();
+			var value = logItem.DataModel["_event"];
+			var list = value.AsListOrEmpty();
+			value = list["name"];
+			var str1 = value.AsStringOrDefault();
 			if (str1 is null || !str1.StartsWith("error."))
 			{
 				return false;
 			}
 
-			dataModelValue = list["data"];
-			dataModelValue = dataModelValue.AsListOrEmpty()["text"];
-			var str2 = dataModelValue.AsStringOrDefault();
+			value = list["data"];
+			value = value.AsListOrEmpty()["text"];
+			var str2 = value.AsStringOrDefault();
 			error = str2;
 			return true;
 		}

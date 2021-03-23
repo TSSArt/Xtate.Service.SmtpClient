@@ -80,7 +80,7 @@ namespace Xtate.CustomAction
 			}
 		}
 
-		[SuppressMessage(category: "Performance", checkId: "CA1822:Mark members as static", Justification = "<Pending>")]
+		[SuppressMessage(category: "Performance", checkId: "CA1822:Mark members as static")]
 		[SuppressMessage(category: "ReSharper", checkId: "MemberCanBeMadeStatic.Global")]
 		public string CreateValue(string lastValue, string? rule, string? template)
 		{
@@ -88,7 +88,7 @@ namespace Xtate.CustomAction
 
 			if (lastValue.Length > 0)
 			{
-				query = query.SkipWhile(v => v != lastValue).Skip(1);
+				query = query.SkipWhile(value => value != lastValue).Skip(1);
 			}
 
 			return query.FirstOrDefault() ?? CreateRandomValue(template, rule);

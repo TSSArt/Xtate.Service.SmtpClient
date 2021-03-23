@@ -50,7 +50,7 @@ namespace Xtate.Test
 		<param name='str' expr=""'value1'""/>
 		<param name='int' expr=""11""/>
 		<param name='arr' expr=""[1, 2.5, '3']""/>
-		<param name='obj' expr=""({key: 'val'})""/>
+		<param name='obj' expr=""({key: 'value'})""/>
     </invoke>
     <transition event='done.invoke' target='final'/>
 </state>
@@ -81,7 +81,7 @@ namespace Xtate.Test
 			Assert.AreEqual(1, result.arr[0]);
 			Assert.AreEqual(2.5, result.arr[1]);
 			Assert.AreEqual("3", result["arr"][2]);
-			Assert.AreEqual("val", result.obj.key);
+			Assert.AreEqual("value", result.obj.key);
 		}
 	}
 }
