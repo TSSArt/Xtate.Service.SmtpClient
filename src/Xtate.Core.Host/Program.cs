@@ -18,7 +18,6 @@
 #endregion
 
 using System;
-using System.Collections.Immutable;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -56,13 +55,15 @@ namespace Xtate.Core.Host
 			var name = Assembly.GetExecutingAssembly().GetName().Name;
 			var autorun = stateMachineHost.ExecuteStateMachineAsync(new Uri($"resx://{name}/{name}/Scxml/autorun.scxml"));
 
-			var sss = new StateMachineFluentBuilder(BuilderFactory.Instance).BeginState()
-																			.BeginTransition()
-																			.SetEvent(ImmutableArray.Create((IEventDescriptor) (EventDescriptor) "*"))
-																			.AddOnTransition(Action)
-																			.EndTransition()
-																			.EndState()
-																			.Build();
+			var sss = FluentBuilderFactory
+					  .Create()
+					  .BeginState()
+					  .BeginTransition()
+					  .SetEvent("*")
+					  .AddOnTransition(Action)
+					  .EndTransition()
+					  .EndState()
+					  .Build();
 
 			var _ = stateMachineHost.ExecuteStateMachineAsync(sss, sessionId: "_system");
 

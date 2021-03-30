@@ -101,7 +101,7 @@ namespace Xtate.BenchmarkTest
 
 		public SimpleStateMachine()
 		{
-			_stateMachine = new StateMachineFluentBuilder(BuilderFactory.Instance).BeginFinal().SetId("1").EndFinal().Build();
+			_stateMachine = FluentBuilderFactory.Create().BeginFinal().SetId("1").EndFinal().Build();
 			_channelReader = Channel.CreateUnbounded<IEvent>();
 			var dataModelHandler = new XPathDataModelHandler();
 			Infrastructure.NotNull(dataModelHandler);

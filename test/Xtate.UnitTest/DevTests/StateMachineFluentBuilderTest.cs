@@ -32,7 +32,7 @@ namespace Xtate.Test
 		[TestMethod]
 		public void EmptyStateMachineTest()
 		{
-			var builder = new StateMachineFluentBuilder(BuilderFactory.Instance);
+			var builder = FluentBuilderFactory.Create();
 
 			var stateMachine = builder.Build();
 
@@ -43,7 +43,7 @@ namespace Xtate.Test
 		[TestMethod]
 		public void InitialAttributeStateMachineTest()
 		{
-			var builder = new StateMachineFluentBuilder(BuilderFactory.Instance);
+			var builder = FluentBuilderFactory.Create();
 
 			builder
 					.SetInitial((Identifier) "S1")
@@ -61,7 +61,7 @@ namespace Xtate.Test
 		[TestMethod]
 		public void RootStatesStateMachineTest()
 		{
-			var builder = new StateMachineFluentBuilder(BuilderFactory.Instance);
+			var builder = FluentBuilderFactory.Create();
 
 			builder
 					.BeginState((Identifier) "S1").EndState()
@@ -83,7 +83,7 @@ namespace Xtate.Test
 		[TestMethod]
 		public async Task DataModelTest()
 		{
-			var builder = new StateMachineFluentBuilder(BuilderFactory.Instance);
+			var builder = FluentBuilderFactory.Create();
 
 			builder
 					.BeginState((Identifier) "S1")
@@ -109,7 +109,7 @@ namespace Xtate.Test
 		[TestMethod]
 		public Task LiveLockErrorConditionTest()
 		{
-			var builder = new StateMachineFluentBuilder(BuilderFactory.Instance);
+			var builder = FluentBuilderFactory.Create();
 
 			builder
 					.BeginState((Identifier) "S1")
@@ -134,7 +134,7 @@ namespace Xtate.Test
 		[TestMethod]
 		public Task LiveLockPingPongTest()
 		{
-			var builder = new StateMachineFluentBuilder(BuilderFactory.Instance);
+			var builder = FluentBuilderFactory.Create();
 
 			builder
 					.BeginState((Identifier) "S1")

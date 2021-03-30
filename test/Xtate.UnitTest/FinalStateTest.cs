@@ -30,7 +30,8 @@ namespace Xtate.Test
 		public async Task Final_state_with_number_as_done_data_Should_return_same_value()
 		{
 			// Arrange
-			var stateMachine = new StateMachineFluentBuilder(BuilderFactory.Instance)
+			var stateMachine = FluentBuilderFactory
+							   .Create()
 							   .BeginFinal()
 							   .SetDoneData(_ => new DataModelValue(22))
 							   .EndFinal()
@@ -51,7 +52,8 @@ namespace Xtate.Test
 		public async Task Input_argument_Should_be_passed_as_return_value()
 		{
 			// Arrange
-			var stateMachine = new StateMachineFluentBuilder(BuilderFactory.Instance)
+			var stateMachine = FluentBuilderFactory
+							   .Create()
 							   .BeginFinal()
 							   .SetDoneData(ctx =>
 											{
