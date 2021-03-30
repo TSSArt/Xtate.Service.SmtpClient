@@ -139,13 +139,18 @@ namespace Xtate.CustomAction
 		private static string[] GetPredefinedValues(string? template)
 		{
 			return template switch
-			{
-					"USERID" => new[] { "tadex", "xtadex" },
-					_ => Array.Empty<string>()
-			};
+				   {
+					   "USERID" => new[] { "tadex", "xtadex" },
+					   _        => Array.Empty<string>()
+				   };
 		}
 
-		private static bool TryGenerate(string? template, string? rule, string value, int index, bool random, out string result)
+		private static bool TryGenerate(string? template,
+										string? rule,
+										string value,
+										int index,
+										bool random,
+										out string result)
 		{
 			result = value;
 

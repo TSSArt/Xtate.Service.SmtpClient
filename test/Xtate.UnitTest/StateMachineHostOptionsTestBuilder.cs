@@ -32,9 +32,9 @@ namespace Xtate.Test
 		{
 			var options = new StateMachineHostOptions
 						  {
-								  DataModelHandlerFactories = ImmutableArray<IDataModelHandlerFactory>.Empty,
-								  IoProcessorFactories = ImmutableArray<IIoProcessorFactory>.Empty,
-								  ServiceFactories = ImmutableArray<IServiceFactory>.Empty
+							  DataModelHandlerFactories = ImmutableArray<IDataModelHandlerFactory>.Empty,
+							  IoProcessorFactories = ImmutableArray<IIoProcessorFactory>.Empty,
+							  ServiceFactories = ImmutableArray<IServiceFactory>.Empty
 						  };
 
 			build(options);

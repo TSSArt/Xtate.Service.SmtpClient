@@ -86,11 +86,11 @@ namespace Xtate.Test
 
 			var options = new InterpreterOptions
 						  {
-								  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
-								  ResourceLoaderFactories = ImmutableArray.Create(_resourceLoaderFactoryMock.Object),
-								  PersistenceLevel = PersistenceLevel.ExecutableAction,
-								  StorageProvider = new TestStorage(),
-								  ExternalCommunication = _externalCommunication.Object
+							  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
+							  ResourceLoaderFactories = ImmutableArray.Create(_resourceLoaderFactoryMock.Object),
+							  PersistenceLevel = PersistenceLevel.ExecutableAction,
+							  StorageProvider = new TestStorage(),
+							  ExternalCommunication = _externalCommunication.Object
 						  };
 
 			var newSessionId = SessionId.New();

@@ -227,7 +227,7 @@ namespace Xtate.Test
 		{
 			var list = new DataModelList
 					   {
-							   ["prop"] = new("value")
+						   ["prop"] = new("value")
 					   };
 
 			_dataModelList[0] = new DataModelValue(list);
@@ -243,7 +243,7 @@ namespace Xtate.Test
 		{
 			var list = new DataModelList
 					   {
-							   [0] = new("value")
+						   [0] = new("value")
 					   };
 
 			_dataModelList[0] = new DataModelValue(list);
@@ -314,7 +314,7 @@ namespace Xtate.Test
 		{
 			var list = new DataModelList
 					   {
-							   ["t"] = new("test")
+						   ["t"] = new("test")
 					   };
 			list.MakeReadOnly();
 			_dataModelList["a"] = new DataModelValue(list);
@@ -333,7 +333,7 @@ namespace Xtate.Test
 		{
 			var list = new DataModelList
 					   {
-							   [0] = new("test")
+						   [0] = new("test")
 					   };
 			list.MakeReadOnly();
 			_dataModelList["a"] = new DataModelValue(list);
@@ -352,7 +352,7 @@ namespace Xtate.Test
 		{
 			var list = new DataModelList
 					   {
-							   ["t"] = new("test")
+						   ["t"] = new("test")
 					   };
 			_dataModelList.SetInternal(key: "a", caseInsensitive: false, new DataModelValue(list), DataModelAccess.ReadOnly);
 
@@ -378,13 +378,13 @@ namespace Xtate.Test
 		{
 			var obj1 = new DataModelList
 					   {
-							   ["prop1-rw"] = new("val1")
+						   ["prop1-rw"] = new("val1")
 					   };
 			obj1.SetInternal(key: "prop1-ro", caseInsensitive: false, new DataModelValue("val1"), DataModelAccess.ReadOnly);
 
 			var obj2 = new DataModelList
 					   {
-							   ["prop2-rw"] = new("val1")
+						   ["prop2-rw"] = new("val1")
 					   };
 			obj1.SetInternal(key: "prop2-ro", caseInsensitive: false, new DataModelValue("val1"), DataModelAccess.ReadOnly);
 
@@ -426,13 +426,13 @@ namespace Xtate.Test
 		{
 			var obj1 = new DataModelList
 					   {
-							   [1] = new("val1")
+						   [1] = new("val1")
 					   };
 			obj1.SetInternal(index: 0, key: null, new DataModelValue("val1"), DataModelAccess.ReadOnly);
 
 			var obj2 = new DataModelList
 					   {
-							   [1] = new("val1")
+						   [1] = new("val1")
 					   };
 			obj1.SetInternal(index: 0, key: null, new DataModelValue("val1"), DataModelAccess.ReadOnly);
 

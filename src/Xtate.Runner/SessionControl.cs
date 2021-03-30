@@ -25,9 +25,9 @@ namespace Xtate.Runner
 {
 	public partial class SessionControl : UserControl
 	{
-		public SessionControl(
-#nullable enable
-				StateMachineHost host, Uri source, string? sessionId)
+		public SessionControl(StateMachineHost host,
+							  Uri source,
+							  string? sessionId)
 		{
 			_host = host;
 			Source = source;

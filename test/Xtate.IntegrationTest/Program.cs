@@ -50,9 +50,9 @@ namespace Xtate.IntegrationTest
 
 			var prms = new
 					   {
-							   loginUrl = "https://test.tssart.com/wp-login.php",
-							   username = "tadex1",
-							   password = "123456"
+						   loginUrl = "https://test.tssart.com/wp-login.php",
+						   username = "tadex1",
+						   password = "123456"
 					   };
 
 			var task = stateMachineHost.ExecuteStateMachineAsync(new Uri(ScxmlBase, relativeUri: "signup.scxml"), DataModelValue.FromObject(prms));

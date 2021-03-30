@@ -40,6 +40,6 @@ namespace Xtate.Test
 		}
 
 		public static IStateMachine FromInnerScxml_EcmaScript(string innerScxml) =>
-				FromScxml("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' datamodel='ecmascript'>" + innerScxml + "</scxml>");
+			FromScxml("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' datamodel='ecmascript'>" + innerScxml + "</scxml>");
 	}
 }

@@ -52,10 +52,10 @@ namespace Xtate.CustomAction
 			if (arguments is null) throw new ArgumentNullException(nameof(arguments));
 
 			return _op switch
-			{
-					"emailMatch" => new DataModelValue(EmailMatch(arguments[Left].AsStringOrDefault(), arguments[Right])),
-					_ => Infrastructure.UnexpectedValue<DataModelValue>(_op)
-			};
+				   {
+					   "emailMatch" => new DataModelValue(EmailMatch(arguments[Left].AsStringOrDefault(), arguments[Right])),
+					   _            => Infrastructure.UnexpectedValue<DataModelValue>(_op)
+				   };
 		}
 
 		private static bool EmailMatch(string? email, string? pattern)

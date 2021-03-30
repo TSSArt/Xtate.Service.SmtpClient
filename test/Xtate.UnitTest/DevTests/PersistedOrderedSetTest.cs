@@ -48,9 +48,9 @@ namespace Xtate.Test
 			_node3 = new Node(3);
 			_map = ImmutableDictionary.CreateRange(new Dictionary<int, IEntity>
 												   {
-														   { 1, _node1 },
-														   { 2, _node2 },
-														   { 3, _node3 }
+													   { 1, _node1 },
+													   { 2, _node2 },
+													   { 3, _node3 }
 												   });
 
 			_sourceSet = new OrderedSet<Node>();

@@ -58,17 +58,22 @@ namespace Xtate
 
 	#region Interface ILogger
 
-		public ValueTask ExecuteLog(ILoggerContext loggerContext, LogLevel logLevel, string? message, DataModelValue data, Exception? exception, CancellationToken token)
+		public ValueTask ExecuteLog(ILoggerContext loggerContext,
+									LogLevel logLevel,
+									string? message,
+									DataModelValue data,
+									Exception? exception,
+									CancellationToken token)
 		{
 			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 
 			var logEventLevel = logLevel switch
-			{
-					LogLevel.Info => LogEventLevel.Information,
-					LogLevel.Warning => LogEventLevel.Warning,
-					LogLevel.Error => LogEventLevel.Error,
-					_ => Infrastructure.UnexpectedValue<LogEventLevel>(logLevel)
-			};
+								{
+									LogLevel.Info    => LogEventLevel.Information,
+									LogLevel.Warning => LogEventLevel.Warning,
+									LogLevel.Error   => LogEventLevel.Error,
+									_                => Infrastructure.UnexpectedValue<LogEventLevel>(logLevel)
+								};
 
 			if (!_logger.IsEnabled(logEventLevel))
 			{
@@ -133,7 +138,11 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask LogError(ILoggerContext loggerContext, ErrorType errorType, Exception exception, string? sourceEntityId, CancellationToken token)
+		public ValueTask LogError(ILoggerContext loggerContext,
+								  ErrorType errorType,
+								  Exception exception,
+								  string? sourceEntityId,
+								  CancellationToken token)
 		{
 			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 
@@ -232,7 +241,11 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask TracePerformingTransition(ILoggerContext loggerContext, TransitionType type, string? eventDescriptor, string? target, CancellationToken token)
+		public ValueTask TracePerformingTransition(ILoggerContext loggerContext,
+												   TransitionType type,
+												   string? eventDescriptor,
+												   string? target,
+												   CancellationToken token)
 		{
 			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 
@@ -253,7 +266,11 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask TracePerformedTransition(ILoggerContext loggerContext, TransitionType type, string? eventDescriptor, string? target, CancellationToken token)
+		public ValueTask TracePerformedTransition(ILoggerContext loggerContext,
+												  TransitionType type,
+												  string? eventDescriptor,
+												  string? target,
+												  CancellationToken token)
 		{
 			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 

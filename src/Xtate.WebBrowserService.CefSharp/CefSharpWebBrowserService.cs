@@ -83,13 +83,13 @@ namespace Xtate.Service
 					{
 						cookiesArray.Add(new DataModelList
 										 {
-												 ["domain"] = cookie.Domain,
-												 ["path"] = cookie.Path,
-												 ["name"] = cookie.Name,
-												 ["value"] = cookie.Value,
-												 ["httpOnly"] = cookie.HttpOnly,
-												 ["secure"] = cookie.Secure,
-												 ["expires"] = cookie.Expires
+											 ["domain"] = cookie.Domain,
+											 ["path"] = cookie.Path,
+											 ["name"] = cookie.Name,
+											 ["value"] = cookie.Value,
+											 ["httpOnly"] = cookie.HttpOnly,
+											 ["secure"] = cookie.Secure,
+											 ["expires"] = cookie.Expires
 										 });
 					}
 
@@ -125,13 +125,13 @@ namespace Xtate.Service
 
 				result.Add(new Cookie
 						   {
-								   Domain = list["domain"].AsStringOrDefault(),
-								   Path = list["path"].AsStringOrDefault(),
-								   Name = list["name"].AsStringOrDefault(),
-								   Value = list["value"].AsStringOrDefault(),
-								   HttpOnly = list["httpOnly"].AsBooleanOrDefault() ?? false,
-								   Secure = list["secure"].AsBooleanOrDefault() ?? false,
-								   Expires = list["expires"].AsDateTimeOrDefault()?.ToDateTime() ?? DateTime.MinValue
+							   Domain = list["domain"].AsStringOrDefault(),
+							   Path = list["path"].AsStringOrDefault(),
+							   Name = list["name"].AsStringOrDefault(),
+							   Value = list["value"].AsStringOrDefault(),
+							   HttpOnly = list["httpOnly"].AsBooleanOrDefault() ?? false,
+							   Secure = list["secure"].AsBooleanOrDefault() ?? false,
+							   Expires = list["expires"].AsDateTimeOrDefault()?.ToDateTime() ?? DateTime.MinValue
 						   });
 			}
 

@@ -46,8 +46,9 @@ namespace Xtate.Test
 			var builder = FluentBuilderFactory.Create();
 
 			builder
-					.SetInitial((Identifier) "S1")
-					.BeginState((Identifier) "S1").EndState();
+				.SetInitial((Identifier) "S1")
+				.BeginState((Identifier) "S1")
+				.EndState();
 
 			var stateMachine = builder.Build();
 
@@ -64,9 +65,12 @@ namespace Xtate.Test
 			var builder = FluentBuilderFactory.Create();
 
 			builder
-					.BeginState((Identifier) "S1").EndState()
-					.BeginParallel((Identifier) "P1").EndParallel()
-					.BeginFinal((Identifier) "F1").EndFinal();
+				.BeginState((Identifier) "S1")
+				.EndState()
+				.BeginParallel((Identifier) "P1")
+				.EndParallel()
+				.BeginFinal((Identifier) "F1")
+				.EndFinal();
 
 			var stateMachine = builder.Build();
 
@@ -86,9 +90,9 @@ namespace Xtate.Test
 			var builder = FluentBuilderFactory.Create();
 
 			builder
-					.BeginState((Identifier) "S1")
-					.AddOnEntry(ctx => ctx.DataModel["Hello"] = new DataModelValue("World"))
-					.EndState();
+				.BeginState((Identifier) "S1")
+				.AddOnEntry(ctx => ctx.DataModel["Hello"] = new DataModelValue("World"))
+				.EndState();
 
 			var channel = Channel.CreateUnbounded<IEvent>();
 			channel.Writer.Complete();
@@ -112,11 +116,11 @@ namespace Xtate.Test
 			var builder = FluentBuilderFactory.Create();
 
 			builder
-					.BeginState((Identifier) "S1")
-					.BeginTransition()
-					.SetCondition(_ => throw new InvalidOperationException("some exception"))
-					.EndTransition()
-					.EndState();
+				.BeginState((Identifier) "S1")
+				.BeginTransition()
+				.SetCondition(_ => throw new InvalidOperationException("some exception"))
+				.EndTransition()
+				.EndState();
 
 			var channel = Channel.CreateUnbounded<IEvent>();
 			channel.Writer.Complete();
@@ -137,16 +141,16 @@ namespace Xtate.Test
 			var builder = FluentBuilderFactory.Create();
 
 			builder
-					.BeginState((Identifier) "S1")
-					.BeginTransition()
-					.SetTarget((Identifier) "S2")
-					.EndTransition()
-					.EndState()
-					.BeginState((Identifier) "S2")
-					.BeginTransition()
-					.SetTarget((Identifier) "S1")
-					.EndTransition()
-					.EndState();
+				.BeginState((Identifier) "S1")
+				.BeginTransition()
+				.SetTarget((Identifier) "S2")
+				.EndTransition()
+				.EndState()
+				.BeginState((Identifier) "S2")
+				.BeginTransition()
+				.SetTarget((Identifier) "S1")
+				.EndTransition()
+				.EndState();
 
 			var channel = Channel.CreateUnbounded<IEvent>();
 			channel.Writer.Complete();

@@ -26,7 +26,6 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using HtmlAgilityPack;
 using MimeKit;
-
 #if !NET461 && !NETSTANDARD2_0
 using System.Buffers;
 
@@ -69,7 +68,10 @@ namespace Xtate.CustomAction
 			return source is not null ? Parse(source, xpath, attr, pattern) : DataModelValue.Null;
 		}
 
-		private static DataModelValue Parse(string content, string? xpath, string? attr, string? pattern)
+		private static DataModelValue Parse(string content,
+											string? xpath,
+											string? attr,
+											string? pattern)
 		{
 			MimeMessage message;
 
@@ -137,7 +139,10 @@ namespace Xtate.CustomAction
 			return list;
 		}
 
-		private static DataModelValue CaptureEntry(HtmlDocument htmlDocument, string? xpath, string? attr, string? pattern)
+		private static DataModelValue CaptureEntry(HtmlDocument htmlDocument,
+												   string? xpath,
+												   string? attr,
+												   string? pattern)
 		{
 			var nodes = xpath is not null ? htmlDocument.DocumentNode.SelectNodes(xpath) : Enumerable.Repeat(htmlDocument.DocumentNode, count: 1);
 

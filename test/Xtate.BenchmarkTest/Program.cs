@@ -38,17 +38,17 @@ namespace Xtate.BenchmarkTest
 		private static void Main()
 		{
 			var _ = BenchmarkRunner.Run<SimpleStateMachine>();
-/*
-			var simpleStateMachine = new SimpleStateMachine();
+			/*
+						var simpleStateMachine = new SimpleStateMachine();
+						
+						simpleStateMachine.HostExecuteStateMachine();
+						simpleStateMachine.HostExecuteStateMachine();
+						simpleStateMachine.HostExecuteStateMachine();
 			
-			simpleStateMachine.HostExecuteStateMachine();
-			simpleStateMachine.HostExecuteStateMachine();
-			simpleStateMachine.HostExecuteStateMachine();
-
-				for (var i = 0; i < 50_000; i ++)
-			{
-				simpleStateMachine.HostExecuteStateMachine();
-			}*/
+							for (var i = 0; i < 50_000; i ++)
+						{
+							simpleStateMachine.HostExecuteStateMachine();
+						}*/
 		}
 	}
 
@@ -56,9 +56,20 @@ namespace Xtate.BenchmarkTest
 	{
 	#region Interface ILogger
 
-		public ValueTask ExecuteLog(ILoggerContext loggerContext, LogLevel logLevel, string? message, DataModelValue arguments, Exception? exception, CancellationToken token) => default;
+		public ValueTask ExecuteLog(ILoggerContext loggerContext,
+									LogLevel logLevel,
+									string? message,
+									DataModelValue arguments,
+									Exception? exception,
+									CancellationToken token) =>
+			default;
 
-		public ValueTask LogError(ILoggerContext loggerContext, ErrorType errorType, Exception exception, string? sourceEntityId, CancellationToken token) => default;
+		public ValueTask LogError(ILoggerContext loggerContext,
+								  ErrorType errorType,
+								  Exception exception,
+								  string? sourceEntityId,
+								  CancellationToken token) =>
+			default;
 
 		public ValueTask TraceProcessingEvent(ILoggerContext loggerContext, IEvent evt, CancellationToken token) => default;
 
@@ -70,9 +81,19 @@ namespace Xtate.BenchmarkTest
 
 		public ValueTask TraceExitedState(ILoggerContext loggerContext, IIdentifier stateId, CancellationToken token) => default;
 
-		public ValueTask TracePerformingTransition(ILoggerContext loggerContext, TransitionType type, string? eventDescriptor, string? target, CancellationToken token) => default;
+		public ValueTask TracePerformingTransition(ILoggerContext loggerContext,
+												   TransitionType type,
+												   string? eventDescriptor,
+												   string? target,
+												   CancellationToken token) =>
+			default;
 
-		public ValueTask TracePerformedTransition(ILoggerContext loggerContext, TransitionType type, string? eventDescriptor, string? target, CancellationToken token) => default;
+		public ValueTask TracePerformedTransition(ILoggerContext loggerContext,
+												  TransitionType type,
+												  string? eventDescriptor,
+												  string? target,
+												  CancellationToken token) =>
+			default;
 
 		public ValueTask TraceInterpreterState(ILoggerContext loggerContext, StateMachineInterpreterState state, CancellationToken token) => default;
 

@@ -41,8 +41,8 @@ namespace Xtate.Service
 
 			Controls.Add(new ChromiumWebBrowser(url?.ToString())
 						 {
-								 Dock = DockStyle.Fill,
-								 RequestHandler = new CustomRequestHandler(this, url, document)
+							 Dock = DockStyle.Fill,
+							 RequestHandler = new CustomRequestHandler(this, url, document)
 						 });
 
 			if (cookieCollection is { } cookies)
@@ -63,16 +63,16 @@ namespace Xtate.Service
 		public CookieCollection? Cookies { get; private set; }
 
 		private static Cookie GetCefCookie(NetCookie cookie) =>
-				new()
-				{
-						Domain = cookie.Domain,
-						Path = cookie.Path,
-						Name = cookie.Name,
-						Value = cookie.Value,
-						HttpOnly = cookie.HttpOnly,
-						Expires = cookie.Expires,
-						Secure = cookie.Secure
-				};
+			new()
+			{
+				Domain = cookie.Domain,
+				Path = cookie.Path,
+				Name = cookie.Name,
+				Value = cookie.Value,
+				HttpOnly = cookie.HttpOnly,
+				Expires = cookie.Expires,
+				Secure = cookie.Secure
+			};
 
 		public void Close(DialogResult dialogResult, IDictionary<string, string>? result, CookieCollection? cookies)
 		{
@@ -107,8 +107,14 @@ namespace Xtate.Service
 		}
 
 		[SuppressMessage(category: "ReSharper", checkId: "SuspiciousTypeConversion.Global")]
-		protected override IResourceRequestHandler GetResourceRequestHandler(IWebBrowser chromiumWebBrowser, IBrowser browser, IFrame frame, IRequest request,
-																			 bool isNavigation, bool isDownload, string requestInitiator, ref bool disableDefaultHandling)
+		protected override IResourceRequestHandler GetResourceRequestHandler(IWebBrowser chromiumWebBrowser,
+																			 IBrowser browser,
+																			 IFrame frame,
+																			 IRequest request,
+																			 bool isNavigation,
+																			 bool isDownload,
+																			 string requestInitiator,
+																			 ref bool disableDefaultHandling)
 		{
 			if (request is null) throw new ArgumentNullException(nameof(request));
 
@@ -149,17 +155,20 @@ namespace Xtate.Service
 
 		#region Interface ICookieVisitor
 
-			public bool Visit(Cookie cookie, int count, int total, ref bool deleteCookie)
+			public bool Visit(Cookie cookie,
+							  int count,
+							  int total,
+							  ref bool deleteCookie)
 			{
 				CookieCollection.Add(new NetCookie
 									 {
-											 Domain = cookie.Domain,
-											 Path = cookie.Path,
-											 Name = cookie.Name,
-											 Value = cookie.Value,
-											 HttpOnly = cookie.HttpOnly,
-											 Expires = cookie.Expires ?? DateTime.MinValue,
-											 Secure = cookie.Secure
+										 Domain = cookie.Domain,
+										 Path = cookie.Path,
+										 Name = cookie.Name,
+										 Value = cookie.Value,
+										 HttpOnly = cookie.HttpOnly,
+										 Expires = cookie.Expires ?? DateTime.MinValue,
+										 Secure = cookie.Secure
 									 });
 
 				return true;

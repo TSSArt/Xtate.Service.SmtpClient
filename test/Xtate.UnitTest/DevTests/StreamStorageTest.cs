@@ -63,7 +63,10 @@ namespace Xtate.Test
 			return base.FlushAsync(cancellationToken);
 		}
 
-		public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+		public override async Task<int> ReadAsync(byte[] buffer,
+												  int offset,
+												  int count,
+												  CancellationToken cancellationToken)
 		{
 			if (count == 0)
 			{
@@ -75,7 +78,10 @@ namespace Xtate.Test
 			return result;
 		}
 
-		public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+		public override Task WriteAsync(byte[] buffer,
+										int offset,
+										int count,
+										CancellationToken cancellationToken)
 		{
 			if (count == 0)
 			{
@@ -410,13 +416,13 @@ namespace Xtate.Test
 		{
 			var cookie = new DataModelList
 						 {
-								 ["domain"] = "some.domain",
-								 ["path"] = "/",
-								 ["name"] = "ID",
-								 ["value"] = "TEST",
-								 ["httpOnly"] = true,
-								 ["secure"] = true,
-								 ["expires"] = new DateTime(year: 2021, month: 1, day: 1)
+							 ["domain"] = "some.domain",
+							 ["path"] = "/",
+							 ["name"] = "ID",
+							 ["value"] = "TEST",
+							 ["httpOnly"] = true,
+							 ["secure"] = true,
+							 ["expires"] = new DateTime(year: 2021, month: 1, day: 1)
 						 };
 
 			var data = new DataModelList { cookie };

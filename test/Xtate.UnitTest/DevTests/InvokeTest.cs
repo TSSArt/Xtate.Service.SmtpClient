@@ -42,43 +42,43 @@ namespace Xtate.Test
 		{
 			_stateMachine = new StateMachineEntity
 							{
-									States = ImmutableArray.Create<IStateEntity>(new StateEntity
-																				 {
-																						 Id = (Identifier) "S1",
-																						 Invoke = ImmutableArray.Create<IInvoke>(new InvokeEntity
+								States = ImmutableArray.Create<IStateEntity>(new StateEntity
+																			 {
+																				 Id = (Identifier) "S1",
+																				 Invoke = ImmutableArray.Create<IInvoke>(new InvokeEntity
+																														 {
+																															 Id = "invoke_id",
+																															 Source = new Uri("proto://src"),
+																															 Type = new Uri("proto://type"),
+																															 Content = new ContentEntity
 																																 {
-																																		 Id = "invoke_id",
-																																		 Source = new Uri("proto://src"),
-																																		 Type = new Uri("proto://type"),
-																																		 Content = new ContentEntity
-																																			 {
-																																					 Body =
-																																							 new ContentBody
-																																							 { Value = "content" }
-																																			 },
-																																		 Finalize = new FinalizeEntity
-																																			 {
-																																					 Action =
-																																							 ImmutableArray
-																																									 .Create<IExecutableEntity>(
-																																											 new LogEntity
-																																											 {
-																																													 Label =
-																																															 "FinalizeExecuted"
-																																											 })
-																																			 }
-																																 }),
-																						 Transitions = ImmutableArray.Create<ITransition>(new TransitionEntity
-																							 {
-																									 EventDescriptors =
-																											 ImmutableArray.Create<IEventDescriptor>((EventDescriptor) "ToF"),
-																									 Target = ImmutableArray.Create<IIdentifier>((Identifier) "F")
-																							 })
-																				 },
-																				 new FinalEntity
-																				 {
-																						 Id = (Identifier) "F"
-																				 })
+																																	 Body =
+																																		 new ContentBody
+																																		 { Value = "content" }
+																																 },
+																															 Finalize = new FinalizeEntity
+																																 {
+																																	 Action =
+																																		 ImmutableArray
+																																			 .Create<IExecutableEntity>(new LogEntity
+																																				 {
+																																					 Label =
+																																						 "FinalizeExecuted"
+																																				 })
+																																 }
+																														 }),
+																				 Transitions = ImmutableArray.Create<ITransition>(new TransitionEntity
+																																  {
+																																	  EventDescriptors =
+																																		  ImmutableArray.Create<IEventDescriptor>(
+																																			  (EventDescriptor) "ToF"),
+																																	  Target = ImmutableArray.Create<IIdentifier>((Identifier) "F")
+																																  })
+																			 },
+																			 new FinalEntity
+																			 {
+																				 Id = (Identifier) "F"
+																			 })
 							};
 
 			_externalCommunicationMock = new Mock<IExternalCommunication>();
@@ -87,18 +87,18 @@ namespace Xtate.Test
 
 			_options = new InterpreterOptions
 					   {
-							   ExternalCommunication = _externalCommunicationMock.Object,
-							   Logger = _loggerMock.Object
+						   ExternalCommunication = _externalCommunicationMock.Object,
+						   Logger = _loggerMock.Object
 					   };
 		}
 
 		private static EventObject CreateEventObject(string name, InvokeId? invokeId = default) =>
-				new()
-				{
-						Type = EventType.External,
-						NameParts = EventName.ToParts(name),
-						InvokeId = invokeId
-				};
+			new()
+			{
+				Type = EventType.External,
+				NameParts = EventName.ToParts(name),
+				InvokeId = invokeId
+			};
 
 		[TestMethod]
 		public async Task SimpleTest()

@@ -45,17 +45,17 @@ namespace Xtate
 	#endregion
 
 		private static LogEventPropertyValue GetLogEventPropertyValue(in DataModelValue value) =>
-				value.Type switch
-				{
-						DataModelValueType.Undefined => new ScalarValue(value.ToObject()),
-						DataModelValueType.Null => new ScalarValue(value.ToObject()),
-						DataModelValueType.String => new ScalarValue(value.ToObject()),
-						DataModelValueType.Number => new ScalarValue(value.ToObject()),
-						DataModelValueType.DateTime => new ScalarValue(value.ToObject()),
-						DataModelValueType.Boolean => new ScalarValue(value.ToObject()),
-						DataModelValueType.List => GetLogEventPropertyValue(value.AsList()),
-						_ => Infrastructure.UnexpectedValue<LogEventPropertyValue>(value.Type)
-				};
+			value.Type switch
+			{
+				DataModelValueType.Undefined => new ScalarValue(value.ToObject()),
+				DataModelValueType.Null      => new ScalarValue(value.ToObject()),
+				DataModelValueType.String    => new ScalarValue(value.ToObject()),
+				DataModelValueType.Number    => new ScalarValue(value.ToObject()),
+				DataModelValueType.DateTime  => new ScalarValue(value.ToObject()),
+				DataModelValueType.Boolean   => new ScalarValue(value.ToObject()),
+				DataModelValueType.List      => GetLogEventPropertyValue(value.AsList()),
+				_                            => Infrastructure.UnexpectedValue<LogEventPropertyValue>(value.Type)
+			};
 
 		private static LogEventPropertyValue GetLogEventPropertyValue(DataModelList list)
 		{
