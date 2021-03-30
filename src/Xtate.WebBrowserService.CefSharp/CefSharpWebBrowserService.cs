@@ -42,7 +42,7 @@ namespace Xtate.Service
 
 			if (string.IsNullOrEmpty(document))
 			{
-				Infrastructure.Fail("Content can't be empty");
+				Infra.Fail("Content can't be empty");
 			}
 
 			using var form = new BrowserForm(url is not null ? new Uri(url) : null, document, GetCookies());

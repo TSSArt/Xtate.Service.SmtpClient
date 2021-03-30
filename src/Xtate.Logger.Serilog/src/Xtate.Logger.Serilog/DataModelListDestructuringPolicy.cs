@@ -54,7 +54,7 @@ namespace Xtate
 				DataModelValueType.DateTime  => new ScalarValue(value.ToObject()),
 				DataModelValueType.Boolean   => new ScalarValue(value.ToObject()),
 				DataModelValueType.List      => GetLogEventPropertyValue(value.AsList()),
-				_                            => Infrastructure.UnexpectedValue<LogEventPropertyValue>(value.Type)
+				_                            => Infra.Unexpected<LogEventPropertyValue>(value.Type)
 			};
 
 		private static LogEventPropertyValue GetLogEventPropertyValue(DataModelList list)

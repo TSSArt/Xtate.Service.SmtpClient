@@ -125,7 +125,7 @@ namespace Xtate.BenchmarkTest
 			_stateMachine = FluentBuilderFactory.Create().BeginFinal().SetId("1").EndFinal().Build();
 			_channelReader = Channel.CreateUnbounded<IEvent>();
 			var dataModelHandler = new XPathDataModelHandler();
-			Infrastructure.NotNull(dataModelHandler);
+			Infra.NotNull(dataModelHandler);
 			_dataModelHandler = dataModelHandler;
 			_host = new StateMachineHostBuilder().SetLogger(_logger).Build();
 			_host.StartHostAsync().Wait();

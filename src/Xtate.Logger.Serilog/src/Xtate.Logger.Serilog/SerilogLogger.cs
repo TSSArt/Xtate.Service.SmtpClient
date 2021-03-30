@@ -72,7 +72,7 @@ namespace Xtate
 									LogLevel.Info    => LogEventLevel.Information,
 									LogLevel.Warning => LogEventLevel.Warning,
 									LogLevel.Error   => LogEventLevel.Error,
-									_                => Infrastructure.UnexpectedValue<LogEventLevel>(logLevel)
+									_                => Infra.Unexpected<LogEventLevel>(logLevel)
 								};
 
 			if (!_logger.IsEnabled(logEventLevel))
@@ -131,7 +131,7 @@ namespace Xtate
 					break;
 
 				default:
-					Infrastructure.UnexpectedValue(data.Type);
+					Infra.Unexpected(data.Type);
 					break;
 			}
 

@@ -54,7 +54,7 @@ namespace Xtate.CustomAction
 			return _op switch
 				   {
 					   "emailMatch" => new DataModelValue(EmailMatch(arguments[Left].AsStringOrDefault(), arguments[Right])),
-					   _            => Infrastructure.UnexpectedValue<DataModelValue>(_op)
+					   _            => Infra.Unexpected<DataModelValue>(_op)
 				   };
 		}
 
