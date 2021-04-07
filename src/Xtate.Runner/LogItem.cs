@@ -27,7 +27,7 @@ namespace Xtate.Runner
 		private readonly string _message;
 
 		public LogItem(string message,
-					   DataModelList? dataModel,
+					   DataModelValue dataModel,
 					   string? dataModelAsText,
 					   string? dataAsText,
 					   Exception? exception)
@@ -43,7 +43,7 @@ namespace Xtate.Runner
 
 		public string? DataAsText { get; }
 
-		public DataModelList? DataModel { get; }
+		public DataModelValue DataModel { get; }
 
 		public Exception? Exception { get; }
 

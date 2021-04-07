@@ -58,12 +58,12 @@ namespace Xtate.Runner
 		}
 
 		public void AddLog(string message,
-						   DataModelList? list,
+						   DataModelValue dataModel1,
 						   string? dataModelAsText,
 						   string? dataAsText,
 						   Exception? exception)
 		{
-			log.Items.Add(new LogItem(message, list, dataModelAsText, dataAsText, exception));
+			log.Items.Add(new LogItem(message, dataModel1, dataModelAsText, dataAsText, exception));
 		}
 
 		public void AssignToSession(string sessionId)
@@ -129,12 +129,12 @@ DATA:
 			}
 
 			error = default;
-			if (logItem.DataModel is null)
+			if (logItem.DataModel.IsUndefinedOrNull())
 			{
 				return false;
 			}
 
-			var value = logItem.DataModel["_event"];
+			var value = logItem.DataModel.AsList()["_event"];
 			var list = value.AsListOrEmpty();
 			value = list["name"];
 			var str1 = value.AsStringOrDefault();

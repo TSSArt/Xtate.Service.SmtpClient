@@ -18,6 +18,7 @@
 #endregion
 
 using System;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
@@ -58,15 +59,13 @@ namespace Xtate
 
 	#region Interface ILogger
 
-		public ValueTask ExecuteLog(ILoggerContext loggerContext,
+		public ValueTask ExecuteLog(ILoggerContext? loggerContext,
 									LogLevel logLevel,
 									string? message,
 									DataModelValue data,
 									Exception? exception,
 									CancellationToken token)
 		{
-			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
-
 			var logEventLevel = logLevel switch
 								{
 									LogLevel.Info    => LogEventLevel.Information,
@@ -102,7 +101,7 @@ namespace Xtate
 				case DataModelValueType.DateTime:
 				case DataModelValueType.Boolean:
 				case DataModelValueType.String:
-					logger = logger.ForContext(propertyName: @"DataText", loggerContext.ConvertToText(data));
+					logger = logger.ForContext(propertyName: @"DataText", ConvertToText(loggerContext, data));
 
 					if (string.IsNullOrWhiteSpace(message))
 					{
@@ -117,7 +116,7 @@ namespace Xtate
 
 				case DataModelValueType.List:
 					logger = logger.ForContext(propertyName: @"Data", data.ToObject(), destructureObjects: true)
-								   .ForContext(propertyName: @"DataText", loggerContext.ConvertToText(data));
+								   .ForContext(propertyName: @"DataText", ConvertToText(loggerContext, data));
 
 					if (string.IsNullOrWhiteSpace(message))
 					{
@@ -138,14 +137,12 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask LogError(ILoggerContext loggerContext,
+		public ValueTask LogError(ILoggerContext? loggerContext,
 								  ErrorType errorType,
 								  Exception exception,
 								  string? sourceEntityId,
 								  CancellationToken token)
 		{
-			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
-
 			if (exception is null) throw new ArgumentNullException(nameof(exception));
 
 			if (!_logger.IsEnabled(LogEventLevel.Error))
@@ -166,10 +163,8 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask TraceProcessingEvent(ILoggerContext loggerContext, IEvent evt, CancellationToken token)
+		public ValueTask TraceProcessingEvent(ILoggerContext? loggerContext, IEvent evt, CancellationToken token)
 		{
-			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
-
 			if (IsTracingEnabled)
 			{
 				var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.ProcessingEvent, IsVerbose))
@@ -181,9 +176,8 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask TraceEnteringState(ILoggerContext loggerContext, IIdentifier stateId, CancellationToken token)
+		public ValueTask TraceEnteringState(ILoggerContext? loggerContext, IIdentifier stateId, CancellationToken token)
 		{
-			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 			if (stateId is null) throw new ArgumentNullException(nameof(stateId));
 
 			if (IsTracingEnabled)
@@ -196,9 +190,8 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask TraceEnteredState(ILoggerContext loggerContext, IIdentifier stateId, CancellationToken token)
+		public ValueTask TraceEnteredState(ILoggerContext? loggerContext, IIdentifier stateId, CancellationToken token)
 		{
-			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 			if (stateId is null) throw new ArgumentNullException(nameof(stateId));
 
 			if (IsTracingEnabled)
@@ -211,9 +204,8 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask TraceExitingState(ILoggerContext loggerContext, IIdentifier stateId, CancellationToken token)
+		public ValueTask TraceExitingState(ILoggerContext? loggerContext, IIdentifier stateId, CancellationToken token)
 		{
-			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 			if (stateId is null) throw new ArgumentNullException(nameof(stateId));
 
 			if (IsTracingEnabled)
@@ -226,9 +218,8 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask TraceExitedState(ILoggerContext loggerContext, IIdentifier stateId, CancellationToken token)
+		public ValueTask TraceExitedState(ILoggerContext? loggerContext, IIdentifier stateId, CancellationToken token)
 		{
-			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 			if (stateId is null) throw new ArgumentNullException(nameof(stateId));
 
 			if (IsTracingEnabled)
@@ -241,14 +232,12 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask TracePerformingTransition(ILoggerContext loggerContext,
+		public ValueTask TracePerformingTransition(ILoggerContext? loggerContext,
 												   TransitionType type,
 												   string? eventDescriptor,
 												   string? target,
 												   CancellationToken token)
 		{
-			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
-
 			if (IsTracingEnabled)
 			{
 				var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.PerformingTransition, IsVerbose));
@@ -266,14 +255,12 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask TracePerformedTransition(ILoggerContext loggerContext,
+		public ValueTask TracePerformedTransition(ILoggerContext? loggerContext,
 												  TransitionType type,
 												  string? eventDescriptor,
 												  string? target,
 												  CancellationToken token)
 		{
-			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
-
 			if (IsTracingEnabled)
 			{
 				var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.PerformedTransition, IsVerbose));
@@ -291,10 +278,8 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask TraceInterpreterState(ILoggerContext loggerContext, StateMachineInterpreterState state, CancellationToken token)
+		public ValueTask TraceInterpreterState(ILoggerContext? loggerContext, StateMachineInterpreterState state, CancellationToken token)
 		{
-			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
-
 			if (IsTracingEnabled)
 			{
 				var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.InterpreterState, IsVerbose));
@@ -305,9 +290,8 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask TraceSendEvent(ILoggerContext loggerContext, IOutgoingEvent outgoingEvent, CancellationToken token)
+		public ValueTask TraceSendEvent(ILoggerContext? loggerContext, IOutgoingEvent outgoingEvent, CancellationToken token)
 		{
-			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 			if (outgoingEvent is null) throw new ArgumentNullException(nameof(outgoingEvent));
 
 			if (IsTracingEnabled)
@@ -321,9 +305,8 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask TraceCancelEvent(ILoggerContext loggerContext, SendId sendId, CancellationToken token)
+		public ValueTask TraceCancelEvent(ILoggerContext? loggerContext, SendId sendId, CancellationToken token)
 		{
-			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 			if (sendId is null) throw new ArgumentNullException(nameof(sendId));
 
 			if (IsTracingEnabled)
@@ -336,9 +319,8 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask TraceStartInvoke(ILoggerContext loggerContext, InvokeData invokeData, CancellationToken token)
+		public ValueTask TraceStartInvoke(ILoggerContext? loggerContext, InvokeData invokeData, CancellationToken token)
 		{
-			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 			if (invokeData is null) throw new ArgumentNullException(nameof(invokeData));
 
 			if (IsTracingEnabled)
@@ -352,9 +334,8 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask TraceCancelInvoke(ILoggerContext loggerContext, InvokeId invokeId, CancellationToken token)
+		public ValueTask TraceCancelInvoke(ILoggerContext? loggerContext, InvokeId invokeId, CancellationToken token)
 		{
-			if (loggerContext is null) throw new ArgumentNullException(nameof(loggerContext));
 			if (invokeId is null) throw new ArgumentNullException(nameof(invokeId));
 
 			if (IsTracingEnabled)
@@ -371,13 +352,23 @@ namespace Xtate
 
 	#endregion
 
+		private static string ConvertToText(ILoggerContext? loggerContext, in DataModelValue value)
+		{
+			if (loggerContext is IInterpreterLoggerContext interpreterLoggerContext)
+			{
+				return interpreterLoggerContext.ConvertToText(value);
+			}
+
+			return value.ToString(CultureInfo.InvariantCulture);
+		}
+
 		private class LoggerEnricher : ILogEventEnricher
 		{
-			private readonly LogEventType   _logEventType;
-			private readonly ILoggerContext _loggerContext;
-			private readonly bool           _verboseLogging;
+			private readonly LogEventType    _logEventType;
+			private readonly ILoggerContext? _loggerContext;
+			private readonly bool            _verboseLogging;
 
-			public LoggerEnricher(ILoggerContext loggerContext, LogEventType logEventType, bool verboseLogging)
+			public LoggerEnricher(ILoggerContext? loggerContext, LogEventType logEventType, bool verboseLogging)
 			{
 				_loggerContext = loggerContext;
 				_logEventType = logEventType;
@@ -388,12 +379,30 @@ namespace Xtate
 
 			public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
 			{
-				if (_loggerContext.SessionId is { } sessionId)
+				if (_loggerContext is IInterpreterLoggerContext interpreterLoggerContext)
+				{
+					Enrich(interpreterLoggerContext, logEvent, propertyFactory);
+				}
+
+				if (_loggerContext?.GetProperties() is { Count: > 0 } properties)
+				{
+					foreach (var pair in properties.KeyValuePairs)
+					{
+						logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(pair.Key, pair.Value, destructureObjects: true));
+					}
+				}
+			}
+
+		#endregion
+
+			private void Enrich(IInterpreterLoggerContext interpreterLoggerContext, LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
+			{
+				if (interpreterLoggerContext.SessionId is { } sessionId)
 				{
 					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"SessionId", sessionId.Value));
 				}
 
-				if (_loggerContext.StateMachineName is { } stateMachineName)
+				if (interpreterLoggerContext.StateMachine.Name is { } stateMachineName)
 				{
 					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"StateMachineName", stateMachineName));
 				}
@@ -403,32 +412,30 @@ namespace Xtate
 					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"LogEventType", _logEventType));
 				}
 
-				if (_verboseLogging && _loggerContext.GetDataModel() is { } dataModel)
+				if (_verboseLogging && interpreterLoggerContext.GetDataModel() is { } dataModel)
 				{
 					logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(name: @"DataModel", dataModel, destructureObjects: true));
-					logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(name: @"DataModelText", _loggerContext.ConvertToText(dataModel)));
+					logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(name: @"DataModelText", interpreterLoggerContext.ConvertToText(dataModel)));
 				}
 
 				if (_verboseLogging)
 				{
-					var activeStates = _loggerContext.GetActiveStates();
+					var activeStates = interpreterLoggerContext.GetActiveStates();
 					if (!activeStates.IsDefault)
 					{
 						logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(name: @"ActiveStates", activeStates));
 					}
 				}
 			}
-
-		#endregion
 		}
 
 		private class EventEnricher : ILogEventEnricher
 		{
-			private readonly IEvent         _event;
-			private readonly bool           _isVerbose;
-			private readonly ILoggerContext _loggerContext;
+			private readonly IEvent          _event;
+			private readonly bool            _isVerbose;
+			private readonly ILoggerContext? _loggerContext;
 
-			public EventEnricher(ILoggerContext loggerContext, IEvent evt, bool isVerbose)
+			public EventEnricher(ILoggerContext? loggerContext, IEvent evt, bool isVerbose)
 			{
 				_loggerContext = loggerContext;
 				_event = evt;
@@ -469,7 +476,7 @@ namespace Xtate
 				if (_isVerbose && !_event.Data.IsUndefined())
 				{
 					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"Data", _event.Data.ToObject(), destructureObjects: true));
-					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"DataText", _loggerContext.ConvertToText(_event.Data)));
+					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"DataText", ConvertToText(_loggerContext, _event.Data)));
 				}
 			}
 
@@ -478,11 +485,11 @@ namespace Xtate
 
 		private class OutgoingEventEnricher : ILogEventEnricher
 		{
-			private readonly bool           _isVerbose;
-			private readonly ILoggerContext _loggerContext;
-			private readonly IOutgoingEvent _outgoingEvent;
+			private readonly bool            _isVerbose;
+			private readonly ILoggerContext? _loggerContext;
+			private readonly IOutgoingEvent  _outgoingEvent;
 
-			public OutgoingEventEnricher(ILoggerContext loggerContext, IOutgoingEvent outgoingEvent, bool isVerbose)
+			public OutgoingEventEnricher(ILoggerContext? loggerContext, IOutgoingEvent outgoingEvent, bool isVerbose)
 			{
 				_loggerContext = loggerContext;
 				_outgoingEvent = outgoingEvent;
@@ -518,7 +525,7 @@ namespace Xtate
 				if (_isVerbose && !_outgoingEvent.Data.IsUndefined())
 				{
 					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"Data", _outgoingEvent.Data.ToObject(), destructureObjects: true));
-					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"DataText", _loggerContext.ConvertToText(_outgoingEvent.Data)));
+					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name: @"DataText", ConvertToText(_loggerContext, _outgoingEvent.Data)));
 				}
 			}
 
@@ -527,11 +534,11 @@ namespace Xtate
 
 		private class InvokeEnricher : ILogEventEnricher
 		{
-			private readonly InvokeData     _invokeData;
-			private readonly bool           _isVerbose;
-			private readonly ILoggerContext _loggerContext;
+			private readonly InvokeData      _invokeData;
+			private readonly bool            _isVerbose;
+			private readonly ILoggerContext? _loggerContext;
 
-			public InvokeEnricher(ILoggerContext loggerContext, InvokeData invokeData, bool isVerbose)
+			public InvokeEnricher(ILoggerContext? loggerContext, InvokeData invokeData, bool isVerbose)
 			{
 				_loggerContext = loggerContext;
 				_invokeData = invokeData;
@@ -564,13 +571,13 @@ namespace Xtate
 					if (!_invokeData.Content.IsUndefined())
 					{
 						logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(name: @"Content", _invokeData.Content, destructureObjects: true));
-						logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(name: @"ContentText", _loggerContext.ConvertToText(_invokeData.Content)));
+						logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(name: @"ContentText", ConvertToText(_loggerContext, _invokeData.Content)));
 					}
 
 					if (!_invokeData.Parameters.IsUndefined())
 					{
 						logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(name: @"Parameters", _invokeData.Parameters, destructureObjects: true));
-						logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(name: @"ParametersText", _loggerContext.ConvertToText(_invokeData.Parameters)));
+						logEvent.AddPropertyIfAbsent(propertyFactory.CreateProperty(name: @"ParametersText", ConvertToText(_loggerContext, _invokeData.Parameters)));
 					}
 				}
 			}

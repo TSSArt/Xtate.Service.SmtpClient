@@ -18,7 +18,6 @@
 #endregion
 
 using System;
-using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -27,7 +26,6 @@ using BenchmarkDotNet.Engines;
 using BenchmarkDotNet.Running;
 using Xtate.Builder;
 using Xtate.Core;
-using Xtate.CustomAction;
 using Xtate.DataModel;
 using Xtate.DataModel.XPath;
 
@@ -56,7 +54,7 @@ namespace Xtate.BenchmarkTest
 	{
 	#region Interface ILogger
 
-		public ValueTask ExecuteLog(ILoggerContext loggerContext,
+		public ValueTask ExecuteLog(ILoggerContext? loggerContext,
 									LogLevel logLevel,
 									string? message,
 									DataModelValue arguments,
@@ -64,46 +62,46 @@ namespace Xtate.BenchmarkTest
 									CancellationToken token) =>
 			default;
 
-		public ValueTask LogError(ILoggerContext loggerContext,
+		public ValueTask LogError(ILoggerContext? loggerContext,
 								  ErrorType errorType,
 								  Exception exception,
 								  string? sourceEntityId,
 								  CancellationToken token) =>
 			default;
 
-		public ValueTask TraceProcessingEvent(ILoggerContext loggerContext, IEvent evt, CancellationToken token) => default;
+		public ValueTask TraceProcessingEvent(ILoggerContext? loggerContext, IEvent evt, CancellationToken token) => default;
 
-		public ValueTask TraceEnteringState(ILoggerContext loggerContext, IIdentifier stateId, CancellationToken token) => default;
+		public ValueTask TraceEnteringState(ILoggerContext? loggerContext, IIdentifier stateId, CancellationToken token) => default;
 
-		public ValueTask TraceEnteredState(ILoggerContext loggerContext, IIdentifier stateId, CancellationToken token) => default;
+		public ValueTask TraceEnteredState(ILoggerContext? loggerContext, IIdentifier stateId, CancellationToken token) => default;
 
-		public ValueTask TraceExitingState(ILoggerContext loggerContext, IIdentifier stateId, CancellationToken token) => default;
+		public ValueTask TraceExitingState(ILoggerContext? loggerContext, IIdentifier stateId, CancellationToken token) => default;
 
-		public ValueTask TraceExitedState(ILoggerContext loggerContext, IIdentifier stateId, CancellationToken token) => default;
+		public ValueTask TraceExitedState(ILoggerContext? loggerContext, IIdentifier stateId, CancellationToken token) => default;
 
-		public ValueTask TracePerformingTransition(ILoggerContext loggerContext,
+		public ValueTask TracePerformingTransition(ILoggerContext? loggerContext,
 												   TransitionType type,
 												   string? eventDescriptor,
 												   string? target,
 												   CancellationToken token) =>
 			default;
 
-		public ValueTask TracePerformedTransition(ILoggerContext loggerContext,
+		public ValueTask TracePerformedTransition(ILoggerContext? loggerContext,
 												  TransitionType type,
 												  string? eventDescriptor,
 												  string? target,
 												  CancellationToken token) =>
 			default;
 
-		public ValueTask TraceInterpreterState(ILoggerContext loggerContext, StateMachineInterpreterState state, CancellationToken token) => default;
+		public ValueTask TraceInterpreterState(ILoggerContext? loggerContext, StateMachineInterpreterState state, CancellationToken token) => default;
 
-		public ValueTask TraceSendEvent(ILoggerContext loggerContext, IOutgoingEvent outgoingEvent, CancellationToken token) => default;
+		public ValueTask TraceSendEvent(ILoggerContext? loggerContext, IOutgoingEvent outgoingEvent, CancellationToken token) => default;
 
-		public ValueTask TraceCancelEvent(ILoggerContext loggerContext, SendId sendId, CancellationToken token) => default;
+		public ValueTask TraceCancelEvent(ILoggerContext? loggerContext, SendId sendId, CancellationToken token) => default;
 
-		public ValueTask TraceStartInvoke(ILoggerContext loggerContext, InvokeData invokeData, CancellationToken token) => default;
+		public ValueTask TraceStartInvoke(ILoggerContext? loggerContext, InvokeData invokeData, CancellationToken token) => default;
 
-		public ValueTask TraceCancelInvoke(ILoggerContext loggerContext, InvokeId invokeId, CancellationToken token) => default;
+		public ValueTask TraceCancelInvoke(ILoggerContext? loggerContext, InvokeId invokeId, CancellationToken token) => default;
 
 		public bool IsTracingEnabled => false;
 
@@ -148,8 +146,8 @@ namespace Xtate.BenchmarkTest
 		[Benchmark]
 		public void ModelBuilderBuild()
 		{
-			var modelBuilder = new InterpreterModelBuilder(_stateMachine, _dataModelHandler, ImmutableArray<ICustomActionFactory>.Empty, default!, default!,
-														   DefaultErrorProcessor.Instance, baseUri: default);
+			var parameters = new InterpreterModelBuilder.Parameters(_stateMachine, _dataModelHandler);
+			var modelBuilder = new InterpreterModelBuilder(parameters);
 			var valueTask = modelBuilder.Build(token: default);
 			valueTask.AsTask().Wait();
 		}

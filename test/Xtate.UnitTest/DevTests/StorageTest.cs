@@ -286,8 +286,12 @@ namespace Xtate.Test
 
 			var dataModelHandler = new EcmaScriptDataModelHandler();
 			var securityContext = SecurityContext.Create(SecurityContextType.NewStateMachine, new DeferredFinalizer());
-			var imBuilder = new InterpreterModelBuilder(stateMachine, dataModelHandler, customActionProviders: default, ImmutableArray.Create(DummyResourceLoader.Instance),
-														securityContext, DefaultErrorProcessor.Instance, baseUri: default);
+			var parameters = new InterpreterModelBuilder.Parameters(stateMachine, dataModelHandler)
+							 {
+								 ResourceLoaderFactories = ImmutableArray.Create(DummyResourceLoader.Instance),
+								 SecurityContext = securityContext
+							 };
+			var imBuilder = new InterpreterModelBuilder(parameters);
 			var model = await imBuilder.Build(default);
 			var storeSupport = model.Root.As<IStoreSupport>();
 

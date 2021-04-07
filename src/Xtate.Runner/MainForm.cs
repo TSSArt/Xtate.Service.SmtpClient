@@ -19,6 +19,7 @@
 
 using System;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -59,7 +60,7 @@ namespace Xtate.Runner
 
 	#region Interface ILogger
 
-		public ValueTask TraceSendEvent(ILoggerContext loggerContext,
+		public ValueTask TraceSendEvent(ILoggerContext? loggerContext,
 										IOutgoingEvent outgoingEvent,
 										CancellationToken token)
 		{
@@ -82,12 +83,12 @@ namespace Xtate.Runner
 			return new ValueTask(WriteLog(loggerContext, "[SEND] Name: " + EventName.ToName(outgoingEvent.NameParts), data: dataModelObject2));
 		}
 
-		public ValueTask TraceCancelEvent(ILoggerContext loggerContext,
+		public ValueTask TraceCancelEvent(ILoggerContext? loggerContext,
 										  SendId sendId,
 										  CancellationToken token) =>
 			new(WriteLog(loggerContext, "[CANCEL] SendId: " + sendId.Value + "."));
 
-		public ValueTask TraceStartInvoke(ILoggerContext loggerContext,
+		public ValueTask TraceStartInvoke(ILoggerContext? loggerContext,
 										  InvokeData invokeData,
 										  CancellationToken token)
 		{
@@ -109,12 +110,12 @@ namespace Xtate.Runner
 			return new ValueTask(WriteLog(loggerContext, message: "[INVOKE]", data: dataModelObject2));
 		}
 
-		public ValueTask TraceCancelInvoke(ILoggerContext loggerContext,
+		public ValueTask TraceCancelInvoke(ILoggerContext? loggerContext,
 										   InvokeId invokeId,
 										   CancellationToken token) =>
 			new();
 
-		ValueTask ILogger.ExecuteLog(ILoggerContext loggerContext,
+		ValueTask ILogger.ExecuteLog(ILoggerContext? loggerContext,
 									 LogLevel logLevel,
 									 string? message,
 									 DataModelValue data,
@@ -122,53 +123,53 @@ namespace Xtate.Runner
 									 CancellationToken token) =>
 			new(WriteLog(loggerContext, "[" + logLevel + "] Label: " + message, data: data, exception: exception));
 
-		ValueTask ILogger.LogError(ILoggerContext loggerContext,
+		ValueTask ILogger.LogError(ILoggerContext? loggerContext,
 								   ErrorType errorType,
 								   Exception exception,
 								   string? sourceEntityId,
 								   CancellationToken token) =>
 			new(WriteLog(loggerContext, string.Format(format: "[ERROR] Type: {0}. Entity: {1}", errorType, sourceEntityId), exception: exception));
 
-		ValueTask ILogger.TraceProcessingEvent(ILoggerContext loggerContext,
+		ValueTask ILogger.TraceProcessingEvent(ILoggerContext? loggerContext,
 											   IEvent evt,
 											   CancellationToken token) =>
 			new(WriteLog(loggerContext, "[EVENT] Name: " + EventName.ToName(evt.NameParts) + "."));
 
-		ValueTask ILogger.TraceEnteringState(ILoggerContext loggerContext,
+		ValueTask ILogger.TraceEnteringState(ILoggerContext? loggerContext,
 											 IIdentifier stateId,
 											 CancellationToken token) =>
 			new(WriteLog(loggerContext, "[ENTER] State: " + stateId.Value + "."));
 
-		ValueTask ILogger.TraceEnteredState(ILoggerContext loggerContext,
+		ValueTask ILogger.TraceEnteredState(ILoggerContext? loggerContext,
 											IIdentifier stateId,
 											CancellationToken token) =>
 			new();
 
-		ValueTask ILogger.TraceExitingState(ILoggerContext loggerContext,
+		ValueTask ILogger.TraceExitingState(ILoggerContext? loggerContext,
 											IIdentifier stateId,
 											CancellationToken token) =>
 			new();
 
-		ValueTask ILogger.TraceExitedState(ILoggerContext loggerContext,
+		ValueTask ILogger.TraceExitedState(ILoggerContext? loggerContext,
 										   IIdentifier stateId,
 										   CancellationToken token) =>
 			new(WriteLog(loggerContext, "[EXIT] State: " + stateId.Value + "."));
 
-		ValueTask ILogger.TracePerformingTransition(ILoggerContext loggerContext,
+		ValueTask ILogger.TracePerformingTransition(ILoggerContext? loggerContext,
 													TransitionType type,
 													string? eventDescriptor,
 													string? target,
 													CancellationToken token) =>
 			new(WriteLog(loggerContext, "[TRANSITION] Target: " + target + "."));
 
-		ValueTask ILogger.TracePerformedTransition(ILoggerContext loggerContext,
+		ValueTask ILogger.TracePerformedTransition(ILoggerContext? loggerContext,
 												   TransitionType type,
 												   string? eventDescriptor,
 												   string? target,
 												   CancellationToken token) =>
 			new();
 
-		async ValueTask ILogger.TraceInterpreterState(ILoggerContext loggerContext,
+		async ValueTask ILogger.TraceInterpreterState(ILoggerContext? loggerContext,
 													  StateMachineInterpreterState state,
 													  CancellationToken token)
 		{
@@ -207,23 +208,40 @@ namespace Xtate.Runner
 			await _stateMachineHost.StopHostAsync();
 		}
 
-		private Task WriteLog(ILoggerContext loggerContext,
+		private Task WriteLog(ILoggerContext? loggerContext,
 							  string message,
 							  bool stop = false,
 							  Exception? exception = default,
 							  DataModelValue data = default)
 		{
-			var dataModel = loggerContext.GetDataModel();
-			var dataModelAsText = loggerContext.GetDataModelAsText();
-			var dataAsText = !data.IsUndefined() ? loggerContext.ConvertToText(data) : null;
+			DataModelValue dataModel;
+			string? dataModelAsText;
+			string? dataAsText;
+			SessionId? sessionId;
+
+			if (loggerContext is IInterpreterLoggerContext interpreterLoggerContext)
+			{
+				dataModel = interpreterLoggerContext.GetDataModel();
+				dataModelAsText = interpreterLoggerContext.ConvertToText(dataModel);
+				dataAsText = interpreterLoggerContext.ConvertToText(data);
+				sessionId = interpreterLoggerContext.SessionId;
+			}
+			else
+			{
+				dataModel = loggerContext?.GetProperties();
+				dataModelAsText = dataModel.ToString(CultureInfo.InvariantCulture);
+				dataAsText = data.ToString(CultureInfo.InvariantCulture);
+				sessionId = default;
+			}
+
 			if (InvokeRequired)
 			{
 				return Task.Factory.FromAsync(BeginInvoke((Action) (
-															  () => WriteLogSafe(loggerContext.SessionId, stop, exception, message, dataModel, dataModelAsText, dataAsText))),
+															  () => WriteLogSafe(sessionId, stop, exception, message, dataModel, dataModelAsText, dataAsText))),
 											  EndInvoke);
 			}
 
-			WriteLogSafe(loggerContext.SessionId, stop, exception, message, dataModel, dataModelAsText, dataAsText);
+			WriteLogSafe(sessionId, stop, exception, message, dataModel, dataModelAsText, dataAsText);
 
 			return Task.CompletedTask;
 		}
@@ -232,7 +250,7 @@ namespace Xtate.Runner
 								  bool stop,
 								  Exception? exception,
 								  string message,
-								  DataModelList? dataModel,
+								  DataModelValue dataModel,
 								  string? dataModelAsText,
 								  string? dataAsText)
 		{
@@ -257,13 +275,13 @@ namespace Xtate.Runner
 			}
 
 			string? str;
-			if (dataModel is null)
+			if (dataModel.IsUndefinedOrNull())
 			{
 				str = default;
 			}
 			else
 			{
-				var value = dataModel["_x"];
+				var value = dataModel.AsList()["_x"];
 				value = value.AsList()["host"];
 				value = value.AsList()["location"];
 				str = value.AsString();
