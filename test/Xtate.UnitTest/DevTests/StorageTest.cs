@@ -18,6 +18,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.Specialized;
 using System.IO;
@@ -29,6 +30,7 @@ using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xtate.Builder;
 using Xtate.Core;
+using Xtate.IoC;
 using Xtate.DataModel.EcmaScript;
 using Xtate.Persistence;
 using Xtate.Scxml;
@@ -272,33 +274,66 @@ namespace Xtate.Test
 
 		[TestMethod]
 		public async Task StoreWithStorageTest()
-		{
+		{/*
+			var serviceLocator = ServiceLocator.Create(
+				delegate(IServiceCollection s)
+				{
+					s.AddForwarding(_ => (IResourceLoader) DummyResourceLoader.Instance);
+					s.AddForwarding<IStateMachineValidator, StateMachineValidator>();
+					s.AddEcmaScript();
+				});
+
 			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Xtate.UnitTest.Resources.All.xml");
 
 			XmlNameTable nt = new NameTable();
 			var xmlNamespaceManager = new XmlNamespaceManager(nt);
 			using var xmlReader = XmlReader.Create(stream!, settings: null, new XmlParserContext(nt, xmlNamespaceManager, xmlLang: default, xmlSpace: default));
 
-			var director = new ScxmlDirector(xmlReader, BuilderFactory.Instance,
-											 new ScxmlDirectorOptions { StateMachineValidator = StateMachineValidator.Instance, NamespaceResolver = xmlNamespaceManager });
+			var director = serviceLocator.GetService<ScxmlDirector, XmlReader>(xmlReader);
+			//var director = new ScxmlDirector(xmlReader, serviceLocator.GetService<IBuilderFactory>(), new ScxmlDirectorOptions(serviceLocator) { NamespaceResolver = xmlNamespaceManager });
 
 			var stateMachine = director.ConstructStateMachine().SynchronousGetResult();
 
-			var dataModelHandler = new EcmaScriptDataModelHandler();
-			var securityContext = SecurityContext.Create(SecurityContextType.NewStateMachine, new DeferredFinalizer());
-			var parameters = new InterpreterModelBuilder.Parameters(stateMachine, dataModelHandler)
+			var dataModelHandler = serviceLocator.GetService<EcmaScriptDataModelHandler>();
+			var securityContext = SecurityContext.Create(SecurityContextType.NewStateMachine);
+			var parameters = new InterpreterModelBuilder.Parameters(serviceLocator, stateMachine, dataModelHandler)
 							 {
 								 ResourceLoaderFactories = ImmutableArray.Create(DummyResourceLoader.Instance),
 								 SecurityContext = securityContext
-							 };
-			var imBuilder = new InterpreterModelBuilder(parameters);
-			var model = await imBuilder.Build(default);
-			var storeSupport = model.Root.As<IStoreSupport>();
+							 };*/
+			//TODO:uncomment
+			var services = new ServiceCollection();
+			services.RegisterStateMachineFactory();
+			services.RegisterStateMachineInterpreter();
+			services.RegisterEcmaScriptDataModelHandler();
+			services.AddForwarding<IStateMachineLocation>(_ => new StateMachineLocation(new Uri("res://Xtate.UnitTest/Xtate.UnitTest/Resources/All.xml")));
+			services.AddImplementation<MyRes>().For<IResourceLoader>();
+			var serviceProvider = services.BuildProvider();
+
+			var interpreterModel = await serviceProvider.GetRequiredService<IInterpreterModel>();
+			//var imBuilder = new InterpreterModelBuilder(parameters);
+			var storeSupport = interpreterModel.Root.As<IStoreSupport>();
 
 			var storage = new InMemoryStorage();
 			storeSupport.Store(new Bucket(storage));
 
 			Console.WriteLine(Dump(storage, Environment.NewLine));
+		}
+
+		public class MyRes : ResxResourceLoader
+		{
+			protected override Stream GetResourceStream(Uri uri)
+			{
+				try
+				{
+					return base.GetResourceStream(uri);
+				}
+				catch (Exception e)
+				{
+					return new MemoryStream();
+				}
+				
+			}
 		}
 
 		[TestMethod]
@@ -697,27 +732,32 @@ namespace Xtate.Test
 			Assert.IsTrue(bucket.TryGet(key: "z", out string _));
 		}
 
+		//TODO:remove IResourceLoader
 		private class DummyResourceLoader : IResourceLoaderFactory, IResourceLoaderFactoryActivator, IResourceLoader
 		{
 			public static readonly IResourceLoaderFactory Instance = new DummyResourceLoader();
 
 		#region Interface IResourceLoader
 
-			public ValueTask<Resource> Request(Uri uri, NameValueCollection? headers, CancellationToken token) => new(new Resource(new MemoryStream()));
+			public ValueTask<Resource> Request(Uri uri, NameValueCollection? headers) => new(new Resource(new MemoryStream()));
 
 		#endregion
 
 		#region Interface IResourceLoaderFactory
 
-			public ValueTask<IResourceLoaderFactoryActivator?> TryGetActivator(IFactoryContext factoryContext, Uri uri, CancellationToken token) => new(this);
+			public ValueTask<IResourceLoaderFactoryActivator?> TryGetActivator(Uri uri) => new(this);
 
 		#endregion
 
 		#region Interface IResourceLoaderFactoryActivator
 
-			public ValueTask<IResourceLoader> CreateResourceLoader(IFactoryContext factoryContext, CancellationToken token) => new(this);
+			public ValueTask<IResourceLoader> CreateResourceLoader(ServiceLocator serviceLocator) => new(this);
 
 		#endregion
+
+			public ValueTask<Resource> GetResource(Uri uri) => new(new Resource(new MemoryStream()));
+
+			public ValueTask<Resource> GetResource(Uri uri, NameValueCollection? headers) => new(new Resource(new MemoryStream()));
 		}
 	}
 }

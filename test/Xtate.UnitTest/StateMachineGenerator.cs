@@ -21,6 +21,7 @@ using System.IO;
 using System.Xml;
 using Xtate.Builder;
 using Xtate.Core;
+using Xtate.IoC;
 using Xtate.Scxml;
 
 namespace Xtate.Test
@@ -29,13 +30,21 @@ namespace Xtate.Test
 	{
 		private static IStateMachine FromScxml(string scxml)
 		{
+			var services = new ServiceCollection();
+			services.RegisterEcmaScriptDataModelHandler();
+			services.RegisterStateMachineFactory();
+			services.AddForwarding<IScxmlStateMachine>(_=> new ScxmlStateMachine(scxml));
+			var serviceProvider = services.BuildProvider();
+			return serviceProvider.GetRequiredService<IStateMachine>().Result;
+
 			using var stringReader = new StringReader(scxml);
 			XmlNameTable nt = new NameTable();
 			var xmlNamespaceManager = new XmlNamespaceManager(nt);
 			using var xmlReader = XmlReader.Create(stringReader, settings: null, new XmlParserContext(nt, xmlNamespaceManager, xmlLang: default, xmlSpace: default));
 
-			var scxmlDirector = new ScxmlDirector(xmlReader, BuilderFactory.Instance,
-												  new ScxmlDirectorOptions { StateMachineValidator = StateMachineValidator.Instance, NamespaceResolver = xmlNamespaceManager });
+			var serviceLocator = ServiceLocator.Create(collection => { } /*s => s.AddForwarding<IStateMachineValidator, StateMachineValidator>()*/);
+			var scxmlDirector = serviceLocator.GetService<ScxmlDirector, XmlReader>(xmlReader);
+			//var scxmlDirector = new ScxmlDirector(xmlReader, serviceLocator.GetService<IBuilderFactory>(), new ScxmlDirectorOptions(serviceLocator) { NamespaceResolver = xmlNamespaceManager });
 			return scxmlDirector.ConstructStateMachine().SynchronousGetResult();
 		}
 

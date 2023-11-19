@@ -20,28 +20,42 @@
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
+using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using Xtate.Core;
 using Xtate.CustomAction;
+using Xtate.IoC;
 
 namespace Xtate.Test.HostedTests
 {
 	public abstract class HostedTestBase
 	{
 		protected StateMachineHost Host   { get; private set; } = default!;
-		protected Mock<ILogger>    Logger { get; private set; } = default!;
+		protected Mock<ILogWriter>    LogWriter { get; private set; } = default!;
 
 		[TestInitialize]
-		public Task Initialize()
+		public async Task Initialize()
 		{
-			Logger = new Mock<ILogger>();
-
+			LogWriter = new Mock<ILogWriter>();
+			/*
 			Host = new StateMachineHostBuilder()
-				   .AddCustomActionFactory(SystemActionFactory.Instance)
-				   .AddResourceLoaderFactory(ResxResourceLoaderFactory.Instance)
+				   //TODO:
+				   //.AddCustomActionFactory(SystemActionFactory.Instance)
+				   //.AddResourceLoaderFactory(ResxResourceLoaderFactory.Instance)
 				   .SetLogger(Logger.Object)
-				   .Build();
+				   .Build(ServiceLocator.Default);
 			return Host.StartHostAsync();
+			*/
+			var sc = new ServiceCollection();
+			sc.RegisterStateMachineHost();
+			sc.AddSharedImplementationSync<StartActionProvider>(SharedWithin.Scope).For<ICustomActionProvider>();
+			sc.AddSharedImplementationSync<DestroyActionProvider>(SharedWithin.Scope).For<ICustomActionProvider>();
+			sc.AddTypeSync<StartAction, XmlReader>();
+			sc.AddTypeSync<DestroyAction, XmlReader>();
+			sc.AddForwarding(_ => LogWriter.Object);
+			var sp = sc.BuildProvider();
+			Host = await sp.GetRequiredService<StateMachineHost>();
 		}
 
 		[TestCleanup]

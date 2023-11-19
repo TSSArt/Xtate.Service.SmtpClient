@@ -44,7 +44,7 @@ namespace Xtate.CustomAction
 
 		protected override DataModelValue Evaluate(IReadOnlyDictionary<string, DataModelValue> arguments)
 		{
-			if (arguments is null) throw new ArgumentNullException(nameof(arguments));
+			Infra.Requires(arguments);
 
 			var content = arguments[Content];
 			if (content.IsUndefinedOrNull())

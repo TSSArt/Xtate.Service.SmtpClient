@@ -23,7 +23,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
+using Xtate.Core;
+using Xtate.IoC;
 using Xtate.Persistence;
+using IServiceProvider = Xtate.IoC.IServiceProvider;
 
 namespace Xtate.Test
 {
@@ -107,9 +110,12 @@ namespace Xtate.Test
 	[TestClass]
 	public class StreamStorageTest
 	{
-		private ProxyMemoryStream    _stream             = default!;
-		private Mock<IStreamCapture> _streamCaptureMock  = default!;
-		private Mock<IStreamCapture> _streamCaptureMock2 = default!;
+		private ProxyMemoryStream                              _stream             = default!;
+		private Mock<IStreamCapture>                           _streamCaptureMock  = default!;
+		private Mock<IStreamCapture>                           _streamCaptureMock2 = default!;
+		private IServiceProvider                               _serviceProvider;
+		private Func<Stream, ValueTask<ITransactionalStorage>> _streamStorageFactory;
+		private Func<Stream, int, ValueTask<ITransactionalStorage>> _streamStorageRollbackLevelFactory;
 
 		[TestInitialize]
 		public void Initialize()
@@ -117,17 +123,24 @@ namespace Xtate.Test
 			_streamCaptureMock = new Mock<IStreamCapture>();
 			_streamCaptureMock2 = new Mock<IStreamCapture>();
 			_stream = new ProxyMemoryStream(_streamCaptureMock.Object);
+
+			var serviceCollection = new ServiceCollection();
+			serviceCollection.RegisterPersistence();
+
+			_serviceProvider = serviceCollection.BuildProvider();
+			_streamStorageFactory = _serviceProvider.GetRequiredFactory<ITransactionalStorage, Stream>();
+			_streamStorageRollbackLevelFactory = _serviceProvider.GetRequiredFactory<ITransactionalStorage, Stream, int>();
 		}
 
 		[TestMethod]
 		public async Task BasicStreamStorageTest()
 		{
 			{
-				await using var streamStorage = await StreamStorage.CreateAsync(_stream);
-				await streamStorage.Shrink(default);
-				await streamStorage.CheckPoint(level: 0, token: default);
-				await streamStorage.CheckPoint(level: 1, token: default);
-				await streamStorage.Shrink(default);
+				using var streamStorage = await _streamStorageFactory(_stream);
+				await streamStorage.Shrink();
+				await streamStorage.CheckPoint(level: 0);
+				await streamStorage.CheckPoint(level: 1);
+				await streamStorage.Shrink();
 			}
 
 			_streamCaptureMock.Verify(l => l.ReadAsync(It.IsAny<int>(), It.IsAny<int>()), Times.Never);
@@ -140,15 +153,15 @@ namespace Xtate.Test
 		public async Task CheckPointZeroLevelTest()
 		{
 			{
-				await using var streamStorage = await StreamStorage.CreateAsync(_stream);
+				using var streamStorage = await _streamStorageFactory(_stream);
 				var bucket = new Bucket(streamStorage);
 				bucket.Add(key: "k", value: "v");
-				await streamStorage.CheckPoint(level: 0, token: default);
+				await streamStorage.CheckPoint(level: 0);
 
 				var bytes = _stream.ToArray();
 				Assert.AreEqual(expected: 8, bytes.Length);
 
-				await using var streamStorage2 = await StreamStorage.CreateAsync(new ProxyMemoryStream(_streamCaptureMock2.Object, _stream));
+				await using var streamStorage2 = await _streamStorageFactory(new ProxyMemoryStream(_streamCaptureMock2.Object, _stream));
 				var bucket2 = new Bucket(streamStorage2);
 				Assert.AreEqual(expected: "v", bucket2.TryGet(key: "k", out string? value) ? value : null);
 			}
@@ -162,14 +175,14 @@ namespace Xtate.Test
 		[TestMethod]
 		public async Task CheckPointFirstLevelTest()
 		{
-			await using var streamStorage = await StreamStorage.CreateAsync(_stream);
+			var streamStorage = await _streamStorageFactory(_stream);
 			var bucket = new Bucket(streamStorage);
 			bucket.Add(key: "k", value: "v0");
-			await streamStorage.CheckPoint(level: 0, token: default);
+			await streamStorage.CheckPoint(level: 0);
 			bucket.Add(key: "k", value: "v1");
-			await streamStorage.CheckPoint(level: 1, token: default);
+			await streamStorage.CheckPoint(level: 1);
 
-			await using var streamStorage2 = await StreamStorage.CreateAsync(new ProxyMemoryStream(_streamCaptureMock2.Object, _stream));
+			await using var streamStorage2 = await _streamStorageFactory(new ProxyMemoryStream(_streamCaptureMock2.Object, _stream));
 			var bucket2 = new Bucket(streamStorage2);
 			Assert.AreEqual(expected: "v1", bucket2.TryGet(key: "k", out string? value) ? value : null);
 		}
@@ -177,14 +190,14 @@ namespace Xtate.Test
 		[TestMethod]
 		public async Task CheckPointFirstLevelWithRollbackTest()
 		{
-			await using var streamStorage = await StreamStorage.CreateAsync(_stream);
+			var streamStorage = await _streamStorageFactory(_stream);
 			var bucket = new Bucket(streamStorage);
 			bucket.Add(key: "k", value: "v0");
-			await streamStorage.CheckPoint(level: 0, token: default);
+			await streamStorage.CheckPoint(level: 0);
 			bucket.Add(key: "k", value: "v1");
-			await streamStorage.CheckPoint(level: 1, token: default);
+			await streamStorage.CheckPoint(level: 1);
 
-			await using var streamStorage2 = await StreamStorage.CreateWithRollbackAsync(new ProxyMemoryStream(_streamCaptureMock2.Object, _stream), rollbackLevel: 0);
+			await using var streamStorage2 = await _streamStorageRollbackLevelFactory(new ProxyMemoryStream(_streamCaptureMock2.Object, _stream), 0);
 			var bucket2 = new Bucket(streamStorage2);
 			Assert.AreEqual(expected: "v0", bucket2.TryGet(key: "k", out string? value) ? value : null);
 		}
@@ -192,15 +205,15 @@ namespace Xtate.Test
 		[TestMethod]
 		public async Task ShrinkTest()
 		{
-			await using var streamStorage = await StreamStorage.CreateAsync(_stream);
+			var streamStorage = await _streamStorageFactory(_stream);
 			var bucket = new Bucket(streamStorage);
 			bucket.Add(key: "k", value: "v0");
-			await streamStorage.CheckPoint(level: 0, token: default);
+			await streamStorage.CheckPoint(level: 0);
 			bucket.Add(key: "k", value: "v1");
-			await streamStorage.CheckPoint(level: 0, token: default);
-			await streamStorage.Shrink(token: default);
+			await streamStorage.CheckPoint(level: 0);
+			await streamStorage.Shrink();
 
-			await using var streamStorage2 = await StreamStorage.CreateAsync(new ProxyMemoryStream(_streamCaptureMock2.Object, _stream));
+			await using var streamStorage2 = await _streamStorageFactory(new ProxyMemoryStream(_streamCaptureMock2.Object, _stream));
 			var bucket2 = new Bucket(streamStorage2);
 			Assert.AreEqual(expected: "v1", bucket2.TryGet(key: "k", out string? value) ? value : null);
 		}
@@ -208,25 +221,25 @@ namespace Xtate.Test
 		[TestMethod]
 		public async Task ShrinkFailure1Test()
 		{
-			await using var streamStorage = await StreamStorage.CreateAsync(_stream);
+			var streamStorage = await _streamStorageFactory(_stream);
 			var bucket = new Bucket(streamStorage);
 			bucket.Add(key: "k", value: "v0");
-			await streamStorage.CheckPoint(level: 0, token: default);
+			await streamStorage.CheckPoint(level: 0);
 			bucket.Add(key: "k", value: "v1");
-			await streamStorage.CheckPoint(level: 0, token: default);
+			await streamStorage.CheckPoint(level: 0);
 
 			_stream.FailWriteCountdown = 1;
 
 			try
 			{
-				await streamStorage.Shrink(token: default);
+				await streamStorage.Shrink();
 				Assert.Fail();
 			}
 			catch (ArgumentException) { }
 
 			var proxyMemoryStream = new ProxyMemoryStream(_streamCaptureMock2.Object, _stream);
 			Assert.AreEqual(expected: 18, proxyMemoryStream.Length);
-			await using var streamStorage2 = await StreamStorage.CreateAsync(proxyMemoryStream);
+			await using var streamStorage2 = await _streamStorageFactory(proxyMemoryStream);
 			Assert.AreEqual(expected: 18, proxyMemoryStream.Length);
 			var bucket2 = new Bucket(streamStorage2);
 			Assert.AreEqual(expected: "v1", bucket2.TryGet(key: "k", out string? value) ? value : null);
@@ -235,25 +248,25 @@ namespace Xtate.Test
 		[TestMethod]
 		public async Task ShrinkFailure2Test()
 		{
-			await using var streamStorage = await StreamStorage.CreateAsync(_stream);
+			var streamStorage = await _streamStorageFactory(_stream);
 			var bucket = new Bucket(streamStorage);
 			bucket.Add(key: "k", value: "v0");
-			await streamStorage.CheckPoint(level: 0, token: default);
+			await streamStorage.CheckPoint(level: 0);
 			bucket.Add(key: "k", value: "v1");
-			await streamStorage.CheckPoint(level: 0, token: default);
+			await streamStorage.CheckPoint(level: 0);
 
 			_stream.FailWriteCountdown = 2;
 
 			try
 			{
-				await streamStorage.Shrink(token: default);
+				await streamStorage.Shrink();
 				Assert.Fail();
 			}
 			catch (ArgumentException) { }
 
 			var proxyMemoryStream = new ProxyMemoryStream(_streamCaptureMock2.Object, _stream);
 			Assert.AreEqual(expected: 28, proxyMemoryStream.Length);
-			await using var streamStorage2 = await StreamStorage.CreateAsync(proxyMemoryStream);
+			await using var streamStorage2 = await _streamStorageFactory(proxyMemoryStream);
 			Assert.AreEqual(expected: 18, proxyMemoryStream.Length);
 			var bucket2 = new Bucket(streamStorage2);
 			Assert.AreEqual(expected: "v1", bucket2.TryGet(key: "k", out string? value) ? value : null);
@@ -262,25 +275,25 @@ namespace Xtate.Test
 		[TestMethod]
 		public async Task ShrinkFailure3Test()
 		{
-			await using var streamStorage = await StreamStorage.CreateAsync(_stream);
+			var streamStorage = await _streamStorageFactory(_stream);
 			var bucket = new Bucket(streamStorage);
 			bucket.Add(key: "k", value: "v0");
-			await streamStorage.CheckPoint(level: 0, token: default);
+			await streamStorage.CheckPoint(level: 0);
 			bucket.Add(key: "k", value: "v1");
-			await streamStorage.CheckPoint(level: 0, token: default);
+			await streamStorage.CheckPoint(level: 0);
 
 			_stream.FailWriteCountdown = 3;
 
 			try
 			{
-				await streamStorage.Shrink(token: default);
+				await streamStorage.Shrink();
 				Assert.Fail();
 			}
 			catch (ArgumentException) { }
 
 			var proxyMemoryStream = new ProxyMemoryStream(_streamCaptureMock2.Object, _stream);
 			Assert.AreEqual(expected: 28, proxyMemoryStream.Length);
-			await using var streamStorage2 = await StreamStorage.CreateAsync(proxyMemoryStream);
+			await using var streamStorage2 = await _streamStorageFactory(proxyMemoryStream);
 			Assert.AreEqual(expected: 9, proxyMemoryStream.Length);
 			var bucket2 = new Bucket(streamStorage2);
 			Assert.AreEqual(expected: "v1", bucket2.TryGet(key: "k", out string? value) ? value : null);
@@ -289,25 +302,25 @@ namespace Xtate.Test
 		[TestMethod]
 		public async Task ShrinkFailure4Test()
 		{
-			await using var streamStorage = await StreamStorage.CreateAsync(_stream);
+			var streamStorage = await _streamStorageFactory(_stream);
 			var bucket = new Bucket(streamStorage);
 			bucket.Add(key: "k", value: "v0");
-			await streamStorage.CheckPoint(level: 0, token: default);
+			await streamStorage.CheckPoint(level: 0);
 			bucket.Add(key: "k", value: "v1");
-			await streamStorage.CheckPoint(level: 0, token: default);
+			await streamStorage.CheckPoint(level: 0);
 
 			_stream.FailWriteCountdown = 4;
 
 			try
 			{
-				await streamStorage.Shrink(token: default);
+				await streamStorage.Shrink();
 				Assert.Fail();
 			}
 			catch (ArgumentException) { }
 
 			var proxyMemoryStream = new ProxyMemoryStream(_streamCaptureMock2.Object, _stream);
 			Assert.AreEqual(expected: 28, proxyMemoryStream.Length);
-			await using var streamStorage2 = await StreamStorage.CreateAsync(proxyMemoryStream);
+			await using var streamStorage2 = await _streamStorageFactory(proxyMemoryStream);
 			Assert.AreEqual(expected: 9, proxyMemoryStream.Length);
 			var bucket2 = new Bucket(streamStorage2);
 			Assert.AreEqual(expected: "v1", bucket2.TryGet(key: "k", out string? value) ? value : null);
@@ -316,20 +329,20 @@ namespace Xtate.Test
 		[TestMethod]
 		public async Task ShrinkFailure5Test()
 		{
-			await using var streamStorage = await StreamStorage.CreateAsync(_stream);
+			var streamStorage = await _streamStorageFactory(_stream);
 			var bucket = new Bucket(streamStorage);
 			bucket.Add(key: "k", value: "v0");
-			await streamStorage.CheckPoint(level: 0, token: default);
+			await streamStorage.CheckPoint(level: 0);
 			bucket.Add(key: "k", value: "v1");
-			await streamStorage.CheckPoint(level: 0, token: default);
+			await streamStorage.CheckPoint(level: 0);
 
 			_stream.FailWriteCountdown = 5;
 
-			await streamStorage.Shrink(token: default);
+			await streamStorage.Shrink();
 
 			var proxyMemoryStream = new ProxyMemoryStream(_streamCaptureMock2.Object, _stream);
 			Assert.AreEqual(expected: 9, proxyMemoryStream.Length);
-			await using var streamStorage2 = await StreamStorage.CreateAsync(proxyMemoryStream);
+			await using var streamStorage2 = await _streamStorageFactory(proxyMemoryStream);
 			Assert.AreEqual(expected: 9, proxyMemoryStream.Length);
 			var bucket2 = new Bucket(streamStorage2);
 			Assert.AreEqual(expected: "v1", bucket2.TryGet(key: "k", out string? value) ? value : null);
@@ -340,24 +353,24 @@ namespace Xtate.Test
 		{
 			var s = new string(c: '0', count: 113);
 
-			await using var streamStorage = await StreamStorage.CreateAsync(_stream);
+			var streamStorage = await _streamStorageFactory(_stream);
 			var bucket = new Bucket(streamStorage);
 			bucket.Add(key: "k", value: "v0");
-			await streamStorage.CheckPoint(level: 0, token: default);
+			await streamStorage.CheckPoint(level: 0);
 			bucket.Add(key: "k", s);
-			await streamStorage.CheckPoint(level: 0, token: default);
+			await streamStorage.CheckPoint(level: 0);
 
 			_stream.FailWriteCountdown = 3;
 
 			try
 			{
-				await streamStorage.Shrink(token: default);
+				await streamStorage.Shrink();
 				Assert.Fail();
 			}
 			catch (ArgumentException) { }
 
 			var proxyMemoryStream = new ProxyMemoryStream(_streamCaptureMock2.Object, _stream);
-			await using var streamStorage2 = await StreamStorage.CreateAsync(proxyMemoryStream);
+			await using var streamStorage2 = await _streamStorageFactory(proxyMemoryStream);
 			var bucket2 = new Bucket(streamStorage2);
 			Assert.AreEqual(s, bucket2.TryGet(key: "k", out string? value) ? value : null);
 		}
@@ -365,15 +378,15 @@ namespace Xtate.Test
 		[TestMethod]
 		public async Task ShrinkWithTranTest()
 		{
-			await using var streamStorage = await StreamStorage.CreateAsync(_stream);
+			var streamStorage = await _streamStorageFactory(_stream);
 			var bucket = new Bucket(streamStorage);
 			bucket.Add(key: "k", value: "v0");
-			await streamStorage.CheckPoint(level: 0, token: default);
+			await streamStorage.CheckPoint(level: 0);
 			bucket.Add(key: "k", value: "v1");
-			await streamStorage.CheckPoint(level: 1, token: default);
-			await streamStorage.Shrink(token: default);
+			await streamStorage.CheckPoint(level: 1);
+			await streamStorage.Shrink();
 
-			await using var streamStorage2 = await StreamStorage.CreateAsync(new ProxyMemoryStream(_streamCaptureMock2.Object, _stream));
+			await using var streamStorage2 = await _streamStorageFactory(new ProxyMemoryStream(_streamCaptureMock2.Object, _stream));
 			var bucket2 = new Bucket(streamStorage2);
 			Assert.AreEqual(expected: "v1", bucket2.TryGet(key: "k", out string? value) ? value : null);
 		}
@@ -381,15 +394,15 @@ namespace Xtate.Test
 		[TestMethod]
 		public async Task ShrinkNotNeededTest()
 		{
-			await using var streamStorage = await StreamStorage.CreateAsync(_stream);
+			var streamStorage = await _streamStorageFactory(_stream);
 			var bucket = new Bucket(streamStorage);
 			bucket.Add(key: "k", value: "v0");
-			await streamStorage.CheckPoint(level: 0, token: default);
+			await streamStorage.CheckPoint(level: 0);
 			bucket.Add(key: "k", value: "v1");
-			await streamStorage.CheckPoint(level: 1, token: default);
-			await streamStorage.Shrink(token: default);
+			await streamStorage.CheckPoint(level: 1);
+			await streamStorage.Shrink();
 
-			await using var streamStorage2 = await StreamStorage.CreateWithRollbackAsync(new ProxyMemoryStream(_streamCaptureMock2.Object, _stream), rollbackLevel: 0);
+			await using var streamStorage2 = await _streamStorageRollbackLevelFactory(new ProxyMemoryStream(_streamCaptureMock2.Object, _stream), 0);
 			var bucket2 = new Bucket(streamStorage2);
 			Assert.AreEqual(expected: "v0", bucket2.TryGet(key: "k", out string? value) ? value : null);
 		}
@@ -397,16 +410,16 @@ namespace Xtate.Test
 		[TestMethod]
 		public async Task ShrinkWithTranWithRollbackTest()
 		{
-			await using var streamStorage = await StreamStorage.CreateAsync(_stream);
+			var streamStorage = await _streamStorageFactory(_stream);
 			var bucket = new Bucket(streamStorage);
 			bucket.Add(key: "k", value: "v0");
 			bucket.Add(key: "k", value: "v2");
-			await streamStorage.CheckPoint(level: 0, token: default);
+			await streamStorage.CheckPoint(level: 0);
 			bucket.Add(key: "k", value: "v1");
-			await streamStorage.CheckPoint(level: 1, token: default);
-			await streamStorage.Shrink(token: default);
+			await streamStorage.CheckPoint(level: 1);
+			await streamStorage.Shrink();
 
-			await using var streamStorage2 = await StreamStorage.CreateWithRollbackAsync(new ProxyMemoryStream(_streamCaptureMock2.Object, _stream), rollbackLevel: 0);
+			await using var streamStorage2 = await _streamStorageRollbackLevelFactory(new ProxyMemoryStream(_streamCaptureMock2.Object, _stream), 0);
 			var bucket2 = new Bucket(streamStorage2);
 			Assert.AreEqual(expected: "v2", bucket2.TryGet(key: "k", out string? value) ? value : null);
 		}
@@ -428,20 +441,19 @@ namespace Xtate.Test
 			var data = new DataModelList { cookie };
 
 			var memoryStream = new MemoryStream();
-			var streamStorage = await StreamStorage.CreateAsync(memoryStream, disposeStream: false);
+			var streamStorage = await _streamStorageFactory(memoryStream);
 			var bucket = new Bucket(streamStorage).Nested("cookies");
 
 			var tracker = new DataModelReferenceTracker(bucket.Nested(Key.DataReferences));
 			bucket.SetDataModelValue(tracker, data);
-			await streamStorage.CheckPoint(level: 0, token: default);
+			await streamStorage.CheckPoint(level: 0);
 
-			await streamStorage.Shrink(default);
+			await streamStorage.Shrink();
 
 			await streamStorage.DisposeAsync();
 
-			memoryStream.Position = 0;
-
-			var streamStorage2 = await StreamStorage.CreateAsync(memoryStream, disposeStream: false);
+			var memoryStream2 = new MemoryStream();
+			var streamStorage2 = await _streamStorageFactory(memoryStream2);
 			var bucket2 = new Bucket(streamStorage2).Nested("cookies");
 			var tracker2 = new DataModelReferenceTracker(bucket2.Nested(Key.DataReferences));
 			var _ = bucket2.GetDataModelValue(tracker2, baseValue: default);

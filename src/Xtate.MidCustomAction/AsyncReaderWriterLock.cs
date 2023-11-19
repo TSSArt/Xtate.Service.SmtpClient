@@ -23,7 +23,7 @@ using System.Threading.Tasks;
 
 namespace Xtate.CustomAction
 {
-	internal sealed class AsyncReaderWriterLock : IDisposable
+	public sealed class AsyncReaderWriterLock : IDisposable
 	{
 		private readonly SemaphoreSlim _readSemaphore  = new(initialCount: 1, maxCount: 1);
 		private readonly SemaphoreSlim _writeSemaphore = new(initialCount: 1, maxCount: 1);

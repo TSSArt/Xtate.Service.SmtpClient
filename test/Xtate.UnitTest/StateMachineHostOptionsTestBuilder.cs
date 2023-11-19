@@ -18,7 +18,10 @@
 #endregion
 
 using System.Collections.Immutable;
+using Xtate.Core;
+using Xtate.IoC;
 using Xtate.DataModel;
+using Xtate.DataModel.EcmaScript;
 using Xtate.IoProcessor;
 using Xtate.Service;
 
@@ -30,9 +33,13 @@ namespace Xtate.Test
 
 		public static StateMachineHostOptions Create(StateMachineHostOptionsSetup build)
 		{
-			var options = new StateMachineHostOptions
+			var options = new StateMachineHostOptions(ServiceLocator.Create(
+														  delegate(IServiceCollection s)
+														  {
+															  s.AddXPath();
+															  s.AddEcmaScript();
+														  }))
 						  {
-							  DataModelHandlerFactories = ImmutableArray<IDataModelHandlerFactory>.Empty,
 							  IoProcessorFactories = ImmutableArray<IIoProcessorFactory>.Empty,
 							  ServiceFactories = ImmutableArray<IServiceFactory>.Empty
 						  };

@@ -21,41 +21,51 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Xtate.Core;
+using Xtate.IoC;
 using Xtate.Persistence;
 
 namespace Xtate.CustomAction
 {
-	internal sealed class StorageActionService : IDisposable
+	public class StorageActionService : IAsyncInitialization, IDisposable
 	{
-		private static readonly Lazy<Task<ITransactionalStorage>> StorageTask = new(GetStorage, LazyThreadSafetyMode.ExecutionAndPublication);
+		private readonly DisposingToken _disposingToken = new();
 
-		private readonly AsyncReaderWriterLock _asyncReaderWriterLock = new();
+		public required Func<(string? Partition, string Key), ValueTask<ITransactionalStorage>> TransactionalStorageFactory { private get; init; }
 
-	#region Interface IDisposable
+		private readonly AsyncInit<ITransactionalStorage> _storageAsyncInit;
+		private readonly AsyncReaderWriterLock            _asyncReaderWriterLock = new();
 
-		public void Dispose() => _asyncReaderWriterLock.Dispose();
+		public StorageActionService() => _storageAsyncInit = AsyncInit.RunAfter(this, static sas => sas.TransactionalStorageFactory((@"mid", @"storage")));
 
-	#endregion
+		public Task Initialization => _storageAsyncInit.Task;
 
-		private static async Task<ITransactionalStorage> GetStorage()
+		protected virtual void Dispose(bool disposing)
 		{
-			var storage = await new FileStorageProvider(path: "dir").GetTransactionalStorage(partition: null, key: "default", token: default).ConfigureAwait(false);
-			await storage.Shrink(default).ConfigureAwait(false);
-
-			return storage;
+			if (disposing)
+			{
+				_disposingToken.Dispose();
+				_asyncReaderWriterLock.Dispose();
+			}
 		}
 
-		public async ValueTask<DataModelValue> GetValue(string variable, CancellationToken token)
+		public void Dispose()
 		{
-			await _asyncReaderWriterLock.AcquireReaderLock(token).ConfigureAwait(false);
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
+		public async ValueTask<DataModelValue> GetValue(string variable)
+		{
+			await _asyncReaderWriterLock.AcquireReaderLock(_disposingToken.Token).ConfigureAwait(false);
 
 			try
 			{
-				var storage = await StorageTask.Value.ConfigureAwait(false);
-				return new DataModelValueSerializer(storage).Load(variable);
+				return DataModelValueSerializer.Load(_storageAsyncInit.Value, variable);
 			}
 			finally
 			{
@@ -63,16 +73,15 @@ namespace Xtate.CustomAction
 			}
 		}
 
-		public async ValueTask SetValue(string variable, DataModelValue value, CancellationToken token)
+		public async ValueTask SetValue(string variable, DataModelValue value)
 		{
-			await _asyncReaderWriterLock.AcquireWriterLock(token).ConfigureAwait(false);
+			await _asyncReaderWriterLock.AcquireWriterLock(_disposingToken.Token).ConfigureAwait(false);
 
 			try
 			{
-				var storage = await StorageTask.Value.ConfigureAwait(false);
-				new DataModelValueSerializer(storage).Save(variable, value);
+				DataModelValueSerializer.Save(_storageAsyncInit.Value, variable, value);
 
-				await storage.CheckPoint(level: 0, token).ConfigureAwait(false);
+				await _storageAsyncInit.Value.CheckPoint(level: 0).ConfigureAwait(false);
 			}
 			finally
 			{

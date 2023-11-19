@@ -34,17 +34,18 @@ namespace Xtate.IntegrationTest
 			Trace.Listeners.Add(new ConsoleTraceListener());
 
 			await using var stateMachineHost = new StateMachineHostBuilder()
-											   .AddEcmaScript()
+											   .AddServices(s => s.AddEcmaScript())
 											   .AddHttpIoProcessor(new Uri(args.Length > 0 ? args[0] : "http://localhost:5001/"))
 											   .AddServiceFactory(HttpClientServiceFactory.Instance)
 											   .AddServiceFactory(SmtpClientServiceFactory.Instance)
 											   .AddCustomActionFactory(BasicCustomActionFactory.Instance)
 											   .AddCustomActionFactory(MimeCustomActionFactory.Instance)
-											   .AddCustomActionFactory(MidCustomActionFactory.Instance)
-											   .AddResourceLoaderFactory(ResxResourceLoaderFactory.Instance)
+											   //.AddCustomActionFactory(MidCustomActionFactory.Instance)
+											   //TODO:
+											   //.AddResourceLoaderFactory(ResxResourceLoaderFactory.Instance)
 											   .SetConfigurationValue(key: "uiEndpoint", value: "http://localhost:5000/dialog")
 											   .SetConfigurationValue(key: "mailEndpoint", value: "http://mid.dev.tssart.com/MailServer/Web2/api/Mail/")
-											   .Build();
+											   .Build(ServiceLocator.Default);
 
 			await stateMachineHost.StartHostAsync().ConfigureAwait(false);
 

@@ -50,58 +50,58 @@ namespace Xtate.BenchmarkTest
 		}
 	}
 
-	internal class NoLogger : ILogger
+	internal class NoLogger : ILoggerOld
 	{
 	#region Interface ILogger
 
-		public ValueTask ExecuteLog(ILoggerContext? loggerContext,
-									LogLevel logLevel,
+		public ValueTask ExecuteLog(LogLevel logLevel,
 									string? message,
 									DataModelValue arguments,
-									Exception? exception,
-									CancellationToken token) =>
+									Exception? exception) =>
 			default;
 
-		public ValueTask LogError(ILoggerContext? loggerContext,
-								  ErrorType errorType,
+		public ValueTask LogError(ErrorType errorType,
 								  Exception exception,
-								  string? sourceEntityId,
-								  CancellationToken token) =>
+								  string? sourceEntityId) =>
 			default;
 
-		public ValueTask TraceProcessingEvent(ILoggerContext? loggerContext, IEvent evt, CancellationToken token) => default;
+		public ValueTask TraceProcessingEvent(IEvent evt) => default;
 
-		public ValueTask TraceEnteringState(ILoggerContext? loggerContext, IIdentifier stateId, CancellationToken token) => default;
+		public ValueTask TraceEnteringState(IIdentifier stateId) => default;
 
-		public ValueTask TraceEnteredState(ILoggerContext? loggerContext, IIdentifier stateId, CancellationToken token) => default;
+		public ValueTask TraceEnteredState(IIdentifier stateId) => default;
 
-		public ValueTask TraceExitingState(ILoggerContext? loggerContext, IIdentifier stateId, CancellationToken token) => default;
+		public ValueTask TraceExitingState(IIdentifier stateId) => default;
 
-		public ValueTask TraceExitedState(ILoggerContext? loggerContext, IIdentifier stateId, CancellationToken token) => default;
+		public ValueTask TraceExitedState(IIdentifier stateId) => default;
 
-		public ValueTask TracePerformingTransition(ILoggerContext? loggerContext,
-												   TransitionType type,
+		public async ValueTask ExecuteLogOld(LogLevel logLevel,
+											 string? message,
+											 DataModelValue arguments,
+											 Exception? exception) =>
+			throw new NotImplementedException();
+
+		public async ValueTask LogErrorOld(ErrorType errorType, Exception exception, string? sourceEntityId) => throw new NotImplementedException();
+
+		public ValueTask TracePerformingTransition(TransitionType type,
 												   string? eventDescriptor,
-												   string? target,
-												   CancellationToken token) =>
+												   string? target) =>
 			default;
 
-		public ValueTask TracePerformedTransition(ILoggerContext? loggerContext,
-												  TransitionType type,
+		public ValueTask TracePerformedTransition(TransitionType type,
 												  string? eventDescriptor,
-												  string? target,
-												  CancellationToken token) =>
+												  string? target) =>
 			default;
 
-		public ValueTask TraceInterpreterState(ILoggerContext? loggerContext, StateMachineInterpreterState state, CancellationToken token) => default;
+		public ValueTask TraceInterpreterState(StateMachineInterpreterState state) => default;
 
-		public ValueTask TraceSendEvent(ILoggerContext? loggerContext, IOutgoingEvent outgoingEvent, CancellationToken token) => default;
+		public ValueTask TraceSendEvent(IOutgoingEvent outgoingEvent) => default;
 
-		public ValueTask TraceCancelEvent(ILoggerContext? loggerContext, SendId sendId, CancellationToken token) => default;
+		public ValueTask TraceCancelEvent(SendId sendId) => default;
 
-		public ValueTask TraceStartInvoke(ILoggerContext? loggerContext, InvokeData invokeData, CancellationToken token) => default;
+		public ValueTask TraceStartInvoke(InvokeData invokeData) => default;
 
-		public ValueTask TraceCancelInvoke(ILoggerContext? loggerContext, InvokeId invokeId, CancellationToken token) => default;
+		public ValueTask TraceCancelInvoke(InvokeId invokeId) => default;
 
 		public bool IsTracingEnabled => false;
 
@@ -115,17 +115,18 @@ namespace Xtate.BenchmarkTest
 		private readonly ChannelReader<IEvent> _channelReader;
 		private readonly IDataModelHandler     _dataModelHandler;
 		private readonly StateMachineHost      _host;
-		private readonly ILogger               _logger = new NoLogger();
+		private readonly ILoggerOld               _logger = new NoLogger();
 		private readonly IStateMachine         _stateMachine;
 
 		public SimpleStateMachine()
 		{
 			_stateMachine = FluentBuilderFactory.Create().BeginFinal().SetId("1").EndFinal().Build();
 			_channelReader = Channel.CreateUnbounded<IEvent>();
-			var dataModelHandler = new XPathDataModelHandler();
+			var serviceLocator = ServiceLocator.Create(s => s.AddXPath());
+			var dataModelHandler = serviceLocator.GetService<XPathDataModelHandler>();
 			Infra.NotNull(dataModelHandler);
 			_dataModelHandler = dataModelHandler;
-			_host = new StateMachineHostBuilder().SetLogger(_logger).Build();
+			_host = new StateMachineHostBuilder().SetLogger(_logger).Build(ServiceLocator.Default);
 			_host.StartHostAsync().Wait();
 		}
 
@@ -138,18 +139,19 @@ namespace Xtate.BenchmarkTest
 		[Benchmark]
 		public void InterpreterRunStateMachine()
 		{
-			var options = new InterpreterOptions { Logger = _logger };
+			var options = new InterpreterOptions(ServiceLocator.Default) { Logger = _logger };
 			var valueTask = StateMachineInterpreter.RunAsync(SessionId.New(), _stateMachine, _channelReader, options);
 			var _ = valueTask.AsTask().GetAwaiter().GetResult();
 		}
 
-		[Benchmark]
+		//TODO:uncomment
+		/*[Benchmark]
 		public void ModelBuilderBuild()
 		{
-			var parameters = new InterpreterModelBuilder.Parameters(_stateMachine, _dataModelHandler);
+			var parameters = new InterpreterModelBuilder.Parameters(ServiceLocator.Default, _stateMachine, _dataModelHandler);
 			var modelBuilder = new InterpreterModelBuilder(parameters);
 			var valueTask = modelBuilder.Build(token: default);
 			valueTask.AsTask().Wait();
-		}
+		}*/
 	}
 }

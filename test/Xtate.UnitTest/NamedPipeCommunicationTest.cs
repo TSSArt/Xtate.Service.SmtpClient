@@ -21,6 +21,8 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xtate.Core;
+using Xtate.IoC;
+using Xtate.IoProcessor;
 
 namespace Xtate.Test
 {
@@ -56,14 +58,34 @@ namespace Xtate.Test
 		[TestMethod]
 		public async Task SameStateMachineHostTest()
 		{
-			var srcPrc = new StateMachineHostBuilder().AddNamedPipeIoProcessor(host: "me", U("src")).AddEcmaScript().Build();
+			var serviceLocator = ServiceLocator.Create(
+				delegate (IServiceCollection s)
+				{
+					s.AddXPath();
+					s.AddEcmaScript();
+				});
+			
+			//var srcPrc = new StateMachineHostBuilder().AddNamedPipeIoProcessor(host: "me", U("src")).Build(serviceLocator);
+
+			var pipeFactory = new NamedPipeIoProcessorFactory("me", U("src"));
+			var fileLogWriter = new TraceLogWriter();
+
+			var sc1 = new ServiceCollection();
+			sc1.RegisterStateMachineHost();
+			sc1.AddForwarding<ILogWriter>(_ => fileLogWriter);
+			sc1.RegisterEcmaScriptDataModelHandler();
+			sc1.AddForwarding<IIoProcessorFactory>(_ => pipeFactory);
+			var sp1 = sc1.BuildProvider();
+
+			var srcPrc = await sp1.GetRequiredService<StateMachineHost>();
+
 			await srcPrc.StartHostAsync();
 			await srcPrc.StartStateMachineAsync(string.Format(SrcScxml, $"named.pipe:///{U("src")}#_session_dstID"), sessionId: "srcID");
 			var dst = srcPrc.ExecuteStateMachineAsync(DstScxml, sessionId: "dstID").Preserve();
 
 			if (await srcPrc.TryGetEventDispatcher(SessionId.FromString("srcID"), token: default) is { } eventDispatcher)
 			{
-				await eventDispatcher.Send(CreateEventObject("trigger"));
+				await eventDispatcher.Send(CreateEventObject("trigger"), default);
 			}
 
 			var result = await dst;
@@ -78,8 +100,35 @@ namespace Xtate.Test
 		[TestMethod]
 		public async Task SameAppDomainNoPipesTest()
 		{
-			var srcPrc = new StateMachineHostBuilder().AddNamedPipeIoProcessor(host: "me", U("src")).Build();
-			var dstPrc = new StateMachineHostBuilder().AddNamedPipeIoProcessor(host: "me", U("dst")).AddEcmaScript().Build();
+			var serviceLocator = ServiceLocator.Create(
+				delegate(IServiceCollection s)
+				{
+					s.AddXPath();
+					s.AddEcmaScript();
+				});
+
+			var fileLogWriter = new FileLogWriter("D:\\Ser\\sss1.txt");
+			var srcPipeFactory = new NamedPipeIoProcessorFactory("me", U("src"));
+			var dstPipeFactory = new NamedPipeIoProcessorFactory("me", U("dst"));
+			var sc1 = new ServiceCollection();
+			sc1.RegisterStateMachineHost();
+			sc1.RegisterEcmaScriptDataModelHandler();
+			//sc1.AddForwarding<ILogWriter>(_ => fileLogWriter);
+			sc1.AddForwarding<IIoProcessorFactory>(_ => srcPipeFactory);
+			var sp1 = sc1.BuildProvider();
+
+			var sc2 = new ServiceCollection();
+			sc2.RegisterStateMachineHost();
+			sc2.AddForwarding<IIoProcessorFactory>(_ => dstPipeFactory);
+			sc2.RegisterEcmaScriptDataModelHandler();
+			//sc2.AddForwarding<ILogWriter>(_ => fileLogWriter);
+			var sp2 = sc2.BuildProvider();
+
+			//var srcPrc = new StateMachineHostBuilder().AddNamedPipeIoProcessor(host: "me", U("src")).Build(serviceLocator);
+			//var dstPrc = new StateMachineHostBuilder().AddNamedPipeIoProcessor(host: "me", U("dst")).Build(serviceLocator);
+
+			var srcPrc = await sp1.GetRequiredService<StateMachineHost>();
+			var dstPrc = await sp2.GetRequiredService<StateMachineHost>();
 
 			await srcPrc.StartHostAsync();
 			await dstPrc.StartHostAsync();
@@ -89,7 +138,7 @@ namespace Xtate.Test
 
 			if (await srcPrc.TryGetEventDispatcher(SessionId.FromString("srcID"), token: default) is { } eventDispatcher)
 			{
-				await eventDispatcher.Send(CreateEventObject("trigger"));
+				await eventDispatcher.Send(CreateEventObject("trigger"), default);
 			}
 
 			var result = await dst;
@@ -105,18 +154,46 @@ namespace Xtate.Test
 		[TestMethod]
 		public async Task SameAppDomainPipesTest()
 		{
-			var srcPrc = new StateMachineHostBuilder().AddNamedPipeIoProcessor(host: "MyHost1", U("src")).Build();
-			var dstPrc = new StateMachineHostBuilder().AddNamedPipeIoProcessor(host: ".", U("dst")).AddEcmaScript().Build();
+			var serviceLocator = ServiceLocator.Create(
+				delegate (IServiceCollection s)
+				{
+					s.AddXPath();
+					s.AddEcmaScript();
+				});
+
+			var fileLogWriter = new FileLogWriter("D:\\Ser\\sss2.txt");
+			var srcPipeFactory = new NamedPipeIoProcessorFactory("MyHost1", U("src"));
+			var dstPipeFactory = new NamedPipeIoProcessorFactory(".", U("dst"));
+			var sc1 = new ServiceCollection();
+			sc1.RegisterStateMachineHost();
+			sc1.RegisterEcmaScriptDataModelHandler();
+			//sc1.AddForwarding<ILogWriter>(_ => fileLogWriter);
+			sc1.AddForwarding<IIoProcessorFactory>(_ => srcPipeFactory);
+			var sp1 = sc1.BuildProvider();
+
+			var sc2 = new ServiceCollection();
+			sc2.RegisterStateMachineHost();
+			sc2.AddForwarding<IIoProcessorFactory>(_ => dstPipeFactory);
+			sc2.RegisterEcmaScriptDataModelHandler();
+			//sc2.AddForwarding<ILogWriter>(_ => fileLogWriter);
+			var sp2 = sc2.BuildProvider();
+
+			//var srcPrc = new StateMachineHostBuilder().AddNamedPipeIoProcessor(host: "MyHost1", U("src")).Build(serviceLocator);
+			//var dstPrc = new StateMachineHostBuilder().AddNamedPipeIoProcessor(host: ".", U("dst")).Build(serviceLocator);
+
+			var srcPrc = await sp1.GetRequiredService<StateMachineHost>();
+			var dstPrc = await sp2.GetRequiredService<StateMachineHost>();
+
 
 			await srcPrc.StartHostAsync();
 			await dstPrc.StartHostAsync();
 
-			await srcPrc.StartStateMachineAsync(string.Format(SrcScxml, $"iop://./{U("dst")}#_session_dstID"), sessionId: "srcID");
+			await srcPrc.StartStateMachineAsync(string.Format(SrcScxml, $"named.pipe://./{U("dst")}#_session_dstID"), sessionId: "srcID");
 			var dst = dstPrc.ExecuteStateMachineAsync(DstScxml, sessionId: "dstID").Preserve();
 
 			if (await srcPrc.TryGetEventDispatcher(SessionId.FromString("srcID"), token: default) is { } eventDispatcher)
 			{
-				await eventDispatcher.Send(CreateEventObject("trigger"));
+				await eventDispatcher.Send(CreateEventObject("trigger"), default);
 			}
 
 			var result = await dst;

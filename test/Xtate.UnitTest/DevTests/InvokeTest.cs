@@ -18,6 +18,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading;
 using System.Threading.Channels;
@@ -25,6 +26,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Xtate.Core;
+using Xtate.IoC;
 using Xtate.IoProcessor;
 
 namespace Xtate.Test
@@ -32,8 +34,8 @@ namespace Xtate.Test
 	[TestClass]
 	public class InvokeTest
 	{
-		private Mock<IExternalCommunication> _externalCommunicationMock = default!;
-		private Mock<ILogger>                _loggerMock                = default!;
+		private Mock<IInvokeController> _invokeControllerMock = default!;
+		private Mock<ILogWriter>                _loggerMock                = default!;
 		private InterpreterOptions           _options                   = default!;
 		private StateMachineEntity           _stateMachine;
 
@@ -81,15 +83,16 @@ namespace Xtate.Test
 																			 })
 							};
 
-			_externalCommunicationMock = new Mock<IExternalCommunication>();
-			_externalCommunicationMock.Setup(e => e.GetIoProcessors()).Returns(ImmutableArray<IIoProcessor>.Empty);
-			_loggerMock = new Mock<ILogger>();
+			_invokeControllerMock = new Mock<IInvokeController>();
+			_loggerMock = new Mock<ILogWriter>();
+			_loggerMock.Setup(s => s.IsEnabled(Level.Info)).Returns(true);
+			_loggerMock.Setup(s => s.IsEnabled(Level.Trace)).Returns(true);
 
-			_options = new InterpreterOptions
+			/*_options = new InterpreterOptions(ServiceLocator.Default)
 					   {
-						   ExternalCommunication = _externalCommunicationMock.Object,
+						   ExternalCommunication = _invokeControllerMock.Object,
 						   Logger = _loggerMock.Object
-					   };
+					   };*/
 		}
 
 		private static EventObject CreateEventObject(string name, InvokeId? invokeId = default) =>
@@ -104,23 +107,36 @@ namespace Xtate.Test
 		public async Task SimpleTest()
 		{
 			var invokeUniqueId = "";
-			_externalCommunicationMock.Setup(l => l.StartInvoke(It.IsAny<InvokeData>(), default))
-									  .Callback((InvokeData data, CancellationToken _) => invokeUniqueId = data.InvokeId.InvokeUniqueIdValue);
+			_invokeControllerMock.Setup(l => l.Start(It.IsAny<InvokeData>()))
+									  .Callback<InvokeData>(data => invokeUniqueId = data.InvokeId.InvokeUniqueIdValue);
 
 			var channel = Channel.CreateUnbounded<IEvent>();
-			var task = StateMachineInterpreter.RunAsync(SessionId.FromString("session1"), _stateMachine, channel, _options);
-			await channel.Writer.WriteAsync(CreateEventObject(name: "fromInvoked", InvokeId.FromString(invokeId: "invoke_id", invokeUniqueId)));
-			await channel.Writer.WriteAsync(CreateEventObject("ToF"));
+
+			var services = new ServiceCollection();
+			services.AddForwarding<IStateMachine>(_ => _stateMachine);
+			services.AddForwarding(d => _invokeControllerMock.Object);
+			services.AddForwarding(d => _loggerMock.Object);
+			services.RegisterStateMachineInterpreter();
+
+			var serviceProvider = services.BuildProvider();
+			var stateMachineInterpreter = await serviceProvider.GetRequiredService<IStateMachineInterpreter>();
+			var eventQueueWriter = await serviceProvider.GetRequiredService<IEventQueueWriter>();
+			
+			var task = stateMachineInterpreter.RunAsync();
+
+			await eventQueueWriter.WriteAsync(CreateEventObject(name: "fromInvoked", InvokeId.FromString(invokeId: "invoke_id", invokeUniqueId)));
+			await eventQueueWriter.WriteAsync(CreateEventObject("ToF"));
 			await task;
 
-			_externalCommunicationMock.Verify(l => l.StartInvoke(It.IsAny<InvokeData>(), default));
-			_externalCommunicationMock.Verify(l => l.CancelInvoke(InvokeId.FromString("invoke_id", invokeUniqueId), default));
-			_externalCommunicationMock.VerifyNoOtherCalls();
+			_invokeControllerMock.Verify(l => l.Start(It.IsAny<InvokeData>()));
+			_invokeControllerMock.Verify(l => l.Cancel(InvokeId.FromString("invoke_id", invokeUniqueId)));
+			_invokeControllerMock.VerifyNoOtherCalls();
 
-			_loggerMock.Verify(l => l.ExecuteLog(It.IsAny<ILoggerContext>(), LogLevel.Info, "FinalizeExecuted", default, default, default));
-			_loggerMock.VerifyGet(l => l.IsTracingEnabled);
-			_loggerMock.Verify(l => l.TraceStartInvoke(It.IsAny<IInterpreterLoggerContext>(), It.IsAny<InvokeData>(), default));
-			_loggerMock.Verify(l => l.TraceCancelInvoke(It.IsAny<IInterpreterLoggerContext>(), It.IsAny<InvokeId>(), default));
+			_loggerMock.Verify(l => l.Write(Level.Info, "ILog", "FinalizeExecuted", It.IsAny<IEnumerable<LoggingParameter>>()));
+			_loggerMock.Verify(l => l.Write(Level.Trace, "IInvoke", It.Is<string>(v => v.StartsWith("Start")), It.IsAny<IEnumerable<LoggingParameter>>()));
+			_loggerMock.Verify(l => l.Write(Level.Trace, "IInvoke", It.Is<string>(v => v.StartsWith("Cancel")), It.IsAny<IEnumerable<LoggingParameter>>()));
+			_loggerMock.Verify(l => l.IsEnabled(It.IsAny<Level>()));
+			_loggerMock.Verify(l => l.Write(Level.Trace, It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IEnumerable<LoggingParameter>>()));
 			_loggerMock.VerifyNoOtherCalls();
 		}
 	}

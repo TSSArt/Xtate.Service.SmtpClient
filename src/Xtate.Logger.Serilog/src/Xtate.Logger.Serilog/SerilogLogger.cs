@@ -29,7 +29,7 @@ using Xtate.Core;
 namespace Xtate
 {
 	[PublicAPI]
-	public class SerilogLogger : ILogger
+	public class SerilogLogger : ILoggerOld
 	{
 		public enum LogEventType
 		{
@@ -46,6 +46,7 @@ namespace Xtate
 			InterpreterState
 		}
 
+		private readonly ILoggerContext _loggerContext;
 		private readonly Logger _logger;
 
 		public SerilogLogger(LoggerConfiguration configuration)
@@ -59,12 +60,18 @@ namespace Xtate
 
 	#region Interface ILogger
 
-		public ValueTask ExecuteLog(ILoggerContext? loggerContext,
-									LogLevel logLevel,
+		public async ValueTask ExecuteLogOld(LogLevel logLevel,
+											 string? message,
+											 DataModelValue arguments,
+											 Exception? exception) =>
+			throw new NotImplementedException();
+
+		public async ValueTask LogErrorOld(ErrorType errorType, Exception exception, string? sourceEntityId) => throw new NotImplementedException();
+
+		public ValueTask ExecuteLog(LogLevel logLevel,
 									string? message,
 									DataModelValue data,
-									Exception? exception,
-									CancellationToken token)
+									Exception? exception)
 		{
 			var logEventLevel = logLevel switch
 								{
@@ -79,7 +86,7 @@ namespace Xtate
 				return default;
 			}
 
-			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.ExecuteLog, IsVerbose));
+			var logger = _logger.ForContext(new LoggerEnricher(_loggerContext, LogEventType.ExecuteLog, IsVerbose));
 
 			switch (data.Type)
 			{
@@ -101,7 +108,7 @@ namespace Xtate
 				case DataModelValueType.DateTime:
 				case DataModelValueType.Boolean:
 				case DataModelValueType.String:
-					logger = logger.ForContext(propertyName: @"DataText", ConvertToText(loggerContext, data));
+					logger = logger.ForContext(propertyName: @"DataText", ConvertToText(_loggerContext, data));
 
 					if (string.IsNullOrWhiteSpace(message))
 					{
@@ -116,7 +123,7 @@ namespace Xtate
 
 				case DataModelValueType.List:
 					logger = logger.ForContext(propertyName: @"Data", data.ToObject(), destructureObjects: true)
-								   .ForContext(propertyName: @"DataText", ConvertToText(loggerContext, data));
+								   .ForContext(propertyName: @"DataText", ConvertToText(_loggerContext, data));
 
 					if (string.IsNullOrWhiteSpace(message))
 					{
@@ -137,11 +144,9 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask LogError(ILoggerContext? loggerContext,
-								  ErrorType errorType,
+		public ValueTask LogError(ErrorType errorType,
 								  Exception exception,
-								  string? sourceEntityId,
-								  CancellationToken token)
+								  string? sourceEntityId)
 		{
 			if (exception is null) throw new ArgumentNullException(nameof(exception));
 
@@ -150,7 +155,7 @@ namespace Xtate
 				return default;
 			}
 
-			var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.Error, IsVerbose))
+			var logger = _logger.ForContext(new LoggerEnricher(_loggerContext, LogEventType.Error, IsVerbose))
 								.ForContext(propertyName: @"ErrorType", errorType);
 
 			if (sourceEntityId is not null)
@@ -163,12 +168,12 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask TraceProcessingEvent(ILoggerContext? loggerContext, IEvent evt, CancellationToken token)
+		public ValueTask TraceProcessingEvent(IEvent evt)
 		{
 			if (IsTracingEnabled)
 			{
-				var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.ProcessingEvent, IsVerbose))
-									.ForContext(new EventEnricher(loggerContext, evt, IsVerbose));
+				var logger = _logger.ForContext(new LoggerEnricher(_loggerContext, LogEventType.ProcessingEvent, IsVerbose))
+									.ForContext(new EventEnricher(_loggerContext, evt, IsVerbose));
 
 				logger.Debug(@"Processing {EventType} event '{EventName}'");
 			}
@@ -176,13 +181,13 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask TraceEnteringState(ILoggerContext? loggerContext, IIdentifier stateId, CancellationToken token)
+		public ValueTask TraceEnteringState(IIdentifier stateId)
 		{
 			if (stateId is null) throw new ArgumentNullException(nameof(stateId));
 
 			if (IsTracingEnabled)
 			{
-				var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.EnteringState, IsVerbose));
+				var logger = _logger.ForContext(new LoggerEnricher(_loggerContext, LogEventType.EnteringState, IsVerbose));
 
 				logger.Debug(messageTemplate: @"Entering state '{StateId}'", stateId.Value);
 			}
@@ -190,13 +195,13 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask TraceEnteredState(ILoggerContext? loggerContext, IIdentifier stateId, CancellationToken token)
+		public ValueTask TraceEnteredState(IIdentifier stateId)
 		{
 			if (stateId is null) throw new ArgumentNullException(nameof(stateId));
 
 			if (IsTracingEnabled)
 			{
-				var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.EnteredState, IsVerbose));
+				var logger = _logger.ForContext(new LoggerEnricher(_loggerContext, LogEventType.EnteredState, IsVerbose));
 
 				logger.Debug(messageTemplate: @"Entered state '{StateId}'", stateId.Value);
 			}
@@ -204,13 +209,13 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask TraceExitingState(ILoggerContext? loggerContext, IIdentifier stateId, CancellationToken token)
+		public ValueTask TraceExitingState(IIdentifier stateId)
 		{
 			if (stateId is null) throw new ArgumentNullException(nameof(stateId));
 
 			if (IsTracingEnabled)
 			{
-				var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.ExitingState, IsVerbose));
+				var logger = _logger.ForContext(new LoggerEnricher(_loggerContext, LogEventType.ExitingState, IsVerbose));
 
 				logger.Debug(messageTemplate: @"Exiting state '{StateId}'", stateId.Value);
 			}
@@ -218,13 +223,13 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask TraceExitedState(ILoggerContext? loggerContext, IIdentifier stateId, CancellationToken token)
+		public ValueTask TraceExitedState(IIdentifier stateId)
 		{
 			if (stateId is null) throw new ArgumentNullException(nameof(stateId));
 
 			if (IsTracingEnabled)
 			{
-				var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.ExitedState, IsVerbose));
+				var logger = _logger.ForContext(new LoggerEnricher(_loggerContext, LogEventType.ExitedState, IsVerbose));
 
 				logger.Debug(messageTemplate: @"Exited state '{StateId}'", stateId.Value);
 			}
@@ -232,15 +237,13 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask TracePerformingTransition(ILoggerContext? loggerContext,
-												   TransitionType type,
+		public ValueTask TracePerformingTransition(TransitionType type,
 												   string? eventDescriptor,
-												   string? target,
-												   CancellationToken token)
+												   string? target)
 		{
 			if (IsTracingEnabled)
 			{
-				var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.PerformingTransition, IsVerbose));
+				var logger = _logger.ForContext(new LoggerEnricher(_loggerContext, LogEventType.PerformingTransition, IsVerbose));
 
 				if (eventDescriptor is null)
 				{
@@ -255,15 +258,13 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask TracePerformedTransition(ILoggerContext? loggerContext,
-												  TransitionType type,
+		public ValueTask TracePerformedTransition(TransitionType type,
 												  string? eventDescriptor,
-												  string? target,
-												  CancellationToken token)
+												  string? target)
 		{
 			if (IsTracingEnabled)
 			{
-				var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.PerformedTransition, IsVerbose));
+				var logger = _logger.ForContext(new LoggerEnricher(_loggerContext, LogEventType.PerformedTransition, IsVerbose));
 
 				if (eventDescriptor is null)
 				{
@@ -278,11 +279,11 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask TraceInterpreterState(ILoggerContext? loggerContext, StateMachineInterpreterState state, CancellationToken token)
+		public ValueTask TraceInterpreterState(StateMachineInterpreterState state)
 		{
 			if (IsTracingEnabled)
 			{
-				var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.InterpreterState, IsVerbose));
+				var logger = _logger.ForContext(new LoggerEnricher(_loggerContext, LogEventType.InterpreterState, IsVerbose));
 
 				logger.Debug(messageTemplate: @"Interpreter state has changed to '{InterpreterState}'", state);
 			}
@@ -290,14 +291,14 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask TraceSendEvent(ILoggerContext? loggerContext, IOutgoingEvent outgoingEvent, CancellationToken token)
+		public ValueTask TraceSendEvent(IOutgoingEvent outgoingEvent)
 		{
 			if (outgoingEvent is null) throw new ArgumentNullException(nameof(outgoingEvent));
 
 			if (IsTracingEnabled)
 			{
-				var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.InterpreterState, IsVerbose))
-									.ForContext(new OutgoingEventEnricher(loggerContext, outgoingEvent, IsVerbose));
+				var logger = _logger.ForContext(new LoggerEnricher(_loggerContext, LogEventType.InterpreterState, IsVerbose))
+									.ForContext(new OutgoingEventEnricher(_loggerContext, outgoingEvent, IsVerbose));
 
 				logger.Debug(messageTemplate: @"Send event '{EventName}'", EventName.ToName(outgoingEvent.NameParts));
 			}
@@ -305,13 +306,13 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask TraceCancelEvent(ILoggerContext? loggerContext, SendId sendId, CancellationToken token)
+		public ValueTask TraceCancelEvent(SendId sendId)
 		{
 			if (sendId is null) throw new ArgumentNullException(nameof(sendId));
 
 			if (IsTracingEnabled)
 			{
-				var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.InterpreterState, IsVerbose));
+				var logger = _logger.ForContext(new LoggerEnricher(_loggerContext, LogEventType.InterpreterState, IsVerbose));
 
 				logger.Debug(messageTemplate: @"Cancel event '{SendId}'", sendId.Value);
 			}
@@ -319,14 +320,14 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask TraceStartInvoke(ILoggerContext? loggerContext, InvokeData invokeData, CancellationToken token)
+		public ValueTask TraceStartInvoke(InvokeData invokeData)
 		{
 			if (invokeData is null) throw new ArgumentNullException(nameof(invokeData));
 
 			if (IsTracingEnabled)
 			{
-				var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.InterpreterState, IsVerbose))
-									.ForContext(new InvokeEnricher(loggerContext, invokeData, IsVerbose));
+				var logger = _logger.ForContext(new LoggerEnricher(_loggerContext, LogEventType.InterpreterState, IsVerbose))
+									.ForContext(new InvokeEnricher(_loggerContext, invokeData, IsVerbose));
 
 				logger.Debug(messageTemplate: @"Start Invoke {InvokeId}", invokeData.InvokeId.Value);
 			}
@@ -334,15 +335,15 @@ namespace Xtate
 			return default;
 		}
 
-		public ValueTask TraceCancelInvoke(ILoggerContext? loggerContext, InvokeId invokeId, CancellationToken token)
+		public ValueTask TraceCancelInvoke(InvokeId invokeId)
 		{
 			if (invokeId is null) throw new ArgumentNullException(nameof(invokeId));
 
 			if (IsTracingEnabled)
 			{
-				var logger = _logger.ForContext(new LoggerEnricher(loggerContext, LogEventType.InterpreterState, IsVerbose));
+				var logger = _logger.ForContext(new LoggerEnricher(_loggerContext, LogEventType.InterpreterState, IsVerbose));
 
-				logger.Debug(messageTemplate: @"Start Invoke {InvokeId}", invokeId.Value);
+				logger.Debug(messageTemplate: @"Cancel Invoke {InvokeId}", invokeId.Value);
 			}
 
 			return default;

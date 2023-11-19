@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net5.0-windows;net461</TargetFrameworks>
+    <TargetFrameworks>net6.0-windows;net461</TargetFrameworks>
     <UseWindowsForms>true</UseWindowsForms>
     <Platforms>x86;x64</Platforms>
     <Nullable>enable</Nullable>

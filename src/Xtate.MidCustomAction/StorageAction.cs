@@ -40,7 +40,7 @@ namespace Xtate.CustomAction
 		private string? _template;
 		private string? _variable;
 
-		internal StorageAction(StorageActionService storageActionService) => _storageActionService = storageActionService;
+		public StorageAction(StorageActionService storageActionService) => _storageActionService = storageActionService;
 
 		protected override void Initialize(XmlReader xmlReader)
 		{
@@ -63,7 +63,7 @@ namespace Xtate.CustomAction
 			//<mid:storage location="password" operation="set" variable="password" />
 		}
 
-		protected override async ValueTask<DataModelValue> EvaluateAsync(IReadOnlyDictionary<string, DataModelValue> arguments, CancellationToken token)
+		protected override async ValueTask<DataModelValue> EvaluateAsync(IReadOnlyDictionary<string, DataModelValue> arguments)
 		{
 			if (arguments is null) throw new ArgumentNullException(nameof(arguments));
 
@@ -77,12 +77,12 @@ namespace Xtate.CustomAction
 
 			if (_operation == "get" && _variable is not null)
 			{
-				return await _storageActionService.GetValue(_variable, token).ConfigureAwait(false);
+				return await _storageActionService.GetValue(_variable).ConfigureAwait(false);
 			}
 
 			if (_operation == "set" && _variable is not null)
 			{
-				await _storageActionService.SetValue(_variable, arguments[Location], token).ConfigureAwait(false);
+				await _storageActionService.SetValue(_variable, arguments[Location]).ConfigureAwait(false);
 
 				return default;
 			}

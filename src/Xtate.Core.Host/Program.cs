@@ -37,18 +37,18 @@ namespace Xtate.Core.Host
 			var baseUri = new Uri(args.Length > 0 ? args[0] : "http://localhost:5000/");
 
 			var stateMachineHost = new StateMachineHostBuilder()
-								   .AddXPath()
-								   .AddEcmaScript()
+								   .AddServices(s => s.AddXPath().AddEcmaScript())
 								   .AddHttpClient()
 								   .AddSmtpClient()
-								   .AddResourceLoaderFactory(ResxResourceLoaderFactory.Instance)
-								   .AddResourceLoaderFactory(FileResourceLoaderFactory.Instance)
-								   .AddResourceLoaderFactory(WebResourceLoaderFactory.Instance)
+								   //TODO:
+								   //.AddResourceLoaderFactory(ResxResourceLoaderFactory.Instance)
+								   //.AddResourceLoaderFactory(FileResourceLoaderFactory.Instance)
+								   //.AddResourceLoaderFactory(WebResourceLoaderFactory.Instance)
 								   .AddCefSharpWebBrowser()
 								   .AddUserInteraction()
 								   .AddHttpIoProcessor(baseUri)
 								   .SetSerilogLogger(cfg => cfg.MinimumLevel.Verbose().WriteTo.Console().WriteTo.Seq("http://beast:5341/"))
-								   .Build();
+								   .Build(ServiceLocator.Default);
 
 			await stateMachineHost.StartHostAsync().ConfigureAwait(false);
 
@@ -73,7 +73,7 @@ namespace Xtate.Core.Host
 			await autorun.ConfigureAwait(false);
 		}
 
-		private static void Action(IExecutionContext executionContext)
+		private static void Action()
 		{
 			//var host = (StateMachineHost) executionContext.RuntimeItems[typeof(IHost)];
 

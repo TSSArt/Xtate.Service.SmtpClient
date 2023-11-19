@@ -20,6 +20,9 @@
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xtate.Builder;
+using Xtate.Core;
+using Xtate.DataModel;
+using Xtate.IoC;
 
 namespace Xtate.Test
 {
@@ -33,11 +36,16 @@ namespace Xtate.Test
 			var stateMachine = FluentBuilderFactory
 							   .Create()
 							   .BeginFinal()
-							   .SetDoneData(_ => new DataModelValue(22))
+							   .SetDoneDataValue(22)
 							   .EndFinal()
 							   .Build();
 
-			await using var stateMachineHost = new StateMachineHost(new StateMachineHostOptions());
+			var services = new ServiceCollection();
+			services.RegisterStateMachineHost();
+			var serviceProvider = services.BuildProvider();
+			var stateMachineHost = await serviceProvider.GetRequiredService<StateMachineHost>();
+
+			//await using var stateMachineHost = new StateMachineHost(new StateMachineHostOptions(ServiceLocator.Default)){_dataConverter = new DataConverter(null)};
 
 			await stateMachineHost.StartHostAsync();
 
@@ -55,16 +63,19 @@ namespace Xtate.Test
 			var stateMachine = FluentBuilderFactory
 							   .Create()
 							   .BeginFinal()
-							   .SetDoneData(ctx =>
+							   .SetDoneDataFunc(() =>
 											{
-												dynamic data = ctx.DataModel;
-												var value = (int) data._x.args;
-												return new DataModelValue(value);
+												dynamic data = Runtime.DataModel;
+												return (int) data._x.args;
 											})
 							   .EndFinal()
 							   .Build();
 
-			await using var stateMachineHost = new StateMachineHost(new StateMachineHostOptions());
+			var services = new ServiceCollection();
+			services.RegisterStateMachineHost();
+			var serviceProvider = services.BuildProvider();
+			var stateMachineHost = await serviceProvider.GetRequiredService<StateMachineHost>();
+			//await using var stateMachineHost = new StateMachineHost(new StateMachineHostOptions(ServiceLocator.Default)){_dataConverter = new DataConverter(null)};
 
 			await stateMachineHost.StartHostAsync();
 

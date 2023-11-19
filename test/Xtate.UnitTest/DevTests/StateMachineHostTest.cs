@@ -29,9 +29,13 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Xtate.Core;
+using Xtate.IoC;
 using Xtate.CustomAction;
+using Xtate.DataModel;
 using Xtate.DataModel.EcmaScript;
+using Xtate.IoProcessor;
 using Xtate.Service;
+using IServiceProvider = Xtate.IoC.IServiceProvider;
 
 namespace Xtate.Test
 {
@@ -45,6 +49,18 @@ namespace Xtate.Test
 		[TestMethod]
 		public async Task SimpleTest()
 		{
+			var services = new ServiceCollection();
+			services.RegisterStateMachineHost();
+			services.RegisterEcmaScriptDataModelHandler();
+			var serviceProvider = services.BuildProvider();
+
+			var host = await serviceProvider.GetRequiredService<StateMachineHost>();
+
+			await host.StartHostAsync();
+			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Xtate.UnitTest.Resources.All.xml");
+			var reader = new StreamReader(stream ?? throw new InvalidOperationException());
+			var _ = host.ExecuteStateMachineAsync(await reader.ReadToEndAsync());
+			/*
 			var resourceLoaderMock = new Mock<IResourceLoader>();
 			var resourceLoaderActivatorMock = new Mock<IResourceLoaderFactoryActivator>();
 			var resourceLoaderFactoryMock = new Mock<IResourceLoaderFactory>();
@@ -52,26 +68,25 @@ namespace Xtate.Test
 			var task = new ValueTask<Resource>(new Resource(new MemoryStream(Encoding.ASCII.GetBytes("content")), new ContentType()));
 
 			resourceLoaderActivatorMock
-				.Setup(e => e.CreateResourceLoader(It.IsAny<IFactoryContext>(), It.IsAny<CancellationToken>()))
+				.Setup(e => e.CreateResourceLoader(It.IsAny<ServiceLocator>()))
 				.Returns(new ValueTask<IResourceLoader>(resourceLoaderMock.Object));
 
 			resourceLoaderFactoryMock
-				.Setup(e => e.TryGetActivator(It.IsAny<IFactoryContext>(), It.IsAny<Uri>(), It.IsAny<CancellationToken>()))
+				.Setup(e => e.TryGetActivator(It.IsAny<Uri>()))
 				.Returns(new ValueTask<IResourceLoaderFactoryActivator?>(resourceLoaderActivatorMock.Object));
 
-			resourceLoaderMock.Setup(e => e.Request(It.IsAny<Uri>(), It.IsAny<NameValueCollection>(), It.IsAny<CancellationToken>())).Returns(task);
+			resourceLoaderMock.Setup(e => e.Request(It.IsAny<Uri>(), It.IsAny<NameValueCollection>())).Returns(task);
 
-			var options = new StateMachineHostOptions
+			var options = new StateMachineHostOptions(ServiceLocator.Create(s => s.AddEcmaScript()))
 						  {
-							  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
 							  ResourceLoaderFactories = ImmutableArray.Create(resourceLoaderFactoryMock.Object)
 						  };
 
-			var stateMachineHost = new StateMachineHost(options);
+			var stateMachineHost = new StateMachineHost(options) {_dataConverter = new DataConverter(null)};
 			await stateMachineHost.StartHostAsync();
 			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Xtate.UnitTest.Resources.All.xml");
 			var reader = new StreamReader(stream ?? throw new InvalidOperationException());
-			var _ = stateMachineHost.ExecuteStateMachineAsync(await reader.ReadToEndAsync());
+			var _ = stateMachineHost.ExecuteStateMachineAsync(await reader.ReadToEndAsync());*/
 		}
 
 		[TestMethod]
@@ -79,31 +94,48 @@ namespace Xtate.Test
 		{
 			var stateMachine = GetStateMachine("<datamodel><data id='dmValue' expr='111'/></datamodel><final id='fin'><donedata><content expr='dmValue'/></donedata></final>");
 
-			var resourceLoaderMock = new Mock<IResourceLoader>();
+			var resourceLoaderServiceMock = new Mock<IResourceLoader>();
 			var resourceLoaderActivatorMock = new Mock<IResourceLoaderFactoryActivator>();
 			var resourceLoaderFactoryMock = new Mock<IResourceLoaderFactory>();
 
 			var task = new ValueTask<Resource>(new Resource(stateMachine, new ContentType()));
 
-			resourceLoaderActivatorMock
-				.Setup(e => e.CreateResourceLoader(It.IsAny<IFactoryContext>(), It.IsAny<CancellationToken>()))
+		/*	resourceLoaderActivatorMock
+				.Setup(e => e.CreateResourceLoader(It.IsAny<ServiceLocator>(), It.IsAny<CancellationToken>()))
 				.Returns(new ValueTask<IResourceLoader>(resourceLoaderMock.Object));
 
 			resourceLoaderFactoryMock
-				.Setup(e => e.TryGetActivator(It.IsAny<IFactoryContext>(), It.IsAny<Uri>(), It.IsAny<CancellationToken>()))
-				.Returns(new ValueTask<IResourceLoaderFactoryActivator?>(resourceLoaderActivatorMock.Object));
+				.Setup(e => e.TryGetActivator(It.IsAny<Uri>(), It.IsAny<CancellationToken>()))
+				.Returns(new ValueTask<IResourceLoaderFactoryActivator?>(resourceLoaderActivatorMock.Object));*/
 
-			resourceLoaderMock.Setup(e => e.Request(new Uri("scxml://a"), It.IsAny<NameValueCollection>(), It.IsAny<CancellationToken>())).Returns(task);
+			//resourceLoaderMock.Setup(e => e.Request(new Uri("scxml://a"), It.IsAny<NameValueCollection>(), It.IsAny<CancellationToken>())).Returns(task);
+			resourceLoaderServiceMock.Setup(e => e.Request(new Uri("scxml://a"), It.IsAny<NameValueCollection>())).Returns(task);
 
-			var options = new StateMachineHostOptions
+			var serviceLocator = ServiceLocator.Create(
+				delegate(IServiceCollection s)
+				{
+					s.AddForwarding(_ => resourceLoaderServiceMock.Object);
+					s.AddXPath();
+					s.AddEcmaScript();
+				});
+			var options = new StateMachineHostOptions(serviceLocator)
 						  {
-							  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
 							  ResourceLoaderFactories = ImmutableArray.Create(resourceLoaderFactoryMock.Object)
 						  };
 
-			var stateMachineHost = new StateMachineHost(options);
-			await stateMachineHost.StartHostAsync();
-			var result = await stateMachineHost.ExecuteStateMachineAsync(new Uri("scxml://a"));
+			//var stateMachineHost = new StateMachineHost(options) {_dataConverter = new DataConverter(null)};
+
+			IServiceProvider serviceProvider = default;
+			var services = new ServiceCollection();
+			services.RegisterEcmaScriptDataModelHandler();
+			services.RegisterStateMachineHost();
+			services.AddForwarding(_ => resourceLoaderServiceMock.Object);
+			serviceProvider = services.BuildProvider();
+
+			var host = await serviceProvider.GetRequiredService<StateMachineHost>();
+
+			await host.StartHostAsync();
+			var result = await host.ExecuteStateMachineAsync(new Uri("scxml://a"));
 
 			Assert.AreEqual(expected: 111.0, result.AsNumber());
 		}
@@ -143,24 +175,23 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 			var task = new ValueTask<Resource>(new Resource(stateMachine, new ContentType()));
 
 			resourceLoaderActivatorMock
-				.Setup(e => e.CreateResourceLoader(It.IsAny<IFactoryContext>(), It.IsAny<CancellationToken>()))
+				.Setup(e => e.CreateResourceLoader(It.IsAny<ServiceLocator>()))
 				.Returns(new ValueTask<IResourceLoader>(resourceLoaderMock.Object));
 
 			resourceLoaderFactoryMock
-				.Setup(e => e.TryGetActivator(It.IsAny<IFactoryContext>(), It.IsAny<Uri>(), It.IsAny<CancellationToken>()))
+				.Setup(e => e.TryGetActivator(It.IsAny<Uri>()))
 				.Returns(new ValueTask<IResourceLoaderFactoryActivator?>(resourceLoaderActivatorMock.Object));
 
-			resourceLoaderMock.Setup(e => e.Request(new Uri("scxml://a"), It.IsAny<NameValueCollection>(), It.IsAny<CancellationToken>())).Returns(task);
+			resourceLoaderMock.Setup(e => e.Request(new Uri("scxml://a"), It.IsAny<NameValueCollection>())).Returns(task);
 
 
-			var options = new StateMachineHostOptions
+			var options = new StateMachineHostOptions(ServiceLocator.Create(s => s.AddEcmaScript()))
 						  {
-							  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
 							  ServiceFactories = ImmutableArray.Create(HttpClientServiceFactory.Instance),
 							  ResourceLoaderFactories = ImmutableArray.Create(resourceLoaderFactoryMock.Object)
 						  };
 
-			var stateMachineHost = new StateMachineHost(options);
+			var stateMachineHost = new StateMachineHost(options) {_dataConverter = new DataConverter(null), ServiceFactories = AsyncEnumerable.Empty<IServiceFactory>(), _ioProcessorFactories = AsyncEnumerable.Empty<IIoProcessorFactory>()};
 
 			var result = await stateMachineHost.ExecuteStateMachineAsync(new Uri("scxml://a"));
 
@@ -225,15 +256,14 @@ capture1: {xpath:'//div[@aria-owner]', attr:'id'}
 	<donedata><content expr='_event.data'/></donedata>
 </final>");
 
-			var options = new StateMachineHostOptions
+			var options = new StateMachineHostOptions(ServiceLocator.Create(s => s.AddEcmaScript()))
 						  {
-							  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
 							  ServiceFactories = ImmutableArray.Create(HttpClientServiceFactory.Instance,
 																	   SmtpClientServiceFactory.Instance /*WebBrowserService.GetFactory<CefSharpWebBrowserService>()*/),
 							  CustomActionFactories = ImmutableArray.Create(BasicCustomActionFactory.Instance, MimeCustomActionFactory.Instance)
 						  };
 
-			var stateMachineHost = new StateMachineHost(options);
+			var stateMachineHost = new StateMachineHost(options) {_dataConverter = new DataConverter(null), ServiceFactories = AsyncEnumerable.Empty<IServiceFactory>(), _ioProcessorFactories = AsyncEnumerable.Empty<IIoProcessorFactory>()};
 
 			var result = await stateMachineHost.ExecuteStateMachineAsync(stateMachine);
 

@@ -31,9 +31,8 @@ using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
-using Xtate.Builder;
 using Xtate.Core;
-using Xtate.DataModel.EcmaScript;
+using Xtate.IoC;
 using Xtate.Persistence;
 using Xtate.Scxml;
 
@@ -45,6 +44,8 @@ namespace Xtate.Test
 		private IStateMachine                _allStateMachine           = default!;
 		private Mock<IExternalCommunication> _externalCommunication     = default!;
 		private Mock<IResourceLoaderFactory> _resourceLoaderFactoryMock = default!;
+		private Mock<IResourceLoader> _resourceLoaderServiceMock = default!;
+		private ServiceLocator _serviceLocator;
 
 		[TestInitialize]
 		public void Initialize()
@@ -56,23 +57,40 @@ namespace Xtate.Test
 			var xmlNamespaceManager = new XmlNamespaceManager(nt);
 			using var xmlReader = XmlReader.Create(stream!, settings: null, new XmlParserContext(nt, xmlNamespaceManager, xmlLang: default, xmlSpace: default));
 
-			var director = new ScxmlDirector(xmlReader, BuilderFactory.Instance,
-											 new ScxmlDirectorOptions { StateMachineValidator = StateMachineValidator.Instance, NamespaceResolver = xmlNamespaceManager });
+			var serviceLocator = ServiceLocator.Create(s => s.AddForwarding<IStateMachineValidator, StateMachineValidator>());
+			//var director = serviceLocator.GetService<ScxmlDirector, XmlReader>(xmlReader);
+			//var director = new ScxmlDirector(xmlReader, serviceLocator.GetService<IBuilderFactory>(), new ScxmlDirectorOptions(serviceLocator) { NamespaceResolver = xmlNamespaceManager });
 
-
-			_allStateMachine = director.ConstructStateMachine().SynchronousGetResult();
+			var sc = new ServiceCollection();
+			sc.RegisterStateMachineFactory();
+			sc.AddForwarding<IStateMachineLocation>(_ => new StateMachineLocation(new Uri("res://Xtate.UnitTest/Xtate.UnitTest/Resources/All.xml")));
+			var sp = sc.BuildProvider();
+			
+			_allStateMachine = sp.GetRequiredService<IStateMachine>().Result;
 
 			var task = new ValueTask<Resource>(new Resource(new MemoryStream(Encoding.ASCII.GetBytes("'content'")), new ContentType()));
 			var loaderMock = new Mock<IResourceLoader>();
-			loaderMock.Setup(e => e.Request(It.IsAny<Uri>(), It.IsAny<NameValueCollection>(), It.IsAny<CancellationToken>()))
+			loaderMock.Setup(e => e.Request(It.IsAny<Uri>(), It.IsAny<NameValueCollection>()))
 					  .Returns(task);
 			var activatorMock = new Mock<IResourceLoaderFactoryActivator>();
-			activatorMock.Setup(e => e.CreateResourceLoader(It.IsAny<IFactoryContext>(), It.IsAny<CancellationToken>()))
+			activatorMock.Setup(e => e.CreateResourceLoader(It.IsAny<ServiceLocator>()))
 						 .Returns(new ValueTask<IResourceLoader>(loaderMock.Object));
 			_resourceLoaderFactoryMock = new Mock<IResourceLoaderFactory>();
-			_resourceLoaderFactoryMock.Setup(e => e.TryGetActivator(It.IsAny<IFactoryContext>(), It.IsAny<Uri>(), It.IsAny<CancellationToken>()))
+			_resourceLoaderFactoryMock.Setup(e => e.TryGetActivator(It.IsAny<Uri>()))
 									  .Returns(new ValueTask<IResourceLoaderFactoryActivator?>(activatorMock.Object));
 			_externalCommunication = new Mock<IExternalCommunication>();
+
+			_resourceLoaderServiceMock = new Mock<IResourceLoader>();
+			_resourceLoaderServiceMock.Setup(e => e.Request(It.IsAny<Uri>(), default)).Returns(task);
+			_resourceLoaderServiceMock.Setup(e => e.Request(It.IsAny<Uri>(), It.IsAny<NameValueCollection>())).Returns(task);
+
+			_serviceLocator = ServiceLocator.Create(
+				delegate(IServiceCollection s)
+				{
+					s.AddForwarding(_ => _resourceLoaderServiceMock.Object);
+					s.AddXPath();
+					s.AddEcmaScript();
+				});
 		}
 
 		[TestMethod]
@@ -84,9 +102,8 @@ namespace Xtate.Test
 			var channel2 = Channel.CreateUnbounded<IEvent>();
 			channel2.Writer.Complete(new ArgumentException("444"));
 
-			var options = new InterpreterOptions
+			var options = new InterpreterOptions(_serviceLocator)
 						  {
-							  DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory),
 							  ResourceLoaderFactories = ImmutableArray.Create(_resourceLoaderFactoryMock.Object),
 							  PersistenceLevel = PersistenceLevel.ExecutableAction,
 							  StorageProvider = new TestStorage(),
@@ -119,17 +136,23 @@ namespace Xtate.Test
 
 		#region Interface IStorageProvider
 
-			public async ValueTask<ITransactionalStorage> GetTransactionalStorage(string? partition, string key, CancellationToken token)
+			public async ValueTask<ITransactionalStorage> GetTransactionalStorage(string? partition, string key)
 			{
 				if (string.IsNullOrEmpty(key)) throw new ArgumentException(message: @"Value cannot be null or empty.", nameof(key));
 
 				var partitionStorage = _storage.GetOrAdd(partition ?? "", _ => new ConcurrentDictionary<string, MemoryStream>());
 				var memStream = partitionStorage.GetOrAdd(key, _ => new MemoryStream());
 
-				return await StreamStorage.CreateAsync(memStream, disposeStream: false, token);
+				var streamStorage = new StreamStorage(memStream, disposeStream: false)
+									{
+										InMemoryStorageFactory = b => new InMemoryStorage(b),
+										InMemoryStorageBaselineFactory = memory => new InMemoryStorage(memory.Span)
+									};
+				await streamStorage.Initialization;
+				return streamStorage;
 			}
 
-			public ValueTask RemoveTransactionalStorage(string? partition, string key, CancellationToken token)
+			public ValueTask RemoveTransactionalStorage(string? partition, string key)
 			{
 				if (string.IsNullOrEmpty(key)) throw new ArgumentException(message: @"Value cannot be null or empty.", nameof(key));
 
@@ -139,7 +162,7 @@ namespace Xtate.Test
 				return default;
 			}
 
-			public ValueTask RemoveAllTransactionalStorage(string? partition, CancellationToken token)
+			public ValueTask RemoveAllTransactionalStorage(string? partition)
 			{
 				_storage.TryRemove(partition ?? "", out _);
 

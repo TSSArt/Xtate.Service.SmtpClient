@@ -23,6 +23,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xtate.Builder;
 using Xtate.Core;
+using Xtate.IoC;
 
 namespace Xtate.Test
 {
@@ -87,12 +88,26 @@ namespace Xtate.Test
 		[TestMethod]
 		public async Task DataModelTest()
 		{
-			var builder = FluentBuilderFactory.Create();
+			IStateMachine stateMachine = default;
 
-			builder
+			var services = new ServiceCollection();
+			services.AddForwarding(_=> stateMachine);
+			services.RegisterStateMachineInterpreter();
+			services.RegisterStateMachineFluentBuilder();
+			var serviceProvider = services.BuildProvider();
+
+			var fluentBuilder = await serviceProvider.GetRequiredService<StateMachineFluentBuilder>();
+
+			//var builder = FluentBuilderFactory.Create();
+
+			stateMachine = fluentBuilder
 				.BeginState((Identifier) "S1")
-				.AddOnEntry(ctx => ctx.DataModel["Hello"] = new DataModelValue("World"))
-				.EndState();
+				.AddOnEntry(() => Runtime.DataModel["Hello"] = new DataModelValue("World"))
+				.EndState().Build();
+
+			var stateMachineInterpreter = await serviceProvider.GetRequiredService<IStateMachineInterpreter>();
+			var eventQueueWriter = await serviceProvider.GetRequiredService<IEventQueueWriter>();
+			eventQueueWriter.Complete();
 
 			var channel = Channel.CreateUnbounded<IEvent>();
 			channel.Writer.Complete();
@@ -100,7 +115,7 @@ namespace Xtate.Test
 
 			try
 			{
-				await StateMachineInterpreter.RunAsync(SessionId.New(), builder.Build(), eventChannel);
+				await stateMachineInterpreter.RunAsync();
 
 				Assert.Fail("StateMachineQueueClosedException should be raised");
 			}
@@ -111,16 +126,33 @@ namespace Xtate.Test
 		}
 
 		[TestMethod]
-		public Task LiveLockErrorConditionTest()
+		public async Task LiveLockErrorConditionTest()
 		{
-			var builder = FluentBuilderFactory.Create();
+			IStateMachine stateMachine = default;
 
-			builder
+			var services = new ServiceCollection();
+			services.AddForwarding(_=> stateMachine);
+			services.RegisterStateMachineInterpreter();
+			services.RegisterStateMachineFluentBuilder();
+			var serviceProvider = services.BuildProvider();
+
+			var fluentBuilder = await serviceProvider.GetRequiredService<StateMachineFluentBuilder>();
+
+
+			//var builder = FluentBuilderFactory.Create();
+
+			stateMachine = fluentBuilder
 				.BeginState((Identifier) "S1")
 				.BeginTransition()
-				.SetCondition(_ => throw new InvalidOperationException("some exception"))
+				.SetConditionFunc((Func<bool>)(() => throw new InvalidOperationException("some exception")))
 				.EndTransition()
-				.EndState();
+				.EndState()
+				.Build();
+
+			var stateMachineInterpreter = await serviceProvider.GetRequiredService<IStateMachineInterpreter>();
+			var eventQueueWriter = await serviceProvider.GetRequiredService<IEventQueueWriter>();
+			eventQueueWriter.Complete();
+
 
 			var channel = Channel.CreateUnbounded<IEvent>();
 			channel.Writer.Complete();
@@ -128,19 +160,28 @@ namespace Xtate.Test
 
 			async Task AssertAction()
 			{
-				var options = new InterpreterOptions { UnhandledErrorBehaviour = UnhandledErrorBehaviour.IgnoreError };
-				await StateMachineInterpreter.RunAsync(SessionId.New(), builder.Build(), eventChannel, options);
+				var options = new InterpreterOptions(ServiceLocator.Default) { UnhandledErrorBehaviour = UnhandledErrorBehaviour.IgnoreError };
+				//await StateMachineInterpreter.RunAsync(SessionId.New(), builder.Build(), eventChannel, options);
+				await stateMachineInterpreter.RunAsync();
 			}
 
-			return Assert.ThrowsExceptionAsync<StateMachineDestroyedException>(AssertAction);
+			Assert.ThrowsExceptionAsync<StateMachineDestroyedException>(AssertAction);
 		}
 
 		[TestMethod]
-		public Task LiveLockPingPongTest()
+		public async Task LiveLockPingPongTest()
 		{
-			var builder = FluentBuilderFactory.Create();
+			IStateMachine stateMachine = default;
 
-			builder
+			var services = new ServiceCollection();
+			services.AddForwarding(_=> stateMachine);
+			services.RegisterStateMachineInterpreter();
+			services.RegisterStateMachineFluentBuilder();
+			var serviceProvider = services.BuildProvider();
+
+			var fluentBuilder = await serviceProvider.GetRequiredService<StateMachineFluentBuilder>();
+
+			stateMachine = fluentBuilder
 				.BeginState((Identifier) "S1")
 				.BeginTransition()
 				.SetTarget((Identifier) "S2")
@@ -150,15 +191,21 @@ namespace Xtate.Test
 				.BeginTransition()
 				.SetTarget((Identifier) "S1")
 				.EndTransition()
-				.EndState();
+				.EndState()
+				.Build();
+
+			var stateMachineInterpreter = await serviceProvider.GetRequiredService<IStateMachineInterpreter>();
+			var eventQueueWriter = await serviceProvider.GetRequiredService<IEventQueueWriter>();
+			eventQueueWriter.Complete();
+
 
 			var channel = Channel.CreateUnbounded<IEvent>();
 			channel.Writer.Complete();
 			var eventChannel = channel.Reader;
 
-			async Task AssertAction() => await StateMachineInterpreter.RunAsync(SessionId.New(), builder.Build(), eventChannel);
+			async Task AssertAction() => await stateMachineInterpreter.RunAsync();
 
-			return Assert.ThrowsExceptionAsync<StateMachineDestroyedException>(AssertAction);
+			Assert.ThrowsExceptionAsync<StateMachineDestroyedException>(AssertAction);
 		}
 	}
 }

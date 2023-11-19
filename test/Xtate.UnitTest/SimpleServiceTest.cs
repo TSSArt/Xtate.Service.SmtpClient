@@ -17,24 +17,48 @@
 
 #endregion
 
+using System;
 using System.Collections.Immutable;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xtate.Core;
+using Xtate.DataModel;
 using Xtate.DataModel.EcmaScript;
+using Xtate.IoC;
 using Xtate.Service;
 
 namespace Xtate.Test
 {
 	public class PassthroughFactoryService : ServiceFactoryBase
 	{
-		public static IServiceFactory Instance { get; } = new PassthroughFactoryService();
+		public required Func<DataModelValue, ValueTask<PassthroughService>> PassthroughServiceFactory { private get; init; }
 
-		protected override void Register(IServiceCatalog catalog) => catalog.Register(type: "passthrough", () => new PassthroughService());
+		protected override void                Register(IServiceCatalog catalog) => catalog.Register(type: "passthrough", Creator);
+
+		private async ValueTask<IService> Creator(ServiceLocator servicelocator,
+											Uri? baseuri,
+											InvokeData invokedata,
+											IServiceCommunication servicecommunication,
+											CancellationToken token)
+		{
+			return await PassthroughServiceFactory(invokedata.Parameters);
+		}
 	}
 
-	public class PassthroughService : ServiceBase
+	public class PassthroughService : IService
 	{
-		protected override ValueTask<DataModelValue> Execute() => new(Parameters);
+		private readonly DataModelValue _parameters;
+		
+		public PassthroughService(DataModelValue parameters) => _parameters = parameters;
+
+		//protected override ValueTask<DataModelValue> Execute() => new(_parameters);
+
+		public ValueTask Destroy(CancellationToken token) => default;
+
+		public ValueTask<DataModelValue> GetResult(CancellationToken token) => new(_parameters);
+
+		public ValueTask Send(IEvent evt, CancellationToken token) => default;
 	}
 
 	[TestClass]
@@ -61,13 +85,24 @@ namespace Xtate.Test
 
 			var stateMachine = StateMachineGenerator.FromInnerScxml_EcmaScript(scxml);
 
-			var options = StateMachineHostOptionsTestBuilder.Create(o =>
+			/*var options = StateMachineHostOptionsTestBuilder.Create(o =>
 																	{
-																		o.DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory);
 																		o.ServiceFactories = ImmutableArray.Create(PassthroughFactoryService.Instance);
-																	});
+																	});*/
 
-			await using var stateMachineHost = new StateMachineHost(options);
+
+			//await using var stateMachineHost = new StateMachineHost(options) {_dataConverter = new DataConverter(null)};
+
+
+			var sc1 = new ServiceCollection();
+			sc1.RegisterStateMachineHost();
+			sc1.AddImplementation<TraceLogWriter>().For<ILogWriter>();
+			sc1.AddImplementation<PassthroughFactoryService>().For<IServiceFactory>();
+			sc1.AddType<PassthroughService, DataModelValue>();
+			sc1.RegisterEcmaScriptDataModelHandler();
+			var sp1 = sc1.BuildProvider();
+
+			var stateMachineHost = await sp1.GetRequiredService<StateMachineHost>();
 
 			await stateMachineHost.StartHostAsync();
 

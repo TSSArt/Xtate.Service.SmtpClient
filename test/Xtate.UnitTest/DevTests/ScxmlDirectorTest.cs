@@ -29,6 +29,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using Xtate.Builder;
 using Xtate.Core;
+using Xtate.IoC;
 using Xtate.DataModel.EcmaScript;
 using Xtate.Scxml;
 
@@ -42,16 +43,23 @@ namespace Xtate.Test
 		[TestInitialize]
 		public void Initialize()
 		{
-			var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Xtate.UnitTest.Resources.Main.xml");
+			//TODO :delete
+			/*var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Xtate.UnitTest.Resources.Main.xml");
 
 			XmlNameTable nt = new NameTable();
 			var xmlNamespaceManager = new XmlNamespaceManager(nt);
 			var xmlReader = XmlReader.Create(stream!, settings: null, new XmlParserContext(nt, xmlNamespaceManager, xmlLang: default, xmlSpace: default));
 
-			var director = new ScxmlDirector(xmlReader, BuilderFactory.Instance,
-											 new ScxmlDirectorOptions { StateMachineValidator = StateMachineValidator.Instance, NamespaceResolver = xmlNamespaceManager });
+			var serviceLocator = ServiceLocator.Create(
+				delegate(IServiceCollection s)
+				{
+					s.AddForwarding<IStateMachineValidator, StateMachineValidator>();
+					s.AddXPath();
+				});
+			var director = serviceLocator.GetService<ScxmlDirector, XmlReader>(xmlReader);
+			//var director = new ScxmlDirector(xmlReader, serviceLocator.GetService<IBuilderFactory>(), new ScxmlDirectorOptions(serviceLocator) { NamespaceResolver = xmlNamespaceManager });
 
-			_stateMachine = director.ConstructStateMachine().SynchronousGetResult();
+			_stateMachine = director.ConstructStateMachine().SynchronousGetResult();*/
 		}
 
 		private static EventObject CreateEventObject(string name) => new() { Type = EventType.External, NameParts = EventName.ToParts(name) };
@@ -59,21 +67,40 @@ namespace Xtate.Test
 		[TestMethod]
 		public async Task ReadScxmlTest()
 		{
-			var channel = Channel.CreateUnbounded<IEvent>();
+			var services = new ServiceCollection();
+			services.AddForwarding<IStateMachineLocation>(_ => new StateMachineLocation(new Uri(@"res://Xtate.UnitTest/Xtate.UnitTest/Resources/Main.xml")));
+			services.RegisterStateMachineFactory();
+			services.RegisterStateMachineInterpreter();
+			services.RegisterEcmaScriptDataModelHandler();
 
-			await channel.Writer.WriteAsync(CreateEventObject("Event1"));
-			await channel.Writer.WriteAsync(CreateEventObject("Test1.done"));
-			await channel.Writer.WriteAsync(CreateEventObject("Event2"));
-			await channel.Writer.WriteAsync(CreateEventObject("done.state.Test2"));
-			await channel.Writer.WriteAsync(CreateEventObject("Timer"));
-			channel.Writer.Complete(new ArgumentException("333"));
+			var serviceProvider = services.BuildProvider();
+
+			var stateMachineInterpreter = await serviceProvider.GetRequiredService<IStateMachineInterpreter>();
+			var eventQueueWriter = await serviceProvider.GetRequiredService<IEventQueueWriter>();
+
+
+			await eventQueueWriter.WriteAsync(CreateEventObject("Event1"));
+			await eventQueueWriter.WriteAsync(CreateEventObject("Test1.done"));
+			await eventQueueWriter.WriteAsync(CreateEventObject("Event2"));
+			await eventQueueWriter.WriteAsync(CreateEventObject("done.state.Test2"));
+			await eventQueueWriter.WriteAsync(CreateEventObject("Timer"));
+			//eventQueueWriter.Complete(new ArgumentException("333"));
+			eventQueueWriter.Complete();
 
 			var extComm = new Mock<IExternalCommunication>();
-			var options = new InterpreterOptions { DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory), ExternalCommunication = extComm.Object };
+			var options = new InterpreterOptions(ServiceLocator.Create(
+													 delegate(IServiceCollection s)
+													 {
+														 s.AddXPath();
+														 s.AddEcmaScript();
+													 }))
+						  {
+							  ExternalCommunication = extComm.Object
+						  };
 
 			try
 			{
-				await StateMachineInterpreter.RunAsync(SessionId.New(), _stateMachine, channel.Reader, options);
+				await stateMachineInterpreter.RunAsync();
 
 				Assert.Fail("StateMachineQueueClosedException should be raised");
 			}
@@ -86,15 +113,33 @@ namespace Xtate.Test
 		[TestMethod]
 		public async Task ReadAllScxmlTest()
 		{
-			var channel = Channel.CreateUnbounded<IEvent>();
+			var services = new ServiceCollection();
+			services.AddForwarding<IStateMachineLocation>(_ => new StateMachineLocation(new Uri(@"res://Xtate.UnitTest/Xtate.UnitTest/Resources/Main.xml")));
+			services.RegisterStateMachineFactory();
+			services.RegisterStateMachineInterpreter();
+			services.RegisterEcmaScriptDataModelHandler();
 
-			channel.Writer.Complete(new ArgumentException("333"));
+			var serviceProvider = services.BuildProvider();
 
-			var options = new InterpreterOptions { DataModelHandlerFactories = ImmutableArray.Create(EcmaScriptDataModelHandler.Factory) };
+			var stateMachineInterpreter = await serviceProvider.GetRequiredService<IStateMachineInterpreter>();
+			var eventQueueWriter = await serviceProvider.GetRequiredService<IEventQueueWriter>();
+
+			eventQueueWriter.Complete();
+			//eventQueueWriter.Complete(new ArgumentException("333"));
+
+			var options = new InterpreterOptions(ServiceLocator.Create(
+													 delegate(IServiceCollection s)
+													 {
+														 s.AddXPath();
+														 s.AddEcmaScript();
+													 }))
+						  {
+							  
+						  };
 
 			try
 			{
-				await StateMachineInterpreter.RunAsync(SessionId.New(), _stateMachine, channel.Reader, options);
+				await stateMachineInterpreter.RunAsync();
 
 				Assert.Fail("StateMachineQueueClosedException should be raised");
 			}
@@ -107,14 +152,35 @@ namespace Xtate.Test
 		[TestMethod]
 		public async Task ScxmlSerializerTest()
 		{
-			var dataModelHandler = new EcmaScriptDataModelHandler();
-			var parameters = new InterpreterModelBuilder.Parameters(_stateMachine, dataModelHandler);
-			var interpreterModelBuilder = new InterpreterModelBuilder(parameters);
-			var interpreterModel = await interpreterModelBuilder.Build(default);
+			var services = new ServiceCollection();
+			services.AddForwarding<IStateMachineLocation>(_ => new StateMachineLocation(new Uri(@"res://Xtate.UnitTest/Xtate.UnitTest/Resources/Main.xml")));
+			services.RegisterStateMachineFactory();
+			services.RegisterScxml();
+			services.RegisterInterpreterModelBuilder();
+			services.RegisterEcmaScriptDataModelHandler();
+
+			var serviceProvider = services.BuildProvider();
+
+			var modelBuilder = await serviceProvider.GetRequiredService<InterpreterModelBuilder>();
+			var stateMachine = await serviceProvider.GetRequiredService<IStateMachine>();
+			var scxmlSerializer = await serviceProvider.GetRequiredService<IScxmlSerializer>();
+
+
+			var serviceLocator = ServiceLocator.Create(
+				delegate(IServiceCollection s)
+				{
+					s.AddXPath();
+					s.AddEcmaScript();
+				});
+			//var dataModelHandler = serviceLocator.GetService<EcmaScriptDataModelHandler>();
+			//var parameters = new InterpreterModelBuilder.Parameters(serviceLocator, _stateMachine, dataModelHandler);
+			//var interpreterModelBuilder = new InterpreterModelBuilder(parameters);
+
+			var interpreterModel = await modelBuilder.Build3(stateMachine);
 			var text = new StringWriter();
 			var xmlWriter = XmlWriter.Create(text, new XmlWriterSettings { Encoding = Encoding.UTF8, Indent = true });
 
-			ScxmlSerializer.Serialize(interpreterModel.Root, xmlWriter!);
+			await scxmlSerializer.Serialize(interpreterModel.Root, xmlWriter);
 
 			Console.WriteLine(text);
 		}

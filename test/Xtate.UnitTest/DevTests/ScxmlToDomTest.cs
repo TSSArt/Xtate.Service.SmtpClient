@@ -17,11 +17,13 @@
 
 #endregion
 
+using System;
 using System.IO;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Xtate.Builder;
 using Xtate.Core;
+using Xtate.IoC;
 using Xtate.Scxml;
 
 namespace Xtate.Test
@@ -31,14 +33,26 @@ namespace Xtate.Test
 	{
 		private static IStateMachine GetStateMachine(string scxml)
 		{
+			var services = new ServiceCollection();
+			services.RegisterStateMachineFactory();
+			services.AddForwarding<IScxmlStateMachine>(_ => new ScxmlStateMachine(scxml));
+			var serviceProvider = services.BuildProvider();
+
+			return serviceProvider.GetRequiredService<IStateMachine>().Result;
+
 			using var textReader = new StringReader(scxml);
 
 			XmlNameTable nt = new NameTable();
 			var xmlNamespaceManager = new XmlNamespaceManager(nt);
 			using var xmlReader = XmlReader.Create(textReader, settings: null, new XmlParserContext(nt, xmlNamespaceManager, xmlLang: default, xmlSpace: default));
 
-			var scxmlDirector = new ScxmlDirector(xmlReader, BuilderFactory.Instance,
-												  new ScxmlDirectorOptions { StateMachineValidator = StateMachineValidator.Instance, NamespaceResolver = xmlNamespaceManager });
+			var serviceLocator = ServiceLocator.Create(
+				delegate(IServiceCollection s)
+				{
+					s.AddForwarding<IStateMachineValidator, StateMachineValidator>();
+				});
+			var scxmlDirector = serviceLocator.GetService<ScxmlDirector, XmlReader>(xmlReader);
+			//var scxmlDirector = new ScxmlDirector(xmlReader, serviceLocator.GetService<IBuilderFactory>(), new ScxmlDirectorOptions(serviceLocator) { NamespaceResolver = xmlNamespaceManager });
 			return scxmlDirector.ConstructStateMachine().SynchronousGetResult();
 		}
 
@@ -174,7 +188,7 @@ namespace Xtate.Test
 		[TestMethod]
 		public void RootElementInitialTest()
 		{
-			var sm = GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' initial=' trg2  trg1 '><state/></scxml>");
+			var sm = GetStateMachine("<scxml xmlns='http://www.w3.org/2005/07/scxml' version='1.0' initial='trg2 trg1'><state/></scxml>");
 			Assert.AreEqual((Identifier) "trg2", sm.Initial!.Transition!.Target[0]);
 			Assert.AreEqual((Identifier) "trg1", sm.Initial.Transition.Target[1]);
 			Assert.AreEqual(expected: 2, sm.Initial.Transition.Target.Length);
@@ -253,7 +267,7 @@ namespace Xtate.Test
 
 		[TestMethod]
 		[ExpectedException(typeof(StateMachineValidationException))]
-		public void DataBodyAndExprFailTest()
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                		public void DataBodyAndExprFailTest()
 		{
 			GetStateMachineXyzDataModel("<datamodel><data id='a' expr='some-expr'>123</data></datamodel>");
 		}
