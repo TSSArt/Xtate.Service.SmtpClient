@@ -13,8 +13,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Xtate.Core\src\Xtate.Core\Xtate.Core.csproj" />
-    <ProjectReference Include="..\..\src\Xtate.DataModel.EcmaScript\src\Xtate.DataModel.EcmaScript\Xtate.DataModel.EcmaScript.csproj" />
-    <ProjectReference Include="..\..\src\Xtate.Logger.Serilog\src\Xtate.Logger.Serilog\Xtate.Logger.Serilog.csproj" />
     <ProjectReference Include="..\..\src\Xtate.BasicCustomAction\Xtate.BasicCustomAction.csproj" />
     <ProjectReference Include="..\..\src\Xtate.MidCustomAction\Xtate.MidCustomAction.csproj" />
     <ProjectReference Include="..\..\src\Xtate.MimeCustomAction\Xtate.MimeCustomAction.csproj" />

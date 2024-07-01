@@ -17,8 +17,4 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\Xtate.Logger.Serilog\Xtate.Logger.Serilog.csproj" />
-  </ItemGroup>
-
 </Project>

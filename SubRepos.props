@@ -1,5 +1,17 @@
 ﻿<Project>
 
+  <!-- Xtate.IoC -->
+  <PropertyGroup>
+    <XtateIoCRepoPath>$(MSBuildThisFileDirectory)src\Xtate.IoC\</XtateIoCRepoPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <SubRepo Include="Xtate.IoC">
+      <Path>$(XtateIoCRepoPath)</Path>
+      <SlnFile>Xtate.IoC.sln</SlnFile>
+    </SubRepo>
+  </ItemGroup>
+
   <!-- Xtate.Core -->
   <PropertyGroup>
     <XtateCoreRepoPath>$(MSBuildThisFileDirectory)src\Xtate.Core\</XtateCoreRepoPath>
