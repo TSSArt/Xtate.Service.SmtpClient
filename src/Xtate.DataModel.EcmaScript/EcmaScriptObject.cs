@@ -1,4 +1,4 @@
-﻿#region Copyright © 2019-2020 Sergii Artemenko
+﻿#region Copyright © 2019-2021 Sergii Artemenko
 
 // This file is part of the Xtate project. <https://xtate.net/>
 // 
@@ -18,14 +18,13 @@
 #endregion
 
 using Jint.Native;
+using Xtate.Core;
 
 namespace Xtate.DataModel.EcmaScript
 {
-	internal class EcmaScriptObject : IObject
+	internal class EcmaScriptObject(JsValue jsValue) : IObject
 	{
-		public EcmaScriptObject(JsValue jsValue) => JsValue = jsValue;
-
-		public JsValue JsValue { get; }
+		public JsValue JsValue { get; } = jsValue;
 
 	#region Interface IObject
 

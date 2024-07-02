@@ -17,9 +17,19 @@
 
 #endregion
 
+	using System.Threading.Tasks;
+	using Xtate.Core;
+
 	namespace Xtate.DataModel.EcmaScript;
 
-	internal class EcmaScriptInlineContentEvaluator(IInlineContent inlineContent) : DefaultInlineContentEvaluator(inlineContent)
+	public class EcmaScriptExternalDataExpressionEvaluator(IExternalDataExpression externalDataExpression) : DefaultExternalDataExpressionEvaluator(externalDataExpression)
 	{
-		protected override DataModelValue ParseToDataModel() => Value is not null ? DataModelConverter.FromJson(Value) : DataModelValue.Null;
+		protected override async ValueTask<DataModelValue> ParseToDataModel(Resource resource)
+		{
+			Infra.NotNull(resource);
+
+			var content = await resource.GetContent().ConfigureAwait(false);
+
+			return DataModelConverter.FromJson(content);
+		}
 	}

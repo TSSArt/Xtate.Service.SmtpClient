@@ -1,4 +1,4 @@
-﻿#region Copyright © 2019-2020 Sergii Artemenko
+﻿#region Copyright © 2019-2021 Sergii Artemenko
 
 // This file is part of the Xtate project. <https://xtate.net/>
 // 
@@ -26,42 +26,36 @@ using Jint.Parser.Ast;
 using Jint.Runtime.Descriptors;
 using Jint.Runtime.Environments;
 using Jint.Runtime.Interop;
-using Xtate.Annotations;
 
 namespace Xtate.DataModel.EcmaScript
 {
-	[PublicAPI]
-	internal class EcmaScriptEngine
+	public class EcmaScriptEngine
 	{
-		public static readonly object Key = new object();
+		public required IInStateController? InStateController { private get; [UsedImplicitly] init; }
+
+		public static readonly object Key = new();
 
 		private readonly Engine          _jintEngine;
-		private readonly HashSet<string> _variableSet = new HashSet<string>();
+		private readonly HashSet<string> _variableSet = [];
 
-		public EcmaScriptEngine(IExecutionContext executionContext)
+		public EcmaScriptEngine(IDataModelController? dataModelController)
 		{
 			_jintEngine = new Engine(options => options.Culture(CultureInfo.InvariantCulture).LimitRecursion(1024).Strict());
 
 			var global = _jintEngine.Global;
-			var inFunction = new DelegateWrapper(_jintEngine, new Func<string, bool>(state => executionContext.InState((Identifier) state)));
+			var inFunction = new DelegateWrapper(_jintEngine, new Func<string, bool>(state => InStateController?.InState((Identifier) state) ?? false));
 			global.FastAddProperty(EcmaScriptHelper.InFunctionName, inFunction, writable: false, enumerable: false, configurable: false);
+
+			if (dataModelController is not null)
+			{
+				SyncRootVariables(dataModelController.DataModel);
+			}
 		}
 
-		public static EcmaScriptEngine GetEngine(IExecutionContext executionContext)
-		{
-			var engine = (EcmaScriptEngine?) executionContext.RuntimeItems[Key];
-
-			Infrastructure.NotNull(engine);
-
-			engine.SyncRootVariables(executionContext.DataModel);
-
-			return engine;
-		}
-
-		private void SyncRootVariables(DataModelObject dataModel)
+		private void SyncRootVariables(DataModelList dataModel)
 		{
 			var global = _jintEngine.Global;
-			List<string>? toRemove = null;
+			List<string>? toRemove = default;
 			foreach (var name in _variableSet)
 			{
 				if (!dataModel.TryGet(name, caseInsensitive: false, out _))
@@ -71,7 +65,7 @@ namespace Xtate.DataModel.EcmaScript
 				}
 			}
 
-			if (toRemove is { })
+			if (toRemove is not null)
 			{
 				foreach (var property in toRemove)
 				{
