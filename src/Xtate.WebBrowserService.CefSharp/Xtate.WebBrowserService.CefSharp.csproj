@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0-windows;net461</TargetFrameworks>
+    <TargetFrameworks>net8.0-windows;net462</TargetFrameworks>
     <UseWindowsForms>true</UseWindowsForms>
     <Platforms>x86;x64</Platforms>
     <RootNamespace>Xtate.Service</RootNamespace>
@@ -10,12 +10,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CefSharp.WinForms" Version="86.0.241" />
+    <PackageReference Include="CefSharp.WinForms" Version="126.2.70" />
     <PackageReference Include="Microsoft.AspNetCore.WebUtilities" Version="2.2.0" />
 
-    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="5.0.3" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.CodeQuality.Analyzers" Version="3.3.1" PrivateAssets="all" />
-    <PackageReference Include="ConfigureAwaitChecker.Analyzer" Version="5.0.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" Version="8.0.0" PrivateAssets="all" />
+    <PackageReference Include="ConfigureAwaitChecker.Analyzer" Version="5.0.0.1" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
