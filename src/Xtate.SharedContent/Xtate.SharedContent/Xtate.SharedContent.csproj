@@ -6,7 +6,7 @@
 		<PackageId>Xtate.SharedContent</PackageId>
 		<NuspecFile>Xtate.SharedContent.nuspec</NuspecFile>
 		<NuspecBasePath>PackageContent</NuspecBasePath>
-                <NoPackageAnalysis>true</NoPackageAnalysis>
+		<NoPackageAnalysis>true</NoPackageAnalysis>
 	</PropertyGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)'=='net462'">
