@@ -13,9 +13,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Xtate.Core\src\Xtate.Core\Xtate.Core.csproj" />
-    <ProjectReference Include="..\..\src\Xtate.BasicCustomAction\Xtate.BasicCustomAction.csproj" />
-    <ProjectReference Include="..\..\src\Xtate.MidCustomAction\Xtate.MidCustomAction.csproj" />
-    <ProjectReference Include="..\..\src\Xtate.MimeCustomAction\Xtate.MimeCustomAction.csproj" />
   </ItemGroup>
 
   <ItemGroup>

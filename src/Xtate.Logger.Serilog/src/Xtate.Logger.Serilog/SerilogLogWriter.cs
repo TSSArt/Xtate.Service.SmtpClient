@@ -18,10 +18,13 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Serilog;
+using Serilog.Context;
 using Serilog.Core;
 using Serilog.Events;
 using Xtate.Core;
@@ -29,8 +32,11 @@ using Xtate.Core;
 namespace Xtate
 {
 	[PublicAPI]
-	public class SerilogLogger : ILoggerOld
+	public class SerilogLogWriter : ILogWriter
 	{
+		private readonly Type _source;
+		private readonly Logger _logger;
+
 		public enum LogEventType
 		{
 			Undefined,
@@ -41,21 +47,69 @@ namespace Xtate
 			EnteredState,
 			ExitingState,
 			ExitedState,
-			PerformingTransition,
-			PerformedTransition,
+			ExecutingTransition,
+			ExecutedTransition,
 			InterpreterState
 		}
 
-		private readonly ILoggerContext _loggerContext;
-		private readonly Logger _logger;
-
-		public SerilogLogger(LoggerConfiguration configuration)
+		public SerilogLogWriter(Type source, LoggerConfiguration configuration)
 		{
-			if (configuration is null) throw new ArgumentNullException(nameof(configuration));
+			Infra.Requires(configuration);
+			_source = source;
 
-			_logger = configuration.Destructure.With<DataModelListDestructuringPolicy>().CreateLogger();
+			_logger = configuration
+					  .Destructure.With<DataModelListDestructuringPolicy>()
+					  .CreateLogger();
 		}
 
+		private static LogEventLevel GetLogEventLevel(Level level) =>level switch
+																	 {
+																		 Level.Info    => LogEventLevel.Information,
+																		 Level.Warning => LogEventLevel.Warning,
+																		 Level.Error   => LogEventLevel.Error,
+																		 Level.Debug   => LogEventLevel.Debug,
+																		 Level.Trace   => LogEventLevel.Verbose,
+																		 Level.Verbose => LogEventLevel.Verbose,
+																		 _             => Infra.Unexpected<LogEventLevel>(level)
+																	 };
+
+		public bool IsEnabled(Level level) => _logger.IsEnabled(GetLogEventLevel(level));
+
+		public ValueTask Write(Level level, int eventId, string? message, IEnumerable<LoggingParameter>? parameters)
+		{
+			
+			var exception = parameters?.FirstOrDefault(IsException).Value as Exception; 
+
+			var logger = _logger.ForContext(_source);
+
+			if (parameters is not null)
+			{
+				logger = logger.ForContext(new ParametersLogEventEnricher(parameters.Where(IsNotException)));
+			}
+
+			logger.Write(GetLogEventLevel(level), exception, message ?? string.Empty);
+
+			return default;
+
+			bool IsException(LoggingParameter p)    => p is { Name: @"Exception", Value: Exception };
+			bool IsNotException(LoggingParameter p) => !IsException(p);
+
+		}
+
+		private class ParametersLogEventEnricher(IEnumerable<LoggingParameter> parameters) : ILogEventEnricher
+		{
+			public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
+			{
+				foreach (var loggingParameter in parameters)
+				{
+					logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(loggingParameter.Name, loggingParameter.Value, true));	
+				}
+			}
+		}
+
+
+
+		/*
 		private bool IsVerbose => _logger.IsEnabled(LogEventLevel.Verbose);
 
 	#region Interface ILogger
@@ -585,5 +639,7 @@ namespace Xtate
 
 		#endregion
 		}
+		*/
 	}
+
 }

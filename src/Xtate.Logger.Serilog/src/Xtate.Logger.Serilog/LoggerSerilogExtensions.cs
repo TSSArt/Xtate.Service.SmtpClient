@@ -18,36 +18,40 @@
 #endregion
 
 using System;
+using System.Threading.Tasks;
 using Serilog;
+using Xtate.Core;
+using Xtate.IoC;
+using IServiceProvider = Xtate.IoC.IServiceProvider;
 
 namespace Xtate
 {
 	[PublicAPI]
 	public static class LoggerSerilogExtensions
 	{
-		public static StateMachineHostBuilder SetSerilogLogger(this StateMachineHostBuilder builder)
+		public static void RegisterSerilogLogger(this IServiceCollection services)
 		{
-			if (builder is null) throw new ArgumentNullException(nameof(builder));
-
-			var configuration = new LoggerConfiguration().WriteTo.Console();
-
-			builder.SetLogger(new SerilogLogger(configuration));
-
-			return builder;
+			services.RegisterSerilogLogger(configuration => configuration.WriteTo.Console());
 		}
 
-		public static StateMachineHostBuilder SetSerilogLogger(this StateMachineHostBuilder builder, Action<LoggerConfiguration> options)
+		public static void RegisterSerilogLogger(this IServiceCollection services, Action<LoggerConfiguration> options)
 		{
-			if (builder is null) throw new ArgumentNullException(nameof(builder));
-			if (options is null) throw new ArgumentNullException(nameof(options));
+			if (services.IsRegistered<SerilogLogWriter, string>())
+			{
+				return;
+			}
 
+			services.AddTransient<ILogWriter, Type>((provider, source) => LogWriterFactory(source, options));
+		}
+
+		private static ValueTask<ILogWriter> LogWriterFactory(Type source, Action<LoggerConfiguration> options)
+		{
 			var configuration = new LoggerConfiguration();
-
 			options(configuration);
 
-			builder.SetLogger(new SerilogLogger(configuration));
+			var logWriter = new SerilogLogWriter(source, configuration);
 
-			return builder;
+			return new ValueTask<ILogWriter>(logWriter);
 		}
 	}
 }
