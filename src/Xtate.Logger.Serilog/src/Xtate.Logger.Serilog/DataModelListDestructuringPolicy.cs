@@ -1,5 +1,5 @@
-﻿#region Copyright © 2019-2021 Sergii Artemenko
-
+﻿// Copyright © 2019-2024 Sergii Artemenko
+// 
 // This file is part of the Xtate project. <https://xtate.net/>
 // 
 // This program is free software: you can redistribute it and/or modify
@@ -15,125 +15,122 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#endregion
-
 using System;
 using System.Collections.Generic;
 using Serilog.Core;
 using Serilog.Events;
 
-namespace Xtate
+namespace Xtate;
+
+public class DataModelListDestructuringPolicy : IDestructuringPolicy
 {
-	public class DataModelListDestructuringPolicy : IDestructuringPolicy
+#region Interface IDestructuringPolicy
+
+	public bool TryDestructure(object value, ILogEventPropertyValueFactory propertyValueFactory, out LogEventPropertyValue? result)
 	{
-	#region Interface IDestructuringPolicy
-
-		public bool TryDestructure(object value, ILogEventPropertyValueFactory propertyValueFactory, out LogEventPropertyValue? result)
+		if (value is not DataModelList list)
 		{
-			if (value is not DataModelList list)
-			{
-				result = default;
+			result = default;
 
-				return false;
-			}
-
-			result = GetLogEventPropertyValue(list);
-
-			return true;
+			return false;
 		}
 
-	#endregion
+		result = GetLogEventPropertyValue(list);
 
-		private static LogEventPropertyValue GetLogEventPropertyValue(in DataModelValue value) =>
-			value.Type switch
-			{
-				DataModelValueType.Undefined => new ScalarValue(value.ToObject()),
-				DataModelValueType.Null      => new ScalarValue(value.ToObject()),
-				DataModelValueType.String    => new ScalarValue(value.ToObject()),
-				DataModelValueType.Number    => new ScalarValue(value.ToObject()),
-				DataModelValueType.DateTime  => new ScalarValue(value.ToObject()),
-				DataModelValueType.Boolean   => new ScalarValue(value.ToObject()),
-				DataModelValueType.List      => GetLogEventPropertyValue(value.AsList()),
-				_                            => Infra.Unexpected<LogEventPropertyValue>(value.Type)
-			};
+		return true;
+	}
 
-		private static LogEventPropertyValue GetLogEventPropertyValue(DataModelList list)
+#endregion
+
+	private static LogEventPropertyValue GetLogEventPropertyValue(in DataModelValue value) =>
+		value.Type switch
 		{
-			var index = 0;
-			foreach (var entry in list.Entries)
-			{
-				if (index ++ != entry.Index)
-				{
-					return new StructureValue(EnumerateEntries(true));
-				}
-			}
+			DataModelValueType.Undefined => new ScalarValue(value.ToObject()),
+			DataModelValueType.Null      => new ScalarValue(value.ToObject()),
+			DataModelValueType.String    => new ScalarValue(value.ToObject()),
+			DataModelValueType.Number    => new ScalarValue(value.ToObject()),
+			DataModelValueType.DateTime  => new ScalarValue(value.ToObject()),
+			DataModelValueType.Boolean   => new ScalarValue(value.ToObject()),
+			DataModelValueType.List      => GetLogEventPropertyValue(value.AsList()),
+			_                            => Infra.Unexpected<LogEventPropertyValue>(value.Type)
+		};
 
-			if (list.GetMetadata() is not null)
+	private static LogEventPropertyValue GetLogEventPropertyValue(DataModelList list)
+	{
+		var index = 0;
+		foreach (var entry in list.Entries)
+		{
+			if (index ++ != entry.Index)
+			{
+				return new StructureValue(EnumerateEntries(true));
+			}
+		}
+
+		if (list.GetMetadata() is not null)
+		{
+			return new StructureValue(EnumerateEntries(false));
+		}
+
+		foreach (var entry in list.Entries)
+		{
+			if (entry.Key is not null || entry.Metadata is not null)
 			{
 				return new StructureValue(EnumerateEntries(false));
 			}
+		}
 
+		if (list.Count == 0)
+		{
+			return new StructureValue(Array.Empty<LogEventProperty>());
+		}
+
+		return new SequenceValue(EnumerateValues());
+
+		IEnumerable<LogEventProperty> EnumerateEntries(bool showIndex)
+		{
 			foreach (var entry in list.Entries)
 			{
-				if (entry.Key is not null || entry.Metadata is not null)
+				var name = GetName(entry.Key);
+				yield return new LogEventProperty(name, GetLogEventPropertyValue(entry.Value));
+
+				if (showIndex)
 				{
-					return new StructureValue(EnumerateEntries(false));
+					yield return new LogEventProperty(name + @":(index)", new ScalarValue(entry.Index));
+				}
+
+				if (entry.Metadata is { } entryMetadata)
+				{
+					yield return new LogEventProperty(name + @":(meta)", GetLogEventPropertyValue(entryMetadata));
 				}
 			}
 
-			if (list.Count == 0)
+			if (list.GetMetadata() is { } metadata)
 			{
-				return new StructureValue(Array.Empty<LogEventProperty>());
-			}
-
-			return new SequenceValue(EnumerateValues());
-
-			IEnumerable<LogEventProperty> EnumerateEntries(bool showIndex)
-			{
-				foreach (var entry in list.Entries)
-				{
-					var name = GetName(entry.Key);
-					yield return new LogEventProperty(name, GetLogEventPropertyValue(entry.Value));
-
-					if (showIndex)
-					{
-						yield return new LogEventProperty(name + @":(index)", new ScalarValue(entry.Index));
-					}
-
-					if (entry.Metadata is { } entryMetadata)
-					{
-						yield return new LogEventProperty(name + @":(meta)", GetLogEventPropertyValue(entryMetadata));
-					}
-				}
-
-				if (list.GetMetadata() is { } metadata)
-				{
-					yield return new LogEventProperty(name: @"(meta)", GetLogEventPropertyValue(metadata));
-				}
-			}
-
-			IEnumerable<LogEventPropertyValue> EnumerateValues()
-			{
-				foreach (var value in list.Values)
-				{
-					yield return GetLogEventPropertyValue(value);
-				}
+				yield return new LogEventProperty(name: @"(meta)", GetLogEventPropertyValue(metadata));
 			}
 		}
 
-		private static string GetName(string? key)
+		IEnumerable<LogEventPropertyValue> EnumerateValues()
 		{
-			if (key is null)
+			foreach (var value in list.Values)
 			{
-				return @"(null)";
+				yield return GetLogEventPropertyValue(value);
 			}
-
-			if (string.IsNullOrWhiteSpace(key))
-			{
-				return @"(" + key + @")";
-			}
-
-			return key;
 		}
+	}
+
+	private static string GetName(string? key)
+	{
+		if (key is null)
+		{
+			return @"(null)";
+		}
+
+		if (string.IsNullOrWhiteSpace(key))
+		{
+			return @"(" + key + @")";
+		}
+
+		return key;
 	}
 }
