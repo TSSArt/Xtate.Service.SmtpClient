@@ -1,4 +1,4 @@
-﻿#region Copyright © 2019-2020 Sergii Artemenko
+﻿#region Copyright © 2019-2021 Sergii Artemenko
 
 // This file is part of the Xtate project. <https://xtate.net/>
 // 
@@ -30,7 +30,7 @@ namespace Xtate
 
 		public bool TryDestructure(object value, ILogEventPropertyValueFactory propertyValueFactory, out LogEventPropertyValue? result)
 		{
-			if (!(value is DataModelList list))
+			if (value is not DataModelList list)
 			{
 				result = default;
 
@@ -45,18 +45,17 @@ namespace Xtate
 	#endregion
 
 		private static LogEventPropertyValue GetLogEventPropertyValue(in DataModelValue value) =>
-				value.Type switch
-				{
-						DataModelValueType.Undefined => new ScalarValue(value.ToObject()),
-						DataModelValueType.Null => new ScalarValue(value.ToObject()),
-						DataModelValueType.String => new ScalarValue(value.ToObject()),
-						DataModelValueType.Number => new ScalarValue(value.ToObject()),
-						DataModelValueType.DateTime => new ScalarValue(value.ToObject()),
-						DataModelValueType.Boolean => new ScalarValue(value.ToObject()),
-						DataModelValueType.Array => GetLogEventPropertyValue(value.AsList()),
-						DataModelValueType.Object => GetLogEventPropertyValue(value.AsList()),
-						_ => Infrastructure.UnexpectedValue<LogEventPropertyValue>()
-				};
+			value.Type switch
+			{
+				DataModelValueType.Undefined => new ScalarValue(value.ToObject()),
+				DataModelValueType.Null      => new ScalarValue(value.ToObject()),
+				DataModelValueType.String    => new ScalarValue(value.ToObject()),
+				DataModelValueType.Number    => new ScalarValue(value.ToObject()),
+				DataModelValueType.DateTime  => new ScalarValue(value.ToObject()),
+				DataModelValueType.Boolean   => new ScalarValue(value.ToObject()),
+				DataModelValueType.List      => GetLogEventPropertyValue(value.AsList()),
+				_                            => Infra.Unexpected<LogEventPropertyValue>(value.Type)
+			};
 
 		private static LogEventPropertyValue GetLogEventPropertyValue(DataModelList list)
 		{
@@ -69,20 +68,20 @@ namespace Xtate
 				}
 			}
 
-			if (list.GetMetadata() is { })
+			if (list.GetMetadata() is not null)
 			{
 				return new StructureValue(EnumerateEntries(false));
 			}
 
 			foreach (var entry in list.Entries)
 			{
-				if (entry.Key is { } || entry.Metadata is { })
+				if (entry.Key is not null || entry.Metadata is not null)
 				{
 					return new StructureValue(EnumerateEntries(false));
 				}
 			}
 
-			if (list.Count == 0 && list is DataModelObject)
+			if (list.Count == 0)
 			{
 				return new StructureValue(Array.Empty<LogEventProperty>());
 			}
@@ -126,12 +125,12 @@ namespace Xtate
 		{
 			if (key is null)
 			{
-				return "(null)";
+				return @"(null)";
 			}
 
 			if (string.IsNullOrWhiteSpace(key))
 			{
-				return "(" + key + ")";
+				return @"(" + key + @")";
 			}
 
 			return key;

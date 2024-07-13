@@ -1,4 +1,4 @@
-﻿#region Copyright © 2019-2020 Sergii Artemenko
+﻿#region Copyright © 2019-2021 Sergii Artemenko
 
 // This file is part of the Xtate project. <https://xtate.net/>
 // 
@@ -19,7 +19,6 @@
 
 using System;
 using Serilog;
-using Xtate.Annotations;
 
 namespace Xtate
 {
