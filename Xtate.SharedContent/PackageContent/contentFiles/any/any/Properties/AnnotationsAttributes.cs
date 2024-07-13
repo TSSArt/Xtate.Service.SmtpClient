@@ -1,4 +1,21 @@
-﻿// ReSharper disable All
+﻿// Copyright © 2019-2024 Sergii Artemenko
+// 
+// This file is part of the Xtate project. <https://xtate.net/>
+// 
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published
+// by the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+// 
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+// 
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// ReSharper disable All
 
 /* MIT License
 
@@ -1815,7 +1832,7 @@ namespace JetBrains.Annotations
 	[Conditional("JETBRAINS_ANNOTATIONS")]
 	internal sealed class IgnoreSpellingAndGrammarErrorsAttribute : Attribute { }
 
-	#region ASP.NET
+#region ASP.NET
 
 	[AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
 	[Conditional("JETBRAINS_ANNOTATIONS")]
@@ -1874,9 +1891,9 @@ namespace JetBrains.Annotations
 		public bool CreateConstructorReferences { get; }
 	}
 
-	#endregion
+#endregion
 
-	#region ASP.NET MVC
+#region ASP.NET MVC
 
 	[AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]
 	[Conditional("JETBRAINS_ANNOTATIONS")]
@@ -2149,9 +2166,9 @@ namespace JetBrains.Annotations
 	[Conditional("JETBRAINS_ANNOTATIONS")]
 	internal sealed class AspMvcActionSelectorAttribute : Attribute { }
 
-	#endregion
+#endregion
 
-	#region ASP.NET Routing
+#region ASP.NET Routing
 
 	/// <summary>
 	///     Indicates that the marked parameter, field, or property is a route template.
@@ -2337,9 +2354,9 @@ namespace JetBrains.Annotations
 		public string QueryParameters { get; set; }
 	}
 
-	#endregion
+#endregion
 
-	#region Razor
+#region Razor
 
 	[AttributeUsage(AttributeTargets.Parameter | AttributeTargets.Property | AttributeTargets.Field)]
 	[Conditional("JETBRAINS_ANNOTATIONS")]
@@ -2463,9 +2480,9 @@ namespace JetBrains.Annotations
 	[Conditional("JETBRAINS_ANNOTATIONS")]
 	internal sealed class RazorWriteMethodParameterAttribute : Attribute { }
 
-	#endregion
+#endregion
 
-	#region XAML
+#region XAML
 
 	/// <summary>
 	///     XAML attribute. Indicates the type that has an <c>ItemsSource</c> property and should be treated
@@ -2523,9 +2540,9 @@ namespace JetBrains.Annotations
 	[Conditional("JETBRAINS_ANNOTATIONS")]
 	internal sealed class XamlTwoWayBindingModeByDefaultAttribute : Attribute { }
 
-	#endregion
+#endregion
 
-	#region Unit Testing
+#region Unit Testing
 
 	/// <summary>
 	///     Specifies the subject being tested by a test class or a test method.
@@ -2596,5 +2613,6 @@ namespace JetBrains.Annotations
 	[AttributeUsage(AttributeTargets.GenericParameter)]
 	[Conditional("JETBRAINS_ANNOTATIONS")]
 	internal sealed class MeansTestSubjectAttribute : Attribute { }
-	#endregion
+
+#endregion
 }
