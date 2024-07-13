@@ -1,5 +1,5 @@
-﻿#region Copyright © 2019-2021 Sergii Artemenko
-
+﻿// Copyright © 2019-2024 Sergii Artemenko
+// 
 // This file is part of the Xtate project. <https://xtate.net/>
 // 
 // This program is free software: you can redistribute it and/or modify
@@ -15,39 +15,39 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#endregion
-
 using System;
+using System.Threading.Tasks;
 using Serilog;
+using Xtate.Core;
+using Xtate.IoC;
 
-namespace Xtate
+namespace Xtate;
+
+[PublicAPI]
+public static class LoggerSerilogExtensions
 {
-	[PublicAPI]
-	public static class LoggerSerilogExtensions
+	public static void RegisterSerilogLogger(this IServiceCollection services)
 	{
-		public static StateMachineHostBuilder SetSerilogLogger(this StateMachineHostBuilder builder)
+		services.RegisterSerilogLogger(configuration => configuration.WriteTo.Console());
+	}
+
+	public static void RegisterSerilogLogger(this IServiceCollection services, Action<LoggerConfiguration> options)
+	{
+		if (services.IsRegistered<SerilogLogWriter, string>())
 		{
-			if (builder is null) throw new ArgumentNullException(nameof(builder));
-
-			var configuration = new LoggerConfiguration().WriteTo.Console();
-
-			builder.SetLogger(new SerilogLogger(configuration));
-
-			return builder;
+			return;
 		}
 
-		public static StateMachineHostBuilder SetSerilogLogger(this StateMachineHostBuilder builder, Action<LoggerConfiguration> options)
-		{
-			if (builder is null) throw new ArgumentNullException(nameof(builder));
-			if (options is null) throw new ArgumentNullException(nameof(options));
+		services.AddTransient<ILogWriter, Type>((provider, source) => LogWriterFactory(source, options));
+	}
 
-			var configuration = new LoggerConfiguration();
+	private static ValueTask<ILogWriter> LogWriterFactory(Type source, Action<LoggerConfiguration> options)
+	{
+		var configuration = new LoggerConfiguration();
+		options(configuration);
 
-			options(configuration);
+		var logWriter = new SerilogLogWriter(source, configuration);
 
-			builder.SetLogger(new SerilogLogger(configuration));
-
-			return builder;
-		}
+		return new ValueTask<ILogWriter>(logWriter);
 	}
 }
