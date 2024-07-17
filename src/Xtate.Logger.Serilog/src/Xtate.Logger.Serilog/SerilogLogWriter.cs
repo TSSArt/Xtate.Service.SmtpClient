@@ -26,61 +26,76 @@ using Xtate.Core;
 
 namespace Xtate;
 
-[PublicAPI]
-public class SerilogLogWriter : ILogWriter
+public class SerilogLogWriterConfiguration
 {
-	public enum LogEventType
+	public LoggerConfiguration Value { get; }
+
+	public SerilogLogWriterConfiguration(Action<LoggerConfiguration> options)
 	{
-		Undefined,
-		ExecuteLog,
-		Error,
-		ProcessingEvent,
-		EnteringState,
-		EnteredState,
-		ExitingState,
-		ExitedState,
-		ExecutingTransition,
-		ExecutedTransition,
-		InterpreterState
+		Value = new LoggerConfiguration();
+
+		options(Value);
+	}
+}
+
+public class SerilogLogWriter<TSource>(SerilogLogWriterConfiguration configuration) : ILogWriter<TSource>, IDisposable
+{
+	protected virtual void Dispose(bool disposing)
+	{
+		if (disposing)
+		{
+			_logger.Dispose();
+		}
 	}
 
-	private readonly Logger _logger;
-	private readonly Type   _source;
-
-	public SerilogLogWriter(Type source, LoggerConfiguration configuration)
+	public void Dispose()
 	{
-		Infra.Requires(configuration);
-		_source = source;
-
-		_logger = configuration
-				  .Destructure.With<DataModelListDestructuringPolicy>()
-				  .CreateLogger();
+		Dispose(true);
+		GC.SuppressFinalize(this);
 	}
+
+	private readonly Logger _logger =
+		configuration
+			.Value
+			.Destructure.With<DataModelListDestructuringPolicy>()
+			.CreateLogger();
 
 #region Interface ILogWriter
 
 	public bool IsEnabled(Level level) => _logger.IsEnabled(GetLogEventLevel(level));
 
-	public ValueTask Write(Level level,
+	public async ValueTask Write(Level level,
 						   int eventId,
 						   string? message,
-						   IEnumerable<LoggingParameter>? parameters)
+						   IAsyncEnumerable<LoggingParameter>? parameters)
 	{
-		var exception = parameters?.FirstOrDefault(IsException).Value as Exception;
-
-		var logger = _logger.ForContext(_source);
+		List<LoggingParameter>? prms = default;
+		Exception? exception = default;
 
 		if (parameters is not null)
 		{
-			logger = logger.ForContext(new ParametersLogEventEnricher(parameters.Where(IsNotException)));
+			await foreach (var prm in parameters.ConfigureAwait(false))
+			{
+				if (exception is null && prm is { Name: @"Exception", Value: Exception ex })
+				{
+					exception = ex;
+				}
+				else
+				{
+					prms ??= [];
+					prms.Add(prm);
+				}
+			}
+		}
+
+		var logger = _logger.ForContext(typeof(TSource));
+
+		if (prms is not null)
+		{
+			logger = logger.ForContext(new ParametersLogEventEnricher(prms));
 		}
 
 		logger.Write(GetLogEventLevel(level), exception, message ?? string.Empty);
-
-		return default;
-
-		bool IsException(LoggingParameter p)    => p is { Name: @"Exception", Value: Exception };
-		bool IsNotException(LoggingParameter p) => !IsException(p);
 	}
 
 #endregion
