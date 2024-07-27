@@ -17,27 +17,43 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Serilog.Core;
 using Serilog.Events;
+using Xtate.Core;
 
 namespace Xtate;
 
-public class DataModelListDestructuringPolicy : IDestructuringPolicy
+public class DestructuringPolicy : IDestructuringPolicy
 {
 #region Interface IDestructuringPolicy
 
-	public bool TryDestructure(object value, ILogEventPropertyValueFactory propertyValueFactory, out LogEventPropertyValue? result)
+	public bool TryDestructure(object value, ILogEventPropertyValueFactory propertyValueFactory, [NotNullWhen(true)] out LogEventPropertyValue? result)
 	{
-		if (value is not DataModelList list)
+		if (value is DataModelList list)
 		{
-			result = default;
+			result = GetLogEventPropertyValue(list);
 
-			return false;
+			return true;
 		}
 
-		result = GetLogEventPropertyValue(list);
+		if (value is ILazyValue lazyValue)
+		{
+			result = GetLogEventPropertyValue(lazyValue.Value);
 
-		return true;
+			return true;
+		}
+
+		if (value is IIdentifier identifier)
+		{
+			result = new ScalarValue(identifier.Value);
+
+			return true;
+		}
+
+		result = default;
+
+		return false;
 	}
 
 #endregion

@@ -17,7 +17,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
 using Serilog.Core;
@@ -26,64 +25,83 @@ using Xtate.Core;
 
 namespace Xtate;
 
-[PublicAPI]
-public class SerilogLogWriter : ILogWriter
+public class SerilogLogWriterConfiguration
 {
-	public enum LogEventType
+	public SerilogLogWriterConfiguration(Action<LoggerConfiguration> options)
 	{
-		Undefined,
-		ExecuteLog,
-		Error,
-		ProcessingEvent,
-		EnteringState,
-		EnteredState,
-		ExitingState,
-		ExitedState,
-		ExecutingTransition,
-		ExecutedTransition,
-		InterpreterState
+		Value = new LoggerConfiguration();
+
+		options(Value);
 	}
 
-	private readonly Logger _logger;
-	private readonly Type   _source;
+	public LoggerConfiguration Value { get; }
+}
 
-	public SerilogLogWriter(Type source, LoggerConfiguration configuration)
+public class SerilogLogWriter<TSource>(SerilogLogWriterConfiguration configuration) : ILogWriter<TSource>, IDisposable
+{
+	private readonly Logger _logger =
+		configuration
+			.Value
+			.Destructure.With<DestructuringPolicy>()
+			.CreateLogger();
+
+#region Interface IDisposable
+
+	public void Dispose()
 	{
-		Infra.Requires(configuration);
-		_source = source;
-
-		_logger = configuration
-				  .Destructure.With<DataModelListDestructuringPolicy>()
-				  .CreateLogger();
-	}
-
-#region Interface ILogWriter
-
-	public bool IsEnabled(Level level) => _logger.IsEnabled(GetLogEventLevel(level));
-
-	public ValueTask Write(Level level,
-						   int eventId,
-						   string? message,
-						   IEnumerable<LoggingParameter>? parameters)
-	{
-		var exception = parameters?.FirstOrDefault(IsException).Value as Exception;
-
-		var logger = _logger.ForContext(_source);
-
-		if (parameters is not null)
-		{
-			logger = logger.ForContext(new ParametersLogEventEnricher(parameters.Where(IsNotException)));
-		}
-
-		logger.Write(GetLogEventLevel(level), exception, message ?? string.Empty);
-
-		return default;
-
-		bool IsException(LoggingParameter p)    => p is { Name: @"Exception", Value: Exception };
-		bool IsNotException(LoggingParameter p) => !IsException(p);
+		Dispose(true);
+		GC.SuppressFinalize(this);
 	}
 
 #endregion
+
+#region Interface ILogWriter<TSource>
+
+	public bool IsEnabled(Level level) => _logger.IsEnabled(GetLogEventLevel(level));
+
+	public async ValueTask Write(Level level,
+								 int eventId,
+								 string? message,
+								 IAsyncEnumerable<LoggingParameter>? parameters)
+	{
+		List<LoggingParameter>? prms = default;
+		Exception? exception = default;
+
+		if (parameters is not null)
+		{
+			await foreach (var prm in parameters.ConfigureAwait(false))
+			{
+				if (exception is null && prm is { Name: @"Exception", Value: Exception ex })
+				{
+					exception = ex;
+				}
+				else
+				{
+					prms ??= [];
+					prms.Add(prm);
+				}
+			}
+		}
+
+		var logger = _logger.ForContext(typeof(TSource));
+
+		if (prms is not null)
+		{
+			logger = logger.ForContext(new ParametersLogEventEnricher(prms));
+		}
+
+		logger.Write(GetLogEventLevel(level), exception, message ?? string.Empty);
+	}
+
+#endregion
+
+	protected virtual void Dispose(bool disposing)
+	{
+		if (disposing)
+		{
+			_logger.Dispose();
+		}
+	}
 
 	private static LogEventLevel GetLogEventLevel(Level level) =>
 		level switch
@@ -103,9 +121,11 @@ public class SerilogLogWriter : ILogWriter
 
 		public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
 		{
-			foreach (var loggingParameter in parameters)
+			foreach (var parameter in parameters)
 			{
-				logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(loggingParameter.Name, loggingParameter.Value, destructureObjects: true));
+				var name = string.IsNullOrEmpty(parameter.Namespace) ? parameter.Name : parameter.Namespace + @"_" + parameter.Name;
+
+				logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name, parameter.Value, destructureObjects: true));
 			}
 		}
 

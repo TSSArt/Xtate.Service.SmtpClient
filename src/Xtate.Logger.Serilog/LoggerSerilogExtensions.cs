@@ -16,14 +16,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 using System;
-using System.Threading.Tasks;
 using Serilog;
 using Xtate.Core;
 using Xtate.IoC;
 
 namespace Xtate;
 
-[PublicAPI]
 public static class LoggerSerilogExtensions
 {
 	public static void RegisterSerilogLogger(this IServiceCollection services)
@@ -33,21 +31,12 @@ public static class LoggerSerilogExtensions
 
 	public static void RegisterSerilogLogger(this IServiceCollection services, Action<LoggerConfiguration> options)
 	{
-		if (services.IsRegistered<SerilogLogWriter, string>())
+		if (services.IsRegistered<SerilogLogWriter<Any>>())
 		{
 			return;
 		}
 
-		services.AddTransient<ILogWriter, Type>((provider, source) => LogWriterFactory(source, options));
-	}
-
-	private static ValueTask<ILogWriter> LogWriterFactory(Type source, Action<LoggerConfiguration> options)
-	{
-		var configuration = new LoggerConfiguration();
-		options(configuration);
-
-		var logWriter = new SerilogLogWriter(source, configuration);
-
-		return new ValueTask<ILogWriter>(logWriter);
+		services.AddTransient(_ => new SerilogLogWriterConfiguration(options));
+		services.AddImplementation<SerilogLogWriter<Any>>().For<ILogWriter<Any>>();
 	}
 }
