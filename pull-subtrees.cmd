@@ -7,3 +7,4 @@ git subtree pull --prefix src/Xtate.DataModel.EcmaScript     https://github.com/
 git subtree pull --prefix src/Xtate.Logger.Serilog           https://github.com/TSSArt/Xtate.Logger.Serilog           main --squash
 git subtree pull --prefix src/Xtate.IoProcessor.Http         https://github.com/TSSArt/Xtate.IoProcessor.Http         main --squash
 git subtree pull --prefix src/Xtate.IoProcessor.Http.Kestrel https://github.com/TSSArt/Xtate.IoProcessor.Http.Kestrel main --squash
+git subtree pull --prefix src/Xtate.Web.Tools                https://github.com/TSSArt/Xtate.Web.Tools                main --squash

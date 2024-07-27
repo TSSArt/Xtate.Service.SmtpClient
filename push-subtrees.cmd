@@ -5,3 +5,4 @@ git subtree push --prefix src/Xtate.DataModel.EcmaScript     https://github.com/
 git subtree push --prefix src/Xtate.Logger.Serilog           https://github.com/TSSArt/Xtate.Logger.Serilog           main
 git subtree push --prefix src/Xtate.IoProcessor.Http         https://github.com/TSSArt/Xtate.IoProcessor.Http         main
 git subtree push --prefix src/Xtate.IoProcessor.Http.Kestrel https://github.com/TSSArt/Xtate.IoProcessor.Http.Kestrel main
+git subtree push --prefix src/Xtate.Web.Tools                https://github.com/TSSArt/Xtate.Web.Tools                main
