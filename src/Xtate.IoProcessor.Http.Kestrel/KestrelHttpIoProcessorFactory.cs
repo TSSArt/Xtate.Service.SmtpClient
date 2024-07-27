@@ -1,5 +1,5 @@
-﻿#region Copyright © 2019-2021 Sergii Artemenko
-
+﻿// Copyright © 2019-2024 Sergii Artemenko
+// 
 // This file is part of the Xtate project. <https://xtate.net/>
 // 
 // This program is free software: you can redistribute it and/or modify
@@ -15,38 +15,35 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#endregion
-
 using System;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Xtate.Core;
 
-namespace Xtate.IoProcessor
+namespace Xtate.IoProcessor;
+
+public sealed class KestrelHttpIoProcessorFactory : IIoProcessorFactory
 {
-	public sealed class KestrelHttpIoProcessorFactory : IIoProcessorFactory
+	private readonly Uri        _baseUri;
+	private readonly IPEndPoint _ipEndPoint;
+
+	public KestrelHttpIoProcessorFactory(Uri baseUri, IPEndPoint ipEndPoint)
 	{
-		private readonly Uri        _baseUri;
-		private readonly IPEndPoint _ipEndPoint;
-
-		public KestrelHttpIoProcessorFactory(Uri baseUri, IPEndPoint ipEndPoint)
-		{
-			_baseUri = baseUri;
-			_ipEndPoint = ipEndPoint;
-		}
-
-	#region Interface IIoProcessorFactory
-
-		public async ValueTask<IIoProcessor> Create(IEventConsumer eventConsumer, CancellationToken token)
-		{
-			var httpIoProcessor = new KestrelHttpIoProcessor(eventConsumer, _baseUri, _ipEndPoint);
-
-			await httpIoProcessor.Start(token).ConfigureAwait(false);
-
-			return httpIoProcessor;
-		}
-
-	#endregion
+		_baseUri = baseUri;
+		_ipEndPoint = ipEndPoint;
 	}
+
+#region Interface IIoProcessorFactory
+
+	public async ValueTask<IIoProcessor> Create(IEventConsumer eventConsumer, CancellationToken token)
+	{
+		var httpIoProcessor = new KestrelHttpIoProcessor(eventConsumer, _baseUri, _ipEndPoint);
+
+		await httpIoProcessor.Start(token).ConfigureAwait(false);
+
+		return httpIoProcessor;
+	}
+
+#endregion
 }

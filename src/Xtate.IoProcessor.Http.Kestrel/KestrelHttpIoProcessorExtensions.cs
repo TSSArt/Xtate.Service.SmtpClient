@@ -1,5 +1,5 @@
-﻿#region Copyright © 2019-2021 Sergii Artemenko
-
+﻿// Copyright © 2019-2024 Sergii Artemenko
+// 
 // This file is part of the Xtate project. <https://xtate.net/>
 // 
 // This program is free software: you can redistribute it and/or modify
@@ -15,33 +15,30 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#endregion
-
 using System;
 using System.Net;
 using Xtate.IoProcessor;
 
-namespace Xtate
+namespace Xtate;
+
+[PublicAPI]
+public static class KestrelHttpIoProcessorExtensions
 {
-	[PublicAPI]
-	public static class KestrelHttpIoProcessorExtensions
+	public static StateMachineHostBuilder AddKestrelHttpIoProcessor(this StateMachineHostBuilder builder, Uri baseUri)
 	{
-		public static StateMachineHostBuilder AddKestrelHttpIoProcessor(this StateMachineHostBuilder builder, Uri baseUri)
-		{
-			if (builder is null) throw new ArgumentNullException(nameof(builder));
+		if (builder is null) throw new ArgumentNullException(nameof(builder));
 
-			builder.AddIoProcessorFactory(new KestrelHttpIoProcessorFactory(baseUri, new IPEndPoint(IPAddress.None, port: 0)));
+		builder.AddIoProcessorFactory(new KestrelHttpIoProcessorFactory(baseUri, new IPEndPoint(IPAddress.None, port: 0)));
 
-			return builder;
-		}
+		return builder;
+	}
 
-		public static StateMachineHostBuilder AddKestrelHttpIoProcessor(this StateMachineHostBuilder builder, Uri baseUri, IPEndPoint ipEndPoint)
-		{
-			if (builder is null) throw new ArgumentNullException(nameof(builder));
+	public static StateMachineHostBuilder AddKestrelHttpIoProcessor(this StateMachineHostBuilder builder, Uri baseUri, IPEndPoint ipEndPoint)
+	{
+		if (builder is null) throw new ArgumentNullException(nameof(builder));
 
-			builder.AddIoProcessorFactory(new KestrelHttpIoProcessorFactory(baseUri, ipEndPoint));
+		builder.AddIoProcessorFactory(new KestrelHttpIoProcessorFactory(baseUri, ipEndPoint));
 
-			return builder;
-		}
+		return builder;
 	}
 }
