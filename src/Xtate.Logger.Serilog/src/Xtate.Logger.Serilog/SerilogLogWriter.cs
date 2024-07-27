@@ -121,9 +121,11 @@ public class SerilogLogWriter<TSource>(SerilogLogWriterConfiguration configurati
 
 		public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
 		{
-			foreach (var loggingParameter in parameters)
+			foreach (var parameter in parameters)
 			{
-				logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(loggingParameter.Name, loggingParameter.Value, destructureObjects: true));
+				var name = string.IsNullOrEmpty(parameter.Namespace) ? parameter.Name : parameter.Namespace + @"_" + parameter.Name;
+
+				logEvent.AddOrUpdateProperty(propertyFactory.CreateProperty(name, parameter.Value, destructureObjects: true));
 			}
 		}
 

@@ -49,8 +49,6 @@ public class SerilogTest
 											 ]
 										 });
 
-		services.AddImplementation<InterpreterDataModelLogEnricher<IStateMachineInterpreter>>().For<ILogEnricher<IStateMachineInterpreter>>();
-
 		await using var provider = services.BuildProvider();
 
 		var smi = await provider.GetRequiredService<IStateMachineInterpreter>();
