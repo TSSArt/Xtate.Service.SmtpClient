@@ -17,7 +17,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Serilog;
 using Serilog.Core;
@@ -28,25 +27,25 @@ namespace Xtate;
 
 public class SerilogLogWriterConfiguration
 {
-	public LoggerConfiguration Value { get; }
-
 	public SerilogLogWriterConfiguration(Action<LoggerConfiguration> options)
 	{
 		Value = new LoggerConfiguration();
 
 		options(Value);
 	}
+
+	public LoggerConfiguration Value { get; }
 }
 
 public class SerilogLogWriter<TSource>(SerilogLogWriterConfiguration configuration) : ILogWriter<TSource>, IDisposable
 {
-	protected virtual void Dispose(bool disposing)
-	{
-		if (disposing)
-		{
-			_logger.Dispose();
-		}
-	}
+	private readonly Logger _logger =
+		configuration
+			.Value
+			.Destructure.With<DestructuringPolicy>()
+			.CreateLogger();
+
+#region Interface IDisposable
 
 	public void Dispose()
 	{
@@ -54,20 +53,16 @@ public class SerilogLogWriter<TSource>(SerilogLogWriterConfiguration configurati
 		GC.SuppressFinalize(this);
 	}
 
-	private readonly Logger _logger =
-		configuration
-			.Value
-			.Destructure.With<DataModelListDestructuringPolicy>()
-			.CreateLogger();
+#endregion
 
-#region Interface ILogWriter
+#region Interface ILogWriter<TSource>
 
 	public bool IsEnabled(Level level) => _logger.IsEnabled(GetLogEventLevel(level));
 
 	public async ValueTask Write(Level level,
-						   int eventId,
-						   string? message,
-						   IAsyncEnumerable<LoggingParameter>? parameters)
+								 int eventId,
+								 string? message,
+								 IAsyncEnumerable<LoggingParameter>? parameters)
 	{
 		List<LoggingParameter>? prms = default;
 		Exception? exception = default;
@@ -99,6 +94,14 @@ public class SerilogLogWriter<TSource>(SerilogLogWriterConfiguration configurati
 	}
 
 #endregion
+
+	protected virtual void Dispose(bool disposing)
+	{
+		if (disposing)
+		{
+			_logger.Dispose();
+		}
+	}
 
 	private static LogEventLevel GetLogEventLevel(Level level) =>
 		level switch
