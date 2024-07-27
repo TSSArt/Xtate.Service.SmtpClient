@@ -1,5 +1,5 @@
-﻿#region Copyright © 2019-2021 Sergii Artemenko
-
+﻿// Copyright © 2019-2024 Sergii Artemenko
+// 
 // This file is part of the Xtate project. <https://xtate.net/>
 // 
 // This program is free software: you can redistribute it and/or modify
@@ -15,47 +15,50 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#endregion
-
 using System;
 using System.Collections.Immutable;
 
-namespace Xtate
+namespace Xtate;
+
+internal class EventObject : IEvent
 {
-	internal class EventObject : IEvent
+	public EventObject(ImmutableArray<IIdentifier> nameParts,
+					   Uri? origin,
+					   Uri originType,
+					   DataModelValue data)
 	{
-		public EventObject(ImmutableArray<IIdentifier> nameParts, Uri? origin, Uri originType, DataModelValue data)
-		{
-			NameParts = nameParts;
-			Origin = origin;
-			OriginType = originType;
-			Data = data.AsConstant();
-		}
-
-		public EventObject(string eventName, Uri? origin, Uri originType, DataModelValue data)
-		{
-			NameParts = EventName.ToParts(eventName);
-			Origin = origin;
-			OriginType = originType;
-			Data = data.AsConstant();
-		}
-
-	#region Interface IEvent
-
-		public DataModelValue Data { get; }
-
-		public InvokeId? InvokeId => null;
-
-		public ImmutableArray<IIdentifier> NameParts { get; }
-
-		public Uri? Origin { get; }
-
-		public Uri OriginType { get; }
-
-		public SendId? SendId => null;
-
-		public EventType Type => EventType.External;
-
-	#endregion
+		NameParts = nameParts;
+		Origin = origin;
+		OriginType = originType;
+		Data = data.AsConstant();
 	}
+
+	public EventObject(string eventName,
+					   Uri? origin,
+					   Uri originType,
+					   DataModelValue data)
+	{
+		NameParts = EventName.ToParts(eventName);
+		Origin = origin;
+		OriginType = originType;
+		Data = data.AsConstant();
+	}
+
+#region Interface IEvent
+
+	public DataModelValue Data { get; }
+
+	public InvokeId? InvokeId => null;
+
+	public ImmutableArray<IIdentifier> NameParts { get; }
+
+	public Uri? Origin { get; }
+
+	public Uri OriginType { get; }
+
+	public SendId? SendId => null;
+
+	public EventType Type => EventType.External;
+
+#endregion
 }
