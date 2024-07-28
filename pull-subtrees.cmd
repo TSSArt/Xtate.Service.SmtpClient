@@ -1,10 +1,9 @@
+@echo off
 SET GIT_MERGE_AUTOEDIT=no
 
-git subtree pull --prefix src/Xtate.SharedContent            https://github.com/TSSArt/Xtate.SharedContent            main --squash
-git subtree pull --prefix src/Xtate.IoC                      https://github.com/TSSArt/Xtate.IoC                      main --squash
-git subtree pull --prefix src/Xtate.Core                     https://github.com/TSSArt/Xtate.Core                     main --squash
-git subtree pull --prefix src/Xtate.DataModel.EcmaScript     https://github.com/TSSArt/Xtate.DataModel.EcmaScript     main --squash
-git subtree pull --prefix src/Xtate.Logger.Serilog           https://github.com/TSSArt/Xtate.Logger.Serilog           main --squash
-git subtree pull --prefix src/Xtate.IoProcessor.Http         https://github.com/TSSArt/Xtate.IoProcessor.Http         main --squash
-git subtree pull --prefix src/Xtate.IoProcessor.Http.Kestrel https://github.com/TSSArt/Xtate.IoProcessor.Http.Kestrel main --squash
-git subtree pull --prefix src/Xtate.Web.Tools                https://github.com/TSSArt/Xtate.Web.Tools                main --squash
+for /f "delims=" %%r in (subtree-repos.txt) do (
+    echo.
+    echo Pulling repository: %%r
+    echo git subtree pull --prefix src/%%r https://github.com/TSSArt/%%r main --squash
+    git subtree pull --prefix src/%%r https://github.com/TSSArt/%%r main --squash
+)
