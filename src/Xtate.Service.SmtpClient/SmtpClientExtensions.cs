@@ -1,5 +1,5 @@
-﻿#region Copyright © 2019-2021 Sergii Artemenko
-
+﻿// Copyright © 2019-2024 Sergii Artemenko
+// 
 // This file is part of the Xtate project. <https://xtate.net/>
 // 
 // This program is free software: you can redistribute it and/or modify
@@ -15,22 +15,19 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#endregion
-
 using System;
 using Xtate.Service;
 
-namespace Xtate
+namespace Xtate;
+
+public static class SmtpClientExtensions
 {
-	public static class SmtpClientExtensions
+	public static StateMachineHostBuilder AddSmtpClient(this StateMachineHostBuilder builder)
 	{
-		public static StateMachineHostBuilder AddSmtpClient(this StateMachineHostBuilder builder)
-		{
-			if (builder is null) throw new ArgumentNullException(nameof(builder));
+		if (builder is null) throw new ArgumentNullException(nameof(builder));
 
-			builder.AddServiceFactory(SmtpClientServiceFactory.Instance);
+		builder.AddServiceFactory(SmtpClientServiceFactory.Instance);
 
-			return builder;
-		}
+		return builder;
 	}
 }
