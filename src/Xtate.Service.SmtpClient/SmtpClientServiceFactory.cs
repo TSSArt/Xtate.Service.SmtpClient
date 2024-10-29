@@ -19,4 +19,4 @@ using Xtate.Core;
 
 namespace Xtate.Service;
 
-public class SmtpClientServiceProvider() : ExternalServiceProvider<HttpClientService>(@"http://xtate.net/scxml/service/#SMTPClient", @"smtp");
+public class SmtpClientServiceProvider() : ExternalServiceProvider<HttpClientService>(type: @"http://xtate.net/scxml/service/#SMTPClient", alias: @"smtp");
