@@ -15,19 +15,8 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-using System;
+using Xtate.Core;
 
 namespace Xtate.Service;
 
-public class SmtpClientServiceFactory : ServiceFactoryBase
-{
-	public static IServiceFactory Instance { get; } = new SmtpClientServiceFactory();
-
-	protected override void Register(IServiceCatalog catalog)
-	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-
-		catalog.Register(type: @"http://xtate.net/scxml/service/#SMTPClient", () => new SmtpClientService());
-		catalog.Register(type: @"smtp", () => new SmtpClientService());
-	}
-}
+public class SmtpClientServiceProvider() : ExternalServiceProvider<HttpClientService>(@"http://xtate.net/scxml/service/#SMTPClient", @"smtp");

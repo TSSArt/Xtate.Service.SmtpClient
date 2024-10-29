@@ -26,7 +26,7 @@ public static class SmtpClientExtensions
 	{
 		if (builder is null) throw new ArgumentNullException(nameof(builder));
 
-		builder.AddServiceFactory(SmtpClientServiceFactory.Instance);
+		//builder.AddServiceFactory(SmtpClientServiceFactory.Instance);
 
 		return builder;
 	}

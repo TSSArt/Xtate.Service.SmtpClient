@@ -21,7 +21,7 @@ using System.Threading.Tasks;
 
 namespace Xtate.Service;
 
-public class SmtpClientService : ServiceBase
+public class SmtpClientService : ExternalServiceBase
 {
 	protected override async ValueTask<DataModelValue> Execute()
 	{
