@@ -15,8 +15,6 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-using Xtate.Core;
+namespace Xtate.ExternalService.SmtpClient;
 
-namespace Xtate.Service;
-
-public class SmtpClientServiceProvider() : ExternalServiceProvider<HttpClientService>(type: @"http://xtate.net/scxml/service/#SMTPClient", alias: @"smtp");
+public class SmtpClientServiceProvider() : ExternalServiceProvider<SmtpClientService>(type: @"http://xtate.net/scxml/service/#SMTPClient", alias: @"smtp");

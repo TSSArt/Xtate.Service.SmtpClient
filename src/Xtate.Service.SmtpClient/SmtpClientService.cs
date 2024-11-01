@@ -19,7 +19,7 @@ using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Xtate.Service;
+namespace Xtate.ExternalService;
 
 public class SmtpClientService : ExternalServiceBase
 {
@@ -28,7 +28,7 @@ public class SmtpClientService : ExternalServiceBase
 		var parameters = Parameters.AsListOrEmpty();
 		var host = parameters["server"].AsString();
 		var port = parameters["port"].AsNumberOrDefault();
-		using var client = new SmtpClient(host, port is { } p ? (int) p : 25);
+		using var client = new System.Net.Mail.SmtpClient(host, port is { } p ? (int) p : 25);
 
 		var fromEmail = parameters["from"].AsString();
 		var fromName = parameters["fromName"].AsStringOrDefault();
