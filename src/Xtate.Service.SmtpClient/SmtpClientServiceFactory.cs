@@ -17,4 +17,4 @@
 
 namespace Xtate.ExternalService.SmtpClient;
 
-public class SmtpClientServiceProvider() : ExternalServiceProvider<SmtpClientService>(type: @"http://xtate.net/scxml/service/#SMTPClient", alias: @"smtp");
+public class SmtpClientServiceProvider() : ExternalServiceProviderBase<SmtpClientService>(type: @"http://xtate.net/scxml/service/#SMTPClient", alias: @"smtp");
