@@ -1,0 +1,13 @@
+<Project>
+
+	<PropertyGroup>
+		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+		<CentralPackageFloatingVersionsEnabled>true</CentralPackageFloatingVersionsEnabled>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageVersion Include="Xtate.Core" />
+	</ItemGroup>
+
+</Project>
+
